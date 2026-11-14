@@ -13,7 +13,10 @@ import { bootAliases } from './src/i18n/locale.js';
 const { version: pkg } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 const git = cmd => { try { return execSync(`git ${cmd}`, { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim(); } catch { return ''; } };
 const version = pkg;
-const build = `${version}+${git('rev-parse --short=7 HEAD') || 'dev'}`;
+// QA_BUILD=1: the debug flags on any host (src/core/flags.js), for a device farm's phone through a tunnel. A local build only.
+const qa = !!process.env.QA_BUILD;
+if (qa && process.env.CI) throw new Error('QA_BUILD opens the debug flags on every host: never built in CI or deployed');
+const build = `${version}+${git('rev-parse --short=7 HEAD') || 'dev'}${qa ? '-qa' : ''}`;
 // `DEV_HTTPS=1 npm run dev`: https on the LAN with a self-signed certificate (.cert/, gitignored; made once with `openssl req -x509 -newkey rsa:2048 -nodes -keyout .cert/dev.key -out .cert/dev.crt -subj /CN=mulassa-dev -addext subjectAltName=IP:<LAN-IP>`
 // «?final»). Phones need a secure context for Web Share with files and the clipboard; http://192.168.x.x has neither.
 const https = process.env.DEV_HTTPS ? { key: readFileSync('.cert/dev.key'), cert: readFileSync('.cert/dev.crt') } : undefined;
@@ -41,4 +44,4 @@ const jocsPage = { name: 'jocs-page', transformIndexHtml: { order: 'pre', handle
   .replace(WATCHDOG, () => `<script id="boot-watchdog">${readFileSync('packages/plassa/src/boot-watchdog.js', 'utf8')}</script>`)
   .replace('<!-- mula-load -->', () => readFileSync('packages/plassa/src/mula-load.html', 'utf8').trim()) } };
 // Keep playtests intact until a manual reload; file watching still invalidates cached modules.
-export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build) }, build: { rollupOptions: { input: pages } }, server: { https, hmr: false }, plugins: [jocsPage, musicEditor(), bestiariMedia(), bouTimeline(), unreleasedFigure(UNRELEASED_IDS), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json
+export default defineConfig({ define: { __APP_VERSION__: JSON.stringify(version), __APP_BUILD__: JSON.stringify(build), __QA_BUILD__: JSON.stringify(qa) }, build: { rollupOptions: { input: pages } }, server: { https, hmr: false }, plugins: [jocsPage, musicEditor(), bestiariMedia(), bouTimeline(), unreleasedFigure(UNRELEASED_IDS), buildStamp] }); // dev-only backends; buildStamp: the build's /version.json

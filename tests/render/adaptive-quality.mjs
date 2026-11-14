@@ -80,6 +80,13 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
   assert.equal(r.changes.length, n, 'no further profile change in that song, although it got heavier');
   r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'out of the song the overload lowers quality as before');
 }
+{ // a menu that drowns at any level (the selector's HTML on an iPhone 8: 11 fps) gets its level back, and the song after it is its own judge
+  const r = rig(); r.run(3); r.run(40, { fps: 11 });
+  assert(r.changes.some(([, q]) => q === -1) && r.level === 2 && r.events.some(e => e.reason === 'futile'), 'the menu went down the ladder for nothing and is restored');
+  const n = r.changes.length; r.run(40, { fps: 11 }); assert.equal(r.changes.length, n, 'and is not walked down again');
+  r.run(20, { hold: true }); assert.equal(r.level, 2, 'a song that holds 60 fps keeps the level');
+  r.run(30, { fps: 11, hold: true }); assert.equal(r.level, -1, 'a song that drowns still steps down, and stays down');
+}
 { // a futile verdict is that song's: after the menus, a song that really misses half its frames steps down
   const r = rig(); r.run(120, { miss: 6, hold: true }); assert(r.events.some(e => e.reason === 'futile') && r.level === 2);
   r.run(10); r.run(30, { miss: 2, cost: 5, hold: true });
@@ -90,7 +97,7 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
 }
 {
   const r = rig(); r.run(3);
-  for (let i = 0; i < 12; i++) r.run(1, { hz: i % 2 ? 24 : 40, cost: 30 });
+  for (let i = 0; i < 12; i++) r.run(1, { hz: i % 2 ? 24 : 40, cost: 30, miss: 3 }); // (missing refreshes too: an even 24/40 alone is Low Power's boot)
   assert(r.level < 2, 'changing estimated Hz under overload cannot repeatedly erase downgrade evidence');
 }
 for (const ceiling of [0, 1]) {

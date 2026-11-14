@@ -164,6 +164,80 @@ the method and its tools: `docs/agents/device-profiling.md`.
   selector on the Bou instead of the Mulassa costs the same at the opening (the Bou's later hitches were the ribbon's,
   which only a figure with no heart from this player shows).
 
+## iPhones before iOS 18, and first draws (measured lessons)
+
+Found on rented iPhones (2026-11-14, AWS Device Farm: iPhone 8 iOS 16.7.11, iPhone 13 iOS 17.6.1 and 18.5, iPhone 15 Pro
+iOS 18.1; Safari under Appium, 60 Hz, QA build) and an S10 over adb for contrast. How to run one, its plans, phases and
+traps: `docs/agents/device-profiling.md` («A rented phone»). Every number below is from those sessions.
+
+- **Safari before 18 composites HTML over the 3D badly; it is the browser, not the chip.** The same iPhone 13 held the
+  selector at 30 fps on iOS 17.6 and at 60 on iOS 18.5; an iPhone 8 (iOS 16.7) at 12; an iPhone 15 Pro (iOS 18.1) and
+  the S10 (Chrome 157, 58 fps) are fine. The 3D alone does 60 on all of them (`#select { display: none }`: 59), with
+  3-4 ms of main thread a frame: nothing shows in a JavaScript profile.
+- **Two owners on the selector.** Its endless CSS animations (iPhone 8: 12 → 44 fps without them) and the figures'
+  carousel as a whole (44 → 60 without it: illustrations +4, labels +8, the scroller +10; no single part). The first is
+  fixed: `@supports not (content-visibility: hidden)` in `styles/select-sizes.css` stops the «play» button's invite and
+  glint, the new card's sweep, the entity badge's holo fade and the free-play button's glows (41-43 fps on the iPhone 8,
+  50-52 on the iPhone 13 with iOS 17). The carousel is left as it is (the owner's call): a menu, and the song does 56.
+- **`@supports not (content-visibility: hidden)` is the test for «Safari before 18»** (the one browser family in use
+  without it). The idle screen relies on the same gap: `[data-reel-gone] { content-visibility: hidden }` did nothing
+  there and the idle dance stayed at 12 fps under the faded selector; its `display: none` fallback gives 60.
+- **One early frame put the 30 Hz cap off: the owner's iPhone 18 Pro lost quality and its crowd in Low Power Mode.**
+  The frame monitor knows the cap from 12 frames in a row at ~33 ms; any frame under 24 ms ended it, and Safari under the
+  cap gives an early frame now and then (a tap on the notes, its own jitter). One every 10 frames was enough: every 33 ms
+  frame then read as slow, two steps down at once, and in Low Power Mode there is no way back up. Now a lone early frame
+  (none in the 4 before it) neither ends the cap nor its run; closer ones do (a 60 Hz screen missing every second or third
+  refresh). The same played Bou: 30 fps at `medium`, no step (2026-11-14, `tests/render/low-power.mjs`).
+- **The page cover stays up until the splash runs at the device's pace** (20 frames in a row under 45 ms, at most 6 s
+  after the first): it lifted on frames of 41-55 ms, Safari still compiling the splash's dances (the Mulassa and Drac pair:
+  30 ms of JavaScript a frame in Low Power Mode, 15 a few seconds later; the Bou alone, 9), and the monitor judged that.
+  A boot step also needs two slow 2 s windows in a row now (`render-quality.js` EARLY).
+- **A slow menu is not a slow phone.** The selector's 12 fps walked the iPhone 8 down to `minimal`, and its song (60 fps
+  at `medium`) was then played at `minimal`. Out of a song, a step down that changes nothing is undone and that menu's
+  share of late frames becomes its floor (`adaptive-quality.js`, `menuFloor`). An even 30 on iOS 17 reads as Low Power
+  (`lowPower` in `?perf`): no step down, by luck.
+- **A first draw is the GPU's work even with its program linked.** `precompile()` links every program, yet on a phone
+  that never drew them (a clean Safari; it keeps them afterwards, so a second load shows nothing) the Bou's rave was a
+  121-181 ms frame where it starts and its banknotes 199-365 ms at the bombo. Fixed by really drawing them once, unseen,
+  in the page's first frames: `bouFrame`'s warm-up (`bouRave(…, warm)` at zero light, `bouBillsWarm`: one note of no
+  size) and `renderer.initTexture` when the banknote's image arrives. After (four clean sessions): no frame over 50 ms
+  at the rave; the bombo still varies, 63 to 266 ms (not only a first draw, then: its owner is open). A new effect that first shows mid-song needs the same: hidden-but-compiled is
+  not drawn.
+- **Where a warm-up runs matters as much as having one.** As each run's first frame it only moved the hitch to the
+  count-in (a 200 ms frame). Now in the page's first frames, once a page: on the iPhone 8 it falls with the banknote's
+  upload as the splash gives way (515 + 214 ms, where 463 + 220 already were).
+- **The selector still steps quality on an iPhone 8** (35-42 fps with the animations stopped): a 287-320 ms frame some
+  6 s in and one of 1.4 s later are those switches, not a first draw, and the song then started at `low`.
+- **JavaScript per frame still counts on a 120 Hz iPhone.** The lasers' hit test walked every triangle of the Bou per
+  beam per frame (the owner's iPhone 15 Pro hitched at the final); a grid per mesh, built one mesh a frame beforehand,
+  fixed it, and the CO2's 800 points are drawn only while a burst shows.
+
+What not to do:
+
+- Do not add an endless CSS animation to the selector (or to anything left over the 3D) without stopping it in that
+  `@supports` block, and do not judge it on a Mac, an iOS 18 iPhone or the S10: none of them show the cost.
+- Do not hide a screen that stays over the 3D with `content-visibility` alone, nor trust `opacity: 0` to make it free
+  on those iPhones: invisible layers are still composited.
+- Do not chase `box-shadow`, `text-shadow`, `filter` or `mask` there: removing all four changed nothing (iPhone 8).
+- Do not let a menu's frame rate set the song's quality, and do not read an even 30 fps as overload before ruling out
+  a refresh cap.
+- Do not count on `precompile()` for a first appearance mid-song, and do not put the warm-up draw where the player is
+  looking or tapping.
+- Do not conclude from one session or one phase: the same iPhone 8 opened the selector at 12 fps in most sessions and at
+  50 in two, and the iPhone 13 left its 30 fps at the first injected style whatever it was (I named the wrong owner
+  once from that). Alternate the variants and repeat (`device-profiling.md`).
+- Do not let one odd frame decide a cadence: a cap, a group or a hitch is read from a run of frames, never from the last one.
+- Do not start judging frames while the page is still warming up (compiling its JavaScript, first draws): keep it under
+  the cover, and give the monitor frames at the device's own pace.
+- Do not take Device Farm for the owner's phone: no 120 Hz, no Low Power Mode, no thermal state, no finger, no audio.
+
+A whole Bou song after all this (autoplay, muted): iPhone 15 Pro (iOS 18.1) 59.6 fps at `medium`, one frame over 50 ms
+(55, at 53.3 s); iPhone 8 (iOS 16.7) 59.5 fps at `low`, 70 ms at 53.3 s, 266 at the bombo, 102 at the end. An iPhone 7 on
+iOS 15.8.4 boots and reaches the selector.
+
+Still open: why iOS 17 enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; the bombo's 63-266 ms;
+quality steps taken on a slow selector (their hitches, and the level the song then starts at).
+
 ## GPU context loss (mobile GPUs)
 
 Android Chrome can crash its GPU process mid-game (an Adreno 618 did it on every results screen, from an off-screen

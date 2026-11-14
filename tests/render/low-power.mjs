@@ -52,6 +52,12 @@ check('Low Power Mode, missed refreshes are no spikes (50 ms at 30 Hz is one ref
   assert.deepEqual(steps(f), []);
 });
 check('60 Hz smooth after the boot hitches: no step', () => assert.deepEqual(steps(boot, at60(60)), []));
+check('Low Power Mode, an early frame now and then (a tap on the notes, Safari\'s jitter): no quality step', () => {
+  // an iPhone 18 Pro in Low Power Mode, its Bou song tapped: one 16.7 ms frame every 6-10 put the cap off and every 33 ms frame read as slow
+  for (const every of [6, 10, 15]) assert.deepEqual(steps(lpm(60).map((f, i) => (i % every ? f : [V60, true]))), [], `every ${every}`);
+});
+check('Low Power Mode left (the screen back at 60 Hz) and then missing refreshes: steps down', () =>
+  assert(steps(lpm(20), at60(30, { miss: 0.15 })).length >= 1));
 // a 60 Hz screen's repeated stutter can also add up to whole 33 ms slots: closed by a late frame, it is never a jitter group
 for (const [name, cycle] of [['50 / 16.7 alternating', [50, 16.7]], ['80 then three 16.7', [80, 16.7, 16.7, 16.7]], ['66.7, 16.7, 16.7', [66.7, 16.7, 16.7]]])
   check(`60 Hz stuttering ${name}: steps down`, () => assert(steps(at60(5), Array.from({ length: 300 }, (_, i) => [cycle[i % cycle.length], true])).length >= 1));

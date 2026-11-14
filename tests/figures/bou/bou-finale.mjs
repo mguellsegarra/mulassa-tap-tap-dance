@@ -17,7 +17,13 @@ const FINALE = run('BOU_FINALE'), notes = run('billNotes'), SHOT = run('END_SHOT
 
 // the song's last 6.4 s (the bombo), its end, then the crane and the close-up; the play camera drifts on until the crane takes it
 const dt = 1 / 60, rain = 6.4, focus = new THREE.Vector3(0, 1, 0), last = new THREE.Vector3(), DRIFT = 0.003;
+// the warm-up draw: one note of no size for one frame, gone the next; never while the rain is on
+{ const carpet = run('billCarpet'), m = new THREE.Matrix4();
+  run('bouBillsWarm')(true); carpet.getMatrixAt(0, m);
+  assert.deepEqual([carpet.visible, carpet.count, m.determinant()], [true, 1, 0], 'the warm-up draws one note of no size');
+  run('bouBillsWarm')(false); assert.deepEqual([carpet.visible, carpet.count], [false, 0], 'and nothing after it'); }
 run('bouBillsStart')(141.5, 141.5 + rain, camera);
+run('bouBillsWarm')(false); assert.equal(run('billCarpet').count > 1, true, 'a warm-up call leaves the rain alone');
 let worst = 0, worstAt = 0, first = -1;
 for (let f = 0; f * dt < rain + 9; f++) {
   const t = f * dt;

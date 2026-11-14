@@ -188,7 +188,7 @@ import { vm, THREE, chart, practice, energy, dance, errors, windowHandlers, docu
     var qualityCompiles = 0, qualityDpr = 0;
     renderer.compileAsync = () => { qualityCompiles++; return Promise.resolve(); };
     renderer.setPixelRatio = dpr => { qualityDpr = dpr; };
-    for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, 10, pace, false);`);
+    for (let i = 0; i < 400 && qualityLevel > -1; i++) monitorFrames(1000 / 20, 10, pace, false);`); // (until the floor: a menu that stays as slow there gets its level back, adaptive-quality.mjs)
   assert.equal(run('qualityLevel'), -1, 'slow frames reach the minimal floor');
   assert.equal(run('renderProfile.name'), 'minimal', 'the scene profile follows the downgrade');
   assert.equal(run('qualityDpr'), run('renderDpr(renderProfile, sizedW, sizedH, devicePixelRatio)'), 'resize applies the lower DPR');
@@ -203,7 +203,7 @@ import { vm, THREE, chart, practice, energy, dance, errors, windowHandlers, docu
   assert.equal(run('qualityLevel'), -1, 'visibility and BFCache resume retain the session level');
   assert.equal(run('renderer'), rendererBefore, 'resume does not recreate the WebGL context');
   context.localStorage = new Proxy({}, { get() { throw new Error('storage blocked'); } });
-  run('qualityLevel = 1; for (let i = 0; i < 400; i++) monitorFrames(1000 / 20, 10, pace, false);');
+  run('qualityLevel = 1; for (let i = 0; i < 400 && qualityLevel > -1; i++) monitorFrames(1000 / 20, 10, pace, false);');
   assert.equal(run('qualityLevel'), -1, 'adaptation also works with blocked storage');
   console.log('session-only quality recovery ok');
 }

@@ -217,3 +217,51 @@ The iPhone splash's JavaScript (Low Power Mode, production build, 25 s, 9,909 sa
 7%, three.js matrices ~13%. No span over 50 ms and no gap without JavaScript in that run: the cost is spread over
 every frame. Next leads: build the applause off the main thread (a Worker), and check why the Drac is posed while
 not on screen.
+
+## A rented phone (AWS Device Farm)
+
+For a phone nobody has at hand (an old iPhone, another iOS): real devices in us-west-2, the owner's AWS account, project
+`mulassa-perf`. Each run needs the owner's go-ahead, with the minutes left read first (`aws devicefarm
+get-account-settings`): only the test's own minutes are metered (a 44 s flow: 1.7 of the job's 9), $0.17 each after the
+1,000 trial ones. Never buy an offering (the unmetered slots are $250 a month); keep `jobTimeoutMinutes` at 8.
+
+1. **The build.** `QA_BUILD=1 VITE_SUPABASE_URL= VITE_SENTRY_DSN= npx vite build --outDir <dir>`: the debug flags
+   (`?autoplay`, `?from`, `?mute`) on any host (`src/core/flags.js`; `vite.config.js` refuses it in CI, its build
+   stamp ends in `-qa`). Serve it with `vite preview`, the probe proxy in front, and a tunnel in front of that
+   (`cloudflared tunnel --url http://127.0.0.1:<proxy port>`); close all three when the run ends.
+2. **The package.** A folder with `tools/qa/device/farm-test.mjs`, a `package.json` whose `test` script runs it, and
+   `farm-plan.json` (`{ url, figure, diff, maxSeconds }`, the tunnel's URL with its flags); `npm pack`, zip the `.tgz`,
+   upload as `APPIUM_WEB_NODE_TEST_PACKAGE`. The spec is `tools/qa/device/farm-spec.yml`
+   (`APPIUM_WEB_NODE_TEST_SPEC`: the service refuses its own default spec unmodified).
+3. **The run.** A device pool with one rule (`ARN IN [...]`), `schedule-run --test type=APPIUM_WEB_NODE,…
+   --execution-configuration jobTimeoutMinutes=8,videoCapture=true`. The result is `mulassa-perf.json` in the run's
+   Customer Artifacts (per second of song: frames, frames over 25 and 50 ms, the worst; the long frames with their
+   song time; `?perf` every 2 s), next to the device's video; the probe proxy's log has the same session live.
+4. **From a hitch to its owner.** A long frame at the same song second names what starts then (2026-11-14, iPhone 8,
+   iOS 16.7: 121 ms where the Bou's rave starts, 199 ms at its bombo: the banknote's texture uploaded on its first draw).
+   Profile that stretch on the Mac at 4× CPU throttling by song time, fix, run the same plan again.
+
+Limits: Low Power Mode cannot be chosen, the phone's temperature is unknown, autoplay is not a finger, and `?mute`
+leaves the audio path out. Safari under Appium ran the game at its normal 60 Hz.
+
+`tools/qa/device/farm-run.mjs <plan.json> [outDir]` does steps 2 and 3 (it refuses a plan over its `budgetMinutes` and
+prints the minutes left). A flow's `phases` (`{ label, seconds, css?, awake? }`) are an A/B on the selector: one injected
+CSS at a time, each with its fps; the result's `anims` lists the CSS animations still running at the end.
+
+Traps met (2026-11-14):
+
+- **One session proves nothing on the selector.** An iPhone 8 opened it at 12 fps in six sessions of eight and at 50 in
+  two; an iPhone 13 on iOS 17 opens it at 30 and any injected style moves it to 48, where it stays. Alternate the
+  variants in one session (A, B, A, B) and repeat across sessions; a jump at the first injected CSS is not that CSS.
+- **Stop the animations before judging the still page.** Hide parts one by one (`display: none`, cumulative) only with
+  `*,*::before,*::after{animation:none!important}` already in.
+- **Safari's inspector is sometimes not there** («did not return any connected web applications», 3 jobs of ~20): the
+  job fails in under a minute, with no result file. Run it again.
+- **A clean phone pays every first draw** (Safari keeps the GPU's pipelines afterwards): a hitch seen only in the first
+  flow of a job is that. A/B it with one variant per job, never two flows in one.
+- `content-visibility` does not exist in Safari before 18: `@supports not (content-visibility: hidden)` is how the CSS
+  tells those apart (the idle screen's `display: none`, the selector's stopped animations, `styles/select-sizes.css`).
+
+What it found on the selector: iOS 16 and 17 composite its endless CSS animations and its carousel over the 3D badly
+(iPhone 8: 12 fps, 44 without the animations, 60 without the carousel too; the same iPhone 13 does 30 on iOS 17.6 and
+60 on iOS 18.5). An Android S10 and iOS 18 are not affected.

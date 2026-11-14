@@ -33,7 +33,12 @@ let reductions = 0;
 { // a clear overload in the session's first seconds steps down on a 2 s window; a mild one, or a later one, waits the 4 s
   const run = (lateEvery, from = 0) => { let at = null, t = 0; const m = frameMonitor(() => { at ??= t; });
     for (let i = 0; t < from + 9000; i++) { const ms = t < from ? 16.7 : (i % lateEvery ? 16.7 : 40); t += ms; m(ms); } return at ?? Infinity; };
-  assert(run(2) < 2000 + 2600, 'half the frames late at boot: down within ~2 s of the warm-up');
+  assert(run(2) >= 2000 + 3900 && run(2) < 2000 + 4600, 'half the frames late at boot: down after two 2 s windows of it');
+  { // a boot that is slow for a window and then settles (Safari in Low Power Mode, any level): no step
+    let at = null, t = 0; const m = frameMonitor(() => { at ??= t; });
+    for (let i = 0; t < 12000; i++) { const ms = t < 4200 ? [62, 98, 51, 163, 56][i % 5] : 33.4; t += ms; m(ms); }
+    assert.equal(at, null, 'one slow early window that does not last steps nothing');
+  }
   assert(run(6) >= 2000 + 3900 && run(6) < Infinity, 'a sixth late (a hitchy boot, not an overload): the usual 4 s window');
   assert(run(2, 22000) >= 22000 + 3500, 'after the first 15 s: the usual 4 s window (an overload from 22 s, where one closes)');
 }

@@ -35,6 +35,10 @@ for (let beat = 0; beat < 32; beat += 0.25) { // the final's eight bars: the fan
   }
 }
 assert(onBou > 20 && onFloor > onBou, `beams on the Bou ${onBou}, on the floor ${onFloor}`);
+// the warm-up draw: everything drawn once, unlit, while the rave is off
+const warmDraw = warm => { run('bouRave')(0, 0, 300, 300, 0, 0, new THREE.Color('#ff3b30'), -50, warm); return ['bouBeams', 'bouDots', 'bouHaze', 'bouCo2'].map(o => run(o).visible).join() + ' ' + run('bouBeamLook').power.value; };
+assert.equal(warmDraw(true), 'true,true,true,true 0', 'the warm-up draws the whole rave with no light');
+assert.equal(warmDraw(false).split(' ')[0], 'false,false,false,false', 'off again the frame after');
 // the CO2's 800 puffs are drawn only while a burst shows: spent (or not fired yet) they cost a phone its fill for nothing
 const co2Drawn = age => { run('bouRave')(1, 0, 300, 300, 0, 0, new THREE.Color('#ff3b30'), age); return run('bouCo2').visible; };
 assert.deepEqual([-1, 0.5, 3, 4, 9].map(co2Drawn), [false, true, true, false, false], 'the CO2 points drawn only during their burst');

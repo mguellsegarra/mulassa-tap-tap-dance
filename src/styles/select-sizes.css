@@ -9,6 +9,9 @@ body.reel-idle #select > * { pointer-events: none; }
    invisible layers; the auto size keeps each box as it was, so the selector's observers see nothing change */
 :is(#select, #settings, #free, #music, #howto) { contain-intrinsic-size: auto none; }
 :is(#select, #settings, #free, #music, #howto)[data-reel-gone] { content-visibility: hidden; }
+/* Safari before 18 has no content-visibility: there the rule above did nothing and an iPhone 8 (iOS 16.7) kept its idle dance
+   at 12 fps; display: none gives it 60 and the selector comes back as it was (2026-11-14, a rented phone) */
+@supports not (content-visibility: hidden) { :is(#select, #settings, #free, #music, #howto)[data-reel-gone] { display: none; } }
 /* its one control, «Mira el ball sencer» (ui/watch-ui.js): fades in with the idle screen, out at once with any wake */
 #idle-watch { background: #2a1a10e0; opacity: 0; pointer-events: none; transition: opacity .25s cubic-bezier(0, 0, .2, 1); }
 #idle-watch > svg { width: 18px; height: 18px; fill: currentColor; }
@@ -76,6 +79,12 @@ body.reel-idle #idle-watch { opacity: 1; pointer-events: auto; transition: opaci
   50% { scale: 1.018; rotate: .25deg; }
 }
 @keyframes sel-glint { 0%, 84% { translate: 0; } 100% { translate: 420%; } }
+/* Safari before 18 (the one browser without content-visibility) composites the selector's endless animations over the 3D
+   badly: an iPhone 8 (iOS 16.7) kept it at 12 fps, 34 with them stopped (2026-11-14, a rented phone, three sessions). The
+   games' tip stays: its animation is what shows and hides it */
+@supports not (content-visibility: hidden) {
+  #select .btn-primary, #select .btn-primary::after, .sel-card.sel-new::before, :is(.sel-pending, .sel-identity) :is(.sel-entity, .sel-entity-part)::before, #free::before, #free::after { animation: none !important; }
+}
 @media (hover: hover) { #select .btn-primary:hover { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 6px 18px #0008; } }
 #select .btn-primary:active { transform: translateY(1px) scale(.98); filter: brightness(.94); box-shadow: 0 2px 8px #0006; }
 @media (prefers-reduced-motion: reduce) {

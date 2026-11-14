@@ -109,6 +109,9 @@ export const SLOW_SHARE = 0.12;
 const SPIKE = { ms: 50, count: 5, within: 3000 };
 // The session's first seconds (monitor time: the loader's excluded): a clear overload (a third of the frames late) decides on a
 // 2 s window, not 4: a ThinkPad X230 that booted a level too high spent ~10 s at 30–40 fps before its two steps down.
+// Two such windows in a row, though: Safari on an iPhone 18 Pro in Low Power Mode draws its first seconds after the cover
+// slow at any level (frames of 41-163 ms, 30-40 ms of JavaScript, then 13-16 at medium and a steady 30 fps): one window
+// dropped it from medium to minimal at the splash, the crowd thinned for the session (14/11/2026).
 const EARLY = { until: 15000, window: 2000, share: 0.3 };
 // iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
 // 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
@@ -121,11 +124,11 @@ const EARLY = { until: 15000, window: 2000, share: 0.3 };
 const CAP = { lo: 29, hi: 44, run: 12 };
 export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot
-  let run = 0, runSlow = 0, capped = false, capMs = 0; // runSlow: this window's slow frames of the current run; capMs: the cap's interval
+  let run = 0, runSlow = 0, capped = false, capMs = 0, earlyHit = false, since = 9; // since: frames since the last one under 24 ms // runSlow: this window's slow frames of the current run; capMs: the cap's interval
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
   const group = new Float64Array(4); let gN = 0, gSum = 0, gPlay = true; // a late frame and the early ones after it, judged together
   const reset = (settle = true) => {
-    elapsed = samples = slow = late = n = run = runSlow = capMs = gN = gSum = 0; spiky = capped = false;
+    elapsed = samples = slow = late = n = run = runSlow = capMs = gN = gSum = 0; since = 9; spiky = capped = earlyHit = false;
     if (settle) warmup = 2000;
   };
   // WebGL in Safari under the 30 Hz cap jitters its timestamps: a late callback, then one or two early ones, together a
@@ -151,8 +154,13 @@ export function frameMonitor(onSlow) {
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
     if (inCap) capMs = capMs ? capMs + (ms - capMs) * 0.1 : ms;
-    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 ? run : 0; // one refresh late (50 ms at 24 Hz) neither builds nor breaks the run
-    if (ms < 24) capped = false; else if (run >= CAP.run) capped = true;
+    // One refresh late (50 ms at 24 Hz) or a lone early frame (the 4 before it were not) neither builds nor breaks the run;
+    // fast frames closer than that lift the cap (a 60 Hz screen missing every second or third refresh is overload, not a cap): under the 30 Hz cap Safari draws an extra early frame now and then (a touch, its jitter), and one
+    // of them every 10 frames made every 33 ms frame read as slow, two steps down at once (an iPhone 18 Pro in Low Power
+    // Mode, its notes tapped, and its splash; 14/11/2026)
+    const lone = ms < 24 && since >= 4; since = ms < 24 ? 0 : since + 1;
+    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 || lone ? run : 0;
+    if (ms < 24 && !lone) capped = false; else if (run >= CAP.run) capped = true;
     if (warmup > 0) { warmup = Math.max(0, warmup - ms); return; }
     const k = capped ? 2 : 1;
     if (play && ms > SPIKE.ms * k) {
@@ -164,9 +172,11 @@ export function frameMonitor(onSlow) {
     else if (capped && ms > capMs * 1.15) late++; // a refresh late: now and then a cap's jitter; a third of the frames is overload
     if (!inCap) runSlow = 0; else if (!capped) runSlow++;
     if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
-    if (elapsed >= 4000 || clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share) {
+    const early = elapsed < 4000 && clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share;
+    if (elapsed >= 4000 || early) {
       const share = samples >= 8 ? (slow + (late / samples > 0.3 ? late : 0)) / samples : 0; // (41.7/50 ms alternating: a busy 120 Hz GPU)
-      if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
+      const wait = early && !earlyHit && elapsed / samples < 100; earlyHit = early; // (the first early window only marks it, the next one confirms; under 10 fps no wait)
+      if (!wait && (share > SLOW_SHARE || spiky)) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
       elapsed = samples = slow = late = runSlow = 0; spiky = false;
     }
   };

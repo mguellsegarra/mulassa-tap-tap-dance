@@ -40,10 +40,14 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
   // And once a drop proved futile, the song in play is left alone: a Galaxy S10 with its CPU slowed three times (JS 15-19 ms
   // a frame, no profile's to shed) went medium, low, minimal, medium, low, minimal in one song, a hitch of up to 787 ms
   // at every switch, never under 40 fps nor over 53 (13/11/2026). Only frames way too slow still step down in a song.
-  let drops = null, tolerated = 0, futile = false; // drops: the level and slow share the current run of drops started from
+  // A drowning menu is the exception: an iPhone 8 (iOS 16.7) drew the selector at 11 fps at medium and at minimal alike, its
+  // own HTML's cost (59 fps with #select hidden, 14/11/2026), and then played its song at minimal, which it holds at
+  // medium at 60. No profile is to blame there either: out of a song the level is restored and the menu keeps that
+  // share as its own floor (menuFloor), which a song never inherits.
+  let drops = null, tolerated = 0, futile = false, menuFloor = 0; // drops: the level and slow share the current run of drops started from
   const down = frameMonitor((steps, evidence) => {
     const share = evidence.slowShare, spiky = evidence.spiky;
-    if (!spiky && share <= tolerated) return;
+    if (!spiky && share <= (playing ? tolerated : Math.max(tolerated, menuFloor))) return;
     // A song whose JavaScript alone takes most of a 60 Hz frame is not helped by a profile (they shed GPU work; the
     // people, the CPU's load, step a level later): it is drawn at an even 30 for the rest of the song instead, half the
     // work and the heat (halve: the pacer's cap, core/timing.js). A 2015 MacBook Pro went 55 to 85 °C in a minute of play
@@ -51,8 +55,9 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     // (only where the pacer can halve: over 50 Hz, not a 120 Hz screen)
     if (playing && !halved && costAvg > CPU_BOUND && currentPace.hz > 50 && currentPace.hz <= 95) { halved = true; halve(true); down.reset(); clear(); report({ time, reason: 'cpu-cap', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
     if (futile && playing && steps < 2 && !spiky) return; // repeated hitches still step down
-    if (drops && level() === -1 && !spiky && share < 0.35 && drops.share - share < SLOW_SHARE) {
-      tolerated = share + SLOW_SHARE; futile = true; const to = drops.from; drops = null;
+    if (drops && level() === -1 && !spiky && (share < 0.35 || !playing) && drops.share - share < SLOW_SHARE) {
+      if (share < 0.35) tolerated = share + SLOW_SHARE; else menuFloor = share + SLOW_SHARE;
+      futile = true; const to = drops.from; drops = null;
       switchTo(to, 'futile', evidence); return;
     }
     drops ??= { from: level(), share };

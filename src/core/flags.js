@@ -3,7 +3,10 @@
 // score (?perf, ?hide, ?vp) and ?figura deep links. Real features (the ?repte challenge link in share.js and ?lang in
 // i18n/locale.js) read their own search and are not flags.
 // Read debug parameters through `Q`.
-export const DEV_HOST = /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(localhost|local|test)|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$/;
+// A QA build (`QA_BUILD=1 npx vite build`, vite.config.js: refused in CI) is a dev host wherever it is served: a rented
+// phone (tools/qa/device/, AWS Device Farm) only reaches it through a public tunnel. Never deployed.
+const QA_HOST = typeof __QA_BUILD__ !== 'undefined' && __QA_BUILD__;
+export const DEV_HOST = QA_HOST ? /^/ : /^(localhost|127(\.\d+){3}|\[::1\]|0\.0\.0\.0|.+\.(localhost|local|test)|10(\.\d+){3}|192\.168(\.\d+){2}|172\.(1[6-9]|2\d|3[01])(\.\d+){2})$/;
 export const PUBLIC_FLAGS = ['perf', 'hide', 'vp', 'figura'];
 export function devSearch(loc) {
   if (!loc) return '';

@@ -132,11 +132,13 @@ bouCo2.visible = false; bouCo2.frustumCulled = false; scene.add(bouCo2);
 const bouFwd = new THREE.Vector3(), bouSide = new THREE.Vector3(), bouAim = new THREE.Vector3(), bouFrom = new THREE.Vector3(), bouDir = new THREE.Vector3(), bouEnd = new THREE.Vector3(), bouAcross = new THREE.Vector3();
 // n: 0..1 how far the rave is on (the night's fade); beat: song beat; b0: the final's first beat; bx, bz: the Bou;
 // tint: the floor's colour of the beat (the haze takes it); co2Age: s since the cannons last fired
-export function bouRave(n, t, beat, b0, bx, bz, tint, co2Age) {
-  const on = n > 0.01;
+// warm: draw it all this frame although it is off (n 0: no light, nothing seen), so the GPU makes its pipelines now and not
+// on the final's first frame (121 ms on an iPhone 8). Returns whether the lasers' grids are ready (off: built meanwhile)
+export function bouRave(n, t, beat, b0, bx, bz, tint, co2Age, warm = false) {
+  const on = n > 0.01 || warm;
   bouBeams.visible = bouDots.visible = bouHaze.visible = on;
-  bouCo2.visible = on && co2Age > 0 && co2Age < 3.5; // only while a burst shows (the shader's own fade): spent, its 800 puffs were still drawn, unseen
-  if (!on) { bouHitWarm(); return; }
+  bouCo2.visible = warm || on && co2Age > 0 && co2Age < 3.5; // only while a burst shows (the shader's own fade): spent, its 800 puffs were still drawn, unseen
+  if (!on) return bouHitWarm();
   const scale = glc.height / 2 / Math.tan(camera.fov * Math.PI / 360) * 0.5; // px per m at 1 m, halved (the clip's puffs)
   bouHaze.material.uniforms.scale.value = bouCo2.material.uniforms.scale.value = bouBeamLook.scale.value = scale;
   // behind the Bou as the camera sees it
@@ -164,6 +166,7 @@ export function bouRave(n, t, beat, b0, bx, bz, tint, co2Age) {
   const u = bouHaze.material.uniforms; u.t.value = t; u.tint.value.copy(tint); u.density.value = 0.06 * n;
   bouCo2.material.uniforms.age.value = Math.min(9, co2Age);
   bouCo2.position.set(bx, 0, bz);
+  return true;
 }
 
 // ---- the follow spot (the first techno): a beam fading down from 13 m onto the Bou and a pool of light at its feet

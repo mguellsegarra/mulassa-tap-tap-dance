@@ -63,6 +63,7 @@ export function loadBouBill() {
   new THREE.TextureLoader().load('/textures/bitllet-bou.png', tex => {
     tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
     confBills.material.map = billMat.map = tex;
+    renderer.initTexture(tex); // uploaded now: on its first draw, at the bombo, it was a 199 ms frame on an iPhone 8 (21 ms of texSubImage2D on a Mac at 4x)
   });
 }
 
@@ -107,6 +108,13 @@ export function bouBillsEnd(camera, focus) {
     const a = d > 1e-4 ? Math.atan2(dz, dx) : n.ph;
     n.x += Math.cos(a) * BOU_BILLS.shot - dx; n.z += Math.sin(a) * BOU_BILLS.shot - dz;
   }
+}
+// warm: one note of no size drawn this frame (bou-show.js's warm-up), so the carpet's first real draw, at the bombo, is not
+// the GPU's first of it (296 ms on an iPhone 8 with its texture already uploaded)
+export function bouBillsWarm(warm) {
+  if (BOU_FINALE.on) return;
+  if (warm) { billCarpet.setMatrixAt(0, billZero); billCarpet.instanceMatrix.needsUpdate = true; }
+  billCarpet.count = +warm; billCarpet.visible = warm;
 }
 export function bouBillsClear() {
   if (!BOU_FINALE.on) return;

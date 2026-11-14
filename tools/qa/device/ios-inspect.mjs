@@ -3,7 +3,7 @@
 // JavaScript at all (the main thread waiting on something else: the GPU, layout) and the [load]/[quality] lines.
 // Docs and the protocol's quirks: docs/agents/device-profiling.md.
 // usage: node tools/qa/device/ios-inspect.mjs <url> [seconds=20] [--bridge=host:9222] [--tab=<regex of the tab's url>]
-//        [--stay: no reload, record whatever the tab shows now (the selector, a song)] [--out=/tmp/mulassa-device/ios-profile.json] [--maps=<a `vite build --sourcemap` outDir: names the minified frames>]
+//        [--cached: reload with Safari's cache on] [--stay: no reload, record whatever the tab shows now (the selector, a song)] [--out=/tmp/mulassa-device/ios-profile.json] [--maps=<a `vite build --sourcemap` outDir: names the minified frames>]
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs';
 import { SourceMap } from 'node:module';
 import { dirname } from 'node:path';
@@ -43,7 +43,7 @@ const send = (method, params = {}) => new Promise(r => {
   setTimeout(() => { if (pend.has(i)) { pend.delete(i); r({ timeout: method }); } }, 10000);
 });
 const run = async (method, params) => { const r = await send(method, params); if (r.error || r.timeout) console.log(method, r.error?.message ?? 'timed out'); return r; };
-await run('Console.enable'); await run('Network.enable'); await run('Network.setResourceCachingDisabled', { disabled: true });
+await run('Console.enable'); await run('Network.enable'); if (!args.includes('--cached')) await run('Network.setResourceCachingDisabled', { disabled: true }); // (--cached: a player's reload, files from Safari's cache)
 // The profiler only reports while the timeline records with its instrument on
 await run('Timeline.enable'); await run('Timeline.setInstruments', { instruments: ['ScriptProfiler'] });
 await run('ScriptProfiler.startTracking', { includeSamples: true }); await run('Timeline.start');

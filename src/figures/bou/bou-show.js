@@ -12,7 +12,7 @@ import { setFinaleDim, setFinaleCalm } from '../../scene/fx.js';
 import { bouRave, bouFollowSpot } from './bou-rave.js';
 import { createFire } from '../common/fire.js';
 import { setConfettiDivert, CONF_LOOK } from '../../scene/confetti.js';
-import { bouBillsStart, bouBillsEnd, bouBillsClear, bouBillsFrame, loadBouBill, BOU_FINALE } from './bou-bills.js';
+import { bouBillsStart, bouBillsEnd, bouBillsClear, bouBillsFrame, bouBillsWarm, loadBouBill, BOU_FINALE } from './bou-bills.js';
 import { M } from '../../scene/figure-springs.js';
 import { G } from '../../game/state.js';
 import { selectedFigure, song } from '../../game/figure-song.js';
@@ -60,6 +60,7 @@ const BOU_DARK = nightLook('#040509', '#010104', '#0a0c18', '#0c0a10', 0.985); /
 const BOU_PLAIN = new THREE.Color('#ffffff'), BOU_SPOT = new THREE.Color(BOU_FX.strobe.spot);
 const BOU_CASTS = [];
 let bouShadowless = false;
+let bouWarmth = 0; // the warm-up draw, once a page: 0 waiting for the lasers' grids, 1 next frame, 2 done
 function bouLight(n, final) {
   bouGlow.value = (final ? BOU_FX.glow : BOU_FX.strobe.glow) * n;
   bouSpot.top.value = final ? 0 : 1; bouSpot.tint.value.copy(final ? BOU_PLAIN : BOU_SPOT);
@@ -91,10 +92,15 @@ export function bouFrame(dt, t) {
   const beat = BOU_SHOW.night || was ? beatAtTime(song.beats, t) : 0, b = Math.floor(beat), final = t >= BOU_FX.finalStart;
   const flash = BOU_SHOW.hush && !CALM.matches ? bouStrobe(t - timeAtBeat(song.beats, b), timeAtBeat(song.beats, b + 1) - timeAtBeat(song.beats, b)) : 0;
   if (BOU_SHOW.night || was) { plazaNight(BOU_SHOW.night, BOU_DARK, flash); bouLight(BOU_SHOW.night, final && !rain); setFinaleDim(BOU_SHOW.night); } // (the finale's lights, scene/fx.js, kept low in its dark: the rain)
-  bouFloor.visible = BOU_SHOW.night > 0.01 && final && !rain; // the first techno's floor stays dark: the strobe is its light
-  if (bouFloor.visible) bouDisco(beat, BOU_SHOW.night);
+  // the final's floor, rave and banknotes drawn once, unlit, in the page's first frames (under its cover or the splash; as each
+  // run's first frame it was a 200 ms count-in on an iPhone 8): their first draw is the GPU's work
+  const warm = !!bou && bouWarmth === 1;
+  bouFloor.visible = warm || BOU_SHOW.night > 0.01 && final && !rain; // the first techno's floor stays dark: the strobe is its light
+  if (bouFloor.visible) bouDisco(beat, warm ? 0 : BOU_SHOW.night);
   const raveN = final && !rain ? BOU_SHOW.night : 0;
-  bouRave(raveN, t, beat, beatAtTime(song.beats, BOU_FX.finalStart), M.pos.x, M.pos.y, BOU_DISCO[b % BOU_DISCO.length], t - BOU_FX.co2);
+  const ready = bouRave(warm ? 0 : raveN, t, beat, beatAtTime(song.beats, BOU_FX.finalStart), M.pos.x, M.pos.y, BOU_DISCO[b % BOU_DISCO.length], t - BOU_FX.co2, warm);
+  bouWarmth = warm ? 2 : bouWarmth || (ready ? 1 : 0);
+  bouBillsWarm(warm);
   bouFollowSpot(final && !rain ? 0 : BOU_SHOW.night, M.pos.x, M.pos.y, rain ? 1.8 : 1); // the first techno and the rain: the follow spot
   // the banknotes: from the final bombo, out through its results, gone with the next game (a song that starts again) or the menu
   if (mine) loadBouBill();

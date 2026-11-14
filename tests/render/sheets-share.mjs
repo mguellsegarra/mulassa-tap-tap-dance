@@ -168,7 +168,12 @@ console.log('classificacions integration contracts ok');
     nodes.get('results-retry').listeners.click();
     assert(run(`G.state === 'play' && G.figureId === '${figure}' && G.diff === ${diff} && !G.practice && G.score === 0 && G.energy === 1`), `${figure}/${reason}/${diff}: restart the same figure and level with a fresh run`);
   }
-  run(`G.challenge = null; G.state = 'select'; setSelectedFigure('mulassa-valls'); updateControls();`);
+  // the Bou's close-up left with a tap (BOU_FINALE.go): a retry's first frame, before bou-show.js clears it, ended the new run at once (iPhone)
+  run(`G.state = 'results'; G.resT = clock - 2; BOU_FINALE.go = true; updateControls();`);
+  nodes.get('results-retry').listeners.click();
+  run('tickGame(-2, -2, 0, 1 / 60);');
+  assert.equal(run('G.state'), 'play', 'the last run\'s tap on the banknotes does not end the retried one');
+  run(`BOU_FINALE.go = false; G.challenge = null; G.state = 'select'; setSelectedFigure('mulassa-valls'); updateControls();`);
 }
 // Comparteix asks for the place on the board of the figure that was played (sheets-setup.js composes share and board), and a
 // publication refreshes the cached name (the check) before the card is drawn again

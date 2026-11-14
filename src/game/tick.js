@@ -58,7 +58,7 @@ export function tickGame(t, vt, beat, dt) {
     if (!G.collapseT) {
       advance(t);
       if (G.practice) practiceTick(t);
-      else if (BOU_FINALE.go || t > song.tail + 1 && !bouHolds()) finish('end'); // (the Bou: its banknotes' close-up waits for a tap, and a tap goes on at once)
+      else if (BOU_FINALE.go && t >= song.end || t > song.tail + 1 && !bouHolds()) finish('end'); // (the Bou: its banknotes' close-up waits for a tap, and a tap goes on at once; the last run's tap still set on a retry's first frame, before bou-show.js clears it, ended the new run)
     } else if (clock - G.collapseT > 3.5) finish('collapse');
   } else if (G.state === 'select' && !REEL.on && !REEL_STILL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu (not under the selector's held shot: each figure dances there on its own)
     G.lastBeat = Math.floor(beat);

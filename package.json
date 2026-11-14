@@ -25,12 +25,19 @@
     "check:leaderboard": "node tests/run.mjs --group=leaderboard"
   },
   "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/haptics": "8.0.2",
+    "@capacitor/ios": "8.6.0",
+    "@capacitor/screen-orientation": "8.0.2",
+    "@capacitor/status-bar": "8.0.4",
     "@sentry/browser": "^11.0.0",
     "@supabase/supabase-js": "^2.117.2",
     "planck": "^1.5.1",
     "three": "^0.180.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "8.6.0",
     "@electric-sql/pglite": "^0.5.8",
     "vite": "^7.1.0"
   }

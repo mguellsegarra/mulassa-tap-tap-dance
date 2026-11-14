@@ -1,0 +1,8 @@
+{
+  "appId": "cat.mulassa.games",
+  "appName": "Mulassa Games",
+  "webDir": "dist",
+  "server": { "appStartPath": "/jocs/index.html" },
+  "ios": { "contentInset": "never" },
+  "android": { "allowMixedContent": false }
+}

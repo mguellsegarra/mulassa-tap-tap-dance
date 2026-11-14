@@ -4,6 +4,7 @@ import { G } from '../game/state.js';
 import { pauseGame } from './pause.js';
 import { resizeIfChanged } from '../hud/canvas.js';
 import { curtainCover } from './curtain.js';
+import { CAP_APP, nativeLock } from '../platform/native.js';
 
 function checkOrientation() {
   document.body.classList.toggle('tablet', isTablet()); // base.css's first-paint rule is a phone's: a small tablet's landscape page is as short
@@ -18,6 +19,7 @@ addEventListener('resize', checkOrientation);
 addEventListener('orientationchange', checkOrientation);
 matchMedia('(orientation: portrait)').addEventListener('change', checkOrientation); // iOS: resize can come with the old size
 setTimeout(checkOrientation);
+nativeLock(deviceOrient());
 const wantOrient = () => !isTablet() && document.body.classList.contains('view-mode') ? 'landscape' : deviceOrient();
 const inFs = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 const freeOn = () => document.body.classList.contains('view-mode');
@@ -26,6 +28,7 @@ const freeOn = () => document.body.classList.contains('view-mode');
 // «gira» cover asks. Desktop: an Escape that takes it out leaves free play windowed, no way back in until next time.
 export function photoOrient() {
   checkOrientation();
+  if (CAP_APP) { nativeLock(wantOrient()); return; } // the app: already full screen, the lock needs no tap
   if (!COARSE.matches) { if (freeOn()) enterFullscreen(); else leaveFs(); return; }
   if (!freeOn()) { leaveFs(); return; }
   if (!inFs()) { enterFullscreen(); return; } // (it locks once in)

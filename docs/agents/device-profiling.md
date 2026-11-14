@@ -199,6 +199,12 @@ A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the 
   Safari's warm-up; on the Mac the pair and the Bou alone cost the same), and the warm-up draw blamed for a frame that a
   quality step made. Alternate A and B, repeat across sessions, and check the second variable (time since load, order,
   the level the 3D is at) before writing a name down. A claim already told to the owner is corrected in so many words.
+- **«Only the first time» is a claim to test**: start the thing three times in one session before calling a frame a
+  first-use cost (the song's first frames repeat at every start; the rave's and the bombo's did not).
+- **Style recalculation has no JavaScript frame**: a forced one shows under whatever read the layout (`stop` in
+  `strip-scroll.js` took the blame for 21 ms of the selector hiding). Chrome's trace says how many elements each
+  `UpdateLayoutTree` restyled, its invalidation tracking says which write scheduled it, and each write timed alone with
+  a `getComputedStyle` after it (Mac, 4x) names the costly one in a minute.
 - **JavaScript or the GPU: the Mac says which.** `Emulation.setCPUThrottlingRate` 4 with a CPU profile over the same
   song seconds: no long frame there means the phone's is a first draw or the compositor, not code to optimise.
 - **Safari's first seconds are slow at any quality** (an iPhone 18 Pro in Low Power Mode: 30-70 ms of JavaScript a frame

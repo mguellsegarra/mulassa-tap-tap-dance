@@ -240,8 +240,18 @@ A whole Bou song after all this (autoplay, muted): iPhone 15 Pro (iOS 18.1) 59.6
 (55, at 53.3 s); iPhone 8 (iOS 16.7) 59.5 fps at `low`, 70 ms at 53.3 s, 266 at the bombo, 102 at the end. An iPhone 7 on
 iOS 15.8.4 boots and reaches the selector.
 
-Still open: why iOS 17 enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; the song's first frame on a clean iPhone 8 (126-144 ms at the count-in);
-quality steps taken on a slow selector (their hitches, and the level the song then starts at).
+The first frames of every song (left as they are, the owner's call, 2026-11-14): 2-3 frames of 50-84 ms in a song's first
+quarter second on the S10 (three starts in one session, twice: not a first-time cost; 87-144 ms on the iPhones), 3 s
+before its first note and inside the change of screen. The first is one main-thread task (65 ms on the S10): the
+selector's ~450 elements restyled as it hides (24-31 ms: `hidden` and `inert` each walk its subtree), the run's start
+(17 ms), paint and layout; the others are its 0.2 s fade and its `display: none` landing. Not the game's JavaScript, not
+a first draw (the boot's warm-up does nothing for it). Measured to nothing: reading the strips' scroll before the
+writes; the corner row's custom properties moved off `body` (587 -> 451 elements restyled, 2 ms); the `:has()` rules
+deleted (only the three corner buttons' 6 ms at 4x). The cost is the selector's size, not one rule: a smaller selector
+DOM is the lever. On the S10 the day's boot changes cost nothing: the cover gone by 5.3 s before and 5.7 after (4 cold
+starts each, 4.3-6.4 s), the opening's lost time 218-385 ms before, 151-285 after.
+
+Still open: why iOS 17 enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; quality steps taken on a slow selector (their hitches, and the level the song then starts at).
 
 ## GPU context loss (mobile GPUs)
 

@@ -82,7 +82,7 @@ Llegenda de l'estat:
 | Carcassa de les pàgines: fonts amb ciríl·lic i CJK, cobertes, 3-2-1, xifres de final de partida, rànquing i fitxa, girar el mòbil (`game.css`) | Plassa |
 | Teclat: fletxes, Enter i Espai, focus recuperat dins el full obert (`sheet-keys.js`, `focus.js`) | Plassa |
 | So de la interfície a cada botó i a cada moviment de teclat (`ui-sound.js`) | Plassa |
-| Tocar fora del full fa el mateix que Escape (`backdrop.js`) | Plassa |
+| Tocar fora del full fa el mateix que Escape, excepte en una capa que surt sola (`data-unasked`) (`backdrop.js`) | Plassa |
 | Llistes que s'esvaeixen on n'hi ha més (`scroll-hint.js`) | Plassa |
 | La barra gruixuda del full que fa scroll (`ui/sheet-fade.js`) | mulassa.cat |
 | El teclat en pantalla no tapa el camp de text (`ui/keyboard-room.js`) | mulassa.cat (cal per al nom i la Bústia) |

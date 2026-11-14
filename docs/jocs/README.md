@@ -97,7 +97,8 @@ are in `packages/plassa/docs/inventari.md`.
   `--sheet-color`, `--sheet-bg`, `--sheet-radius`, `--page-edge`, `--page-bg`, `--game`) and its own screens.
 - Interaction: `focus.js` (keyboard vs pointer, `<html data-keys>`), `sheet-keys.js` (arrows, Enter/Space and focus
   recovery in the open cover), `ui-sound.js` (a blip on keyboard moves and every press), `backdrop.js` (a tap outside a
-  cover's sheet does what Escape does), `scroll-hint.js`, `gesture.js` (every tap or key), `double-tap.js`,
+  cover's sheet does what Escape does; a cover that comes up by itself, `data-unasked`, ignores its backdrop and every
+  tap for 400 ms), `scroll-hint.js`, `gesture.js` (every tap or key), `double-tap.js`,
   `tap-start.js` (the home waits for the tap its music needs).
 - The page's life: `page-leave.js` (hidden, blur, pagehide: a run pauses) and `page-audio.js` (one AudioContext: fade
   before stopping, back on return and checked, iOS's audio session, a clock that stands still; reported to Sentry).

@@ -27,6 +27,7 @@ class El {
   contains(el) { for (let e = el; e; e = e.parent) if (e === this) return true; return false; }
   setAttribute(k, v) { this.attrs[k] = String(v); }
   getAttribute(k) { return this.attrs[k] ?? null; }
+  toggleAttribute(k, f) { if (f) this.attrs[k] = ''; else delete this.attrs[k]; }
   addEventListener(t, f) { (this.on[t] ||= []).push(f); }
   fire(t, ev = {}) { const e = { preventDefault() { this.prevented = true; }, ...ev }; for (const f of this.on[t] || []) f(e); return e; }
   click() { return this.fire('click'); }
@@ -571,6 +572,7 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   const wait = async () => { await tick(); await tick(); };
   const a = make({ afterPublish: () => {} }); a.setRun(RUN); a.board.results(true); await wait();
   assert(a.$('publish-menu').open && !a.$('publish-never').hidden, 'the auto prompt offers it');
+  assert.equal(a.$('publish-menu').getAttribute('data-unasked'), '', 'by itself: a stray tap neither closes it nor presses «No m’ho tornis a recordar» (ui/backdrop.js)');
   a.$('publish-never').click();
   assert(!a.$('publish-menu').open && a.mem.get(OPTOUT_KEY) === '1', 'stores the opt-out');
   assert.equal(a.shares.length, 0, 'nothing opens next');
@@ -578,6 +580,7 @@ for (const [total, line] of [[1, 'Ets el número 1!'], [20, 'Ets el número 7!']
   assert(!a.$('publish-menu').open, 'never opens by itself again');
   a.$('results-publish').click(); await wait();
   assert(a.$('publish-menu').open && a.$('publish-never').hidden, 'opened on purpose: no such button');
+  assert.equal(a.$('publish-menu').getAttribute('data-unasked'), null, 'opened on purpose: a tap outside closes it again');
   a.$('publish-cancel').click();
   // ⚙ Configuració: the row only while the prompt is off; «Activa» clears the opt-out
   a.board.refreshSettings();

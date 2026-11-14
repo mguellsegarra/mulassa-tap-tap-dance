@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import { viteLoad } from './pop-ssr.mjs';
 
 const mem = new Map(), els = {};
-const fakeEl = () => ({ hidden: false, textContent: '', style: {}, dataset: {}, firstChild: { style: {}, offsetWidth: 0 }, classList: { add() {}, remove() {}, toggle() {} }, animate: () => ({ finished: Promise.resolve(), }), getAnimations: () => [], addEventListener() {}, focus() {}, click() {}, setAttribute() {}, appendChild() {}, querySelector: () => null });
+const fakeEl = () => ({ hidden: false, textContent: '', style: {}, dataset: {}, firstChild: { style: {}, offsetWidth: 0 }, classList: { add() {}, remove() {}, toggle() {} }, animate: () => ({ finished: Promise.resolve(), }), getAnimations: () => [], addEventListener() {}, focus() {}, click() {}, setAttribute() {}, attrs: {}, toggleAttribute(k, f) { this.attrs[k] = f; }, appendChild() {}, querySelector: () => null });
 Object.assign(globalThis, {
   localStorage: { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: k => mem.delete(k) },
   document: { getElementById: id => (els[id] ??= fakeEl()), activeElement: null, body: { classList: { toggle() {} }, appendChild() {} }, addEventListener() {}, createElement: fakeEl },
@@ -91,6 +91,7 @@ toPlay();
   calls.length = 0;
   carretilla();
   flow.pause();
+  assert.equal($('pause-menu').attrs['data-unasked'], true, 'a pause by itself (page left, stalled clock): a stray tap neither quits nor resumes it (#plassa/backdrop.js)');
   await new Promise(go => setTimeout(go, 700)); // a wall-clock timer would have fired by now
   for (let n = 0; n < 20; n++) flow.step(.05);
   assert.equal(words(), 0, 'a pause holds the word: the clock stands still');
@@ -100,6 +101,8 @@ toPlay();
   toPlay();
   for (let n = 0; n < 40; n++) flow.step(.05);
   assert.equal(words(), 0, 'a quit drops it: the next run never shows the last one\'s');
+  flow.pause(true);
+  assert.equal($('pause-menu').attrs['data-unasked'], false, 'the ⏸ button or Escape: its backdrop and buttons work at once');
 }
 flow.showMenu();
 await close();

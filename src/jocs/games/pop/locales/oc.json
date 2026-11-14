@@ -78,6 +78,8 @@
   "fail.title": "Uep! Non s’a pogut cargar",
   "fail.text": "Actualiza era pagina tà tornar-ac a provar.",
   "fail.retry": "Torna-ac a provar",
+  "fail.webglTitle": "Uep! Non se pòt mostrar eth jòc",
+  "fail.webglText": "Eth tòn navegador non pòt mostrar eth jòc en 3D. Barra-lo deth tot e torna a daurí-lo; se non, actualiza-lo o daurís-lo damb Chrome o Safari.",
   "lost.title": "Uep! Eth jòc s’a arturat",
   "lost.text": "Eth mobil a deishat de mostrar eth jòc en 3D. Barra eth navegador deth tot e torna a daurí-lo.",
   "badge.campanar": "Campanau de Valls",

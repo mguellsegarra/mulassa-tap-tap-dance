@@ -78,6 +78,8 @@
   "fail.title": "Ups! Não foi possível carregar",
   "fail.text": "Atualiza a página para tentar outra vez.",
   "fail.retry": "Tentar outra vez",
+  "fail.webglTitle": "Ups! Não é possível mostrar o jogo",
+  "fail.webglText": "O teu navegador não consegue mostrar o jogo em 3D. Fecha-o por completo e volta a abri-lo; se não resultar, atualiza-o ou abre-o no Chrome ou no Safari.",
   "lost.title": "Ups! O jogo parou",
   "lost.text": "O telemóvel deixou de mostrar o jogo em 3D. Fecha o navegador por completo e volta a abri-lo.",
   "badge.campanar": "Torre de Valls",

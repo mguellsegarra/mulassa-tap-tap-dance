@@ -9,6 +9,7 @@ import homeLoop from './menu-music.json' with { type: 'json' };
 import { MELODY } from './melody.js';
 import { createPageAudio } from '#plassa/page-audio.js';
 import { musicPref } from '#plassa/music-pref.js';
+import { errors, errorName } from '#plassa/errors.js';
 
 musicPref.adopt('pica-music'); // Pop's own key until Plassa's one switch (the game's first name)
 let on = musicPref.get(), ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
@@ -43,6 +44,19 @@ export function setMusicOn(v) {
 function audio() {
   if (ctx) return true;
   try { ctx = new AudioContext(); } catch { return false; } // no Web Audio: a silent game
+  try { buildAudio(); return true; } catch (e) {
+    // a context made broken (WebKit: sample rate 0, a clock that is NaN): building on it threw, and a half-made one left seq null
+    // for every later call (Sentry, 12 Nov 2026). A silent game instead, told once.
+    if (!audioBroken) errors.report('audio-unavailable', { name: errorName(e), rate: String(ctx.sampleRate > 0) });
+    audioBroken = true;
+    ctx.close?.()?.catch?.(() => {});
+    ctx = clock = out = life = seq = sfxBus = noise = music = home = null;
+    return false;
+  }
+}
+let audioBroken = false;
+function buildAudio() {
+  if (!(ctx.sampleRate > 0)) throw new RangeError('no sample rate'); // nothing could be scheduled or buffered on it
   clock = audioClock(ctx);
   out = ctx.createGain();
   out.connect(ctx.destination);
@@ -59,7 +73,6 @@ function audio() {
   music.gain.value = on ? 1 : 0;
   music.connect(out);
   home = createMenuMusic(ctx, music, { url: homeUrl, loop: homeLoop });
-  return true;
 }
 // every tap or key: the first one the browser counts lets the context run (a suspended one stays as it is)
 export const unlock = () => life?.gesture(); // never a paused run's: nothing should sound then (its menu is tapped too)

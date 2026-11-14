@@ -78,6 +78,8 @@
   "fail.title": "¡Ups! No se ha podido cargar",
   "fail.text": "Recarga la página para volver a intentarlo.",
   "fail.retry": "Vuelve a intentarlo",
+  "fail.webglTitle": "¡Ups! No se puede mostrar el juego",
+  "fail.webglText": "Tu navegador no puede mostrar el juego en 3D. Ciérralo del todo y vuelve a abrirlo; si no, actualízalo o ábrelo con Chrome o Safari.",
   "lost.title": "¡Ups! El juego se ha detenido",
   "lost.text": "El móvil ha dejado de mostrar el juego en 3D. Cierra el navegador del todo y vuelve a abrirlo.",
   "badge.campanar": "Campanario de Valls",

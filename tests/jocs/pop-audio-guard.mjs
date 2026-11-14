@@ -48,6 +48,21 @@ class FakeContext {
   createDelay() { return node(); }
   createBufferSource() { return node(); }
 }
+{ // a context made broken (WebKit: sample rate 0, a NaN clock): the game goes on silent, it does not throw on every call
+  let closed = 0;
+  globalThis.AudioContext = class extends FakeContext {
+    sampleRate = 0; currentTime = NaN; state = 'running';
+    createBuffer() { throw new DOMException('Length must be at least 1.', 'NotSupportedError'); }
+    close() { closed++; return Promise.resolve(); }
+  };
+  assert.doesNotThrow(() => { audio.startHomeMusic(); audio.armAudio(); audio.startMusic(createConductor(0), 'mulassa'); }, 'a broken context: no throw');
+  for (const name of ['hit', 'sprout', 'bell', 'count', 'boom', 'ui']) assert.doesNotThrow(() => SFX[name](2), `SFX.${name} on a broken context`);
+  assert.doesNotThrow(() => { audio.pauseMusic(); audio.resumeMusic(); audio.watchAudio(1000); audio.setMusicOn(true); });
+  assert.ok(closed >= 1, 'the broken context is closed, not kept half-made');
+  delete globalThis.AudioContext;
+  Object.assign(log, { starts: [], gains: 0, disconnects: 0 });
+}
+
 globalThis.AudioContext = FakeContext;
 
 const tune = createConductor(0);

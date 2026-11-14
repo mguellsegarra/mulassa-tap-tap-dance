@@ -78,6 +78,8 @@
   "fail.title": "Ene! Ezin izan da kargatu",
   "fail.text": "Freskatu orria berriro saiatzeko.",
   "fail.retry": "Saiatu berriro",
+  "fail.webglTitle": "Ene! Ezin da jokoa erakutsi",
+  "fail.webglText": "Zure nabigatzaileak ezin du jokoa 3Dn erakutsi. Itxi guztiz eta ireki berriro; bestela, eguneratu edo ireki Chrome edo Safari erabiliz.",
   "lost.title": "Ene! Jokoa gelditu da",
   "lost.text": "Mugikorrak jokoa 3Dn erakusteari utzi dio. Itxi nabigatzailea guztiz eta ireki berriro.",
   "badge.campanar": "Vallsko kanpandorrea",

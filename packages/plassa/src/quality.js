@@ -7,6 +7,8 @@ const coarse = matchMedia('(pointer: coarse)').matches, gpu = probeRenderer();
 const level = isSoftwareRenderer(gpu) ? -1 : Math.min(gpuLossLevel(), initialQuality({ mobile: coarse, cores: navigator.hardwareConcurrency,
   memory: navigator.deviceMemory, saveData: navigator.connection?.saveData, renderer: gpu.renderer }));
 export const LOW = level <= 0;
+// the GPU's name for crash reports (errors.js's `gl` tag, as the main game's): which phones a report comes from
+export const GL_NAME = (gpu.renderer || 'unknown').slice(0, 120);
 // The pixel ratio, and with the canvas's CSS size (w, h) also the main game's pixel budget for this level (renderDpr): a big
 // window at DPR 2 would be 3x the pixels of a phone's. Re-read on fit: zoom, another screen.
 const profile = profileAt(level < 0 ? -1 : LOW ? 0 : coarse ? 1 : 2);

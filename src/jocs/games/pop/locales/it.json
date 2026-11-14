@@ -78,6 +78,8 @@
   "fail.title": "Ops! Caricamento fallito",
   "fail.text": "Ricarica la pagina per riprovare.",
   "fail.retry": "Riprova",
+  "fail.webglTitle": "Ops! Impossibile mostrare il gioco",
+  "fail.webglText": "Il tuo browser non può mostrare il gioco in 3D. Chiudilo del tutto e riaprilo; altrimenti aggiornalo o aprilo con Chrome o Safari.",
   "lost.title": "Ops! Il gioco si è fermato",
   "lost.text": "Il telefono ha smesso di mostrare il gioco in 3D. Chiudi del tutto il browser e riaprilo.",
   "badge.campanar": "Campanile di Valls",

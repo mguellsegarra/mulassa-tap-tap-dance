@@ -8,6 +8,23 @@ import { heroQuadMake } from './share-capture.js';
 // is a file now, public/share/, never rendered on the device). Run again after a quality step (screen only): the shadow
 // map on/off changes every program, and the hidden ones (confetti, fireworks) would otherwise compile on their first
 // appearance mid-song (a GLOBUS pop, the finale). Never throws; resolves when ready.
+// A linked program is not a drawn one: on its first draw the GPU still builds its pipeline (Metal: 121-365 ms frames on an
+// iPhone 8 where the Bou's rave and banknotes first showed, mid-song). At boot, under the page's cover, everything in
+// the scene is drawn once (hidden objects shown, empty instanced meshes given one instance, nothing culled), then put
+// back as it was. Not after a quality step: that one is on screen.
+function warmDraw() {
+  const hidden = [], empty = [], culled = [];
+  scene.traverse(o => {
+    if (!o.visible) { hidden.push(o); o.visible = true; }
+    if (o.isInstancedMesh && o.count === 0) { empty.push(o); o.count = 1; }
+    if (o.frustumCulled) { culled.push(o); o.frustumCulled = false; }
+  });
+  try { renderer.render(scene, camera); } catch { /* drawn by the first frame that needs it instead */ } finally {
+    for (const o of hidden) o.visible = false;
+    for (const o of empty) o.count = 0;
+    for (const o of culled) o.frustumCulled = true;
+  }
+}
 export function precompile(quad = false) {
   const jobs = [], prev = renderer.getRenderTarget?.() ?? null;
   let rt = null;
@@ -24,5 +41,5 @@ export function precompile(quad = false) {
   } catch { /* compiled by the first render that needs them instead */ } finally {
     if (rt) renderer.setRenderTarget(prev);
   }
-  return Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {}))).then(() => { rt?.dispose(); });
+  return Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {}))).then(() => { rt?.dispose(); if (quad) warmDraw(); });
 }

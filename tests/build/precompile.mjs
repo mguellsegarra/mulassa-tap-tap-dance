@@ -25,3 +25,19 @@ vm.runInContext(source.replace('renderer.capabilities.getMaxAnisotropy();', ''),
 cached = false; calls.length = 0;
 await vm.runInContext('precompile()', oldCtx);
 assert.notEqual(calls[0], 'driver-query', 'the old warmup leaves the synchronous query to the first texture');
+
+// At boot (quad) everything is drawn once, hidden and empty objects too, and left as it was; a quality step's warm-up draws nothing.
+{
+  const objs = [{ visible: false, frustumCulled: true }, { visible: true, isInstancedMesh: true, count: 0, frustumCulled: false }, { visible: true, isInstancedMesh: true, count: 7, frustumCulled: true }];
+  const seen = [], before = JSON.stringify(objs);
+  const r = { ...renderer, getRenderTarget: () => null, setRenderTarget() {}, compileAsync: () => Promise.resolve(), render() { seen.push(objs.map(o => [o.visible, o.count ?? null, o.frustumCulled])); } };
+  const c = vm.createContext({ renderer: r, scene: { traverse: fn => objs.forEach(fn) }, camera: {}, balloonFx: null, dracWarm() {}, Promise,
+    THREE: { WebGLRenderTarget: class { dispose() {} } }, heroQuadMake: () => ({ scene: {}, cam: {} }) });
+  vm.runInContext(source, c);
+  await vm.runInContext('precompile()', c);
+  assert.equal(seen.length, 0, 'a quality step draws nothing extra (it is on screen)');
+  await vm.runInContext('precompile(true)', c);
+  assert.deepEqual(seen, [[[true, null, false], [true, 1, false], [true, 7, false]]], 'the boot draws every object once: shown, one instance at least, not culled');
+  assert.equal(JSON.stringify(objs), before, 'and puts each one back');
+  console.log('precompile: the boot warm-up draws the whole scene once and restores it ok');
+}

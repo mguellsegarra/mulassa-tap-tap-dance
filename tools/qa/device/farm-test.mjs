@@ -55,6 +55,7 @@ async function main() {
         let up = false;
         for (let i = 0; i < 60 && !(up = await js('return !!window.__dbg && (document.getElementById("loader")?.hidden ?? true)')); i++) await sleep(1000);
         if (!up) run.notes.push('the loader never left');
+        run.loaderMs = await js('return Math.round(performance.now())'); // (the page's ms when its cover was seen gone, polled every second)
         await js(PROBE); await sleep(3000);
         // the splash wants a real tap (the audio's gesture): a native one on the page's body
         try { await wd('POST', `${S}/element/${Object.values(await wd('POST', `${S}/element`, { using: 'css selector', value: 'body' }))[0]}/click`, {}); } catch (e) { run.notes.push(`tap: ${e.message}`); }

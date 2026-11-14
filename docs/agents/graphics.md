@@ -203,6 +203,11 @@ traps: `docs/agents/device-profiling.md` («A rented phone»). Every number belo
   size) and `renderer.initTexture` when the banknote's image arrives. After (four clean sessions): no frame over 50 ms
   at the rave; the bombo still varies, 63 to 266 ms (not only a first draw, then: its owner is open). A new effect that first shows mid-song needs the same: hidden-but-compiled is
   not drawn.
+- **The whole scene is drawn once at boot, under the page's cover** (`scene/precompile.js` `warmDraw`: hidden objects
+  shown, empty instanced meshes given one instance, nothing culled, then all put back). Four clean iPhone 8 sessions, two
+  with it and two without: the bombo's frame 87 and 89 ms without, none over 50 with; the frame as the splash gives way
+  487 and 494 ms without, 306 and 287 with; the cover gone by 12.4-12.6 s without, 11.7-12.7 with (no longer). A new
+  effect needs nothing more than being in the scene at boot. The Bou's own warm-up (below) is older and was in both.
 - **Where a warm-up runs matters as much as having one.** As each run's first frame it only moved the hitch to the
   count-in (a 200 ms frame). Now in the page's first frames, once a page: on the iPhone 8 it falls with the banknote's
   upload as the splash gives way (515 + 214 ms, where 463 + 220 already were).
@@ -235,7 +240,7 @@ A whole Bou song after all this (autoplay, muted): iPhone 15 Pro (iOS 18.1) 59.6
 (55, at 53.3 s); iPhone 8 (iOS 16.7) 59.5 fps at `low`, 70 ms at 53.3 s, 266 at the bombo, 102 at the end. An iPhone 7 on
 iOS 15.8.4 boots and reaches the selector.
 
-Still open: why iOS 17 enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; the bombo's 63-266 ms;
+Still open: why iOS 17 enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; the song's first frame on a clean iPhone 8 (126-144 ms at the count-in);
 quality steps taken on a slow selector (their hitches, and the level the song then starts at).
 
 ## GPU context loss (mobile GPUs)

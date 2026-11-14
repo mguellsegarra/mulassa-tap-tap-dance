@@ -1,0 +1,13 @@
+/* The Lane Rush POC's own screens: the street canvas and the HUD. The look is the base (Plassa's base.css and game.css); this file sets its colour tokens. */
+:root { --accent: #ffc928; --button-gold-bg: linear-gradient(180deg, #ffe066 0%, #ffc928 55%, #e8a51a 100%); --button-bg: #2a1d16e8; --ink: #2a1a10; --sheet-color: #3a2a20; --sheet-bg: linear-gradient(#4a3426, #2f2119); --sheet-radius: 24px; --page-edge: #2f6fa8; --page-bg: linear-gradient(#7cc4f2, #cfe8f7) #7cc4f2; --game: #ffc928; }
+canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
+/* the distance big at the top, as the reference */
+#hud { position: fixed; z-index: 2; top: calc(var(--sat) + 12px); left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+#hud[hidden] { display: none; }
+#dist { display: flex; align-items: baseline; gap: .08em; font: 400 clamp(64px, 20vw, 120px)/.8 'Jersey 10', monospace; font-variant-numeric: tabular-nums; color: #fff8e6; -webkit-text-stroke: .08em #2a1a10; paint-order: stroke fill; }
+#dist small { font-size: .44em; }
+#flash { position: fixed; z-index: 1; inset: 0; pointer-events: none; background: #ff4d3d; opacity: 0; transition: opacity .24s ease; }
+#flash.on { opacity: .34; }
+/* the home shows the street running behind it: no blur over it */
+.home-cover { background: none; -webkit-backdrop-filter: none; backdrop-filter: none; justify-content: flex-end; }
+.corner-l { position: absolute; top: calc(var(--sat) + 16px); left: 16px; } /* shortcut: Pop's own rule; both take it from the base if this game goes on */

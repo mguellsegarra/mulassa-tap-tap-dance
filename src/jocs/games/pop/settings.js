@@ -53,7 +53,8 @@ const needConfirmed = setupConfirmGate({ focusIn, identity: () => service.identi
   openProfile: (what, back, opts) => profile.open(what, back, opts) });
 const profile = setupProfile({ focusIn, captcha, store: kv, aliasKey: ALIAS_KEY, deviceNote, service, offerLink: (back, title) => needConfirmed.offer(back, title) });
 const badges = setupBadges({ focusIn, service, store: kv, onSaved: id => { profile.badgeSaved(id); refreshIdentity(service, kv, { fresh: true }); } });
-const feedback = setupFeedback({ focusIn, captcha, service, accessToken: () => service.accessToken() });
+// the form's own sender (services/feedback.js), as the main game's: `service` here is the leaderboard, which has no send()
+const feedback = setupFeedback({ focusIn, captcha, accessToken: () => service.accessToken() });
 setupLang({ store, state: () => 'select' }); // its row goes after the sheet's buttons; the home is the only place ⚙ opens
 
 // Perfil: the block (src/ui/account-ui.js's, without the statistics); a step it opens comes back here when it closes

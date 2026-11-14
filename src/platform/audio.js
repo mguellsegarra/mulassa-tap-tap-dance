@@ -91,7 +91,9 @@ export class Chip {
     this.session(); // back from a hidden page's 'auto'
     if (this.silentMenu()) return Promise.resolve(false);
     this.unhush();
-    const failed = e => { errors.report('audio-resume-failed', { ...audioFailureTags(e), audioState: this.ctx.state }); return false; };
+    // refused without a tap is iOS's rule after another app, not a failure: only a refusal inside a tap is reported
+    const tapped = navigator.userActivation?.isActive;
+    const failed = e => { if (tapped) errors.report('audio-resume-failed', { ...audioFailureTags(e), audioState: this.ctx.state }); return false; };
     try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
   } // a rejected wake stays paused; the next real gesture can resume the same transport
 

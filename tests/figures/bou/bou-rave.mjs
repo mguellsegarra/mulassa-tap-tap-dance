@@ -35,6 +35,9 @@ for (let beat = 0; beat < 32; beat += 0.25) { // the final's eight bars: the fan
   }
 }
 assert(onBou > 20 && onFloor > onBou, `beams on the Bou ${onBou}, on the floor ${onFloor}`);
+// the CO2's 800 puffs are drawn only while a burst shows: spent (or not fired yet) they cost a phone its fill for nothing
+const co2Drawn = age => { run('bouRave')(1, 0, 300, 300, 0, 0, new THREE.Color('#ff3b30'), age); return run('bouCo2').visible; };
+assert.deepEqual([-1, 0.5, 3, 4, 9].map(co2Drawn), [false, true, true, false, false], 'the CO2 points drawn only during their burst');
 console.log(`bou rave: ${onBou} beams end on the Bou, ${onFloor} on the floor, none through it ok`);
 { // rays from inside a mesh's box (the DDA must start where the ray starts, not where it leaves the box): every triangle tried,
   // both faces, as the beams count them (three's Raycaster skips back faces)

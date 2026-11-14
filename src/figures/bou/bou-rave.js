@@ -134,7 +134,8 @@ const bouFwd = new THREE.Vector3(), bouSide = new THREE.Vector3(), bouAim = new 
 // tint: the floor's colour of the beat (the haze takes it); co2Age: s since the cannons last fired
 export function bouRave(n, t, beat, b0, bx, bz, tint, co2Age) {
   const on = n > 0.01;
-  bouBeams.visible = bouDots.visible = bouHaze.visible = bouCo2.visible = on;
+  bouBeams.visible = bouDots.visible = bouHaze.visible = on;
+  bouCo2.visible = on && co2Age > 0 && co2Age < 3.5; // only while a burst shows (the shader's own fade): spent, its 800 puffs were still drawn, unseen
   if (!on) { bouHitWarm(); return; }
   const scale = glc.height / 2 / Math.tan(camera.fov * Math.PI / 360) * 0.5; // px per m at 1 m, halved (the clip's puffs)
   bouHaze.material.uniforms.scale.value = bouCo2.material.uniforms.scale.value = bouBeamLook.scale.value = scale;

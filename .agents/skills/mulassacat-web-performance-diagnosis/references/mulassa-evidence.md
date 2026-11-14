@@ -84,3 +84,33 @@ first paint, known since 2026-11-03 and accepted as a first-raster cost. Showing
 longer. A crude prototype behind a URL flag proved it in one build before any real code was written; its first numbers
 were wrong because the probe timed the rehearsal instead of the real opening.
 
+## P13
+
+2026-11-14, the owner's iPhone 18 Pro in Low Power Mode: quality fell from medium to minimal and the crowd thinned,
+at the splash 4 s after a load and in a song while he tapped. Not load: 9 ms of JavaScript a frame at medium, a steady
+30 fps. The frame monitor took its 30 Hz cap off at any frame under 24 ms, and Safari under the cap gives an early one
+now and then (a touch, its jitter); one every 10 frames made every 33 ms frame read as slow (reproduced in node with
+`frameMonitor` in a minute, after hours on rented phones that cannot show it). A lone early frame now keeps the cap
+(`render-quality.js`, `tests/render/low-power.mjs`); the page cover also waits for 20 frames in a row under 45 ms. The
+same family had been patched for two other frame patterns (2026-11-03: 24 Hz; 2026-11-13: late and early frames in
+groups). The owner's played song after it: 30 fps, medium, no step.
+
+## P14
+
+2026-11-14, rented iPhones (AWS Device Farm): the selector at 12 fps on an iPhone 8 (iOS 16.7) and 30 on an iPhone 13
+(iOS 17.6), 60 on the same iPhone 13 with iOS 18.5 and on an S10. Safari before 18 composites HTML over the 3D badly:
+its endless CSS animations (12 -> 44 fps without them) and the figures' carousel (44 -> 60 without it; no single part).
+Shadows, filters and masks: nothing. Wrong owner named once (the level buttons): the iPhone 13 left its 30 fps at the
+first injected style whatever it was, and a slow state that comes and goes between sessions needs A, B, A, B in one
+session and repeats across sessions. Fixed for the animations (`@supports not (content-visibility: hidden)`); the
+carousel left as it is.
+
+## P15
+
+2026-11-14, a clean iPhone 8 (a rented one: Safari keeps its GPU pipelines, so only a phone that never ran the game
+shows it): 121-181 ms where the Bou's rave starts and 87-365 ms at its banknotes' bombo, with every program already
+linked by `precompile()`. A Mac at 4x CPU throttling showed no long frame there: not JavaScript, a first draw. Drawing
+the whole scene once at boot under the page cover (`precompile.js` `warmDraw`) took the bombo's frame to none over
+50 ms (two sessions each way) and the splash-to-selector frame from 490 to 300 ms, the cover no longer. A warm-up placed
+at the run's first frame had only moved the hitch to the count-in. Still open: the song's first frame, 126-144 ms.
+

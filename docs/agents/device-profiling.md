@@ -42,7 +42,9 @@ load the URL; the S10 normally stays plugged into mac-studio.
   right for Control Center (Low Power Mode's toggle: iOS turns it off by itself at 80% while charging). Safari's audio
   starts only after a real touch on the splash; then `__dbg.choose(level)` with `?autoplay` plays a whole song, and
   `&mute` keeps it silent. Check the state left the splash after the tap and tap again if not (a tap can miss); Device
-  Hub can restart with a new pid and window, and the phone sits at another place in its window then.
+  Hub can restart with a new pid and window, and the phone sits at another place in its window then. (2026-11-14: the
+  Control Center drag and the Home button did nothing, and a zoomed mirror swallowed every click: «A performance hunt»
+  below.)
 - **What the iPhone actually shows** (not what rAF reports): a small Swift program can turn on CoreMediaIO's screen
   capture devices (`kCMIOHardwarePropertyAllowScreenCaptureDevices`, as QuickTime does) and record the plugged-in
   iPhone's screen with `AVCaptureMovieFileOutput` at 60 fps; ffmpeg alone does not list it. Start the recording before
@@ -177,6 +179,52 @@ Measuring in general:
   Compare like with like.
 - A hook blocks shell commands containing a bare `open` (it brings apps to the front): write such scripts with the
   file tool and run them with `node`, or name the variable otherwise.
+
+A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the selector; read before starting one):
+- **Ask where and how it happens before measuring anything**: which screen, playing or watching, which phone, Low Power
+  Mode or not. The owner's «it drops quality and the crowd leaves» was in the song, tapping its notes, in Low Power Mode:
+  a rented phone (60 Hz, no Low Power Mode, no finger) could never show it, and hours went to what it could show.
+- **Read the game's own verdict first.** With `?perf` every quality change is logged (`[quality] {reason, from, to, hz,
+  lowPower, slowShare, capped, cpu…}`; the probe proxy keeps them): «overload at the splash, 4 s in, slowShare 0.9, cpu
+  10 ms» says the monitor misread the cadence before any profile does. A crowd that thins is a quality step
+  (`stepPeople`), never a game rule.
+- **A monitor bug is reproduced in node, not on the phone.** Feed `frameMonitor` the frame intervals seen (the probe
+  can post every one: a scratch copy of `probe-proxy.mjs` with an `all` array) and it steps or not in milliseconds of
+  work; the fix then gets a test that fails without it (`tests/render/low-power.mjs`).
+- **Before fixing a module, read its last commits** (`git log -5 -- <file>`): the Low Power cadence had been fixed for
+  one frame pattern on 2026-11-03 and for another on 2026-11-13. A third pattern means the rule is wrong, not that one
+  more case is missing; say so to the owner, who remembers the earlier fix.
+- **One comparison names no owner.** Three wrong ones that day: the level buttons (the phone left its slow state at
+  the first injected style, whatever it was), the Mulassa and Drac splash pair (the two profiles were seconds apart in
+  Safari's warm-up; on the Mac the pair and the Bou alone cost the same), and the warm-up draw blamed for a frame that a
+  quality step made. Alternate A and B, repeat across sessions, and check the second variable (time since load, order,
+  the level the 3D is at) before writing a name down. A claim already told to the owner is corrected in so many words.
+- **JavaScript or the GPU: the Mac says which.** `Emulation.setCPUThrottlingRate` 4 with a CPU profile over the same
+  song seconds: no long frame there means the phone's is a first draw or the compositor, not code to optimise.
+- **Safari's first seconds are slow at any quality** (an iPhone 18 Pro in Low Power Mode: 30-70 ms of JavaScript a frame
+  for 5-10 s after a load, 9 afterwards): compare profiles taken the same seconds after load, and keep the build whose
+  profile you took (`--maps` needs that build's `.map` files: a rebuild changes the chunk names).
+- **`ios-inspect.mjs --cached`** for a reload as a player's: with the cache disabled Safari's profiler stopped answering
+  («ScriptProfiler.stopTracking timed out», no samples).
+- **Never reload or drive a tab the owner is playing in.** A loop of reloads cut his song; ask, or use another tab.
+- **The plugged-in iPhone, driven without the owner** (Device Hub and Cua on the Mac it is plugged into, from a
+  delegated agent there): a click reaches the phone only with the mirror fitted («Zoom to Fit»; zoomed, with its «Zoom
+  Controls» banner, every click was swallowed); the drag for Control Center and the Home button did nothing that day, so
+  Low Power Mode is the owner's to switch (iOS drops it at 80% of charge: check `lowPower` in `?perf` before every run);
+  a tap at the splash's centre can land on the language prompt or leave Safari, so look before and after each one.
+  Through the probe's `__cmd` a synthetic `pointerdown`/`pointerup`/`click` on the element at the centre passes the
+  splash (no audio), `.sel-card[data-id="…"]` picks a figure and `__dbg.choose(level)` starts its song.
+- **The bridge dies with the cable**: after the phone is unplugged or locked for a while `:9221/json` lists nothing and
+  `:9222` refuses; restart `ios_webkit_debug_proxy` on that Mac. Tabs show only with Safari in front and unlocked.
+- **A tunnel to `vite preview` answers 403** («host is not allowed»): put the probe proxy in front (it is what the
+  tunnel points at). A new quick tunnel may not resolve on this Mac for minutes (a cached miss): check it through a
+  public resolver (`dig @1.1.1.1`, `curl --resolve`) before calling it down.
+- **A rule that reads «never do X in the menus» can be right for one phone and wrong for the rest**: «no quality step
+  out of a song» fixed the iPhone 8's slow selector and was undone the same hour, because weak phones find their level in
+  the menu and would otherwise step down mid-song. Six existing tests said so: read what the failing tests protect
+  before rewriting them.
+- Close what the hunt opened (tunnels, previews, proxies, the bridge on the other Mac) and say what stays (the Device
+  Farm project, free).
 
 ## Baseline, 2026-11-11 (release/1.4.0, d540e86)
 

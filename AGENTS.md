@@ -150,6 +150,12 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
   no permanent `will-change` without the device's numbers; animate only `translate`, `scale` or `opacity`, without blend
   modes, for anything left running. Read `docs/agents/graphics.md` («DOM blocking costs») before adding one, and measure
   it with `tools/qa/device/android-frames.mjs`. The S10 is shared: ask the owner that it is free before a run.
+- **A performance complaint: ask where, read the verdict, then measure.** First the exact flow (which screen, playing or
+  watching, which phone, Low Power Mode), then the game's own `[quality]` lines with `?perf`, then the device the owner
+  holds, not a stand-in that cannot reproduce it. The traps of the last hunt (wrong owners named from one comparison, a
+  frame-monitor rule patched pattern by pattern, a rented phone that has no Low Power Mode nor finger) are in
+  `docs/agents/device-profiling.md` («A performance hunt») and what they found in `docs/agents/graphics.md` («iPhones
+  before iOS 18, and first draws»): read both before starting one.
 - Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is shown to the owner; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
 - Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape. Viewport set for menus and sheets: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).
 - **Player-facing text is written by Codex.** Other agents do not write final UI copy in any language: use clearly provisional text only in proposals, and hand the owner the list of strings needed (key, screen, context, length limit) so a Codex agent writes them and their translations.

@@ -8,4 +8,5 @@ const call = src.match(/setupFeedback\(\{([^}]*)\}\)/)?.[1];
 assert.ok(call, 'Pop sets up the feedback sheet');
 const keys = call.split(',').map(k => k.trim().split(':')[0].trim());
 assert.ok(!keys.includes('service'), 'no service of its own: the default is the feedback sender (services/feedback.js)');
+assert.match(call, /\bgame: 'pop'/, 'the e-mail says it came from Pop');
 console.log('pop feedback: the sheet uses the feedback sender ok');

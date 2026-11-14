@@ -8,7 +8,7 @@ import { errors } from '../services/errors.js';
 import { byId, statusLine, setButton } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 
-export function setupFeedback({ focusIn, captcha, service = defaultService, doc = document, closeDelay = 4000, report = errors.report, accessToken = async () => '', openCode = () => globalThis.open('https://github.com/mguellsegarra/mulassa-tap-tap-dance', '_blank', 'noopener') }) {
+export function setupFeedback({ focusIn, captcha, game = '', service = defaultService, doc = document, closeDelay = 4000, report = errors.report, accessToken = async () => '', openCode = () => globalThis.open('https://github.com/mguellsegarra/mulassa-tap-tap-dance', '_blank', 'noopener') }) {
   const $ = byId(doc);
   const menu = $('feedback-menu'), form = $('feedback-form'), text = $('feedback-message');
   const title = $('feedback-title'), lead = $('feedback-lead'), kindRow = $('feedback-kind'), material = $('feedback-material'), entity = $('feedback-entity'), entityName = $('feedback-entity-name');
@@ -117,7 +117,7 @@ export function setupFeedback({ focusIn, captcha, service = defaultService, doc 
     if (r !== req) return;
     setSend(tr('ui.feedback.sending'), true);
     try {
-      await service.send({ ...sending, message: ok.message, token, accessToken: await accessToken() });
+      await service.send({ ...sending, ...(game && { game }), message: ok.message, token, accessToken: await accessToken() });
       if (r !== req) return;
       done = true;
       busy = false;

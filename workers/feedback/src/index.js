@@ -1,6 +1,6 @@
 import { EmailMessage } from 'cloudflare:email';
 
-// «Bústia de la plaça» (src/services/feedback.js): POST { kind, figure?, options?, entity?, message, turnstileToken, version } with a Supabase bearer → 200 { ok: true } or 4xx/5xx
+// «Bústia de la plaça» (src/services/feedback.js): POST { kind, game?, figure?, options?, entity?, message, turnstileToken, version } with a Supabase bearer → 200 { ok: true } or 4xx/5xx
 // { error: code } (src/services/feedback.js maps the codes to Catalan). The session, Turnstile, then the message goes straight to the owner's
 // inbox as one plain-text e-mail through Email Routing's send_email binding (env.MAIL, wrangler.toml). Nothing is stored
 //: if sending fails, the player sees «Torna-ho a provar».
@@ -16,6 +16,8 @@ const KINDS = {
   material: { tag: 'MATERIAL', min: FIGURE_MIN, options: { photos: 'fotos o vídeos', music: 'partitura', dance: 'sap el ball' } },
   entity: { tag: 'COLLA', min: FIGURE_MIN, options: { colla: 'colla', institution: 'ajuntament o entitat', business: 'empresa o comerç' } },
 };
+// the games sent from (src/jocs): a known id becomes its name in the e-mail, anything else is the main game's sheet
+const GAMES = { pop: 'Mulassa Pop' };
 const oneLine = (v, max) => [...(typeof v === 'string' ? v : '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim()].slice(0, max).join('');
 // Supabase Auth says who holds this token. A guest's session is valid too: only a confirmed address counts.
 async function confirmedUser(env, bearer) {
@@ -105,6 +107,7 @@ export default {
     const message = typeof body?.message === 'string' ? body.message.trim() : '';
     const token = typeof body?.turnstileToken === 'string' ? body.turnstileToken : '';
     const version = typeof body?.version === 'string' ? body.version.slice(0, 64) : '';
+    const game = typeof body?.game === 'string' && Object.hasOwn(GAMES, body.game) ? GAMES[body.game] : '';
     const kind = KINDS[body?.kind] && Object.hasOwn(KINDS, body.kind) ? body.kind : null, rules = KINDS[kind];
     if (!rules) return reply(400, { error: 'invalid' });
     if (chars(message) < rules.min || chars(message) > MAX) return reply(400, { error: 'invalid_message' });
@@ -170,14 +173,14 @@ export default {
     // --- the e-mail: plain text only (nothing the player wrote is ever rendered as HTML, nor put in a header)
     const when = new Date().toLocaleString('ca-ES', { timeZone: 'Europe/Madrid' });
     const detail = rules.options ? options.map(o => rules.options[o]).join(', ') : '';
-    const text = [...(figure ? [`Figura: ${figure}`] : []), ...(detail ? [`Marca: ${detail}`] : []), ...(entity ? [`Entitat: ${entity}`] : []),
-      ...(figure || detail || entity ? [''] : []), message, '', '—', `Correu confirmat: ${email}`, `Quan: ${when}`,
+    const text = [...(game ? [`Joc: ${game}`] : []), ...(figure ? [`Figura: ${figure}`] : []), ...(detail ? [`Marca: ${detail}`] : []), ...(entity ? [`Entitat: ${entity}`] : []),
+      ...(game || figure || detail || entity ? [''] : []), message, '', '—', `Correu confirmat: ${email}`, `Quan: ${when}`,
       `Versió: ${version || '?'}`, `Navegador: ${(req.headers.get('user-agent') || '?').slice(0, 160)}`].join('\n');
     try {
       // one subject per message (Gmail threads equal subjects): the time and the message's first words
       const short = new Date().toLocaleString('ca-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
       const words = message.replace(/\s+/g, ' ').trim(), gist = [...words].length > 40 ? [...words].slice(0, 40).join('').trimEnd() + '…' : words;
-      const raw = mime({ from, to, replyTo: email, subject: `[${rules.tag}] ${figure ? `${figure} · ` : ''}${detail ? `${detail} · ` : ''}${short} · ${gist}`, text });
+      const raw = mime({ from, to, replyTo: email, subject: `[${rules.tag}] ${game ? `${game} · ` : ''}${figure ? `${figure} · ` : ''}${detail ? `${detail} · ` : ''}${short} · ${gist}`, text });
       await env.MAIL.send(new EmailMessage(from, to, raw));
     } catch (err) {
       console.error('[mulassa-feedback] send failed', String(err?.message || err).slice(0, 200));

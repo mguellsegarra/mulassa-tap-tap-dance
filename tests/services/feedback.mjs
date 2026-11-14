@@ -225,6 +225,16 @@ assert(!mail.text.includes('203.0.113.'), 'no IP in the mail');
 
 sent.length = 0;
 assert.equal(sent.length, 0, 'nothing mailed without one');
+{ // from a game: its name in the subject and the body; an id the Worker does not know is left out
+  sent.length = 0;
+  await post({ ...good, game: 'pop' });
+  const pop = parse(sent[0].raw);
+  assert.equal(decodeWord(pop.headers.get('subject')), '[BÚSTIA] Mulassa Pop · 28/9 12:00 · Molt bon joc!');
+  assert(pop.text.startsWith('Joc: Mulassa Pop\r\n\r\nMolt bon joc!'), pop.text);
+  sent.length = 0;
+  await post({ ...good, game: 'constructor\r\nBcc: x@y.cat' });
+  assert.equal(decodeWord(parse(sent[0].raw).headers.get('subject')), '[BÚSTIA] 28/9 12:00 · Molt bon joc!', 'an unknown game: no name');
+}
 sent.length = 0;
 await post({ ...good, message: 'Línia 1\nLínia 2\r\nLínia 3' + 'ç'.repeat(300) });
 mail = parse(sent[0].raw);
@@ -329,6 +339,8 @@ await svc.send({ message: ' Hola! ', token: 't', accessToken: 'jwt' });
 assert.equal(last.u, 'https://mulassa-feedback.x.workers.dev', 'straight to VITE_FEEDBACK_URL');
 assert.deepEqual(last.init.headers, { 'content-type': 'application/json', authorization: 'Bearer jwt' }, 'the session says who writes');
 assert.deepEqual(JSON.parse(last.init.body), { kind: 'general', figure: null, options: [], entity: '', message: 'Hola!', turnstileToken: 't', version: 'v1' }, 'no address from the client');
+await svc.send({ game: 'pop', message: 'Hola!', token: 't', accessToken: 'jwt' });
+assert.equal(JSON.parse(last.init.body).game, 'pop', 'a game names itself');
 last = null;
 await assert.rejects(svc.send({ kind: 'material', message: 'Tinc fotos', token: 't' }), e => e.code === 'invalid_message');
 assert.equal(last, null, 'a short figure message never leaves the device');

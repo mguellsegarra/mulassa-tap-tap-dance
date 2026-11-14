@@ -41,7 +41,7 @@ export function createFeedback({ url = env.VITE_FEEDBACK_URL, enabled = env.VITE
   fetchFn = (...a) => fetch(...a), online = () => globalThis.navigator?.onLine !== false, version = APP_BUILD } = {}) {
   return Object.freeze({
     configured: Boolean(url && enabled),
-    async send({ kind = 'general', figure = null, options = [], entity = '', message, token, accessToken }) {
+    async send({ kind = 'general', game = '', figure = null, options = [], entity = '', message, token, accessToken }) {
       const ok = checkFeedback(message, kind === 'general' ? MESSAGE_MIN : FIGURE_MESSAGE_MIN);
       if (!ok.ok) throw fail('invalid_message');
       if (!online()) throw fail('offline');
@@ -50,7 +50,7 @@ export function createFeedback({ url = env.VITE_FEEDBACK_URL, enabled = env.VITE
         // the Worker asks Supabase Auth who this is: the reply address comes from there, never from the client
         res = await fetchFn(url, {
           method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${accessToken}` },
-          body: JSON.stringify({ kind, figure, options, entity, message: ok.message, turnstileToken: token, version }),
+          body: JSON.stringify({ kind, ...(game && { game }), figure, options, entity, message: ok.message, turnstileToken: token, version }),
         });
       } catch { throw fail('offline'); } // no answer at all: the connection (or a blocker)
       if (res.ok) return true;

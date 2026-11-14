@@ -91,7 +91,8 @@ export const SHOWREELS = {
 };
 
 // Live state (owned here; main.js runs tickReel each frame). acc: menu beats counted since the page began (unwrapped).
-export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null, eye: null, fixed: false }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1, song: false, idle: false };
+export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null, eye: null, fixed: false }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1, song: false, idle: false, may: false };
+// may: the selector could show it (a playable figure, no photo mode); it plays only once its UI has faded (REEL.idle)
 // idle: the selector's UI faded out (ui/reel-idle.js, through main.js); the Drac's night and fire play only then (drac-show.js)
 export const setReelIdle = on => { REEL.idle = on; };
 

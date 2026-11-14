@@ -7,3 +7,6 @@ export const nativeHaptics = capPlugins?.Haptics ?? null;
 // The app locks what the web can only ask for with the «gira» cover (phones upright, tablets and free play sideways).
 export const nativeLock = orientation => capPlugins?.ScreenOrientation?.lock({ orientation }).catch(() => {});
 capPlugins?.StatusBar?.hide().catch(() => {});
+// The app's live updates are checked by the games' pages (packages/plassa/src/native.js), where it starts; this page only
+// tells the updater it loaded, or a new bundle opened here would be rolled back.
+capPlugins?.CapacitorUpdater?.notifyAppReady().catch(() => {});

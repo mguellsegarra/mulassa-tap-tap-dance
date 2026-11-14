@@ -10,8 +10,10 @@
      (ui/sheets-setup.js), and closing it before the plaça is ready brings the loader back. -->
 <!-- nothing in the game is dragged: the browser's own drag of a picture, logo or text (a ghost of it) would steal the pointer -->
 <script>addEventListener('dragstart', e => e.preventDefault());</script>
-<!-- The app (Capacitor) serves this page for any path without a file name: /jocs/ and /pop/ go on to their own page. -->
-<script>if (window.Capacitor && location.pathname.length > 1 && !/\.html$/.test(location.pathname)) location.replace(location.pathname.replace(/\/?$/, '/index.html') + location.search + location.hash);</script>
+<!-- The app (Capacitor) serves this page for any path without a file name: /jocs/ and /pop/ go on to their own page. It starts
+     on Mulassa Games, but a live update reloads at the root: a root opened from no page (no referrer) is a start, not «Juga». -->
+<script>if (window.Capacitor && location.pathname.length > 1 && !/\.html$/.test(location.pathname)) location.replace(location.pathname.replace(/\/?$/, '/index.html') + location.search + location.hash);
+else if (window.Capacitor && location.pathname === '/' && !document.referrer) location.replace('/jocs/index.html');</script>
 <script>if (location.hash === '#jocs') location.replace('/jocs/'); // the games' selector was a sheet here: old links and a game page kept from before</script>
 <link rel="canonical" href="https://mulassa.cat/">
 <link rel="alternate" type="text/markdown" href="/index.md">

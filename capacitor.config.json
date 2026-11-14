@@ -2,7 +2,22 @@
   "appId": "cat.mulassa.games",
   "appName": "Mulassa Games",
   "webDir": "dist",
-  "server": { "appStartPath": "/jocs/index.html" },
-  "ios": { "contentInset": "never" },
-  "android": { "allowMixedContent": false }
+  "server": {
+    "appStartPath": "/jocs/index.html"
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "appReadyTimeout": 10000,
+      "statsUrl": "",
+      "updateUrl": "",
+      "channelUrl": ""
+    }
+  }
 }

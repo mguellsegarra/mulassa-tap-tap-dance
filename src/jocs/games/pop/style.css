@@ -67,7 +67,7 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 #tap-start { grid-column: 1 / -1; } /* the first screen's one button, the whole row */
 #menu-best .go { display: none; }
 
-#end-name { margin-top: 4px; text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
+#end-name { text-decoration: none; } /* a link to mulassa.cat's name sheet, drawn as the sheet's buttons */
 #profile-run { font-size: 22px; font-weight: 800; color: var(--accent); } /* the run the name is for (settings.js promptName), one line in the title's colour as the main game's */
 #profile-run .lvt { text-transform: uppercase; } #profile-run .lvt0 { color: var(--lvl0); } #profile-run .lvt1 { color: var(--lvl1); } #profile-run .lvt2 { color: var(--lvl2); }
 #end-name:not([hidden]) { display: flex; align-items: center; justify-content: center; } /* a link, not a <button>: its label centred as theirs when the sheet makes them taller */

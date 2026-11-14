@@ -1,6 +1,6 @@
 // The games' audio through the page's life (packages/plassa/src/page-audio.js): nothing reported before the first tap, a
 // frozen clock stopped and woken by the next tap (or left to the run's pause), leaving pauses the run and fades out,
-// a sound that does not come back is reported, and iOS's session follows what should sound.
+// a sound a tap can't bring back is reported (iOS waiting for that tap is not), a resume refused inside a tap is, and iOS's session follows what should sound.
 import assert from 'node:assert/strict';
 
 const timers = [];
@@ -40,18 +40,20 @@ life.gesture();
 assert.equal(ctx.state, 'running', 'the first tap wakes it');
 assert.equal(session.type, 'playback', 'something sounds: the playback session');
 
-// running with its clock standing still (AirPods dropping out), on the home: stopped, reported once, the next tap wakes it
+// running with its clock standing still (AirPods dropping out), on the home: stopped, the next tap wakes it, nothing reported
 for (let t = 4000; t <= 5200; t += 400) life.watch(t);
 fire();
-assert.deepEqual(reports.splice(0), ['menu-audio-stalled']);
+assert.deepEqual(reports, [], 'not reported yet: the next tap may fix it');
 assert.equal(ctx.state, 'suspended', 'stopped, so a tap can restart it');
 life.gesture();
 assert.equal(ctx.state, 'running', 'the next tap wakes it');
+ctx.currentTime += 1; fire();
+assert.deepEqual(reports, [], 'the tap brought it back: nothing reported');
 life.gesture(); // the tap after it finds it running: back for good (as mulassa.cat's audio-resume.js)
 
 // in a run the game handles it (its pause), nothing is reported
 inRun = true;
-for (let t = 6000; t <= 7200; t += 400) life.watch(t);
+for (let t = 6000; t <= 7600; t += 400) life.watch(t); // the first frame sees the clock that moved above
 assert.deepEqual([log.splice(0), reports], [['pause'], []], 'a run pauses instead');
 
 // leaving the page: a fade, the context stops; 'auto' while hidden
@@ -61,14 +63,16 @@ assert.equal(out.gain.value, 0, 'faded out');
 fire();
 assert.deepEqual([ctx.state, session.type], ['suspended', 'auto']);
 
-// back, something should sound, iOS keeps it stopped: reported, then the next tap wakes it
+// back, something should sound, iOS keeps it stopped: reported only when a tap can't wake it
 inRun = false;
 ctx.resume = function () { return Promise.resolve(); }; // refused without a tap
 document.hidden = false;
 document.dispatchEvent(new Event('visibilitychange'));
 await flush();
 fire();
-assert.deepEqual(reports.splice(0), ['audio-not-back'], 'the sound that did not come back is reported');
+assert.deepEqual(reports, [], 'stopped until a tap: iOS\'s rule, not reported');
+life.gesture(); fire(); // the tap's resume refused too
+assert.deepEqual(reports.splice(0), ['audio-not-back'], 'a sound a tap can\'t bring back is reported');
 ctx.resume = function () { this.state = 'running'; return Promise.resolve(); };
 life.gesture();
 assert.equal(ctx.state, 'running');
@@ -89,6 +93,18 @@ console.log('page audio: no report before a tap, frozen clock stopped and woken,
   life2.gesture();
   for (let t = 4000; t <= 5200; t += 400) life2.watch(t);
   fire();
+  life2.gesture(); fire(); // the tap restarts it, its clock still frozen
   assert.deepEqual(reports.splice(0), ['menu-audio-stalled'], 'an already running context\'s frozen clock is caught after the first tap');
 }
 console.log('page audio: the first tap counts on a context autoplay already let run ok');
+
+// resume() refused: inside a tap it is reported, without one (back from another app) it is iOS's rule
+{
+  const ctx3 = { ...ctx, state: 'suspended', resume: () => Promise.reject(new DOMException('no', 'NotAllowedError')) };
+  const life3 = createPageAudio(ctx3, out, { hearing: () => true });
+  navigator.userActivation.isActive = false; life3.resume(); await flush();
+  assert.deepEqual(reports, [], 'refused without a tap: not reported');
+  navigator.userActivation.isActive = true; life3.resume(); await flush();
+  assert.deepEqual(reports.splice(0), ['audio-resume-failed'], 'refused inside a tap: reported');
+}
+console.log('page audio: a refused resume reported only inside a tap ok');

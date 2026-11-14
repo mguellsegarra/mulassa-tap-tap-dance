@@ -1,5 +1,6 @@
 // Back from another app or tab with the menu's sound still stopped (iOS waits for a tap): no card, the next tap anywhere wakes
-// it; nothing waits when the sound came back, in a run, or when the menu is silent anyway.
+// it; nothing waits when the sound came back, in a run, or when the menu is silent anyway. Reported only when a tap with focus
+// can't bring it back: iOS waiting for that tap is the expected case.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
@@ -12,7 +13,7 @@ const chip = { menuMusic: true, suspend() { suspends++; chip.ctx.state = 'suspen
   wake() { if (!focus) return; wakes++; if (chip.ctx.state !== 'running') chip.ctx.state = 'running'; }, ctx: { state: 'suspended', currentTime: 5 } };
 Object.defineProperty(chip, 'running', { get: () => chip.ctx.state === 'running' });
 const ctx = { G: { state: 'select', activityEpoch: 0 }, chip, setTimeout: (f, ms) => { assert.equal(ms, 700); later.push(f); },
-  errors: { report: (kind, tags) => reports.push([kind, tags.audioState]) }, document: { hidden: false },
+  errors: { report: (kind, tags) => reports.push([kind, tags.audioState]) }, document: { hidden: false, hasFocus: () => focus },
   addEventListener: (ev, f, o) => { assert.equal(o.capture, true); on[ev] = f; } };
 vm.runInNewContext(src + '\nthis.check = checkAudioBack; this.stalled = audioStalled;', ctx);
 assert.deepEqual(Object.keys(on), ['touchend', 'click', 'keydown'], 'taps and keys are heard from the import on, ahead of the sheets\' handlers');
@@ -21,12 +22,14 @@ const tap = (ev = 'touchend') => on[ev]();
 
 tap(); assert.equal(wakes, 0, 'no stopped sound: a tap wakes nothing here');
 back();
-assert.deepEqual(reports.at(-1), ['audio-not-back', 'suspended'], 'the selector came back silent: reported with its state');
-back(); assert.equal(reports.length, 1, 'already waiting: no second report');
+assert.equal(reports.length, 0, 'the selector came back silent: iOS waiting for a tap, not reported');
+back(); assert.equal(reports.length, 0, 'already waiting');
 focus = false; tap();
 assert.equal(chip.running, false, 'the tap that gives focus back (another Safari tab) is refused');
 focus = true; tap('keydown');
 assert.deepEqual([wakes, chip.running], [1, true], 'the next tap or key wakes it');
+chip.ctx.currentTime += 1; later.splice(0).forEach(f => f());
+assert.equal(reports.length, 0, 'the tap brought it back: nothing reported');
 tap(); assert.equal(wakes, 1, 'once it plays, taps no longer touch it');
 
 chip.ctx.state = 'suspended'; back(); // waiting, then left again without a tap, and back with a frozen `running` context
@@ -45,8 +48,10 @@ assert.equal(wakes, 3, 'left again before the check: nothing waits');
 ctx.check(); ctx.document.hidden = true; later.splice(0).forEach(f => f()); tap(); tap();
 assert.equal(wakes, 3, 'hidden at the check: nothing waits');
 chip.ctx.state = 'running'; tap(); ctx.stalled(); // on the menu, the loop's clock froze without leaving (AirPods)
-assert.deepEqual([reports.at(-1), chip.ctx.state], [['menu-audio-stalled', 'running'], 'suspended'], 'reported and suspended');
+assert.deepEqual([reports.length, chip.ctx.state], [0, 'suspended'], 'suspended, not reported yet');
 tap(); assert.equal(chip.running, true, 'the next tap wakes it');
+later.splice(0).forEach(f => f()); // its clock still frozen 700 ms after the tap
+assert.deepEqual(reports.at(-1), ['menu-audio-stalled', 'running'], 'a tap that can\'t bring the sound back: reported, with its state');
 // A blur with the page on screen (Android's address bar): our own suspend, no report, but a tap still wakes it
 {
   const before = reports.length;
@@ -57,7 +62,8 @@ tap(); assert.equal(chip.running, true, 'the next tap wakes it');
   tap(); assert.deepEqual([wakes, chip.running], [woke + 1, true], 'the next tap wakes it');
   tap();
   chip.ctx.state = 'suspended'; ctx.check(true); later.splice(0).forEach(f => f());
-  back(); assert.deepEqual(reports.at(-1), ['audio-not-back', 'suspended'], 'a real return that stays silent after it is still reported');
+  back(); tap(); later.splice(0).forEach(f => f());
+  assert.deepEqual(reports.at(-1), ['audio-not-back', 'running'], 'a real return after it whose tap can\'t bring the sound back is still reported');
   assert.equal(reports.length, before + 1);
 }
 console.log('Sound back from another app: no card, the next tap anywhere wakes it when it stayed stopped or frozen');

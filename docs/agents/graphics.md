@@ -242,6 +242,11 @@ What not to do:
 - Do not conclude from one session or one phase: the same iPhone 8 opened the selector at 12 fps in most sessions and at
   50 in two, and the iPhone 13 left its 30 fps at the first injected style whatever it was (I named the wrong owner
   once from that). Alternate the variants and repeat (`device-profiling.md`).
+- Do not make the menus exempt from quality steps: tried on 2026-11-14 (to keep a slow selector from setting the song's
+  level) and reverted, because weak phones find their level there before the first song (six tests say so); `menuFloor`
+  is what stayed.
+- Do not answer a Low Power complaint with one more frame pattern in `frameMonitor`, nor call it fixed after one good
+  session: replay the owner's recorded sessions (`tests/render/fixtures/low-power-bou.json`) and add the one that fails.
 - Do not let one odd frame decide a cadence: a cap, a group or a hitch is read from a run of frames, never from the last one.
 - Do not start judging frames while the page is still warming up (compiling its JavaScript, first draws): keep it under
   the cover, and give the monitor frames at the device's own pace.

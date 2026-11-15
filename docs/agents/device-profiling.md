@@ -189,13 +189,17 @@ A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the 
   10 ms» says the monitor misread the cadence before any profile does. A crowd that thins is a quality step
   (`stepPeople`), never a game rule.
 - **A monitor bug is reproduced in node, not on the phone.** Feed `frameMonitor` the frame intervals seen (the probe
-  can post every one: a scratch copy of `probe-proxy.mjs` with an `all` array) and it steps or not in milliseconds of
+  can post every one: `probe-proxy.mjs … rec`, an `all` array per post) and it steps or not in milliseconds of
   work; the fix then gets a test that fails without it (`tests/render/low-power.mjs`).
 - **One good session proves nothing: record the owner's sessions and keep them.** A fix validated on one played song
-  failed on the next. Have the owner play through the recording probe (every rAF interval posted, a big on-screen
-  message while it records and when the quality steps, so they know when to stop), replay the intervals through
+  failed on the next. Have the owner play through the recording probe (`probe-proxy.mjs <port> <target> <label> <dir>
+  rec`: every rAF interval posted, a big on-screen message while it records and when the quality steps, so they know
+  when to stop), replay the intervals through
   `framePacer` and `adaptiveQuality` in node, and add each failing session to
   `tests/render/fixtures/low-power-bou.json`. Never reload or drive the tab while they play.
+- **What the rented phones played (2026-11-14): the Bou only**, with `?autoplay` at difficulty 1 (one whole song on two
+  iPhones, a dozen 30 s passes) and the selector without playing. The Drac and the Mulassa were never played there, and
+  neither was played in Low Power Mode on the owner's phone after the `throttled` rule: the rule is shared, the proof is not.
 - **Before fixing a module, read its last commits** (`git log -5 -- <file>`): the Low Power cadence had been fixed for
   one frame pattern on 2026-11-03 and for another on 2026-11-13. A third pattern means the rule is wrong, not that one
   more case is missing; say so to the owner, who remembers the earlier fix.

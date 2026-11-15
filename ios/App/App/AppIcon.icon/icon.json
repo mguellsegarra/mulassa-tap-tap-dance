@@ -1,0 +1,30 @@
+{
+  "fill" : {
+    "solid" : "srgb:0.16471,0.10196,0.06275,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "M.svg",
+          "name" : "M"
+        },
+        {
+          "image-name" : "marc.svg",
+          "name" : "marc"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.4
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}

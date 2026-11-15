@@ -191,6 +191,11 @@ A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the 
 - **A monitor bug is reproduced in node, not on the phone.** Feed `frameMonitor` the frame intervals seen (the probe
   can post every one: a scratch copy of `probe-proxy.mjs` with an `all` array) and it steps or not in milliseconds of
   work; the fix then gets a test that fails without it (`tests/render/low-power.mjs`).
+- **One good session proves nothing: record the owner's sessions and keep them.** A fix validated on one played song
+  failed on the next. Have the owner play through the recording probe (every rAF interval posted, a big on-screen
+  message while it records and when the quality steps, so they know when to stop), replay the intervals through
+  `framePacer` and `adaptiveQuality` in node, and add each failing session to
+  `tests/render/fixtures/low-power-bou.json`. Never reload or drive the tab while they play.
 - **Before fixing a module, read its last commits** (`git log -5 -- <file>`): the Low Power cadence had been fixed for
   one frame pattern on 2026-11-03 and for another on 2026-11-13. A third pattern means the rule is wrong, not that one
   more case is missing; say so to the owner, who remembers the earlier fix.

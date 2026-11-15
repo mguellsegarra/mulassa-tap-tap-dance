@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { adaptiveQuality } from '../../src/platform/adaptive-quality.js';
 import { framePacer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
+import { readFileSync } from 'node:fs';
 
 const rig = (ceiling = 2) => {
   let level = ceiling, t = 0; const events = [], changes = [], halves = [];
@@ -179,4 +180,17 @@ console.log('context-lost quality step ok');
   const slow = framePacer(); let u = 0, n = 0; slow.cap = true; for (let i = 0; i < 60; i++) { u += 1000 / 30; if (slow(u, true)) n++; }
   assert.equal(n, 60, 'a screen already at 30 Hz (Low Power Mode) is never halved to 15');
 }
-
+{ // a real song, as an iPhone 18 Pro in Low Power Mode drew it (the owner playing the Bou): Safari switching between 30
+  // and 24 Hz, frames of 50-79 ms in between, 9 ms of JavaScript. Replayed frame by frame through the pacer and the monitor
+  const { recordings } = JSON.parse(readFileSync(new URL('./fixtures/low-power-bou.json', import.meta.url), 'utf8'));
+  for (const posts of recordings) {
+  const replay = cost => { let level = 1, now = 0; const pace = framePacer(), changes = [], reasons = [];
+    const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => reasons.push(e.reason) });
+    for (const [play, frames] of posts) for (const ms of frames) { now += ms; pace(now, !!play); sample(ms, cost, pace, !!play, true, !!play); }
+    return { changes, reasons }; };
+  const light = replay(9);
+  assert.deepEqual(light.changes, [], 'the browser\'s own late frames under its cap, the game\'s work light: no quality step, the crowd stays');
+  assert(light.reasons.includes('throttled'), 'and it is reported as the browser\'s throttle');
+  assert(replay(22).changes.length >= 1, 'the same frames with the game\'s own work heavy (22 ms of a 33 ms frame) still step down');
+  }
+}

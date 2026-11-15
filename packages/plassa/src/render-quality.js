@@ -124,11 +124,11 @@ const EARLY = { until: 15000, window: 2000, share: 0.3 };
 const CAP = { lo: 29, hi: 44, run: 12 };
 export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot
-  let run = 0, runSlow = 0, capped = false, capMs = 0, earlyHit = false, since = 9; // since: frames since the last one under 24 ms // runSlow: this window's slow frames of the current run; capMs: the cap's interval
+  let run = 0, runSlow = 0, capped = false, capMs = 0, earlyHit = false, quick = 0; // quick: which of the last 12 frames were under 24 ms (bits) // runSlow: this window's slow frames of the current run; capMs: the cap's interval
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
   const group = new Float64Array(4); let gN = 0, gSum = 0, gPlay = true; // a late frame and the early ones after it, judged together
   const reset = (settle = true) => {
-    elapsed = samples = slow = late = n = run = runSlow = capMs = gN = gSum = 0; since = 9; spiky = capped = earlyHit = false;
+    elapsed = samples = slow = late = n = run = runSlow = capMs = gN = gSum = quick = 0; spiky = capped = earlyHit = false;
     if (settle) warmup = 2000;
   };
   // WebGL in Safari under the 30 Hz cap jitters its timestamps: a late callback, then one or two early ones, together a
@@ -154,13 +154,15 @@ export function frameMonitor(onSlow) {
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
     if (inCap) capMs = capMs ? capMs + (ms - capMs) * 0.1 : ms;
-    // One refresh late (50 ms at 24 Hz) or a lone early frame (the 4 before it were not) neither builds nor breaks the run;
-    // fast frames closer than that lift the cap (a 60 Hz screen missing every second or third refresh is overload, not a cap): under the 30 Hz cap Safari draws an extra early frame now and then (a touch, its jitter), and one
-    // of them every 10 frames made every 33 ms frame read as slow, two steps down at once (an iPhone 18 Pro in Low Power
-    // Mode, its notes tapped, and its splash; 14/11/2026)
-    const lone = ms < 24 && since >= 4; since = ms < 24 ? 0 : since + 1;
-    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 || lone ? run : 0;
-    if (ms < 24 && !lone) capped = false; else if (run >= CAP.run) capped = true;
+    // One refresh late (50 ms at 24 Hz) or an early frame now and then neither builds nor breaks the run: under the 30 Hz cap
+    // Safari draws early ones (a touch, its jitter, two in a row catching up after a late one: 96, 71, 16, 21 ms), and one
+    // every 10 frames made every 33 ms frame read as slow, two steps down at once (an iPhone 18 Pro in Low Power Mode, its
+    // notes tapped, 14/11/2026). The cap is off only while a third of the last 12 frames were early: a screen back at 60 Hz,
+    // or one missing every second or third refresh (overload, not a cap).
+    quick = (quick << 1 | (ms < 24 ? 1 : 0)) & 0xfff;
+    let quicks = 0; for (let b = quick; b; b &= b - 1) quicks++;
+    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 || ms < 24 && quicks < 4 ? run : 0;
+    if (quicks >= 4) capped = false; else if (run >= CAP.run) capped = true;
     if (warmup > 0) { warmup = Math.max(0, warmup - ms); return; }
     const k = capped ? 2 : 1;
     if (play && ms > SPIKE.ms * k) {

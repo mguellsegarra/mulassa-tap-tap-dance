@@ -54,6 +54,14 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     // and its JavaScript from 7.6 to 14 ms a frame, medium and low changing nothing (13/11/2026).
     // (only where the pacer can halve: over 50 Hz, not a 120 Hz screen)
     if (playing && !halved && costAvg > CPU_BOUND && currentPace.hz > 50 && currentPace.hz <= 95) { halved = true; halve(true); down.reset(); clear(); report({ time, reason: 'cpu-cap', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
+    // Under a browser's own cap (Low Power Mode) with the game's work well inside the frame, late frames are the browser's:
+    // an iPhone 18 Pro's Safari played the Bou switching between 30 and 24 Hz with frames of 50-79 ms in between (14% of
+    // them «slow»), 9 ms of JavaScript a frame, and medium, low and minimal alike: the song lost its crowd for nothing
+    // (recorded, tests/render/fixtures/low-power-bou.json, 14/11/2026). Only way too slow or hitching still steps there.
+    // shortcut: a device whose GPU alone holds it at a steady ~30 fps with light JavaScript reads the same and keeps its level; tell them apart if one shows up in reports.
+    // (the monitor's own cap can be off for a window, two early frames after a late one: its share is then against 60 Hz
+    // and means nothing on a screen the pacer reads at 30 or 24; that one stepped the same song down at its 125th second)
+    if ((evidence.capped || currentPace.fps < 45) && steps < 2 && !spiky && costAvg < 1000 / currentPace.fps * 0.45) { report({ time, reason: 'throttled', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
     if (futile && playing && steps < 2 && !spiky) return; // repeated hitches still step down
     if (drops && level() === -1 && !spiky && (share < 0.35 || !playing) && drops.share - share < SLOW_SHARE) {
       if (share < 0.35) tolerated = share + SLOW_SHARE; else menuFloor = share + SLOW_SHARE;

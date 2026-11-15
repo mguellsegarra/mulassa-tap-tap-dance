@@ -188,6 +188,17 @@ traps: `docs/agents/device-profiling.md` («A rented phone»). Every number belo
   frame then read as slow, two steps down at once, and in Low Power Mode there is no way back up. Now a lone early frame
   (none in the 4 before it) neither ends the cap nor its run; closer ones do (a 60 Hz screen missing every second or third
   refresh). The same played Bou: 30 fps at `medium`, no step (2026-11-14, `tests/render/low-power.mjs`).
+- **That rule held for one session and failed the next: a throttled browser is told from its cost, not from one more
+  frame pattern.** The same phone, the day after, ran the Bou at 25 fps (30 and 24 Hz in turns, frames of 50-79 ms
+  between them, JavaScript 9 ms a frame) and lost two levels in 40 s; with the cap rule patched it still lost one at
+  the song's 125th second, when a late pair's catch-up (96, 71, 16, 21 ms) took the cap off. Two changes: the cap now
+  lifts only when 4 of the last 12 frames are under 24 ms (a screen back at 60 Hz), and `adaptive-quality.js` reports
+  `throttled` without stepping when the pace is capped or under 45 fps, the window is not spiky and the frame's own cost
+  is under 45% of the pace's budget: lowering quality cannot buy a frame the browser withholds. The owner's two
+  sessions are the test (`tests/render/fixtures/low-power-bou.json`, replayed through the pacer and the monitor by
+  `tests/render/adaptive-quality.mjs`); a third whole song then stayed at `medium` (16 `throttled` reports, no step).
+  Held notes had twice the frames over 70 ms (5.9% against 2.9%) and the stretches with no notes falling a third of
+  the late ones: the HUD lane costs on the GPU there, not measured part by part.
 - **The page cover stays up until the splash runs at the device's pace** (20 frames in a row under 45 ms, at most 6 s
   after the first): it lifted on frames of 41-55 ms, Safari still compiling the splash's dances (the Mulassa and Drac pair:
   30 ms of JavaScript a frame in Low Power Mode, 15 a few seconds later; the Bou alone, 9), and the monitor judged that.

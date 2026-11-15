@@ -7,6 +7,7 @@ import { createResults } from './results.js';
 import { createFlow } from './flow.js';
 import { setupRankingUI } from './ranking-ui.js';
 import { setupOrientation } from '#plassa/orientation.js';
+import { onNativeBack, onAppInactive } from '#plassa/native.js';
 import { t, applyWords } from './i18n.js';
 import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX } from './audio.js';
 import { setupLevelStep } from './level-step.js';
@@ -115,6 +116,12 @@ const back = () => {
   if (inRun()) flow.pause(); else flow.resume();
 };
 addEventListener('keydown', e => { if (e.key === 'Escape') back(); });
+// Android's back button in the app (plassa/native.js): as Escape, and on from the end sheet to the home, from the home to the games menu
+onNativeBack(() => {
+  if (flow.mode === 'over') flow.showMenu();
+  else if (flow.mode === 'menu' && !document.querySelector('.cover:not([hidden]):not(#boot)')) location.replace('/jocs/index.html');
+  else back();
+});
 closeOnBackdrop(back);
 scrollHints([$('board-list')]);
 addEventListener('resize', flow.resized);
@@ -126,6 +133,7 @@ soundOnPress();
 setupSheetKeys({ top: () => [...document.querySelectorAll('.cover:not([hidden]):not(#boot), dialog[open]')].pop() ?? (flow.mode === 'menu' ? $('menu') : null) });
 // leaving the page (hidden, blur, pagehide) pauses a run; so does a run whose audio clock stands still (page-audio.js)
 onPageLeave(flow.pause);
+onAppInactive(flow.pause); // the app covered without being left (plassa/native.js)
 audioPage({ stall: () => inRun() && (flow.pause(), true) });
 
 let last = performance.now(), behind = 0, odd = false; // behind: the home backdrop's time not drawn yet

@@ -18,6 +18,7 @@ import { setupBoard } from './board-ui.js';
 import { OPTOUT_KEY, PERSIST_KEY } from './publish-ui.js';
 import { setupGreeting } from './greeting.js';
 import { setupDeviceHint } from './device-hint.js';
+import { lowPowerState } from '../platform/native.js';
 import { setupFreeGate } from './free-gate.js';
 import { setupNews } from './news-sheet.js';
 import { hasPlayed } from '../game/records.js';
@@ -193,7 +194,7 @@ let cardGreeted = false;
 const selectorFree = () => G.state === 'select' && !sheetUp() && !viewMode && !document.hidden && !document.querySelector('dialog[open]');
 const badgeNews = setupBadgeNews({ focusIn, service, store: mockBoard ? { get: () => null, set() {} } : kv, ...(!mockBoard && { notices: seenNotices }), badges: sheets.badges, profile, idle: selectorFree, refresh: () => refreshIdentity(service, kv, { fresh: true }) }); // the mock: every load can show it again
 sheets.badgeNews = badgeNews;
-const hint = setupDeviceHint({ focusIn, store, softwareGl, // the device tips, last: after the profile's own news
+const hint = setupDeviceHint({ focusIn, store, softwareGl, lowPower: () => lowPowerState.on, // the device tips, last: after the profile's own news
   account: () => (ownerKey(kv) ? (savedName(kv).verified ? 'linked' : 'guest') : 'none'), confirm: back => { profile.open('link', back); if (!profile.isOpen) back?.(); } }); // offline the profile sheet stays shut: focus back to the selector
 sheets.hint = hint;
 sheets.freeGate = setupFreeGate({ focusIn, store, onEnter: () => enterFree() }); // an upright iPhone is asked to turn before free play

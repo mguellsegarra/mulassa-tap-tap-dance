@@ -4,20 +4,29 @@
 // mid-run, never under a sheet or a typed field. The main game (update.js) and each mini-game say what quiet is for them.
 import { APP_BUILD } from '../../../src/core/version.js';
 import { shouldReload } from './update-rules.js';
+import { LIVE_UPDATES, checkLiveUpdate, applyLiveUpdate } from './native.js';
 
 const UPDATE_TRIED = 'reloaded-for'; // sessionStorage: the build a reload was tried for (update-rules.js)
 
 export function watchUpdates(quiet) {
-  let newer = null, waitT = 0;
+  let newer = null, waitT = 0, downloading = false;
   function reloadWhenQuiet() {
     clearTimeout(waitT);
     if (!newer || document.hidden) return;
     if (!quiet()) { waitT = setTimeout(reloadWhenQuiet, 2000); return; } // busy: ask again later
+    if (LIVE_UPDATES) { applyLiveUpdate(newer).catch(() => { newer = null; }); return; } // the app: switch to the downloaded bundle
     try { sessionStorage.setItem(UPDATE_TRIED, newer); } catch { /* private mode: at worst one more check */ }
     location.reload();
   }
   async function check() {
     if (document.hidden || newer) return reloadWhenQuiet();
+    // the app carries its own /version.json: ask the site, and download only when quiet
+    if (LIVE_UPDATES) {
+      if (downloading) return;
+      if (!quiet()) { clearTimeout(waitT); waitT = setTimeout(check, 2000); return; } // busy: ask again later
+      downloading = true; newer = await checkLiveUpdate().catch(() => null); downloading = false;
+      return reloadWhenQuiet();
+    }
     try {
       const r = await fetch('/version.json', { cache: 'no-store' });
       if (!r.ok) return; // dev server and tests: no file, nothing to compare
@@ -32,5 +41,6 @@ export function watchUpdates(quiet) {
   // (not preventDefault: Vite would resolve the import with nothing and break its caller)
   addEventListener('vite:preloadError', check);
   addEventListener('pageshow', e => { if (e?.persisted) check(); }); // back from the bfcache
+  if (LIVE_UPDATES) check(); // the app has no index.html build check: its launch is a wake too
   return check;
 }

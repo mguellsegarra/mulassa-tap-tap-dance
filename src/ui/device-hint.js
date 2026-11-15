@@ -1,9 +1,12 @@
 import { stepsFor } from './install-app.js';
+// the app's Android WebView says «; wv)», as an app's own browser does: CAP_APP tells them apart
+import { CAP_APP } from '../platform/native.js';
 // Device tips, told once ever by the idle selector's greeting (greeting.js), after the profile's news; closing one either way
 // stores its key = 'off': it never comes back. First match only:
 //   #inapp-hint-menu  inside an app's own browser (Instagram, TikTok, any Android WebView): its storage is easily lost, so
 //                     offer a jump to the real browser where one exists, and that app's menu steps as the sure way
-//   #gpu-hint-menu    WebGL in software (turn hardware acceleration on)
+//   #gpu-hint-menu    WebGL in software (turn hardware acceleration on): a browser's setting, not in the app
+//   #power-hint-menu  the app, with the phone saving battery (the game runs less smoothly): once a day while it lasts
 // (The iPhone's fullscreen tip is free play's own: free-gate.js.)
 // The jump out of an app's browser, null where none is known. Android: an intent:// for the system's default browser (Instagram
 // asks «You're leaving our app», then Chrome opens it: S10, 2026-11-04). iOS has none: Instagram's browser swallowed
@@ -17,17 +20,17 @@ export function browserJump(ua, href) {
 // address: lost with this storage, so confirm it first) or 'linked' (confirmed: «Recupera» brings it back in the real browser).
 // The in-app tip is told once per state ('inapp-hint' keeps the states told): its risk changes when a profile appears or is confirmed.
 const ACCOUNTS = ['none', 'guest', 'linked'];
-export function setupDeviceHint({ focusIn, store, softwareGl, account = () => 'none', confirm = () => {}, ua = navigator.userAgent ?? '', standalone = navigator.standalone === true || globalThis.matchMedia?.('(display-mode: standalone), (display-mode: fullscreen)').matches === true, href = globalThis.location?.href, doc = document }) {
+export function setupDeviceHint({ focusIn, store, softwareGl, app = CAP_APP, lowPower = () => false, today = () => new Date().toDateString(), account = () => 'none', confirm = () => {}, ua = navigator.userAgent ?? '', standalone = CAP_APP || navigator.standalone === true || globalThis.matchMedia?.('(display-mode: standalone), (display-mode: fullscreen)').matches === true, href = globalThis.location?.href, doc = document }) {
   const $ = id => doc.getElementById(id);
   const inApp = stepsFor({ ua, standalone }) === 'inapp', jump = inApp ? browserJump(ua, href) : null;
   const told = () => (store.get('inapp-hint') || '').split(',');
   let up = null, back = null, after = null; // up: the sheet shown; after: what its own button asked for, once it has closed
-  for (const key of ['inapp-hint', 'gpu-hint']) {
+  for (const key of ['inapp-hint', 'gpu-hint', 'power-hint']) {
     const menu = $(`${key}-menu`);
     if (!menu) continue;
     for (const id of ['ok', 'close']) $(`${key}-${id}`).addEventListener('click', () => menu.close());
     menu.addEventListener('close', () => {
-      store.set(key, key === 'gpu-hint' ? 'off' : [...new Set([...told(), menu.dataset.state])].filter(Boolean).join(','));
+      store.set(key, key === 'gpu-hint' ? 'off' : key === 'power-hint' ? today() : [...new Set([...told(), menu.dataset.state])].filter(Boolean).join(','));
       up = null; const b = back, a = after; back = after = null;
       if (a) a(b); else b?.();
     });
@@ -49,9 +52,10 @@ export function setupDeviceHint({ focusIn, store, softwareGl, account = () => 'n
     show(onBack = null) {
       if (up?.open) return false;
       const state = inApp && account();
-      const key = inApp && !told().includes(state) && $('inapp-hint-menu') ? 'inapp-hint' : softwareGl && store.get('gpu-hint') !== 'off' && $('gpu-hint-menu') ? 'gpu-hint' : null;
+      const key = inApp && !told().includes(state) && $('inapp-hint-menu') ? 'inapp-hint' : softwareGl && !app && store.get('gpu-hint') !== 'off' && $('gpu-hint-menu') ? 'gpu-hint'
+        : lowPower() && store.get('power-hint') !== today() && $('power-hint-menu') ? 'power-hint' : null;
       if (!key) return false;
-      const first = key === 'inapp-hint' ? dress(state) : 'gpu-hint-ok';
+      const first = key === 'inapp-hint' ? dress(state) : `${key}-ok`;
       up = $(`${key}-menu`); back = onBack;
       up.showModal(); focusIn(up, first);
       return true;

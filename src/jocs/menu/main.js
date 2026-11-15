@@ -6,6 +6,7 @@ import { setupGamesCarousel } from './carousel.js';
 import { setupMusic } from './music.js';
 import { setUiSound, soundOnPress } from '#plassa/ui-sound.js';
 import { setupOrientation } from '#plassa/orientation.js';
+import { onNativeBack, leaveApp, CAP_APP, hideSplash } from '#plassa/native.js';
 import { stopDoubleTapZoom } from '#plassa/double-tap.js';
 import { errors } from '#plassa/errors.js';
 import { watchUpdates } from '#plassa/update-watch.js';
@@ -20,10 +21,11 @@ const carousel = setupGamesCarousel();
 
 function open(card) {
   if (!card || 'soon' in card.dataset) return; // a surprise card holds the place of next week's game: nothing to open yet
+  // the rhythm game is the site's home; Pop is the one game with its own short address. The app names the game's file:
+  // its bare root is a start (index.html), told apart by a referrer that iOS's capacitor:// never sends.
   // the page fades at once: on a phone the next one can take seconds to show, and the old one stood still meanwhile (owner, 11 Nov 2026)
   document.documentElement.classList.add('leaving');
-  // the rhythm game is the site's home; Pop is the one game with its own short address
-  location.replace({ tap: '/', pop: '/pop/' }[card.dataset.game] ?? `/jocs/${card.dataset.game}/`);
+  location.replace({ tap: CAP_APP ? '/index.html' : '/', pop: '/pop/' }[card.dataset.game] ?? `/jocs/${card.dataset.game}/`);
 }
 $('games-grid').addEventListener('click', e => {
   const card = e.target.closest?.('[data-game]');
@@ -44,8 +46,10 @@ soundOnPress();
 stopDoubleTapZoom();
 setupOrientation(() => {});
 watchUpdates(() => true); // nothing here to interrupt
+onNativeBack(leaveApp); // Android's back button on the app's first page: home, the app kept as it is
 focusIn($('games-menu'), 'games-hero-play');
 document.documentElement.classList.add('ready');
+hideSplash(); // the app's launch screen, held until now (plassa/native.js)
 // «Instal·la l'app» (install.js): mulassa.cat's words and steps sheet in a chunk of their own, after the page shows
 import('./install.js').catch(e => errors.capture(e, { where: 'install' }));
 setTimeout(() => { $('boot').hidden = true; }, 400); // kept, hidden: the error card comes up in it (the watchdog)

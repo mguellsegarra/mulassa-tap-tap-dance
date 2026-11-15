@@ -1,37 +1,50 @@
-// The app's live updates (plassa/native.js): a newer build on the site is downloaded with its checksum and queued for the
-// next launch; the same build, the one already queued, or one the plugin rolled back once are never fetched again.
+// The app's live updates (plassa/native.js): a newer build on the site is downloaded file by file and handed back to switch
+// to (never queued with next(): the plugin would apply it whenever the app is backgrounded, mid-run too); the same build, one
+// already downloaded, or one the plugin rolled back once are never fetched again.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const saved = new Map();
 globalThis.localStorage = { getItem: k => saved.get(k) ?? null, setItem: (k, v) => saved.set(k, v), removeItem: k => saved.delete(k) };
-let local = { build: 'A' }, site = { build: 'B', checksum: 'abc' };
+let local = { build: 'A' }, site = { build: 'B', manifest: [{ file_name: 'jocs/a b.html', file_hash: 'h1' }] };
 globalThis.fetch = async url => ({ json: async () => (url === '/version.json' ? local : site) });
-const { checkLiveUpdate } = await import('../../packages/plassa/src/native.js');
-const BASE = 'https://example.test/app';
-const plugin = ({ next = null, failed = null } = {}) => {
+const { checkLiveUpdate, applyLiveUpdate } = await import('../../packages/plassa/src/native.js');
+const BASE = 'https://example.test';
+const plugin = ({ bundles = [], failed = null } = {}) => {
   const calls = [];
-  return { calls, getNextBundle: async () => next, getFailedUpdate: async () => failed,
-    download: async o => { calls.push(['download', o]); return { id: 'id-' + o.version }; }, next: async o => { calls.push(['next', o.id]); } };
+  return { calls, list: async () => ({ bundles }), getFailedUpdate: async () => failed,
+    download: async o => { calls.push(['download', o]); return { id: 'id-' + o.version }; },
+    next: async () => calls.push(['next']), set: async o => { calls.push(['set', o.id]); } };
 };
 
-test('a newer build is downloaded with its checksum and queued for the next launch', async () => {
+test('a newer build is downloaded file by file from the site and handed back, not queued', async () => {
   const p = plugin();
-  await checkLiveUpdate(p, BASE);
-  assert.deepEqual(p.calls, [['download', { url: `${BASE}/bundle.zip`, version: 'B', checksum: 'abc' }], ['next', 'id-B']]);
+  assert.equal(await checkLiveUpdate(p, BASE), 'id-B');
+  assert.deepEqual(p.calls, [['download', { url: `${BASE}/app-bundle.json`, version: 'B',
+    manifest: [{ file_name: 'jocs/a b.html', file_hash: 'h1', download_url: `${BASE}/jocs/a%20b.html` }] }]]);
 });
 
-test('nothing when the app already runs it or has it queued', async () => {
-  local = { build: 'B' }; let p = plugin(); await checkLiveUpdate(p, BASE); assert.equal(p.calls.length, 0, 'same build');
-  local = { build: 'A' }; p = plugin({ next: { version: 'B' } }); await checkLiveUpdate(p, BASE); assert.equal(p.calls.length, 0, 'already queued');
+test('nothing when the app already runs it; no second download when an earlier busy check got it', async () => {
+  local = { build: 'B' }; let p = plugin(); assert.equal(await checkLiveUpdate(p, BASE), null); assert.equal(p.calls.length, 0, 'same build');
+  local = { build: 'A' }; p = plugin({ bundles: [{ id: 'old', version: 'B', status: 'success' }] });
+  assert.equal(await checkLiveUpdate(p, BASE), 'old'); assert.equal(p.calls.length, 0, 'already downloaded');
+  p = plugin({ bundles: [{ id: 'half', version: 'B', status: 'downloading' }] });
+  assert.equal(await checkLiveUpdate(p, BASE), 'id-B', 'an unfinished download is not switched to');
 });
 
 test('a build rolled back once is never fetched again, even after the plugin forgets the failure', async () => {
-  site = { build: 'C', checksum: 'bad' };
+  site = { build: 'C', manifest: [] };
   let p = plugin({ failed: { bundle: { version: 'C' } } }); await checkLiveUpdate(p, BASE);
   assert.equal(p.calls.length, 0, 'the launch that reports the failure');
   p = plugin(); await checkLiveUpdate(p, BASE);
   assert.equal(p.calls.length, 0, 'later launches: getFailedUpdate answers once only');
-  site = { build: 'D', checksum: 'ok' }; p = plugin(); await checkLiveUpdate(p, BASE);
+  site = { build: 'D', manifest: [] }; p = plugin(); await checkLiveUpdate(p, BASE);
   assert.equal(p.calls[0][1].version, 'D', 'a fixed build after it still comes in');
+});
+
+test('switching remembers the page, for index.html to go back to after the reload at the root', async () => {
+  globalThis.location = { pathname: '/pop/index.html', search: '?x=1' };
+  const p = plugin(); await applyLiveUpdate('id-D', p);
+  assert.deepEqual(p.calls, [['set', 'id-D']]);
+  assert.equal(saved.get('live-update-return'), '/pop/index.html?x=1');
 });

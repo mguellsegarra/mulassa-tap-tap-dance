@@ -3,7 +3,8 @@
   "appName": "Mulassa Games",
   "webDir": "dist",
   "server": {
-    "appStartPath": "/jocs/index.html"
+    "appStartPath": "/jocs/index.html",
+    "hostname": "app.mulassa.cat"
   },
   "ios": {
     "contentInset": "never"
@@ -18,6 +19,16 @@
       "statsUrl": "",
       "updateUrl": "",
       "channelUrl": ""
+    },
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "launchFadeOutDuration": 300,
+      "backgroundColor": "#2a1a10",
+      "showSpinner": false,
+      "androidScaleType": "CENTER_CROP",
+      "splashFullScreen": true,
+      "splashImmersive": true
     }
-  }
+  },
+  "backgroundColor": "#2a1a10"
 }

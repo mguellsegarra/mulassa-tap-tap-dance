@@ -14,6 +14,8 @@
     root.classList.remove('ready');
     boot.className = 'cover fail';
     boot.hidden = false;
+    var splash = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen; /* the app's launch screen would hide the card */
+    if (splash) splash.hide();
     boot.innerHTML = '<div class="art">' + document.getElementById('boot-art').innerHTML.replace('class="mula-load"', 'class="mula-load sad"') + '</div>'
       + '<div class="sheet" role="alert"><h2></h2><p class="result-sub"></p><div class="sheet-actions"><button type="button" class="btn btn-primary"></button></div></div>';
     boot.querySelector('h2').textContent = title || W.title || 'Ups! No s’ha pogut carregar'; // i18n-ok: the page's Catalan until the game's words load

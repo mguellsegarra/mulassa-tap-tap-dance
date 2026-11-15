@@ -36,6 +36,11 @@ https://beta.mulassa.cat/*
 /pop/index.html
   Cache-Control: no-cache
 
+# the app's live update (tools/deploy/app-bundle.mjs): asked for from the app's own origin, and replaced on every deploy
+/app-bundle.json
+  Cache-Control: no-cache
+  Access-Control-Allow-Origin: *
+
 /index.md
   Content-Type: text/markdown; charset=utf-8
 /projecte/index.md

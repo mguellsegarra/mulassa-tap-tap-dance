@@ -43,7 +43,7 @@ const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { 
 const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured: true, results() {} }, share: { results() {} }, feedback: { configured: false }, select: { visible(on) { this.shown = on; } } };
 const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, navigator: { userActivation: { isActive: true } }, performance: { now: () => time },
   G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
-  howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
+  howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {}, onNativeBack() {}, // the app's back button (tests/ui/pad-input.mjs)
   howtoEl: $('howto'), settingsEl: $('settings'), freeEl: $('free'), musicEl: $('music'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
   addEventListener(k, f) { (handlers[k] ||= []).push(f); }, clearTimeout() {}, setTimeout() { return 1; },
   padButtons: [$('pad-left'), $('pad-right')], hud: $('hud'), orbit: { ptrs: new Map(), x: [0.4,11] }, look: { ptrs: new Map(), x: [0,1] }, pnow: () => time, W: 375, K: 1,

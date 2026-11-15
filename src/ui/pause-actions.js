@@ -9,6 +9,7 @@ import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
 import { glc, renderer } from '../scene/stage.js';
 import { errors } from '../services/errors.js';
+import { onAppInactive } from '../platform/native.js';
 
 export function togglePause() {
   if (G.state !== 'play' || !pageActive()) return;
@@ -56,6 +57,7 @@ function syncPageActivity(e) {
 document.addEventListener('visibilitychange', syncPageActivity);
 addEventListener('blur', syncPageActivity);
 addEventListener('focus', syncPageActivity);
+onAppInactive(() => { G.activityEpoch++; pauseGame(); }); // the app covered without being left (platform/native.js)
 addEventListener('pagehide', () => {
   G.activityEpoch++;
   chip?.clearMenuSfx?.();

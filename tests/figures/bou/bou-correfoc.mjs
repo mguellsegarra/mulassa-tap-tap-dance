@@ -1,6 +1,6 @@
 // The Bou's festa rules (src/figures/bou/bou-correfoc.js) and its carretilles on the model (models/bou.js).
 import assert from 'node:assert/strict';
-import { BOU_FX, BOU_BILLS, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTileLight, bouTileRing, bouTileColour, bouSoftTileLight, bouHeroSpot, bouBillPlan, bouFlutterDrop, bouWind } from '../../../src/figures/bou/bou-correfoc.js';
+import { BOU_FX, BOU_BILLS, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTubeOn, bouTileLight, bouTileRing, bouTileColour, bouSoftTileLight, bouHeroSpot, bouBillPlan, bouFlutterDrop, bouWind } from '../../../src/figures/bou/bou-correfoc.js';
 import * as THREE from 'three';
 import { buildBou, BOU_TUBE_K } from '../../../src/figures/bou/bou.js';
 
@@ -54,6 +54,11 @@ for (let i = 0; i < BOU_FX.back + 3; i++) {
   assert.equal(bouTubeBurns(i, false), i < BOU_FX.back, `tube ${i} on the plaça`);
   assert.equal(bouTubeBurns(i, true), i >= BOU_FX.back, `tube ${i} carried`);
   assert(bouTubeBurns(i, false, true) && bouTubeBurns(i, true, true), `tube ${i} in free play's burst: all of them, back, horns and mouth`);
+}
+// set down, the head's jets fade out: its back's tubes must not grow in for that moment (they blinked on an iPhone)
+for (let i = 0; i < BOU_FX.back; i++) {
+  assert(!bouTubeOn(i, bouCarried(BOU_FX.carryEnd), false, bouJetsWant(BOU_FX.carryEnd, -Infinity), false), `back tube ${i} stays in as the head's jets fade`);
+  assert(bouTubeOn(i, false, false, false, true), `back tube ${i} already out stays out while its burst fades`);
 }
 assert(!bouCarried(BOU_FX.festaStart - 0.01) && bouCarried(BOU_FX.festaStart) && bouCarried(BOU_FX.carryEnd - 0.01) && !bouCarried(BOU_FX.carryEnd), 'carried over [festaStart, carryEnd)');
 

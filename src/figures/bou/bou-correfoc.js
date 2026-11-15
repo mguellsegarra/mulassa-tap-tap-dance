@@ -51,6 +51,9 @@ export const bouJetsWant = (t, at) => t >= BOU_FX.festaStart && t < BOU_FX.carry
 // in the videos); otherwise its back's, all at once (in turns the fire walked along its back)
 export const bouCarried = t => t >= BOU_FX.festaStart && t < BOU_FX.carryEnd;
 export const bouTubeBurns = (i, carried, all = false) => all || (i >= BOU_FX.back) === carried; // all: free play's own burst (Q), every tube at once
+// is tube i out this frame: it burns, and the jets are wanted or it was already out (`out`): a fading burst grows no new
+// tube (set down, its back's grew in for the 0.3 s its head's jets took to die)
+export const bouTubeOn = (i, carried, all, want, out) => bouTubeBurns(i, carried, all) && (want || out);
 // tile (i, j) at song beat `beat`, d m from the Bou: its flash 0..1; and (in an n-wide grid) its colour's index
 export function bouTileLight(i, j, beat, d) {
   const b = Math.floor(beat), f = beat - b;

@@ -18,7 +18,7 @@ import { G } from '../../game/state.js';
 import { selectedFigure, song } from '../../game/figure-song.js';
 import { BOU } from '../../game/figures.js';
 import { PHOTO } from '../../game/photo-control.js';
-import { BOU_FX, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTileLight, bouTileRing, bouTileColour, bouStrobe } from './bou-correfoc.js';
+import { BOU_FX, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeOn, bouTileLight, bouTileRing, bouTileColour, bouStrobe } from './bou-correfoc.js';
 import { beatAtTime, timeAtBeat } from '../../core/beat-grid.js';
 import { CALM } from '../../core/env.js';
 
@@ -120,7 +120,7 @@ export function bouFrame(dt, t) {
   let lit = 0, live = false;
   const carried = bouCarried(t);
   for (let i = 0; i < bou.fire.length; i++) {
-    const tube = bou.fire[i], on = BOU_SHOW.jets > 0 && bouTubeBurns(i, carried, manual);
+    const tube = bou.fire[i], on = BOU_SHOW.jets > 0 && bouTubeOn(i, carried, manual, want, BOU_GROW[i] > 0);
     BOU_GROW[i] += ((on ? 1 : 0) - BOU_GROW[i]) * (1 - Math.exp(-dt / BOU_FX.grow));
     if (BOU_GROW[i] < 0.01) BOU_GROW[i] = 0;
     tube.visible = BOU_GROW[i] > 0; tube.scale.setScalar(BOU_GROW[i] || 1);

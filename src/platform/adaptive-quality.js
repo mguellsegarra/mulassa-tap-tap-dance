@@ -45,6 +45,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
   // medium at 60. No profile is to blame there either: out of a song the level is restored and the menu keeps that
   // share as its own floor (menuFloor), which a song never inherits.
   let drops = null, tolerated = 0, futile = false, menuFloor = 0; // drops: the level and slow share the current run of drops started from
+  let probe = null, throttled = false; // probe: the level and slow share a capped step down started from; throttled: it bought nothing
   const down = frameMonitor((steps, evidence) => {
     const share = evidence.slowShare, spiky = evidence.spiky;
     if (!spiky && share <= (playing ? tolerated : Math.max(tolerated, menuFloor))) return;
@@ -54,14 +55,23 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     // and its JavaScript from 7.6 to 14 ms a frame, medium and low changing nothing (13/11/2026).
     // (only where the pacer can halve: over 50 Hz, not a 120 Hz screen)
     if (playing && !halved && costAvg > CPU_BOUND && currentPace.hz > 50 && currentPace.hz <= 95) { halved = true; halve(true); down.reset(); clear(); report({ time, reason: 'cpu-cap', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
-    // Under a browser's own cap (Low Power Mode) with the game's work well inside the frame, late frames are the browser's:
-    // an iPhone 18 Pro's Safari played the Bou switching between 30 and 24 Hz with frames of 50-79 ms in between (14% of
-    // them «slow»), 9 ms of JavaScript a frame, and medium, low and minimal alike: the song lost its crowd for nothing
-    // (recorded, tests/render/fixtures/low-power-bou.json, 14/11/2026). Only way too slow or hitching still steps there.
-    // shortcut: a device whose GPU alone holds it at a steady ~30 fps with light JavaScript reads the same and keeps its level; tell them apart if one shows up in reports.
-    // (the monitor's own cap can be off for a window, two early frames after a late one: its share is then against 60 Hz
-    // and means nothing on a screen the pacer reads at 30 or 24; that one stepped the same song down at its 125th second)
-    if ((evidence.capped || currentPace.fps < 45) && steps < 2 && !spiky && costAvg < 1000 / currentPace.fps * 0.45) { report({ time, reason: 'throttled', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
+    // Under a cap (a screen the pacer reads under 45 fps) with light JavaScript, late frames have two possible owners that
+    // read alike from here: the browser withholding frames (Low Power Mode: an iPhone 18 Pro's Safari played the Bou
+    // switching between 30 and 24 Hz with frames of 50-79 ms in between, 14% of them «slow», 9 ms of JavaScript, at medium,
+    // low and minimal alike, and lost its crowd for nothing; tests/render/fixtures/low-power-bou.json, 14/11/2026) or a GPU
+    // that cannot keep up (a 60 Hz phone drawing 33 and 50 ms frames in turns). Only a step tells them apart: one level
+    // down is a probe (the near people lag a level, stage.js stepPeople: nobody leaves), and when the late share does not
+    // fall by the overload threshold it is put back and the cap is the browser's until the pace is fast again
+    // (`throttled`). A step that helped stays, and the next one is probed the same way. Way too slow or hitching steps as ever.
+    // (not at the game's own 30, `halved`: its overload is real)
+    if ((evidence.capped || currentPace.fps < 45) && steps < 2 && !spiky && !halved && costAvg < 1000 / currentPace.fps * 0.45) {
+      if (throttled) { report({ time, reason: 'throttled', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
+      if (probe && level() === probe.from - 1 && probe.share - share < SLOW_SHARE) {
+        throttled = true; const to = probe.from; probe = drops = null;
+        switchTo(to, 'throttled', evidence); return;
+      }
+      probe = { from: level(), share };
+    }
     if (futile && playing && steps < 2 && !spiky) return; // repeated hitches still step down
     if (drops && level() === -1 && !spiky && (share < 0.35 || !playing) && drops.share - share < SLOW_SHARE) {
       if (share < 0.35) tolerated = share + SLOW_SHARE; else menuFloor = share + SLOW_SHARE;
@@ -84,6 +94,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     if (Number.isFinite(cost)) costAvg = costAvg >= 0 ? costAvg + (cost - costAvg) * 0.02 : cost; // ~1 s of frames
     if (halved && !play) { halved = false; halve(false); } // the song is over: menus and the next song start at the full rate
     if (!play) futile = false; // only the song in play is left alone: the next one is judged afresh
+    if (pace.fps >= 45) { throttled = false; probe = null; } // the cap is gone: the next one is probed afresh
     if (restored && lostTo !== null) { // on a drawn frame: the profile's precompile needs a live context and a finished boot
       const to = lostTo; lostTo = null; restored = false;
       switchTo(to, 'context-lost', {}); trial = false;

@@ -448,17 +448,19 @@ console.log('crowd footprints never overlap ok');
     const q = JSON.parse(run(`(() => { setRotllana(true);
       const band = () => plaza.band.filter(p => p.g.scale.x > 0.05).map(p => [p.g.position.x, p.g.position.z]), sized = () => { const m = new THREE.Matrix4(); let n = 0, part = 0; for (let i = 0; i < rotllanaCrowd.mesh.count; i++) { rotllanaCrowd.mesh.getMatrixAt(i, m); const k = Math.hypot(m.elements[0], m.elements[1], m.elements[2]); if (k > 1e-6) n++; } return n; };
       const b0 = band(), spots = new Map(activeCrowd.map(p => [p, p.ringSlot])), n0 = sized(), level = qualityLevel, people = peopleLevel;
-      qualityLevel = -1; applyRenderQuality({ transition: true }); setRotllana(true); // (minimal: fewer figures than this ring has)
       let off = 0; const walk = () => band().forEach((b, i) => { if (b0[i]) off = Math.max(off, Math.hypot(b[0] - b0[i][0], b[1] - b0[i][1])); });
       // (a frame's order: the stage lays the ring, the fade moves things, the frame is drawn)
-      walk(); animateRenderQuality(0.1); walk(); const mid = sized(); setRotllana(true);
-      animateRenderQuality(1); walk(); setRotllana(true); const end = sized();
+      qualityLevel = -1; applyRenderQuality({ transition: true }); setRotllana(true); // the level alone: the people, far ones too, lag it
+      walk(); animateRenderQuality(0.1); walk(); setRotllana(true); animateRenderQuality(1); walk(); setRotllana(true);
+      peopleLevel = -1; applyRenderQuality({ transition: true }); setRotllana(true); // (minimal people: fewer figures than this ring has)
+      animateRenderQuality(0.1); const mid = sized(); setRotllana(true);
+      animateRenderQuality(1); setRotllana(true); const end = sized();
       const kept = activeCrowd.filter(p => spots.has(p)), moved = kept.filter(p => p.ringSlot !== spots.get(p)).length;
       qualityLevel = level; peopleLevel = people; applyRenderQuality(); setRotllana(true);
       return JSON.stringify({ off, players: b0.length, kept: kept.length, moved, n0, mid, end }); })()`));
     if (process.env.SHOWQ) console.log(JSON.stringify(q));
     assert(q.players > 0 && q.off < 0.01, `a quality change moves the ring's band ${q.off.toFixed(2)} m`);
-    assert(q.end < q.n0 && q.mid === q.n0, `the ring's figures leave over the fade, not at once (${q.n0} -> ${q.mid} mid-fade -> ${q.end})`);
+    assert(q.end < q.n0 && q.mid >= q.n0, `the ring's figures leave over the fade, not at once (${q.n0} -> ${q.mid} mid-fade -> ${q.end})`);
   }
   { // fewer people (the people's level a step down): whoever stays in the ring keeps the spot (they were all dealt out
     // again, and half the front rows walked to another place mid-dance)

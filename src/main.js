@@ -42,7 +42,7 @@ import { clearCameraImpact } from './scene/cameras.js';
 import { BOU_FINALE } from './figures/bou/bou-bills.js';
 import { PERF, perfSample, perfReset, qualitySample, showPerfLine } from './dev/perf.js';
 import { renderHero } from './scene/share-capture.js';
-import { precompile } from './scene/precompile.js';
+import { precompile, warmDraw } from './scene/precompile.js';
 import { autoplay, collapse, judge, press } from './game/judge.js';
 import { finish, songWait, musicLine, startFinal, previewResults, startPractice, endPractice, choose } from './game/flow.js';
 import './ui/pad.js';
@@ -192,7 +192,7 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
   if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
   window.__mulassaSetBootPhase?.('shaders');
-  Promise.all([prepareFigureScenes(), waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs)))]).then(([, result]) => {
+  Promise.all([prepareFigureScenes(), waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs)).then(() => { if (loader.covering) warmDraw(); }))]).then(([, result]) => {
     if (window.__mulassaBootFailure) return;
     window.__mulassaSetBootPhase?.('frame');
     loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');

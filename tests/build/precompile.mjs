@@ -8,7 +8,7 @@ const renderer = {
   capabilities: { getMaxAnisotropy() { if (!cached) { calls.push('driver-query'); cached = true; } return 8; } },
   compileAsync() { calls.push('compile'); return Promise.resolve(); },
 };
-const source = readFileSync(new URL('../../src/scene/precompile.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace('export function', 'function');
+const source = readFileSync(new URL('../../src/scene/precompile.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replaceAll('export function', 'function');
 const ctx = vm.createContext({ renderer, scene: {}, camera: {}, balloonFx: null, dracWarm() {}, Promise });
 vm.runInContext(source, ctx);
 await vm.runInContext('precompile()', ctx);
@@ -34,10 +34,11 @@ assert.notEqual(calls[0], 'driver-query', 'the old warmup leaves the synchronous
   const c = vm.createContext({ renderer: r, scene: { traverse: fn => objs.forEach(fn) }, camera: {}, balloonFx: null, dracWarm() {}, Promise,
     THREE: { WebGLRenderTarget: class { dispose() {} } }, heroQuadMake: () => ({ scene: {}, cam: {} }) });
   vm.runInContext(source, c);
-  await vm.runInContext('precompile()', c);
-  assert.equal(seen.length, 0, 'a quality step draws nothing extra (it is on screen)');
-  await vm.runInContext('precompile(true)', c);
+  await vm.runInContext('precompile()', c); await vm.runInContext('precompile(true)', c);
+  assert.equal(seen.length, 0, 'compiling draws nothing: a quality step is on screen, and the boot links its programs first');
+  vm.runInContext('warmDraw()', c);
   assert.deepEqual(seen, [[[true, null, false], [true, 1, false], [true, 7, false]]], 'the boot draws every object once: shown, one instance at least, not culled');
   assert.equal(JSON.stringify(objs), before, 'and puts each one back');
+  assert.match(readFileSync(new URL('../../src/main.js', import.meta.url), 'utf8'), /linkPrograms\(renderer\.info\.programs\)\)\.then\(\(\) => \{ if \(loader\.covering\) warmDraw\(\); \}\)/, 'the boot draws it after linking, and only under the cover');
   console.log('precompile: the boot warm-up draws the whole scene once and restores it ok');
 }

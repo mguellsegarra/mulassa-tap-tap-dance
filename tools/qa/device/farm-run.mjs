@@ -23,7 +23,8 @@ const left = () => aws('get-account-settings').accountSettings.trialMinutes?.rem
 // metered: only the test's own minutes (2026-11-14: a 44 s flow was 1.7 of the job's 9), ~55 s a flow besides its song
 const flowPhases = f => (f.phases ?? []).reduce((s, p) => s + p.seconds, 0);
 const estimate = plan.devices.length * plan.flows.reduce((s, f) => s + f.maxSeconds + flowPhases(f) + 55, 0) / 60, before = left();
-console.log(`plan: ${plan.devices.length} device(s) x ${plan.flows.length} flow(s), ~${estimate.toFixed(1)} metered minutes (budget ${plan.budgetMinutes}); trial minutes left: ${before}`);
+const timeout = Math.ceil(plan.flows.reduce((s, f) => s + f.maxSeconds + flowPhases(f) + 60, 0) / 60) + 4; // (it stops a hung job; farm-test.mjs stops itself first)
+console.log(`plan: ${plan.devices.length} device(s) x ${plan.flows.length} flow(s), ~${estimate.toFixed(1)} metered minutes (budget ${plan.budgetMinutes}; an estimate: jobs that hang could meter up to ${plan.devices.length * timeout}); trial minutes left: ${before}`);
 if (!(estimate <= plan.budgetMinutes)) { console.error('over the plan\'s budgetMinutes: nothing was run'); process.exit(1); }
 
 const project = aws('list-projects').projects.find(p => p.name === plan.project)?.arn;
@@ -46,7 +47,6 @@ async function upload(file, name, type) {
 }
 const testPackage = await upload(join(pkg, 'pkg.zip'), 'pkg.zip', 'APPIUM_WEB_NODE_TEST_PACKAGE'), spec = await upload(join(here, 'farm-spec.yml'), 'farm-spec.yml', 'APPIUM_WEB_NODE_TEST_SPEC');
 const pool = aws('create-device-pool', '--project-arn', project, '--name', `run-${Date.now()}`, '--rules', JSON.stringify([{ attribute: 'ARN', operator: 'IN', value: JSON.stringify(devices.map(d => d.arn)) }])).devicePool.arn;
-const timeout = Math.ceil(plan.flows.reduce((s, f) => s + f.maxSeconds + flowPhases(f) + 60, 0) / 60) + 4; // (it stops a hung job; farm-test.mjs stops itself first)
 const run = aws('schedule-run', '--project-arn', project, '--device-pool-arn', pool, '--name', plan.name ?? planFile.split('/').pop(), '--test', `type=APPIUM_WEB_NODE,testPackageArn=${testPackage},testSpecArn=${spec}`,
   '--execution-configuration', `jobTimeoutMinutes=${timeout},videoCapture=true`).run.arn;
 console.log(`run ${run} (job timeout ${timeout} min); waiting`);

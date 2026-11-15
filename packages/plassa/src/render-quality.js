@@ -18,9 +18,9 @@ export const PROFILES = [
 export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6, smoke: 0, jets: 140, wheels: 64 };
 export const profileAt = level => (level < 0 ? MINIMAL : PROFILES[Math.min(level, PROFILES.length - 1)]);
 // A session's near people (the skinned ring's rows, balconies, the band, a colla's seated) lag adaptive quality (stage.js
-// stepPeople): people leaving the plaça read as broken. The armless backdrop and mid band step with the level, along with
-// sharpness, shadows and effects: far off, the fewest notice them go.
-const PROFILE_PEOPLE = ['rows', 'stride', 'balconies', 'near', 'band'];
+// stepPeople): people leaving the plaça read as broken, the armless backdrop and mid band too (far off, yet the owner saw
+// them go on a one-level probe, 15/11/2026). Sharpness, shadows and effects step with the level.
+const PROFILE_PEOPLE = ['rows', 'stride', 'balconies', 'near', 'band', 'backdrop', 'mid'];
 export const sessionProfile = (level, people) => {
   const p = profileAt(people);
   return { ...profileAt(level), ...Object.fromEntries(PROFILE_PEOPLE.map(k => [k, p[k]])), people: p.name };

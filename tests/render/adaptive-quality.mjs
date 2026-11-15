@@ -188,9 +188,24 @@ console.log('context-lost quality step ok');
     const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => reasons.push(e.reason) });
     for (const [play, frames] of posts) for (const ms of frames) { now += ms; pace(now, !!play); sample(ms, cost, pace, !!play, true, !!play); }
     return { changes, reasons }; };
-  const light = replay(9);
-  assert.deepEqual(light.changes, [], 'the browser\'s own late frames under its cap, the game\'s work light: no quality step, the crowd stays');
+  const light = replay(9), at = light.changes.findIndex((q, i) => q === 1 && light.changes[i - 1] === 0);
+  // (the frames are the recording's whatever the level: a step can buy nothing here, as it bought nothing on the phone)
+  assert(light.changes.every(q => q >= 0) && light.changes.at(-1) === 1, `one level down at most, as a probe, and back (${light.changes})`);
+  assert.deepEqual(light.changes.slice(at + 1), [], 'once the probe bought nothing the browser\'s late frames cost no more steps');
   assert(light.reasons.includes('throttled'), 'and it is reported as the browser\'s throttle');
   assert(replay(22).changes.length >= 1, 'the same frames with the game\'s own work heavy (22 ms of a 33 ms frame) still step down');
   }
 }
+{ // the other owner of the same reading: a 60 Hz phone whose GPU cannot keep up (33 and 50 ms frames in turns, 5 ms of
+  // JavaScript). Its steps help, so they stay: the probe must not take it for a throttled browser (two reviewers, 15/11/2026)
+  let level = 1, now = 0; const pace = framePacer(), changes = [], reasons = [];
+  const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => reasons.push(e.reason) });
+  for (let i = 0; now < 90000; i++) { const ms = i % (level === 1 ? 2 : level === 0 ? 4 : 1e9) === 1 ? 50 : 100 / 3; now += ms; pace(now, true); sample(ms, 5, pace, true, true, true); }
+  assert.deepEqual(changes, [0, -1], `a GPU that gains from each step keeps stepping down (${changes})`);
+  // and one that gains from the first step only stays there: the second is put back
+  level = 1; now = 0; changes.length = 0; const pace2 = framePacer();
+  const sample2 = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: () => {} });
+  for (let i = 0; now < 90000; i++) { const ms = i % (level === 1 ? 2 : 4) === 1 ? 50 : 100 / 3; now += ms; pace2(now, true); sample2(ms, 5, pace2, true, true, true); }
+  assert.deepEqual(changes, [0, -1, 0], `a step that bought nothing is put back, the one that helped is kept (${changes})`);
+}
+

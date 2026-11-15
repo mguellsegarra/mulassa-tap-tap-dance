@@ -7,10 +7,10 @@ assert.equal(initialQuality({ mobile: true, cores: 8, memory: 8 }), 1);
 assert.equal(initialQuality({ mobile: true, cores: 4 }), 1); // iOS under-reports cores: phones start antialiased
 assert.equal(initialQuality({ cores: 16, memory: 16 }), 2);
 assert.equal(initialQuality({ saveData: true }), 0);
-{ // a session's near people lag the level (render-quality.js sessionProfile); the armless backdrop and mid band step with it
+{ // a session's near people lag the level (render-quality.js sessionProfile); the armless backdrop and mid band with them (the owner saw them go on a one-level probe)
   const p = sessionProfile(-1, 1);
   assert(p.dpr === MINIMAL.dpr && p.shadow === 0 && p.smoke === MINIMAL.smoke && p.rows === PROFILES[1].rows && p.stride === PROFILES[1].stride && p.people === 'medium', 'minimal render, medium near people');
-  assert(p.backdrop === MINIMAL.backdrop && p.mid === MINIMAL.mid, 'the armless backdrop and mid band go first, with the level');
+  assert(p.backdrop === PROFILES[1].backdrop && p.mid === PROFILES[1].mid, 'the armless backdrop and mid band stay with the people: nobody leaves on the first step');
   assert.deepEqual(sessionProfile(2, 2), { ...PROFILES[2], people: 'high' });
 }
 for (const renderer of ['Adreno (TM) 506', 'ANGLE (Qualcomm, Adreno (TM) 418, OpenGL ES 3.2)', 'Mali-G52', 'Mali-T880', 'Mali-400 MP', 'PowerVR Rogue GE8320'])

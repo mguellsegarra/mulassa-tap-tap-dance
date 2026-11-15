@@ -11,8 +11,10 @@ import { heroQuadMake } from './share-capture.js';
 // A linked program is not a drawn one: on its first draw the GPU still builds its pipeline (Metal: 121-365 ms frames on an
 // iPhone 8 where the Bou's rave and banknotes first showed, mid-song). At boot, under the page's cover, everything in
 // the scene is drawn once (hidden objects shown, empty instanced meshes given one instance, nothing culled), then put
-// back as it was. Not after a quality step: that one is on screen.
-function warmDraw() {
+// back as it was. Not after a quality step: that one is on screen. main.js calls it after linkPrograms (each program's
+// first use paid in slices: this one render would otherwise pay them all at once) and only while the cover is up (the
+// boot stops waiting for a slow compile after 1.5 s, boot.js waitForWarmup: the draw would land on the selector or a song).
+export function warmDraw() {
   const hidden = [], empty = [], culled = [];
   scene.traverse(o => {
     if (!o.visible) { hidden.push(o); o.visible = true; }
@@ -41,5 +43,5 @@ export function precompile(quad = false) {
   } catch { /* compiled by the first render that needs them instead */ } finally {
     if (rt) renderer.setRenderTarget(prev);
   }
-  return Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {}))).then(() => { rt?.dispose(); if (quad) warmDraw(); });
+  return Promise.all(jobs.map(j => Promise.resolve(j).catch(() => {}))).then(() => { rt?.dispose(); });
 }

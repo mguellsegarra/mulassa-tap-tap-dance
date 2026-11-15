@@ -187,7 +187,8 @@ A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the 
 - **Read the game's own verdict first.** With `?perf` every quality change is logged (`[quality] {reason, from, to, hz,
   lowPower, slowShare, capped, cpu…}`; the probe proxy keeps them): «overload at the splash, 4 s in, slowShare 0.9, cpu
   10 ms» says the monitor misread the cadence before any profile does. A crowd that thins is a quality step
-  (`stepPeople`), never a game rule.
+  (`stepPeople`) or the song going badly (some of the ring come and go with the accuracy: `crowd-pose.js` `thr`): the
+  log says which.
 - **A monitor bug is reproduced in node, not on the phone.** Feed `frameMonitor` the frame intervals seen (the probe
   can post every one: `probe-proxy.mjs … rec`, an `all` array per post) and it steps or not in milliseconds of
   work; the fix then gets a test that fails without it (`tests/render/low-power.mjs`).
@@ -197,6 +198,15 @@ A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the 
   when to stop), replay the intervals through
   `framePacer` and `adaptiveQuality` in node, and add each failing session to
   `tests/render/fixtures/low-power-bou.json`. Never reload or drive the tab while they play.
+- **Have the work reviewed from scratch before calling a monitor rule right.** Two reviewers (2026-11-15), given the
+  commits and no conclusions, each replayed a GPU-bound phone through the pacer and the rule and found it never stepped
+  down again; the recorded sessions alone could not show it. A rule about «whose fault a late frame is» needs the
+  opposite case as a test, not only the complaint's.
+- **Known and left as they are (2026-11-15, from those reviews):** a menu that drowns at every level sets a floor no
+  later menu passes for the session (`menuFloor`); at `low` the Bou's snake takes nearly all the visible ring;
+  `farm-run.mjs` neither requires the owner's AWS profile nor refuses at zero trial minutes; the cover can stay 6 s on a
+  phone that never draws 20 smooth frames (3 before); the fixture test feeds a fixed 9 ms of JavaScript, not the
+  recorded one; the warm-up draw's own task was never timed on a phone.
 - **What the rented phones played (2026-11-14): the Bou only**, with `?autoplay` at difficulty 1 (one whole song on two
   iPhones, a dozen 30 s passes) and the selector without playing. The Drac and the Mulassa were never played there, and
   neither was played in Low Power Mode on the owner's phone after the `throttled` rule: the rule is shared, the proof is not.
@@ -215,7 +225,8 @@ A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the 
   `UpdateLayoutTree` restyled, its invalidation tracking says which write scheduled it, and each write timed alone with
   a `getComputedStyle` after it (Mac, 4x) names the costly one in a minute.
 - **JavaScript or the GPU: the Mac says which.** `Emulation.setCPUThrottlingRate` 4 with a CPU profile over the same
-  song seconds: no long frame there means the phone's is a first draw or the compositor, not code to optimise.
+  song seconds: no long frame there points at a first draw or the compositor on the phone (a lead, not proof: another
+  engine can have a JavaScript cost the Mac lacks).
 - **Safari's first seconds are slow at any quality** (an iPhone 18 Pro in Low Power Mode: 30-70 ms of JavaScript a frame
   for 5-10 s after a load, 9 afterwards): compare profiles taken the same seconds after load, and keep the build whose
   profile you took (`--maps` needs that build's `.map` files: a rebuild changes the chunk names).

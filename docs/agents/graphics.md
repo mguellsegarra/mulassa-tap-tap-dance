@@ -188,17 +188,25 @@ traps: `docs/agents/device-profiling.md` («A rented phone»). Every number belo
   frame then read as slow, two steps down at once, and in Low Power Mode there is no way back up. Now a lone early frame
   (none in the 4 before it) neither ends the cap nor its run; closer ones do (a 60 Hz screen missing every second or third
   refresh). The same played Bou: 30 fps at `medium`, no step (2026-11-14, `tests/render/low-power.mjs`).
-- **That rule held for one session and failed the next: a throttled browser is told from its cost, not from one more
-  frame pattern.** The same phone, the day after, ran the Bou at 25 fps (30 and 24 Hz in turns, frames of 50-79 ms
+- **That rule held for one session and failed the next: a throttled browser is told by a step that buys nothing, not
+  by one more frame pattern.** The same phone, the day after, ran the Bou at 25 fps (30 and 24 Hz in turns, frames of 50-79 ms
   between them, JavaScript 9 ms a frame) and lost two levels in 40 s; with the cap rule patched it still lost one at
   the song's 125th second, when a late pair's catch-up (96, 71, 16, 21 ms) took the cap off. Two changes: the cap now
-  lifts only when 4 of the last 12 frames are under 24 ms (a screen back at 60 Hz), and `adaptive-quality.js` reports
-  `throttled` without stepping when the pace is capped or under 45 fps, the window is not spiky and the frame's own cost
-  is under 45% of the pace's budget: lowering quality cannot buy a frame the browser withholds. The owner's two
-  sessions are the test (`tests/render/fixtures/low-power-bou.json`, replayed through the pacer and the monitor by
-  `tests/render/adaptive-quality.mjs`); a third whole song then stayed at `medium` (16 `throttled` reports, no step).
-  Held notes had twice the frames over 70 ms (5.9% against 2.9%) and the stretches with no notes falling a third of
-  the late ones: the HUD lane costs on the GPU there, not measured part by part.
+  lifts only when 4 of the last 12 frames are under 24 ms (a screen back at 60 Hz), and under a cap with light JavaScript `adaptive-quality.js` takes its
+  first step down as a probe: if the late share does not fall by the overload threshold the level is put back
+  (`throttled`) and nothing more steps until the pace is fast again; the near people lag a level, so nobody leaves. A
+  first version skipped the step outright on «capped and light JavaScript»: two reviews showed a 60 Hz phone whose
+  GPU cannot keep up (33 and 50 ms frames in turns) reads exactly the same and never stepped down again. JavaScript
+  time says nothing about the GPU; only the step does. The owner's two sessions and that phone are the test
+  (`tests/render/fixtures/low-power-bou.json`, `tests/render/adaptive-quality.mjs`). On the owner's phone the probe
+  cost 6 s at `low` once (the song's 15th second), then `medium` to the end. The first try thinned the far crowd on
+  that one step and the owner saw it: the armless backdrop and mid band now lag a level with the near people
+  (`sessionProfile`), so a first step takes sharpness, shadows and effects only.
+- **In Low Power Mode it is the finger, not the HUD.** The same phone, song and server: on `?autoplay&mute` Safari
+  sat at 24 Hz (86-89% of frames at 42 ms, 1-2% late, no verdict at all); played by hand with sound it jumped between 30
+  and 24 Hz (48% at 33 ms, 36% at 42) with 12% late, the game's work the same 9-10 ms. The late frames are those
+  switches. Held notes looked worse in an earlier table (5.9% of frames over 70 ms against 2.9%) because a finger is
+  down, not for what they draw. Touch and sound were not told apart.
 - **The page cover stays up until the splash runs at the device's pace** (20 frames in a row under 45 ms, at most 6 s
   after the first): it lifted on frames of 41-55 ms, Safari still compiling the splash's dances (the Mulassa and Drac pair:
   30 ms of JavaScript a frame in Low Power Mode, 15 a few seconds later; the Bou alone, 9), and the monitor judged that.
@@ -245,6 +253,13 @@ What not to do:
 - Do not make the menus exempt from quality steps: tried on 2026-11-14 (to keep a slow selector from setting the song's
   level) and reverted, because weak phones find their level there before the first song (six tests say so); `menuFloor`
   is what stayed.
+- Do not skip a quality step because the JavaScript is light: a busy GPU has light JavaScript too.
+- Do not take anyone out of the plaça on a first step, far figures included: the owner sees them go. People are the
+  second step's (`PROFILE_PEOPLE`).
+- Do not give several people of a procession the same spot to walk back to: they wait on it for ever, still counted
+  as in it, and the next song's has nobody (the Bou's snake, three abreast, 2026-11-15; `PARADE_K.patience` is the net).
+- Do not draw the warm-up before `linkPrograms` nor once the cover is down (`main.js`): one render then pays every
+  program's first use at once, or lands on the selector.
 - Do not answer a Low Power complaint with one more frame pattern in `frameMonitor`, nor call it fixed after one good
   session: replay the owner's recorded sessions (`tests/render/fixtures/low-power-bou.json`) and add the one that fails.
 - Do not let one odd frame decide a cadence: a cap, a group or a hitch is read from a run of frames, never from the last one.

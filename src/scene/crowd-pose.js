@@ -58,7 +58,7 @@ export function pose(p, dt, beat, live) {
   const lens = Math.min(lensShrink(F.lens, p.pos.x, p.pos.y, F.lensK), F.lens && OUTGOING_LENS.on ? lensShrink(OUTGOING_LENS, p.pos.x, p.pos.y) : 1);
   if (lens !== (p.lensK ?? 1)) { p.lensK = lens; p.g.scale.setScalar(p.scale * (p.pres ?? 1) * p.qualityScale * lens); }
   if (p.thr) { // one of those who come and go with how well it goes (PRES)
-    const to = smooth01((presK - p.thr) / PRES.soft);
+    const to = p.parade ? 1 : smooth01((presK - p.thr) / PRES.soft); // (in a figure's procession they stay: a gap would walk round with it)
     if (to !== p.pres) {
       p.pres += (to - p.pres) * presE; if (Math.abs(to - p.pres) < 1e-3) p.pres = to;
       p.g.scale.setScalar(p.pres < 0.01 ? (p.pres = 0) : p.scale * p.pres * p.qualityScale * lens);

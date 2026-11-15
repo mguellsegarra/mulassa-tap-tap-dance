@@ -54,7 +54,7 @@ export function separate() {
     for (const p of activeCrowd) {
       if (p.rest || crowdAnchored(p)) continue; // at rest during the song (or charred stiff): only a mover can reach them, and resolves it
       const cellX = p.cell % 32, cellZ = Math.floor(p.cell / 32);
-      if (wallN) pushOffWalls(p, cellX, cellZ);
+      if (wallN && !p.parade) pushOffWalls(p, cellX, cellZ); // (a figure's procession slips through a rotllana's packed rows: walled in behind them, half the Bou's snake never reached it)
       for (let z = Math.max(0, cellZ - 2); z <= Math.min(31, cellZ + 2); z++) {
         for (let x = Math.max(0, cellX - 2); x <= Math.min(31, cellX + 2); x++) {
           const cell = crowdCells[x + z * 32];

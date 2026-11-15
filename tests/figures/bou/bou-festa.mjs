@@ -7,7 +7,8 @@ import { bouPose, BOU_TIMING, BOU_CARRY, bouFestaAt } from '../../../src/figures
 import { buildBou } from '../../../src/figures/bou/bou.js';
 import { createBouMotion } from '../../../src/figures/bou/bou-motion.js';
 import { BOU_CAPATAS, bouToWorld, createBouColla, carryColla } from '../../../src/figures/bou/bou-colla.js';
-import { PARADE, PARADE_K, paradeTick, paradeSteer, paradeSlot, paradeLeaveAt } from '../../../src/figures/bou/bou-parade.js';
+import { PARADE, PARADE_K, paradeTick, paradeSteer, paradeSlot, paradeLeaveAt, paradeShape } from '../../../src/figures/bou/bou-parade.js';
+import { LAP } from '../../../src/figures/bou/bou-dance.js';
 import { ARM, HELPER_HIP } from '../../../src/scene/models/colla.js';
 import { PROFILES } from '../../../src/platform/render-quality.js';
 
@@ -111,8 +112,16 @@ assert.ok(worst.crowdShell > 0.1, `the public runs into the Bou (${worst.crowdSh
 assert.ok(worst.crowdHelper > 0.4, `the public runs through an attendant (${worst.crowdHelper.toFixed(2)} m)`);
 assert.ok(worst.crowdCap > 0.5, `the public runs through the capatàs (${worst.crowdCap.toFixed(2)} m)`);
 assert.ok(worst.crowdEach > 0.4, `two of the public through each other (${worst.crowdEach.toFixed(2)} m)`);
-assert.equal(joined, Math.max(PARADE_K.count, Math.min(PARADE_K.most, Math.floor(crowd.length * PARADE_K.share))), 'the snake fills: never under `count`, more with a big crowd');
+assert.equal(joined, PARADE_K.count, `a snake of ${joined}, not ${PARADE_K.count}: the crowd has room for it all`);
 assert.ok(joined >= 10, `a file of ${joined} at medium quality`);
+// however many are free, the snake reaches round to `nose` m short of its muzzle (the owner, 15/11/2026): one file
+// while its rows stay `single` m apart, two beyond
+for (const n of [12, 18, 22, 23, PARADE_K.count]) {
+  const { abreast, space } = paradeShape(n), last = PARADE_K.gap + space * (Math.ceil((n - PARADE_K.tail) / abreast) - 1);
+  assert.ok(Math.abs(2 * Math.PI * LAP.r - PARADE_K.muzzle - last - PARADE_K.nose) < 1e-9, `${n} in the snake: its tail ${(2 * Math.PI * LAP.r - PARADE_K.muzzle - last).toFixed(2)} m from the muzzle`);
+  assert.equal(abreast, n <= 22 ? 1 : 2, `${n} in the snake: ${abreast} abreast, rows ${space.toFixed(2)} m apart`);
+}
+paradeShape(joined); // (back to this run's)
 assert.ok(formed > 0.8, `the file is not formed a beat after the lift (${(formed * 100).toFixed(0)}% in place)`);
 assert.ok(behind < 1.5, `nobody right at its tail (${behind.toFixed(2)} m)`);
 assert.ok(crowd.every(p => !p.parade || p.parade === 'home'), 'everyone heads home');

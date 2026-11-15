@@ -10,6 +10,11 @@
      (ui/sheets-setup.js), and closing it before the plaça is ready brings the loader back. -->
 <!-- nothing in the game is dragged: the browser's own drag of a picture, logo or text (a ghost of it) would steal the pointer -->
 <script>addEventListener('dragstart', e => e.preventDefault());</script>
+<!-- The app (Capacitor) serves this page for any path without a file name: /jocs/ and /pop/ go on to their own page. It starts
+     on Mulassa Games, but a live update reloads at the root: a root opened from no page (no referrer) is a start, not «Juga» (iOS's capacitor:// sends no referrer at all, so the games
+     menu opens /index.html by name). -->
+<script>if (window.Capacitor && location.pathname.length > 1 && !/\.html$/.test(location.pathname)) location.replace(location.pathname.replace(/\/?$/, '/index.html') + location.search + location.hash);
+else if (window.Capacitor && location.pathname === '/' && !document.referrer) location.replace('/jocs/index.html');</script>
 <script>if (location.hash === '#jocs') location.replace('/jocs/'); // the games' selector was a sheet here: old links and a game page kept from before</script>
 <link rel="canonical" href="https://mulassa.cat/">
 <link rel="alternate" type="text/markdown" href="/index.md">
@@ -615,6 +620,15 @@ addEventListener('beforeinstallprompt', function (e) { window.__installPrompt = 
     <h2 id="gpu-hint-title" data-i18n="html.gpuHintTitle">Acceleració per maquinari</h2>
     <p id="gpu-hint-text" class="board-text" data-i18n-rich="html.rich.gpuHint">El navegador no fa servir la targeta gràfica: el joc anirà més fluid si actives l’<b>acceleració per maquinari</b>.</p>
     <div class="sheet-actions"><button id="gpu-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
+  </div>
+</dialog>
+<dialog id="power-hint-menu" class="sheet hint-menu" data-unasked tabindex="-1" aria-labelledby="power-hint-title" aria-describedby="power-hint-text">
+  <button id="power-hint-close" type="button" data-i18n-attr="aria-label:html.attr.close" class="sheet-x" aria-label="Tanca"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  <div class="sheet-body">
+    <svg class="hint-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h15v8H3zM21 11v2M6 11v2"/></svg>
+    <h2 id="power-hint-title" data-i18n="html.powerHintTitle">Estalvi de bateria</h2>
+    <p id="power-hint-text" class="board-text" data-i18n-rich="html.rich.powerHint">El mòbil estalvia bateria i el joc va menys fluid. Desactiva l’<b>estalvi de bateria o el mode de consum reduït</b> per jugar millor.</p>
+    <div class="sheet-actions"><button id="power-hint-ok" type="button" class="btn btn-primary" data-i18n="ui.common.ok">D’acord</button></div>
   </div>
 </dialog>
 <dialog id="inapp-hint-menu" class="sheet hint-menu" data-unasked tabindex="-1" aria-labelledby="inapp-hint-title" aria-describedby="inapp-hint-text"><!-- inside an app's own browser, one version per account state (device-hint.js) -->

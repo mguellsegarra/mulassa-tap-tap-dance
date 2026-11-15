@@ -10,6 +10,7 @@ import { shareText, challengeUrl, challengeResult, bragWorthy, shareMode, linkMo
 import { drawCard, cardAlt, toJpeg, loadCardFonts } from '../hud/share-card.js';
 import { ALIAS_KEY, savedName } from '../services/leaderboard-identity.js';
 import { errors } from '../services/errors.js';
+import { shareNav } from '../platform/native.js';
 import { badgeImage } from './player-badges.js';
 
 const FORMAT_KEY = 'share-format';
@@ -17,7 +18,7 @@ const FORMAT_KEY = 'share-format';
 // 0.2 s) first, so it never waits behind the publish sheet or freezes mid-way; the shimmer holds the card's place.
 const afterEntrance = () => new Promise(r => (globalThis.requestAnimationFrame ?? setTimeout)(() => setTimeout(r, 200)));
 
-export function setupShare({ focusIn, restore = () => {}, hero = () => null, standing = async () => null, sfx = () => {}, doc = document, nav = navigator,
+export function setupShare({ focusIn, restore = () => {}, hero = () => null, standing = async () => null, sfx = () => {}, doc = document, nav = shareNav,
   store, fonts = doc.fonts, url = globalThis.URL, settle = afterEntrance }) { // the sheet opens only from its button, never by itself
   const $ = byId(doc);
   const menu = $('share-menu'), row = $('results-actions'), btn = $('results-share'), tag = $('results-share-tag');

@@ -19,6 +19,7 @@ import { hud, W, K } from '../hud/canvas.js';
 import { orbit, look, pnow } from '../scene/cameras.js';
 import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';
 import { bouTap } from '../figures/bou/bou-bills.js';
+import { onNativeBack } from '../platform/native.js';
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
@@ -49,6 +50,14 @@ addEventListener('keydown', e => {
     if (e.code === 'Space') { if (G.watch) togglePause(); else press('P', e); } // the dance demo: Space pauses, as a video
     if (e.code === 'KeyP') togglePause();
   } else if (G.state === 'results' && clock - G.resT > 1 && (e.code === 'Space' || e.code === 'Enter')) toTitle();
+});
+// Android's back button in the app (platform/native.js, after an open sheet): Escape's own steps (pause, leaving free play,
+// the selector's level step); where none applies, the results go to the selector and the rest back to the games menu
+onNativeBack(() => {
+  const esc = new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true, cancelable: true });
+  if (G.state !== 'splash') (document.activeElement ?? document.body).dispatchEvent(esc); // the splash: a key would start the audio
+  if (esc.defaultPrevented || G.state === 'play') return;
+  if (G.state === 'results') toTitle(); else location.replace('/jocs/index.html');
 });
 function padDown(b, e) {
   e.preventDefault();

@@ -57,6 +57,8 @@ jobs:
       VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
       VITE_FEEDBACK_URL: ${{ vars.VITE_FEEDBACK_URL }}
       VITE_FEEDBACK_ENABLED: ${{ vars.VITE_FEEDBACK_ENABLED }}
+      # the app's live updates follow the channel that built them (a per-environment variable overrides it)
+      VITE_LIVE_UPDATE_URL: ${{ vars.VITE_LIVE_UPDATE_URL || (github.ref_type == 'tag' && 'https://mulassa.cat' || 'https://beta.mulassa.cat') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -81,6 +83,8 @@ jobs:
       - name: Point beta link previews at beta
         if: env.CHANNEL == 'beta'
         run: find dist -name '*.html' -exec sed -i -E 's#((property="og:(url|image)"|name="twitter:image") content=")https://mulassa\.cat#\1https://beta.mulassa.cat#' {} +
+      # the app's live update: dist/app-bundle.json lists dist/'s files and hashes (after the beta rewrite: the bundle is what is served)
+      - run: node tools/deploy/app-bundle.mjs
       - name: Deploy dist/
         run: npx --yes wrangler@4.142.0 pages deploy dist --project-name mulassa-tap-tap-dance --branch ${{ env.CHANNEL == 'production' && 'main' || 'beta' }} --commit-dirty=true
         env:

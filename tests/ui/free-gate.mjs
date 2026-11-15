@@ -20,6 +20,7 @@ function make(o = {}) {
 // not an iPhone, or already sideways: free play goes straight in
 assert.equal(make({ ua: 'Linux; Android 14' }).gate.ask(), false, 'Android locks the orientation itself');
 { const t = make(); t.up.v = false; assert.equal(t.gate.ask(), false, 'sideways already: nothing to ask'); }
+assert.equal(make({ app: true }).gate.ask(), false, 'the app locks the iPhone sideways itself: asked to turn, the lock would hold it upright for ever');
 
 // upright iPhone in Safari: the recommendation first, «D’acord» brings the turn sheet; turning starts free play
 const a = make();

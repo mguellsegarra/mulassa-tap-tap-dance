@@ -1,5 +1,6 @@
 import { hugBubble } from './free-gate.js';
 import { IN_APP } from './profile-notes.js';
+import { CAP_APP } from '../platform/native.js';
 import { errors } from '../services/errors.js';
 // «Instal·la l’app» in ⚙ Configuració. Chromium browsers (Chrome, Edge, Samsung Internet) hand over their install prompt
 // (beforeinstallprompt) once the page qualifies, and the button opens it. Where no prompt exists the button shows that
@@ -15,7 +16,7 @@ export function stepsFor({ ua = '', touch = 0, standalone = false } = {}) {
   if (/iPad/.test(ua) || (/Macintosh/.test(ua) && touch > 1)) return 'ipad'; // iPadOS says «Macintosh»: its touch points tell
   return /iPhone|iPod/.test(ua) ? 'iphone' : null;
 }
-export function setupInstall({ focusIn, back, button = 'settings-install', ua = navigator.userAgent ?? '', touch = navigator.maxTouchPoints ?? 0, standalone = navigator.standalone === true || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches, doc = document, listen = addEventListener }) {
+export function setupInstall({ focusIn, back, button = 'settings-install', ua = navigator.userAgent ?? '', touch = navigator.maxTouchPoints ?? 0, standalone = CAP_APP || navigator.standalone === true || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches, doc = document, listen = addEventListener }) {
   const by = id => doc.getElementById(id), btn = by(button), sheet = by('install-steps-menu');
   const steps = stepsFor({ ua, touch, standalone });
   for (const el of sheet.querySelectorAll('[data-for]')) el.hidden = el.dataset.for !== steps;

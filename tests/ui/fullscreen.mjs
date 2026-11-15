@@ -9,7 +9,7 @@ const handlers = {}, on = (k, f) => (handlers[k] ||= []).push(f), classes = new 
 let asked = 0, exited = 0, firstCheck = null;
 const doc = { addEventListener: on, fullscreenElement: null, body: { classList: { contains: c => classes.has(c), toggle: (c, on) => on ? classes.add(c) : classes.delete(c) } },
   documentElement: { requestFullscreen() { asked++; return Promise.resolve(); } }, exitFullscreen() { exited++; return Promise.resolve(); } };
-const ctx = { document: doc, G: { state: 'select', paused: false }, COARSE: { matches: true }, isTablet: () => false, deviceOrient: () => 'portrait', pauseGame() {}, resizeIfChanged() {}, curtainCover() {},
+const ctx = { document: doc, G: { state: 'select', paused: false }, COARSE: { matches: true }, isTablet: () => false, deviceOrient: () => 'portrait', pauseGame() {}, resizeIfChanged() {}, curtainCover() {}, CAP_APP: false, nativeLock() {}, // the web: no app
   navigator: { userAgent: 'Linux; Android 14', maxTouchPoints: 5, userActivation: { isActive: true } }, screen: {}, innerWidth: 393, innerHeight: 852,
   addEventListener() {}, matchMedia: () => ({ addEventListener() {} }), setTimeout: f => (firstCheck = f), Promise };
 vm.runInNewContext(src + '\nthis.api = { photoOrient };', ctx);

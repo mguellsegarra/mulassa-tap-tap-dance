@@ -16,6 +16,7 @@ const ctx = vm.createContext({ G, COARSE, pageActive: () => active,
   document: { addEventListener(k, f) { handlers[k] = f; } },
   addEventListener(k, f) { handlers[k] = f; }, setTimeout(f, ms) { timers.push({ f, ms }); },
   glc: { addEventListener() {} }, // the WebGL watchdog's listeners (tests/render/scene-crowd.mjs)
+  onAppInactive(f) { ctx.appInactive = f; }, // the app covered without being left (platform/native.js)
 });
 vm.runInContext(read('../../src/ui/pause-actions.js').replace(/^import .*;$/gm, '').replaceAll('export ', ''), ctx);
 vm.runInContext(read('../../src/game/state.js').match(/export function afterActive\([\s\S]*?\n\}/)[0].replace('export ', ''), ctx);
@@ -72,3 +73,16 @@ ctx.chip.menuSrc = {}; watch(12000, 0.016); assert.equal(ctx.stalls, undefined, 
 watch(14000, 0); assert.deepEqual([ctx.stalls, G.paused], [1, false], 'frozen under the loop: the tap is awaited, no pause');
 delete ctx.chip.menuSrc; watch(16000, 0, 0); ctx.chip.radioSrc = {}; watch(16100, 0); assert.equal(ctx.stalls, 2, 'the radio too');
 console.log('deferred effects expire on blur, visibility and page exit; fresh effects and explicit pause preserved');
+
+// The app covered without being left (Control Center, a call, Android's shade): the page stays visible and focused, so
+// only the native signal pauses a run, and its pending effects are dropped like on leaving the page.
+{
+  Object.assign(G, { state: 'play', paused: false }); active = true;
+  let fired = 0; ctx.afterActive(700, () => fired++);
+  ctx.appInactive();
+  assert.equal(G.paused, true, 'a run pauses although the page never lost focus');
+  timers.splice(0).forEach(({ f }) => f());
+  assert.equal(fired, 0, 'an effect asked before is dropped');
+  Object.assign(G, { state: 'select', paused: false }); ctx.appInactive();
+  assert.equal(G.paused, false, 'the menus have nothing to pause');
+}

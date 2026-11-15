@@ -26,12 +26,18 @@ const context = vm.createContext({
   settleHold: () => releases.push(true), songTime() {}, eventAt() {},
   haptic() {}, padFeedback() {}, syncPad() {}, releaseAll() {}, clearPhotoKeys() {}, photoRelease() {},
   orbit: { ptrs: new Map() }, look: { ptrs: new Map() }, orbitUp() {}, pnow() {},
+  // Android's back button in the app (platform/native.js): the handler is kept to be pressed below
+  onNativeBack(f) { context.nativeBack = f; }, performance: { now: () => 0 }, // (Escape asks the mouse look first)
+  togglePause() { context.pauses = (context.pauses || 0) + 1; }, clock: 10,
+  toTitle() { context.titles = (context.titles || 0) + 1; }, location: { replace(url) { context.left = url; } },
+  KeyboardEvent: class { constructor(type, o) { Object.assign(this, o, { type }); this.defaultPrevented = false; } preventDefault() { this.defaultPrevented = true; } },
   addEventListener(type, handler) {
     if (!listeners.has(type)) listeners.set(type, []);
     listeners.get(type).push(handler);
   },
 });
-context.document = { addEventListener: context.addEventListener };
+const body = { tagName: 'BODY', dispatchEvent: e => { e.target = body; (listeners.get(e.type) || []).forEach(h => h(e)); } }; // a real dispatch sets the target
+context.document = { addEventListener: context.addEventListener, body };
 vm.runInContext(readFileSync(new URL('../../src/ui/mouse-look.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context);
 vm.runInContext(readFileSync(new URL('../../src/platform/double-tap.js', import.meta.url), 'utf8').replace(/^export /gm, ''), context);
 vm.runInContext(readFileSync(new URL('../../src/ui/input.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, ''), context);
@@ -79,4 +85,12 @@ const hitsBeforeSelect = calls.length;
 emit('keydown', { tagName: 'BODY', handlers: {} }, { code: 'Space' });
 assert.deepEqual(sounds, [], 'Space on the selector does not play a hidden menu action');
 assert.equal(calls.length, hitsBeforeSelect, 'Space on the selector does not judge a hit');
-console.log('pad pointer/keyboard/hold/GUAPA input stays separate from menu audio ok');
+
+// Android's back button: in a song it is Escape (the pause), on the results it goes to the selector, elsewhere to the games menu
+G.state = 'play'; G.paused = false; context.nativeBack();
+assert.equal(context.pauses, 1, 'back in a song opens the pause'); assert.equal(context.left, undefined, 'and stays in the game');
+G.state = 'results'; context.nativeBack();
+assert.equal(context.titles, 1, 'back on the results goes to the selector');
+G.state = 'select'; context.nativeBack();
+assert.equal(context.left, '/jocs/index.html', 'back on the selector leaves for the games menu');
+console.log('pad pointer/keyboard/hold/GUAPA input stays separate from menu audio ok; Android back ok');

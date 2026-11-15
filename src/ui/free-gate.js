@@ -1,8 +1,11 @@
 // «Gira el mòbil» before free play on an iPhone held upright. iOS has no orientation lock and no page fullscreen, so the
 // selector explains it first: Safari recommends the home-screen app, then both ask to turn the phone, and free
-// play starts by itself once it is on its side. Other devices pass straight through (fullscreen.js locks Android).
+// play starts by itself once it is on its side. Other devices pass straight through (fullscreen.js locks Android), and so does
+// the app, which locks the iPhone too: asked to turn, a phone held upright by the lock would never get there.
 // The home-screen recommendation is told once (FREE_FS_KEY); later taps only ask to turn, with a bubble back to its steps
 // in Safari.
+import { CAP_APP } from '../platform/native.js';
+
 export const FREE_FS_KEY = 'free-hint';
 // A wrapped box keeps its widest size: the bubble is cut to its longest line, so no hole is left on its right
 // (also «Instal·la l’app»'s steps, install-app.js)
@@ -14,7 +17,7 @@ export function hugBubble(menu, doc = document) {
   const right = Math.max(...[...r.getClientRects()].map(x => x.right));
   b.style.width = `${Math.ceil(right - b.getBoundingClientRect().left + parseFloat(getComputedStyle(b).paddingRight))}px`;
 }
-export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.userAgent ?? '', standalone = navigator.standalone, media = globalThis.matchMedia?.('(orientation: portrait)'), portrait = () => (typeof media?.matches === 'boolean' ? media.matches : innerHeight > innerWidth), doc = document, listen = addEventListener }) {
+export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.userAgent ?? '', standalone = navigator.standalone, app = CAP_APP, media = globalThis.matchMedia?.('(orientation: portrait)'), portrait = () => (typeof media?.matches === 'boolean' ? media.matches : innerHeight > innerWidth), doc = document, listen = addEventListener }) {
   const by = id => doc.getElementById(id), turn = by('free-hint-menu'), fs = by('free-fs-menu');
   const iphone = /iPhone|iPod/.test(ua), isOpen = () => Boolean(turn.open || fs.open);
   // Safari's own steps: Chrome, Firefox and Edge on iOS are WebKit too, but their menus differ
@@ -37,7 +40,7 @@ export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.u
     get isOpen() { return isOpen(); },
     // true when a sheet took the tap: free play waits for the turn
     ask() {
-      if (!iphone || !portrait() || isOpen()) return false;
+      if (app || !iphone || !portrait() || isOpen()) return false;
       if (!safari || store?.get(FREE_FS_KEY) === '1') askTurn();
       else { store?.set(FREE_FS_KEY, '1'); showSteps(); }
       return true;

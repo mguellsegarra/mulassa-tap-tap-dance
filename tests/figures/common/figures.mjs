@@ -2,7 +2,7 @@ import { UNRELEASED_IDS } from '../../../src/figures/index.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { selectCss } from '../../ui/page.mjs';
-import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, isNovelty, saveFigureRecord, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, isNovelty, markSeen, saveFigureRecord, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../../../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
@@ -79,6 +79,9 @@ for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-v
   assert(isNovelty(fresh, BOU) && !isNovelty(fresh, MULASSA) && !isNovelty(fresh, DRAC), 'only the Bou is new');
   saveFigureRecord(fresh, BOU, 2, 0.8, 1000, 40);
   assert(!isNovelty(fresh, BOU), 'a record on any level ends it');
+  const w = new Map(), seen = { get: k => w.get(k) ?? null, set: (k, v) => w.set(k, v) };
+  markSeen(seen, MULASSA); assert.equal(w.size, 0, 'a figure without the trait stores nothing');
+  markSeen(seen, BOU); assert(!isNovelty(seen, BOU), 'watching the ball or free play ends it, with no record');
 }
 assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-v3-2', 'each Mulassa score version has its own record namespace');
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
@@ -322,7 +325,7 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert.match(escutSvg('sant-julia'), /stroke-linejoin="round"\/><g stroke="none"><g fill="#2e8b3e">/, 'Sant Julià: the laurel outside the oval');
   assert(!/stroke-linejoin="round"\/><g stroke="none">/.test(escutSvg('valls')), 'arms without an outside charge add nothing');
   assert(escutSvg('campos').includes('#8a2a8c'), 'Campos: the purple bordure');
-  assert.match($('select-towns').innerHTML, /data-town="sant-joan"[^>]*>.*?<\/svg>Sant Joan \(Mallorca\)<\/button>/, 'Sant Joan: its pill says which one');
+  assert.match($('select-towns').innerHTML, /data-town="sant-joan"[^>]*><img class="escut"[^>]*>Sant Joan \(Mallorca\)<\/button>/, 'Sant Joan: its pill says which one');
   assert.equal(locationOf({ town: 'sant-joan' }), 'Sant Joan · Mallorca', 'its location line keeps the plain name');
   const shortOf = new Map(); // one association, one short name on every card (the Lleó and the Gegants del Pi share theirs)
   for (const f of sourceCatalog.figures) { assert.equal(shortOf.get(f.entityName) ?? f.entity, f.entity, `${f.id}: ${f.entityName} keeps one short name`); shortOf.set(f.entityName, f.entity); }
@@ -571,7 +574,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   const ids = TOWNS.flatMap(t => [escutSvg(t.id), escutSvg(t.id)]).map(svg => svg.match(/clipPath id="([^"]+)"/)[1]);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(escutSvg('nowhere'), '');
-  assert.match(strip, /escutSvg\(t\.id\) \|\|/); assert.match(strip, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
+  assert.match(strip, /escutImg\(t\.id\) \|\|/); assert.match(strip, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (the owner chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = selectCss();

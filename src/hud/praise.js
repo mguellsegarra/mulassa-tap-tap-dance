@@ -44,6 +44,22 @@ export function bigWord(word, x, y, size, cols, rot = 0, maxW = W - 12, base = s
   H.drawImage(sp.c, -sp.w * sc / 2, -sp.h * sc / 2, sp.w * sc, sp.h * sc);
   H.restore();
 }
+// The word one letter every `step` s, each letter its own cached sprite (B, O, U, !: four outlines, not one per prefix)
+// (its letters and their widths measured once per word and size, kept on the praise: nothing allocated a frame)
+function drawLetters(p, age, cx, y, cols, tilt, maxW, base) {
+  if (p.letters?.base !== base) {
+    H.font = `800 ${base}px ${FONT}`;
+    const chars = [...p.word], ws = chars.map(ch => H.measureText(ch).width);
+    p.letters = { base, chars, ws, tot: ws.reduce((a, b) => a + b, 0) };
+  }
+  const { chars, ws, tot } = p.letters, fit = Math.min(1, maxW / (tot + base * 0.6));
+  let lx = cx - tot * fit / 2;
+  for (let i = 0; i < chars.length; i++) {
+    const a = age - i * p.step, w = ws[i] * fit;
+    if (a > 0) bigWord(chars[i], lx + w / 2, y + Math.sin(tilt) * (lx + w / 2 - cx), base * fit * elastic(Math.min(1, a / 0.25)), cols, tilt, maxW, base, true);
+    lx += w;
+  }
+}
 function paintWord(c, word, x, y, size, cols, rot, fit, part = 'all') { // part: 'rim' (the outline), 'fill' or 'all'
   c.save();
   c.translate(x, y); c.rotate(rot);
@@ -116,6 +132,7 @@ export function drawPraise() {
   }
   H.restore();
   H.globalAlpha = fade;
-  bigWord(p.word, cx, y, size, cols, tilt, maxW, HEADLINE_SIZE(big) * (1 + lvl * 0.08), p.tier === 'rainbow');
+  if (p.step) drawLetters(p, age, cx, y, cols, tilt, maxW, HEADLINE_SIZE(big) * (1 + lvl * 0.08));
+  else bigWord(p.word, cx, y, size, cols, tilt, maxW, HEADLINE_SIZE(big) * (1 + lvl * 0.08), p.tier === 'rainbow');
   H.globalAlpha = 1;
 }

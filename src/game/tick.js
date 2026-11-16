@@ -47,7 +47,8 @@ export function tickGame(t, vt, beat, dt) {
       for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
       burst(M.pos.x, M.pos.y, 'end');
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      figTheme.chant.forEach(([w, at, dur]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, dur, 0.5); }));
+      // step: one letter every `step` s (the Bou's BOOOUUUUU!, hud/praise.js drawLetters)
+      figTheme.chant.forEach(([w, at, dur, step]) => afterActive(at * 1000, () => { if (G.state === 'play' && headline(w, 'rainbow', 4, dur, 0.5) && step) G.praise.step = step; }));
       setTrauma(1);
     }
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps

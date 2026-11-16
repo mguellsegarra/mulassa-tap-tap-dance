@@ -2,6 +2,7 @@
 // Supabase client and stored session (services/supabase-client.js). A run goes whole to the pop-score function, which plays
 // it again and records its own score. A run made without a name waits here until there is one. Loaded only when needed.
 import { getClient } from '../../../services/supabase-client.js';
+import { sessionAuth } from '../../../services/session-auth.js';
 import { store } from '#plassa/storage.js';
 
 const PENDING = 'pop-pending'; // the best run made with no name yet (or offline): sent once there is one
@@ -9,7 +10,7 @@ const fail = code => Object.assign(new Error(code), { code });
 
 async function client() {
   const c = await getClient();
-  const { data } = await c.auth.getSession();
+  const { data } = await sessionAuth(c).current();
   return { c, signed: !!data.session, uid: data.session?.user.id ?? null };
 }
 async function rpc(c, name, args) {

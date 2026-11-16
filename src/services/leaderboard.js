@@ -6,6 +6,7 @@ import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
 import { fail, translated } from './leaderboard-errors.js';
 import { getClient } from './supabase-client.js';
+import { sessionAuth } from './session-auth.js';
 export { LEADERBOARD_VERSION, normalizeAlias } from './leaderboard-rules.js';
 export { getLeaderboardResult, subscribeLeaderboardResult } from './leaderboard-result.js';
 
@@ -27,10 +28,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     const c = await getClient();
     // Another tab (or an expiry) may switch this browser's session at any time: supabase-js tells every tab. Deferred: a
     // listener that calls back into auth inside this callback would deadlock the SDK.
-    if (!watching && c?.auth?.onAuthStateChange) {
-      watching = true;
-      c.auth.onAuthStateChange(event => { if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') setTimeout(() => emit({ type: 'changed' }), 0); });
-    }
+    if (!watching) watching = sessionAuth(c).watch(event => { if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') setTimeout(() => emit({ type: 'changed' }), 0); });
     return c;
   }
   async function write(action) {
@@ -41,18 +39,18 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     finally { writing = false; }
   }
   async function session(c, captchaToken) {
-    const { data, error } = await c.auth.getSession();
+    const { data, error } = await sessionAuth(c).current();
     if (error) throw error;
     if (data.session) return data.session;
     if (captchaRequired && !captchaToken) throw fail('captcha');
-    const signed = await c.auth.signInAnonymously({ options: { captchaToken } });
+    const signed = await sessionAuth(c).signInAnonymously(captchaToken);
     if (signed.error) throw signed.error;
     if (!signed.data.session) throw fail('session');
     return signed.data.session;
   }
   // an existing session only (reads and the stats sync never create a player)
   async function signedIn(c) {
-    const { data, error } = await c.auth.getSession();
+    const { data, error } = await sessionAuth(c).current();
     if (error) throw error;
     return data.session;
   }
@@ -69,8 +67,8 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       const text = String(error?.message ?? '');
       if (text.includes('leaderboard_auth')) {
         let userId = null;
-        try { userId = (await c.auth.getSession()).data?.session?.user?.id ?? null; } catch { /* the id is only for the stats layer */ }
-        if (text.includes('leaderboard_auth_required')) try { await c.auth.signOut({ scope: 'local' }); } catch { /* the retry reports it */ }
+        try { userId = (await sessionAuth(c).current()).data?.session?.user?.id ?? null; } catch { /* the id is only for the stats layer */ }
+        if (text.includes('leaderboard_auth_required')) try { await sessionAuth(c).signOut(); } catch { /* the retry reports it */ }
         if (userId) emit({ type: 'gone', userId });
       }
       throw error;
@@ -134,7 +132,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     },
     async identity() {
       try {
-        const c = await client(), { data, error } = await c.auth.getSession();
+        const c = await client(), { data, error } = await sessionAuth(c).current();
         if (error) throw error;
         // the address only once Supabase Auth confirmed it (a pending change is not the profile's)
         const user = data.session?.user;
@@ -209,7 +207,7 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       if (writing) throw fail('busy');
       writing = true;
       try {
-        const { error } = await (await client()).auth.signOut({ scope: 'local' });
+        const { error } = await sessionAuth(await client()).signOut();
         if (error) throw error;
       } catch (error) { throw translated(error); }
       finally { writing = false; }
@@ -222,13 +220,13 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
       writing = true;
       let userId;
       try {
-        const c = await client(), { data, error } = await c.auth.getSession();
+        const c = await client(), { data, error } = await sessionAuth(c).current();
         if (error) throw error;
         if (!data.session) throw fail('session');
         userId = data.session.user?.id;
         const deleted = await c.functions.invoke('delete-player', { body: {} });
         if (deleted.error || !deleted.data?.deleted) throw deleted.error ?? fail('unavailable');
-        await c.auth.signOut({ scope: 'local' });
+        await sessionAuth(c).signOut();
       } catch (error) { throw translated(error); }
       finally { writing = false; }
       if (userId) emit({ type: 'gone', userId }); // decision 31: its statistics go too

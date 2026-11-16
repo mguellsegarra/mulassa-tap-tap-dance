@@ -3,6 +3,7 @@
 // time, errors translated), emit (account events) and captchaRequired.
 import { fail } from './leaderboard-errors.js';
 import { cleanEmail } from './feedback.js';
+import { sessionAuth } from './session-auth.js';
 
 export function codeSignIn({ write, emit, captchaRequired }) {
   return {
@@ -15,16 +16,16 @@ export function codeSignIn({ write, emit, captchaRequired }) {
       const mail = cleanEmail(email);
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(mail)) throw fail('email');
       return write(async c => {
-        const { data, error } = await c.auth.getSession();
+        const { data, error } = await sessionAuth(c).current();
         if (error) throw error;
         if (data.session && !signIn) {
-          const up = await c.auth.updateUser({ email: mail });
+          const up = await sessionAuth(c).changeEmail(mail);
           if (!up.error) return { type: 'email_change' };
           if (up.error.code !== 'email_exists') throw up.error;
           return { type: 'exists', guest: data.session.user?.is_anonymous ? data.session.user.id : null }; // the profile it would leave
         }
         if (captchaRequired && !captchaToken) throw fail('captcha');
-        const { error: otpError } = await c.auth.signInWithOtp({ email: mail, options: { shouldCreateUser: false, captchaToken } });
+        const { error: otpError } = await sessionAuth(c).sendSignInCode(mail, captchaToken);
         if (otpError) throw otpError;
         return { type: 'email' };
       });
@@ -36,14 +37,14 @@ export function codeSignIn({ write, emit, captchaRequired }) {
       if (token.length !== 6 || !['email', 'email_change'].includes(type)) throw fail('code');
       let left = null;
       const out = await write(async c => {
-        const before = type === 'email' && leave ? (await c.auth.getSession()).data?.session : null;
-        const { data, error } = await c.auth.verifyOtp({ email: mail, token, type });
+        const before = type === 'email' && leave ? (await sessionAuth(c).current()).data?.session : null;
+        const { data, error } = await sessionAuth(c).verifyCode(mail, token, type);
         if (error) throw error;
         // another tab may have switched this browser, or confirmed that guest meanwhile: the server's answer for its own token
         // decides (shortcut: checked just before the call, so a confirmation in the same instant still loses; a server-side
         // guest-only delete would close it)
         if (before?.access_token && before.user?.id === leave && data?.user?.id !== leave) try {
-          const now = (await c.auth.getUser(before.access_token)).data?.user;
+          const now = (await sessionAuth(c).userOf(before.access_token)).data?.user;
           if (now?.id === leave && now.is_anonymous) {
             const d = await c.functions.invoke('delete-player', { body: {}, headers: { Authorization: `Bearer ${before.access_token}` } });
             if (!d.error && d.data?.deleted) left = leave;

@@ -91,6 +91,9 @@ export function separate() {
     }
     for (const p of activeCrowd) recell(p);
   }
+  // the figures' limit has the last word: a neighbour's push (or this mover's own, after its walls) could put someone back
+  // a few mm into a rotllana's figure (16/11/2026: -1.6 mm with one crowd)
+  if (wallN) for (const p of activeCrowd) if (!p.parade && !crowdAnchored(p)) { pushOffWalls(p, p.cell % 32, Math.floor(p.cell / 32)); recell(p); }
 }
 // Use the existing neighbour grid when a walking spectator needs a detour, rather than stepping into the next person.
 export function photoCrowdClearance(p, x, z) {

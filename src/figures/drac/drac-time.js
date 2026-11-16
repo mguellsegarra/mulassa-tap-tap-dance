@@ -35,6 +35,7 @@ export function createDracTime(song) {
   return {
     refAt, songAtRef, rateAt,
     beatAt: t => beatAtTime(B, t), // the game's own grid (figure-song.js beatAt for the Drac)
+    beats: B, // song seconds of each beat (drac-clip.js)
     beatAtRef: r => beatAtTime(B, songAtRef(r)),
     pickup: B[pickupBeat], // song seconds of the pickup note
     refEnd: song.refEnd,

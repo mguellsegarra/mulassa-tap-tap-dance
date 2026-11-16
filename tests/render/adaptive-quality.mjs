@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
 import { adaptiveQuality } from '../../src/platform/adaptive-quality.js';
 import { framePacer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
+import { readFileSync } from 'node:fs';
 
 const rig = (ceiling = 2) => {
-  let level = ceiling, t = 0; const events = [], changes = [];
-  const sample = adaptiveQuality({ ceiling, level: () => level, change: q => { changes.push([t, q]); level = q; }, report: e => events.push(e) });
+  let level = ceiling, t = 0; const events = [], changes = [], halves = [];
+  const sample = adaptiveQuality({ ceiling, level: () => level, change: q => { changes.push([t, q]); level = q; }, report: e => events.push(e), halve: on => halves.push(on) });
   const run = (seconds, options = {}) => {
     const { hz = 60, fps = hz, cost = 3, miss = 0, ...rest } = options;
     for (let i = 0, end = t + seconds * 1000; t < end; i++) {
@@ -12,7 +13,7 @@ const rig = (ceiling = 2) => {
       sample(ms, typeof cost === 'function' ? cost(level) : cost, { hz, fps, half: !!rest.half, lowPower: !!rest.lowPower }, !!rest.hold, rest.ready ?? true);
     }
   };
-  return { sample, run, events, changes, get level() { return level; } };
+  return { sample, run, events, changes, halves, get level() { return level; } };
 };
 {
   const r = rig(); r.run(3); for (let i = 0; i < 9; i++) r.run(1, { miss: r.level === 2 ? 4 : 0, cost: 14 }); // the drop relieves the load
@@ -64,12 +65,40 @@ for (const policy of [{ hold: true }, { half: true, hz: 120, fps: 60 }, { lowPow
   assert(r.events.some(e => e.reason === 'futile'), 'the futile drop is reported');
   r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'a heavier overload than the tolerated misses still lowers quality');
 }
+{ // a song whose JavaScript takes most of a 60 Hz frame is drawn at an even 30 instead of losing a profile that would not help
+  const r = rig(); r.run(3, { hold: true, cost: 14 }); r.run(5, { miss: 4, cost: 14, hold: true }); // (the rig keeps its rate: stop at the verdict)
+  assert.deepEqual(r.halves, [true], 'the overload of a CPU-bound song asks for the half rate, once');
+  assert.equal(r.level, 2, 'and keeps its profile'); assert(r.events.some(e => e.reason === 'cpu-cap'));
+  r.run(20, { fps: 30, hz: 60, cost: 14, hold: true }); assert.equal(r.level, 2, 'a steady 30 is its pace, not an overload');
+  r.run(3, { cost: 3 }); assert.deepEqual(r.halves, [true, false], 'the full rate is back once the song is over');
+  const g = rig(); g.run(3, { hold: true }); g.run(12, { miss: 4, cost: 5, hold: true });
+  assert(g.level < 2 && !g.halves.length, 'a light frame that misses refreshes is the GPU\'s: the profile steps down as before');
+}
+{ // a song in play is not walked down the ladder again once a drop proved futile (a CPU-bound phone: a hitch at every switch)
+  const r = rig(); r.run(120, { miss: 6, hold: true });
+  assert(r.events.some(e => e.reason === 'futile') && r.level === 2, 'the song\'s first drop is undone as futile');
+  const n = r.changes.length; r.run(60, { miss: 3, cost: 14, hold: true });
+  assert.equal(r.changes.length, n, 'no further profile change in that song, although it got heavier');
+  r.run(12, { miss: 3, cost: 14 }); assert(r.level < 2, 'out of the song the overload lowers quality as before');
+}
+{ // a menu that drowns at any level (the selector's HTML on an iPhone 8: 11 fps) gets its level back, and the song after it is its own judge
+  const r = rig(); r.run(3); r.run(40, { fps: 11 });
+  assert(r.changes.some(([, q]) => q === -1) && r.level === 2 && r.events.some(e => e.reason === 'futile'), 'the menu went down the ladder for nothing and is restored');
+  const n = r.changes.length; r.run(40, { fps: 11 }); assert.equal(r.changes.length, n, 'and is not walked down again');
+  r.run(20, { hold: true }); assert.equal(r.level, 2, 'a song that holds 60 fps keeps the level');
+  r.run(30, { fps: 11, hold: true }); assert.equal(r.level, -1, 'a song that drowns still steps down, and stays down');
+}
+{ // a futile verdict is that song's: after the menus, a song that really misses half its frames steps down
+  const r = rig(); r.run(120, { miss: 6, hold: true }); assert(r.events.some(e => e.reason === 'futile') && r.level === 2);
+  r.run(10); r.run(30, { miss: 2, cost: 5, hold: true });
+  assert(r.level < 2, 'the next song is judged afresh');
+}
 {
   const r = rig(-1); r.run(90); assert.equal(r.level, -1, 'software renderer ceiling is preserved');
 }
 {
   const r = rig(); r.run(3);
-  for (let i = 0; i < 12; i++) r.run(1, { hz: i % 2 ? 24 : 40, cost: 30 });
+  for (let i = 0; i < 12; i++) r.run(1, { hz: i % 2 ? 24 : 40, cost: 30, miss: 3 }); // (missing refreshes too: an even 24/40 alone is Low Power's boot)
   assert(r.level < 2, 'changing estimated Hz under overload cannot repeatedly erase downgrade evidence');
 }
 for (const ceiling of [0, 1]) {
@@ -143,3 +172,40 @@ console.log('adaptive quality: overload, measured recovery, failed-trial backoff
   delete globalThis.localStorage; delete globalThis.document;
 }
 console.log('context-lost quality step ok');
+{ // the pacer's cap: a 60 Hz screen draws every other refresh, evenly, and all of them again once it is lifted
+  const pace = framePacer(); let t = 0, drawn = 0; const tick = n => { drawn = 0; for (let i = 0; i < n; i++) { t += 1000 / 60; if (pace(t, true)) drawn++; } return drawn; };
+  assert.equal(tick(120), 120, '60 Hz: every refresh'); pace.cap = true;
+  assert(Math.abs(tick(120) - 60) <= 1 && Math.round(pace.fps) === 30, `capped: every other refresh (${drawn}), 30 fps`);
+  pace.cap = false; assert.equal(tick(120), 120, 'lifted: every refresh again');
+  const slow = framePacer(); let u = 0, n = 0; slow.cap = true; for (let i = 0; i < 60; i++) { u += 1000 / 30; if (slow(u, true)) n++; }
+  assert.equal(n, 60, 'a screen already at 30 Hz (Low Power Mode) is never halved to 15');
+}
+{ // a real song, as an iPhone 18 Pro in Low Power Mode drew it (the owner playing the Bou): Safari switching between 30
+  // and 24 Hz, frames of 50-79 ms in between, 9 ms of JavaScript. Replayed frame by frame through the pacer and the monitor
+  const { recordings } = JSON.parse(readFileSync(new URL('./fixtures/low-power-bou.json', import.meta.url), 'utf8'));
+  for (const posts of recordings) {
+  const replay = cost => { let level = 1, now = 0; const pace = framePacer(), changes = [], reasons = [];
+    const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => reasons.push(e.reason) });
+    for (const [play, frames] of posts) for (const ms of frames) { now += ms; pace(now, !!play); sample(ms, cost, pace, !!play, true, !!play); }
+    return { changes, reasons }; };
+  const light = replay(9), at = light.changes.findIndex((q, i) => q === 1 && light.changes[i - 1] === 0);
+  // (the frames are the recording's whatever the level: a step can buy nothing here, as it bought nothing on the phone)
+  assert(light.changes.every(q => q >= 0) && light.changes.at(-1) === 1, `one level down at most, as a probe, and back (${light.changes})`);
+  assert.deepEqual(light.changes.slice(at + 1), [], 'once the probe bought nothing the browser\'s late frames cost no more steps');
+  assert(light.reasons.includes('throttled'), 'and it is reported as the browser\'s throttle');
+  assert(replay(22).changes.length >= 1, 'the same frames with the game\'s own work heavy (22 ms of a 33 ms frame) still step down');
+  }
+}
+{ // the other owner of the same reading: a 60 Hz phone whose GPU cannot keep up (33 and 50 ms frames in turns, 5 ms of
+  // JavaScript). Its steps help, so they stay: the probe must not take it for a throttled browser (two reviewers, 15/11/2026)
+  let level = 1, now = 0; const pace = framePacer(), changes = [], reasons = [];
+  const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => reasons.push(e.reason) });
+  for (let i = 0; now < 90000; i++) { const ms = i % (level === 1 ? 2 : level === 0 ? 4 : 1e9) === 1 ? 50 : 100 / 3; now += ms; pace(now, true); sample(ms, 5, pace, true, true, true); }
+  assert.deepEqual(changes, [0, -1], `a GPU that gains from each step keeps stepping down (${changes})`);
+  // and one that gains from the first step only stays there: the second is put back
+  level = 1; now = 0; changes.length = 0; const pace2 = framePacer();
+  const sample2 = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: () => {} });
+  for (let i = 0; now < 90000; i++) { const ms = i % (level === 1 ? 2 : 4) === 1 ? 50 : 100 / 3; now += ms; pace2(now, true); sample2(ms, 5, pace2, true, true, true); }
+  assert.deepEqual(changes, [0, -1, 0], `a step that bought nothing is put back, the one that helped is kept (${changes})`);
+}
+

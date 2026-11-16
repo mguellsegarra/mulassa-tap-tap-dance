@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { buildMulassa } from '../../../src/figures/mulassa/mulassa.js';
 import { makeMulaMotion } from '../../../src/figures/mulassa/mula-path.js';
-import { shoeSeparation, SHOE, planSupports } from '../../../src/figures/mulassa/mula-supports.js';
+import { shoeGap, SHOE, planSupports } from '../../../src/figures/mulassa/mula-supports.js';
 import { createCarriers } from '../../../src/figures/mulassa/mula-carriers.js';
 import { makeDirections } from '../../../tools/dev/bestiari-compare/directions.js';
 import { createCameraFrame } from '../../../tools/dev/bestiari-compare/camera.js';
@@ -157,7 +157,7 @@ for (let frame = 0; frame <= 39888; frame++) {
     }
   }
   for (let i = 0; i < 8; i++) for (let j = i + 1; j < 8; j++) {
-    const a = motion.foot(t, i), b = motion.foot(t, j), gap = shoeSeparation(a, b, {}).gap;
+    const a = motion.foot(t, i), b = motion.foot(t, j), gap = shoeGap(a.x, a.z, a.yaw, b.x, b.z, b.yaw);
     assert(gap >= -1e-7 || Math.abs(a.y - b.y) >= SHOE.height - 1e-7, `shoes intersect at ${t}: ${i}/${j}`);
   }
   for (const o of parts) {

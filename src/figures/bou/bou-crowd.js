@@ -1,10 +1,17 @@
 // The Bou's festa on the people (bou-parade.js), as the crowd reads it (scene/crowd-effects.js): how wild the plaça goes,
 // the conga that runs behind the carried Bou, its bounce on every beat and its arms.
 import { BOU_FESTA } from './bou-stage.js';
+import { BOU_SHOW } from './bou-show.js';
 import { paradeTick, paradeSteer, PARADE_K } from './bou-parade.js';
+import { G } from '../../game/state.js';
+import { selectedFigure } from '../../game/figure-song.js';
+import { poseBouPercussion } from './bou-percussion.js';
 
 export const BOU_CROWD = {
-  festa: () => BOU_FESTA.k, // 0 but while the Bou is held up over the colla's heads
+  band(band, beat) {
+    if (G.state === 'play' && selectedFigure.id === 'bou-tradicional-valls') poseBouPercussion(band, beat);
+  },
+  festa: () => Math.max(BOU_FESTA.k, BOU_SHOW.hush ? 1 : 0), // 0 but while the Bou is held up over the colla's heads, and the first techno (arms up under the strobe)
   tick: paradeTick,
   steer: (p, dt) => !!p.parade && paradeSteer(p, dt), // running behind the carried Bou, or walking back
   pace: p => (p.parade ? PARADE_K.run * 1.3 : 0), // the snake runs: its drawn bodies may catch up this fast (m/s)

@@ -1,27 +1,30 @@
 name: Supabase functions
 
-# main → the beta project, a version tag → production (tags skip the paths filter: each release redeploys)
+# Called by deploy-pages.yml only after channel validation and migrations succeed.
 on:
-  push:
-    branches: [main]
-    tags: ['v*']
-    paths: ['supabase/functions/**', 'supabase/config.toml']
-  workflow_dispatch:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+    secrets:
+      SUPABASE_ACCESS_TOKEN:
+        required: true
 
 permissions:
   contents: read
 
 concurrency:
-  group: supabase-functions-${{ github.ref_type == 'tag' && 'production' || 'beta' }}
+  group: supabase-functions-${{ inputs.environment }}
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
+    environment: ${{ inputs.environment }}
     env:
-      PROJECT_REF: ${{ github.ref_type == 'tag' && 'oajlkitufibpfvhgtqwr' || vars.SUPABASE_PROJECT_REF }}
+      PROJECT_REF: ${{ inputs.environment == 'production' && 'oajlkitufibpfvhgtqwr' || vars.SUPABASE_PROJECT_REF }}
       # Needs Edge Functions read-write; the database migrations job does not use it.
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
@@ -32,5 +35,6 @@ jobs:
       # --use-api bundles on Supabase's side: no Docker on the runner. verify_jwt comes from supabase/config.toml.
       - run: |
           [ -n "$PROJECT_REF" ] || { echo "missing Supabase project"; exit 1; }
+          if [ "${{ inputs.environment }}" != production ] && [ "$PROJECT_REF" = oajlkitufibpfvhgtqwr ]; then echo "beta must not deploy functions to production"; exit 1; fi
           supabase functions deploy delete-player --project-ref "$PROJECT_REF" --use-api --yes
           supabase functions deploy pop-score --project-ref "$PROJECT_REF" --use-api --yes

@@ -39,6 +39,8 @@ export async function preparePages(directory, song) {
     if (!files.includes(name)) throw new Error(`Missing deployment file: ${name}`);
   }
   const deploy = files.filter(name => !OMIT.has(name));
+  // a QA build (vite.config.js: `-qa` stamp) opens every debug flag on any host: never deployed
+  if (files.includes('version.json') && /-qa$/.test(JSON.parse(await readFile(resolve(root, 'version.json'), 'utf8')).build ?? '')) throw new Error('A QA build (-qa stamp) must never be deployed');
   if (!deploy.some(name => /^assets\/[\w-]+\.js$/.test(name))) throw new Error('Missing built JavaScript');
   if (deploy.length > 20_000) throw new Error('Pages Free file count exceeded');
   for (const name of deploy) {
@@ -49,6 +51,7 @@ export async function preparePages(directory, song) {
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
       || /^[a-z]{2,3}(?:-[A-Za-z]{2,4})?\/projecte\/index\.(html|md)$/.test(name) // /<lang>/projecte/ from tools/deploy/seo-content/<lang>.json
       || /^photo-icons\/[\w-]+\.webp$/.test(name) // free play's drawn move buttons (src/ui/photo-icons.js)
+      || /^escuts\/[\w-]+\.[0-9a-f]{8}\.\d+\.png$/.test(name) // the selector pills' arms (src/ui/escuts.js, tools/ui/build-escuts.mjs)
       || /^jocs\/[\w-]+\/index\.html$/.test(name) // docs/jocs/README.md: one page per mini-game
       || name === 'pop/index.html' // mulassa.cat/pop: Mulassa Pop
       || name === 'jocs/index.html' // mulassa.cat/jocs: a short link to the games picker

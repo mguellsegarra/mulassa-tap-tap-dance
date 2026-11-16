@@ -62,6 +62,18 @@ Keep every angle on the camera's side of the action (|az| ≤ 1.2, the 180° rul
 - `photo-showreel.mjs` jumps from the selector straight to results. A long-lens showreel shot left the menu zoom set, and `easeLensX` snapped it. In the game a run always comes in between.
 - An `import()` by URL from a dev module can load a second copy of a module after a hot update. Hand the game's own module instances to `applyProposal` (`src/dev/reel-proposal.js`).
 
+## 7. A figure's own film («Mira el ball»)
+
+The Bou (2026-11-10) and the Drac (2026-11-13) film «Mira el ball» with their own cameras instead of the showreel's: `figures/common/clip-camera.js` places the game's camera from a shot list (`bou-clip.js`, `drac-clip.js`), full frame, with dry cuts. It needs the figure's root as a pure function of the song time. What the two rounds taught:
+
+- **The lens follows the path, never the figure.** It aims at the root averaged over ~2 s either side (`lag`), at a fixed height. Following the root itself was the «la càmera bota» of the Drac's showreel demo and the Bou's first film.
+- **No cut between two pictures alike.** On a phone four different shot names (wide, front, crane, orbit) showed the Drac the same size from the same side, and the owner called the cuts «molt iguals, queda molt malament». Each cut must change the figure's size on the screen by 1.4x or the side by 0.5 rad; `tests/figures/drac/drac-clip.mjs` measures it at four frame shapes. Think in three sizes (far, middle, near) and three sides, and check the phone frame, where names lie.
+- **A bare plaça wants a low, near lens.** The Bou's shots look down from over the crowd (its rotllana fills the floor, and from low the lens saw under its skirt). The same heights on the Drac showed 40% of the screen as tiles («veig moooolt de terra»). Its shots stand inside the dance ground at about its heads' height and look slightly up (a high `y`, `tallY` more on a tall phone): the figure sits low in the frame, the crowd and façades above it. Measure the tiles' share, not only the figure's size.
+- **A tall phone is narrow.** At 9:20 a 3 m figure with room to run cannot stand taller than about 45% of the screen; nearer than that its runs leave the sides. Shots on its spot can go to 60%.
+- **A fixed camera in front of a charge stays over the heads.** At ground height the Drac's arc walked into the lens (75% of it out of frame).
+- **The idle selector is another film.** The Bou's uses only its open, slow shots. The Drac's idle screen kept the showreel: held for 70 beats, a near camera had the arc walk into it.
+- Before showing the owner: a contact sheet from real screenshots at a phone size (recorded video comes out cropped), and the numbers per shot (figure's height, tiles' share, out of frame, turn rate).
+
 ## Research
 
 No installed or registry skill covers real-time camera direction. Searched on skills.sh: cinematography, camera direction, film editing, music video, dance film, multicam, shot list. What exists covers prompts for generated video, audio-driven multicam editing of real footage and generic three.js rigs. The rules above come from live TV direction (fixed cameras, cut to the camera the action goes to), dance film ([sources](sources.md)) and measuring this dance.

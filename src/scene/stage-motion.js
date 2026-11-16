@@ -13,15 +13,22 @@ import { clearManualImpact, expireManual } from './manual-jump.js';
 import { PAIR, DRAC_JUMP, keepClear, takeSolo, animPair } from '../figures/drac/drac-play.js';
 import { FIGURE_SCENES, sceneOf } from './figure-scenes.js';
 import { setBandLineup } from './quality.js';
+import { setRotllana } from './rotllana.js';
 import { traitsOf, SPLASH_HOST_ID } from '../figures/index.js';
 
 const SPLASH = { pair: PAIR, keepClear };
+// The splash's figure for this load, handed in by ui/splash-turn.js (which owns the visit counter in storage)
+export let SPLASH_SOLO = null;
+export const setSplashSolo = id => { SPLASH_SOLO = id; };
 let animatedFigureId = selectedFigure.id;
 export function resetMotionImpact() {
   clearManualImpact();
   M.air = M.airV = 0; PHOTO.air = false;
   DRAC_JUMP.air = DRAC_JUMP.airV = 0;
 }
+// Whether the figure on show stands in its own ring of people (rotllana.js): never in the splash's pair, nor in free
+// play, where every figure is driven in the same plaça, whose people step out of its way (a ring's packed figures do not)
+export const figureRing = (own, pair, driven) => !pair && !driven && !!own.rotllana;
 let impactState, impactFigure, impactEpoch;
 export function animStage(dt, beat, live = 1) {
   expireManual();
@@ -29,8 +36,9 @@ export function animStage(dt, beat, live = 1) {
     resetMotionImpact();
     impactState = G.state; impactFigure = selectedFigure.id; impactEpoch = PHOTO.epoch;
   }
-  if (animatedFigureId !== selectedFigure.id) {
-    animatedFigureId = selectedFigure.id;
+  const soloSplash = G.state === 'splash' ? SPLASH_SOLO : null; // the splash's figure alone, whoever is selected
+  if (animatedFigureId !== (soloSplash ?? selectedFigure.id)) {
+    animatedFigureId = soloSplash ?? selectedFigure.id;
     standUp(); M.dancing = false; M.yaw = FRONT; M.yawVel = 0;
     M.pos.set(0, 0); M.pivot.set(0, PIVOT); for (const f of FIGURE_SCENES) f.reset?.();
     Object.assign(S.yaw, { x: FRONT, v: 0, t: FRONT });
@@ -38,7 +46,7 @@ export function animStage(dt, beat, live = 1) {
   if (G.state !== 'splash' && G.state !== 'select' && PHOTO.ready) {
     setPhotoControl(false); endPhoto();
   }
-  const pair = G.state === 'splash'; // (free play shows one figure at a time: the one driven)
+  const pair = G.state === 'splash' && !soloSplash; // (free play shows one figure at a time: the one driven)
   // M owns the Mulassa in a pair, but the selected figure in the solo menu. Hand the existing Drac walker over.
   if (pair !== Boolean(PAIR.k) && traitsOf(selectedFigure.id).splashPartner && G.state !== 'play' && G.state !== 'results') {
     if (pair) {
@@ -65,12 +73,13 @@ export function animStage(dt, beat, live = 1) {
     S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0;
     endPhoto();
   }
-  const solo = PHOTO.on ? PHOTO.id : selectedFigure.id; // (free play: the figure driven, whatever the selector shows)
+  const solo = PHOTO.on ? PHOTO.id : soloSplash ?? selectedFigure.id; // (free play: the figure driven, whatever the selector shows)
   const own = (pair ? sceneOf(SPLASH_HOST_ID) : sceneOf(solo)) ?? FIGURE_SCENES[0]; // the figure on show
   const reel = REEL.on && G.state === 'select' && !PHOTO.on && !pair; // the selector's showreel: the song dance on the menu loop's beat (game/showreel.js)
   for (const f of FIGURE_SCENES) f.show(f === own);
   setBandLineup(PHOTO.on ? null : own.band ?? 'banda'); // free play: no musicians with any figure, only the public
-  for (const f of FIGURE_SCENES) f.collaTick(f === own && !pair, beat, dt, reel); // (the splash has two figures: no colla)
+  setRotllana(figureRing(own, G.state === 'splash', PHOTO.on)); // (after the band: its spots stay clear; the splash's figure alone: the pair's open plaça too)
+  for (const f of FIGURE_SCENES) f.collaTick(f === own && G.state !== 'splash', beat, dt, reel); // (the splash, pair or alone: no colla)
   if (own.id === SPLASH_HOST_ID) animPair(dt, beat, pair);
   else {
     PAIR.k = 0;

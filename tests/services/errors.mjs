@@ -152,7 +152,7 @@ console.log('crash reports: gating, scrubbing, early buffer ok');
 // The pre-bundle watchdog forwards only finite category tags, once, including a failure before this module loaded.
 {
   const { readFileSync } = await import('node:fs'), { runInNewContext } = await import('node:vm');
-  const source = readFileSync(new URL('../../src/services/errors.js', import.meta.url), 'utf8');
+  const source = readFileSync(new URL('../../packages/plassa/src/errors.js', import.meta.url), 'utf8');
   const bridge = source.slice(source.indexOf('if (w) {\n  let bootReported'), source.indexOf("if (MODE === 'development'"));
   for (const early of [false, true]) {
     const sent = [], win = early ? { __mulassaBootFailure: { phase: 'shaders', reason: 'deadline' } } : {};

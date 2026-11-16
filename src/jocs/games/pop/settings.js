@@ -139,13 +139,14 @@ function publishing(kind, back, run, prompt = false) {
   if (!profile.open(kind, null, { publish: asks })) return false; // its way back is onDone's alone (the close listener above): given here too, the run went twice
   $('profile-run').replaceChildren(...(asks ? run : [])); $('profile-run').hidden = !asks;
   $('profile-never').hidden = !(asks && prompt);
+  if (asks && prompt) $('profile-menu').setAttribute('data-unasked', ''); // came up by itself over the end sheet's taps (ui/backdrop.js)
   return true;
 }
 $('profile-never').addEventListener('click', () => {
   if ($('profile-send').disabled) return; // the profile is being made (profile-ui.js's busy): closing now would lose it
   kv.set(PROMPT_OFF, '1'); syncPromptRow(); $('profile-menu').close();
 });
-$('profile-menu').addEventListener('close', () => { $('profile-run').hidden = $('profile-never').hidden = true; }); // Perfil's own steps never show them
+$('profile-menu').addEventListener('close', () => { $('profile-run').hidden = $('profile-never').hidden = true; $('profile-menu').removeAttribute('data-unasked'); }); // Perfil's own steps never show them
 export function promptName(run, back) {
   if (kv.get(PROMPT_OFF) || document.querySelector('dialog[open]')) return false;
   onDone = back;

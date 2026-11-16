@@ -7,13 +7,15 @@ import { dummy } from './confetti.js';
 
 let finaleDim = 0; // a figure's night (0-1) keeps the finale's lights low and hides the voxel fireworks (grey cubes in a dark fog; figures/drac/drac-show.js)
 export const setFinaleDim = v => { finaleDim = v; };
+let finaleCalm = 0; // a figure's quiet end (0-1) brings the day's light back with no pulse (the Bou's close-up: its pale notes flashed on every beat and changed colour in one frame when the finale ended)
+export const setFinaleCalm = v => { finaleCalm = v; };
+const finSun = new THREE.Color(LIGHT.sun), finSky = new THREE.Color(LIGHT.sky);
 export function animFinaleLights(beat) {
   if (G.finale) {
-    const pulse1 = Math.max(0, 1 - (beat % 1) * 3);
-    sun.color.setHSL((beat * 0.13) % 1, 0.55, 0.78); // (lighter than a full colour: at 0.62 the plaça read as night)
-    hemi.color.setHSL((beat * 0.13 + 0.5) % 1, 0.5, 0.88);
-    hemi.intensity = (1.4 + pulse1 * 0.9) * (1 - 0.95 * finaleDim);
-
+    const pulse1 = Math.max(0, 1 - (beat % 1) * 3), lit = 1 - finaleCalm;
+    sun.color.setHSL((beat * 0.13) % 1, 0.55, 0.78).lerp(finSun, finaleCalm); // (lighter than a full colour: at 0.62 the plaça read as night)
+    hemi.color.setHSL((beat * 0.13 + 0.5) % 1, 0.5, 0.88).lerp(finSky, finaleCalm);
+    hemi.intensity = 1.6 + ((1.4 + pulse1 * 0.9) * (1 - 0.95 * finaleDim) - 1.6) * lit;
   } else if (hemi.intensity !== 1.6) {
     sun.color.set(LIGHT.sun); hemi.color.set(LIGHT.sky); hemi.intensity = 1.6;
   }

@@ -2,8 +2,8 @@
 // play, the results), then the lens shift, the plaza props in the way, the shake and the CSS-pixel view offset.
 // It reads the selector's rect and the view mode, so it lives with the UI glue; the cameras themselves are scene/.
 import { selectedFigure, figureScale } from '../game/figure-song.js';
-import { clock, G } from '../game/state.js';
-import { Q, COARSE } from '../core/env.js';
+import { clock, G, chip } from '../game/state.js';
+import { Q, COARSE, CALM } from '../core/env.js';
 import { blocks } from '../scene/framing.js';
 import { orbitCancel, resetLook } from '../scene/orbit.js';
 import { camera, plaza, cameraTarget, camFocus, camFocusTarget, camShift, camShiftX, camXYZ, focusXYZ, setCamShift } from '../scene/stage.js';
@@ -15,15 +15,19 @@ import { trauma, setTrauma } from '../scene/manual-jump.js';
 import { orbit, look, insidePlaza, frameMenuCamera, lens, easeLensX, applyCameraImpact, pairShot } from '../scene/cameras.js';
 import { framePlayCamera, applyWatchLook, CAMS } from '../scene/play-camera.js';
 import { framePhotoCamera, releasePhotoCamera } from '../scene/photo-camera.js';
-import { FIGURE_SCENES } from '../scene/figure-scenes.js';
-import { BOU_FINALE } from '../figures/bou/bou-bills.js';
-import { hud, HH, K, W, SAFE, baseFov } from '../hud/canvas.js';
+import { FIGURE_SCENES, sceneOf } from '../scene/figure-scenes.js';
+import { SPLASH_SOLO } from '../scene/stage-motion.js';
+import { hud, HH, K, W, SAFE, baseFov, setCloseUp } from '../hud/canvas.js';
 import { lane, playBottom, playStage } from '../hud/layout.js';
 import { splashS, splashBand } from '../hud/title.js';
 import { viewMode, menuState, updateControls } from './controls.js';
 import { sheets } from './sheets.js';
-import { idleBand } from './reel-idle.js';
-import { REEL } from '../game/showreel.js';
+import { idleBand, reelIdle, REEL_IDLE_FADE_MS } from './reel-idle.js';
+import { REEL, REEL_STILL, tickReel, tickStill, setReelIdle } from '../game/showreel.js';
+
+import { renderer, renderScreen } from '../scene/stage.js';
+import { PERF } from '../dev/perf.js';
+import { reelDissolve } from './reel-fade.js';
 
 const RESULTS_EASE = 0.6; // s
 const SPLASH_BAND = {}, WATCH_BAND = { top: 0, bottom: 0, left: 0, right: 0 }; // the splash's and the dance demo's free bands, refilled each frame
@@ -61,9 +65,9 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
       aim = Math.max(-0.25 * HH * K, Math.min(0.25 * HH * K, (mid - HH / 2) * K));
     }
     const splash = G.state === 'splash'; // the pair, framed whole between the logo and the prompt (cameras.js pairShot)
-    const sel = G.state === 'select', root = splash ? pairShot() : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
+    const sel = G.state === 'select', root = splash ? pairShot(SPLASH_SOLO) : sel && !PAIR.k ? figureRoot(selectedFigure.id) : null; // «QUI BALLA?» frames its figure in the free rect it measured (css px, when it opens or resizes); «mode foto» hides the selector: the whole screen
     if (sel && !sheets.select?.band) updateControls(); // the first frame after the splash: its cut needs the band, measured later in the frame, or it frames the whole screen and springs back out (5 m in 1 s)
-    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : null);
+    shift = frameMenuCamera(dt, mx, mz, root, splash ? splashBand(SPLASH_BAND) : sel && !viewMode ? (reelWide ? idleBand(sheets.select?.band, W * K, HH * K, SAFE) : sheets.select?.band) : null, aim, REEL.on ? REEL : REEL_STILL.on ? REEL_STILL : null);
   } else if (watchReel) { // «Mira el ball»: the showreel's shots on the song's beat, in the demo's free stage; a drag still turns them round her
     const area = playStage(); WATCH_BAND.top = area.top * K; WATCH_BAND.bottom = area.bottom * K; WATCH_BAND.right = W * K;
     if (REEL.fresh) resetLook(look);
@@ -85,15 +89,38 @@ export function frameCamera(dt, now, reelWide) { // reelWide: the idle selector'
     CAMS.live = false;
     if (G.state !== 'results' && camera.fov !== baseFov()) { camera.fov = baseFov(); camera.updateProjectionMatrix(); }
   }
+  setCloseUp(FIGURE_SCENES.some(f => f.closeUp?.())); // its small print at the screen's own pixels while it holds (hud/canvas.js); before the end shot: a resize resets the lens, which the shot then sets again (after it, one frame showed the play lens)
   if (!VIEW && !PHOTO.on) for (const f of FIGURE_SCENES) if (f.endShot) shift = f.endShot(dt, shift); // a figure's end shot (the Bou: down to its banknotes, over play and results)
   const menuCam = (menuState() || watchReel) && !PHOTO.on && !VIEW;
   setCamShift(PHOTO.on || menuCam || G.state === 'play' && !VIEW ? shift : camShift + (shift - camShift) * Math.min(1, dt * 3), menuCam ? lens.x : easeLensX(dt) * !PHOTO.on); // play and menus: already smoothed (photo driving: no shift)
   if (Math.abs(camShift) > 0.5 || Math.abs(camShiftX) > 0.5) camera.setViewOffset(W * K, HH * K, -camShiftX, -camShift, W * K, HH * K);
   else if (camera.view?.enabled) camera.clearViewOffset();
+  if (!VIEW && !PHOTO.on) for (const f of FIGURE_SCENES) f.filmShot?.(); // a figure's own film of its dance (the Bou's «Mira el ball»): the whole camera, its lens shift too
   focusXYZ[0] = mx; focusXYZ[1] = G.state === 'play' ? 1.4 : 1; focusXYZ[2] = mz;
   propsFor(camera);
   if (trauma > 0) { // shake decays; quadratic so small bumps barely move it. During play only a small accent
     setTrauma(Math.max(0, trauma - dt * 1.6)); // (GUAPA, the finale), added on top: it never feeds the camera's springs
   }
-  applyCameraImpact(trauma * (1 - BOU_FINALE.k)); // (no shake on the Bou's close-up)
+  applyCameraImpact(trauma * (sceneOf(selectedFigure.id)?.endImpact?.() ?? 1));
+}
+
+// Capture the outgoing shot before the scene advances, preserving still/reel hand-over timing.
+export function frameShowreel(now, dt, heard, beat, pendingSel) {
+  const reelWide = reelIdle(now);
+  setReelIdle(reelWide);
+  const reelMay = G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still');
+  const wasReel = REEL.on, wasStill = REEL_STILL.on;
+  const watchBeat = G.state === 'play' && G.watch ? (heard > 0 ? beat : 0) : null;
+  tickReel(reelMay && reelWide, selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches, watchBeat);
+  tickStill(reelMay, selectedFigure.id);
+  if (PERF?.mode !== 'no3d') {
+    if (wasStill && REEL.on || wasReel && REEL_STILL.on) {
+      renderScreen();
+      reelDissolve(renderer.domElement, W * K, HH * K, camera, true, REEL_IDLE_FADE_MS);
+    } else if (REEL.cut && !REEL.fresh) {
+      renderScreen();
+      reelDissolve(renderer.domElement, W * K, HH * K, camera);
+    }
+  }
+  return reelWide;
 }

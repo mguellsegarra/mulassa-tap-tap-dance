@@ -2,7 +2,7 @@
 // Eina de dev (no entra al build): captura d'una sessió del joc amb la GPU real (Chrome + Metal), no SwiftShader.
 // Sortida a --out (def. /tmp/mulassa-capture/<hora>): frames.csv (ms de cada rAF), summary.json, video.mp4 i spike-N.jpg
 // (contact sheet al voltant dels pitjors frames). Un lock a /tmp fa que els agents facin cua: només un Chrome GPU alhora.
-// Ús: node tools/qa/capture.mjs --url='http://localhost:5178/?mute&autoplay&from=40' [--seconds=20] [--vp=393x852] [--dpr=2] [--touch] [--pw=/tmp/ui-inv-pw] [--js='codi un cop carregat']
+// Ús: node tools/qa/capture.mjs --url='http://localhost:5178/?mute&autoplay&from=40' [--seconds=20] [--vp=393x852] [--dpr=2] [--touch] [--tap] [--pw=/tmp/ui-inv-pw] [--js='codi un cop carregat']
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, rmSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -37,6 +37,7 @@ try {
   if (/swiftshader|llvmpipe/i.test(gpu)) throw new Error(`sense GPU real: ${gpu}`);
   // mesura només el joc ja carregat: sense la càrrega del dev server (cobertura del loader fora)
   await page.waitForFunction(() => document.getElementById('loader')?.hidden ?? true, null, { timeout: 120000 });
+  if (args.tap) { await page.waitForTimeout(3000); await (args.touch ? page.touchscreen.tap(W / 2, H * 0.7) : page.mouse.click(W / 2, H * 0.7)); await page.waitForTimeout(2500); } // a real tap past the splash: the audio needs a gesture (__dbg.choose before it fails to start the music)
   if (args.js) await page.evaluate(args.js); // e.g. pick a figure and start: --js='document.querySelector(`[data-id=bou-tradicional-valls]`).click(); __dbg.choose(1)'
   await page.evaluate(() => { window.__frames.length = 0; window.__long.length = 0; });
   await page.waitForTimeout(secs * 1000);

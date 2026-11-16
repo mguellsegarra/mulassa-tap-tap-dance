@@ -140,6 +140,7 @@ export function setupPublish({ doc, $, service, store, focusIn, now, runs, canWr
     setSend(tr('ui.board.publish'), true);
     neverBtn.hidden = !auto; // only on the prompt that opened by itself; the slot is fixed for that opening
     $('publish-board').hidden = true;
+    publishMenu.toggleAttribute('data-unasked', auto); // by itself: no tap outside closes it, none inside counts for 400 ms (backdrop.js)
     if (!publishMenu.open) publishMenu.showModal();
     if (auto) publishMenu.focus();
     else focusIn(publishMenu, oneTap ? 'publish-send' : 'publish-alias');

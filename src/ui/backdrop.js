@@ -20,7 +20,7 @@ addEventListener('click', e => {
 
 // A sheet nobody asked for comes up under a finger that was busy elsewhere (data-unasked, greeting.js): no tap outside
 // closes it (above), and for its first ARM_MS no tap inside presses its buttons either. Escape and the back gesture still close it.
-const ARM_MS = 400;
+const ARM_MS = 400; // the same as packages/plassa/src/backdrop.js (tests/jocs/shared-base.mjs)
 // one watch on the whole document: a game page appends mulassa.cat's sheets after this module runs (jocs/main-sheets.js)
 new MutationObserver(records => {
   for (const { target: d } of records) if (d.open && d.matches?.('dialog[data-unasked]')) d.dataset.since = String(performance.now());

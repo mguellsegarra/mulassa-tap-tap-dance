@@ -42,30 +42,57 @@ for (const e of timing.events.filter(e => e.voice === 0).sort((a, b) => a.beat -
 }
 assert(melody.length > 300 && Math.abs(melody[0].beat - FIRST) < 1e-6 && Math.abs(melody.at(-1).beat - LAST) < 1e-6);
 
-// Level = the easiest difficulty that taps it, by its place in the 4/4 bar: beats 1 and 3 FÀCIL, beat 4 NORMAL, the
-// beat 2 and the eighths between DIFÍCIL; triplets and sixteenths stay in the audio. FÀCIL stays flat (6-7 notes per
-// 7 s) while the tempo climbs to 150: in a bar shorter than 1.8 s its beat 3 goes to NORMAL every other bar.
-const near = (x, k) => Math.abs(x - k) < 1e-6;
-const barOf = beat => Math.floor((beat - FIRST) / 4);
-const fastBar = beat => { const b0 = FIRST + 4 * barOf(beat); return sec(b0 + 4) - sec(b0) < 1.8 && barOf(beat) % 2 === 1; };
-function levelOf(n) {
-  const p = ((n.beat - FIRST) % 4 + 4) % 4;
-  if (near(p, 0)) return 0;
-  if (near(p, 2)) return fastBar(n.beat) ? 1 : 0;
-  if (near(p, 3)) return 1;
-  if (near(p % 1, 0) || near(p % 1, 0.5)) return 2;
-  return 3;
+// Level = the easiest difficulty that taps it. Each bar is read by the shape of its four beats (h: a note of two
+// beats or more starts there, q: one beat, e: shorter, t: a triplet, -: none) and always gets the same taps, all on
+// the beats. FÀCIL: the bar's first beat and the long notes that close a phrase (the two quarters after a run), not
+// an even pulse; NORMAL adds the beats of the run; DIFÍCIL taps every eighth. Triplets and sixteenths stay in the audio.
+const near = (x, k) => Math.abs(x - k) < 1e-2;
+const barOf = beat => Math.floor((beat - FIRST + 1e-6) / 4);
+const TAPS = { // shape: [FÀCIL's beats, NORMAL's]
+  'h-e-': [[0, 2], [0, 2]], 'h--t': [[0, 3], [0, 3]], 'h-qe': [[0], [0, 2]], 'h-qt': [[0], [0, 2]], 'h---': [[0], [0]], 'q---': [[0], [0]],
+  tttt: [[0, 2], [0, 1, 2]], teqe: [[0, 2], [0, 1, 2]], 'tte-': [[0, 2], [0, 1, 2]],
+  qqqq: [[0, 2, 3], [0, 1, 2, 3]], 'qqh-': [[0, 1, 2], [0, 1, 2]],
+  eeee: [[0], [0, 1, 2]], eeqq: [[0, 2, 3], [0, 2, 3]], 'eeh-': [[0, 2], [0, 1, 2]], 'eeq-': [[0, 2], [0, 1, 2]],
+};
+const LEVEL = new Map(); // beat -> level; a note off the grid has none
+const RUN = new Map(); // beat -> the end of a run held from its first note, on NORMAL and DIFÍCIL
+{
+  const bars = new Map();
+  for (const n of melody) bars.set(barOf(n.beat), [...(bars.get(barOf(n.beat)) ?? []), n]);
+  for (const [k, list] of bars) {
+    const b0 = FIRST + 4 * k, at = p => list.find(n => near(n.beat - b0, p)), frac = f => list.filter(n => near((n.beat - b0) % 1, f)).length;
+    const shape = [0, 1, 2, 3].map(p => { const n = at(p); return !n ? '-' : n.beats > 1.99 ? 'h' : n.beats > 0.99 ? 'q' : n.beats < 0.4 ? 't' : 'e'; }).join('');
+    let taps = TAPS[shape];
+    if (frac(2 / 3) >= 2 && !frac(1 / 3)) { // bars 9-16 gallop (tan-ta on every beat): every other beat, then three, then all four
+      const f = at(0) ? [0, 2] : [1, 3];
+      taps = [f, [...f, f[0] + 1], [0, 1, 2, 3]];
+    }
+    // a little of MANTÉN on the runs: in the third bar of each four-bar phrase (the run comes back) NORMAL and DIFÍCIL
+    // hold its first two beats instead of tapping them, then tap its end
+    else if (shape === 'eeee' && k % 4 === 3) { taps = [[0], [0, 3], [0, 3, 3.5]]; RUN.set(b0, b0 + 2); }
+    assert(taps, `bar at beat ${b0}: no taps for the shape ${shape}`);
+    const eighths = list.map(n => n.beat - b0).filter(p => near(p * 2, Math.round(p * 2)));
+    [taps[0], taps[1], taps[2] ?? eighths].forEach((ps, L) => { for (const p of ps) { const n = at(p); if (n && !LEVEL.has(n.beat)) LEVEL.set(n.beat, L); } });
+  }
 }
-// GUAPA: the openings of the dance's phrases (bou-dance.js anchors), the festive last phrase and the final do.
-const BIG = new Set([FIRST, barAt(19), barAt(27), barAt(35), barAt(64), barAt(72), barAt(80), barAt(88), LAST]);
+const levelOf = n => LEVEL.get(n.beat) ?? 3;
+// GUAPA: the openings of the dance's phrases (bou-dance.js anchors), the festive last phrase and the final do. Not the
+// song's first note: its long do is held, as every time it comes back.
+const BIG = new Set([barAt(19), barAt(27), barAt(35), barAt(64), barAt(72), barAt(80), barAt(88), LAST]);
 for (const b of BIG) assert(melody.some(n => near(n.beat, b) && levelOf(n) === 0), `GUAPA on beat ${b} is not a FÀCIL melody note`);
-// MANTÉN: the tune's long notes (two beats or more), held to a beat before they end: a beat of air before the next tap.
-const holdEnd = n => n.beats >= 2 && levelOf(n) <= 1 && !BIG.has(n.beat) ? n.beat + n.beats - 1 : 0;
 
 // Sides follow the melody: up -> PA (ka), down -> GUA (don), same -> keep; no level plays more than 4 on one side.
-const taps = melody.map(n => ({ ...n, level: levelOf(n), big: BIG.has(n.beat), end: holdEnd(n) })).filter(n => n.level < 3);
-const air = taps.filter(n => n.end).map(n => [n.beat, n.end]);
-const chart = taps.filter(n => !air.some(([a, e]) => n.beat > a + 1e-6 && n.beat < e + 1 - 1e-6));
+const chart = melody.map(n => ({ ...n, level: levelOf(n), big: BIG.has(n.beat), end: 0 })).filter(n => n.level < 3);
+// MANTÉN: a note of a beat or more is held as long as it sounds, up to a beat before the next tap of any level.
+chart.forEach((n, i) => {
+  const end = Math.min(n.beat + n.beats, (chart[i + 1]?.beat ?? Infinity) - 1);
+  if (n.level <= 1 && !n.big && end - n.beat >= 1 - 1e-6) n.end = end; // (a FÀCIL note's hold shows on FÀCIL: song.easyHolds)
+});
+// and a BRAMA answers the long do: the short note that closes a held one of two beats, before the tune rests
+chart.forEach((n, i) => {
+  const held = chart[i - 1], rest = (chart[i + 1]?.beat ?? Infinity) - (n.beat + n.beats) > 0.25;
+  if (held?.end && held.beats >= 2 && near(held.beat + held.beats, n.beat) && rest && n.level === 0) n.big = true;
+});
 let last = null;
 for (const n of chart) { n.side = last == null ? 'don' : n.pitch > last.pitch ? 'ka' : n.pitch < last.pitch ? 'don' : last.side; last = n; }
 for (let lvl = 0; lvl < 3; lvl++) {
@@ -83,7 +110,9 @@ for (let lvl = 0; lvl < 3; lvl++) {
   }
 }
 
-const notes = chart.map(n => [r4(sec(n.beat)), n.side, n.level, n.big ? 1 : 0, n.end ? r4(sec(n.end)) : 0]);
+// a hold's end: one number, or [FÀCIL, NORMAL, DIFÍCIL] for a held run, which FÀCIL only taps
+const holdOf = n => (RUN.has(n.beat) && !n.big ? [0, r4(sec(RUN.get(n.beat))), r4(sec(RUN.get(n.beat)))] : n.end ? r4(sec(n.end)) : 0);
+const notes = chart.map(n => [r4(sec(n.beat)), n.side, n.level, n.big ? 1 : 0, holdOf(n)]);
 const S = b => r4(sec(b));
 const song = {
   figure: 'bou-tradicional-valls', revision: timing.revision,
@@ -96,6 +125,8 @@ const song = {
   beats: timing.beats.map(r4),
   // the ESQUELLOT (the Bou's GLOBUS): the last two bars mashed up to the final hit; its notes give way (chart.js)
   balloons: [[barAt(90), barAt(92)]],
+  // MANTÉN on FÀCIL too (chart.js): its opening is the long do held, on every level (the owner, 13/11/2026)
+  easyHolds: true,
   notes,
   audio: `music/${playback.audio}?v=${playback.audioSha256.slice(0, 12)}`,
   // what the dance (figures/bou/bou-dance.js) needs from timing.json, so the game never bundles the whole 470 KB file:

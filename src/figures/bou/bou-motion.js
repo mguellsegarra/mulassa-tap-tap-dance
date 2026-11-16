@@ -1,7 +1,7 @@
 import { newBouPose, createBouDance } from './bou-dance.js';
 // One deterministic sampler for playback, pause, restart and arbitrary seeks.
-export function createBouMotion(rig) {
-  const dance=createBouDance(),pose=newBouPose(),feet=Array.from({length:4},()=>({}));
+export function createBouMotion(rig, dance = createBouDance()) {
+  const pose=newBouPose(),feet=Array.from({length:4},()=>({}));
   // dt: real seconds since the last frame, for the tail's pendulum only (0 = a seek: it hangs still)
   // sq 0-1: a BRAMA's squash on the head (bou-stage.js bouBrama)
   return (t,dt=0,sq=0)=>{
@@ -12,7 +12,7 @@ export function createBouMotion(rig) {
       const f=dance.foot(t,i,feet[i]);
       rig.feet[i].position.set(f.x,f.y,f.z);rig.feet[i].rotation.set(f.tilt??0,f.yaw,0,'YXZ');
     }
-    rig.cap?.play(t,pose.beat,sq); // the head's gags on the song's beat (bou-heads.js)
+    rig.cap?.play(t,pose.beat,sq,pose.calm); // the head's gags on the song's beat, held back while the opening is solemn (bou-heads.js)
     rig.poseLegs();rig.root.updateMatrixWorld(true);
     if(dt>0){rig.swingTail?.beat?.(pose.beat);rig.swingTail?.(dt);}else rig.swingTail?.reset();
     return pose;

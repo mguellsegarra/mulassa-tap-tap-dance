@@ -29,7 +29,8 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
       if (prev && out) now.forEach((q, i) => {
         const o = prev[i], w = ppl[i].way > 0.001 || ppl[i].away || ppl[i].spd > 0.05 || ppl[i].vel.lengthSq() > 4e-4 ? out.way : ppl[i].nearK > 0.02 ? out.ring : out; // the first ring (even fading in or out) has its own limits; walking (making way, settling after it: the next test): their own bucket
         w.pos = Math.max(w.pos, Math.hypot(q[0] - o[0], q[2] - o[2])); w.y = Math.max(w.y, Math.abs(q[1] - o[1]));
-        for (let k = 3; k < q.length; k++) w.rot = Math.max(w.rot, Math.abs(q[k] - o[k]));
+        // A fan keeps waving in silence; its arm has the 6 rad/s guard below, not the idle groove's stillness limit.
+        for (let k = 3; k < q.length; k++) if (!ppl[i].fan || k !== 5 && k !== 6) w.rot = Math.max(w.rot, Math.abs(q[k] - o[k]));
         w.top = Math.max(w.top, q[1]); if (!ppl[i].fan) w.arm = Math.min(w.arm, q[5]); // arm 0 (ventalls: by the face)
       });
       if (out) { out.ringN = Math.max(out.ringN, ppl.filter(p => p.near).length); out.shove = Math.max(out.shove || 0, mood.shoveK); }
@@ -165,9 +166,10 @@ import { dance, flushLoader, nodes, keyHandlers, windowHandlers, drawnText, docu
 // Leaving a paused game must resume the menu and allow the next game to run.
 run(`let resumes = 0;
   chip = { stop() {}, menu() {}, resume() { resumes++; }, ctx: {} };
-  G.state = 'play'; G.paused = true;
+  G.state = 'play'; G.paused = true; G.finale = G.doublePoints = true;
   toTitle();`);
 assert.equal(run('G.paused'), false, 'menu clears pause after Escape');
+assert.equal(run('G.finale || G.doublePoints'), false, 'left mid-finale: its pulsing lights and cheering crowd stay out of the selector');
 assert.equal(run('resumes'), 1, 'menu resumes suspended audio');
 
 // Loading a recording may finish after the player has already left the game.

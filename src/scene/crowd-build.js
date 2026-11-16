@@ -34,7 +34,7 @@ export const arenaNow = () => COLLAS.reduce((r, c) => (c.helpers.visible ? Math.
 export function placeHome(p) {
   // the front row near enough that her turns reach it (RING); with a colla out, from the dance ground's edge
   const r = Math.max(RING.front + p.row * 1.1 + rnd(-0.4, 0.4), arenaNow() && arenaNow() + 0.3 + p.row * 0.6);
-  p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r);
+  if (p.ring) p.pos.copy(p.ring); else p.pos.set(Math.cos(p.ang) * r, Math.sin(p.ang) * r); // ring: their slot in a figure's rotllana (rotllana.js)
   p.vel.set(0, 0); p.gx = p.gz = undefined; p.away = false; // (drawn there at once, no easing across)
 }
 for (let row = 0; row < renderProfile.rows; row++) {
@@ -62,6 +62,12 @@ for (let row = 0; row < renderProfile.rows; row++) {
   }
 }
 // one draw call for everyone (the band and, at high, the balcony people too); p.g/torso/legs/arms drive each pose
+const balconyIndices = plaza.balcony.reduce((n, p) => n + [p.torso, ...p.legs, ...p.arms].reduce((k, bone) => k + bone.children.reduce((j, m) => j + (m.isMesh ? (m.geometry.index ?? m.geometry.attributes.position).count : 0), 0), 0), 0); // (before skinCrowd takes their meshes)
 export const crowdMesh = skinCrowd([...crowd, ...plaza.band, ...plaza.balcony]);
+// The balcony people (the last in the mesh) cast no shadow: the fronts cast none, so theirs fell alone on the open floor,
+// 2 m out from the wall, a person's shadow with no one there.
+const crowdRange = crowdMesh.geometry.drawRange, crowdAll = crowdMesh.geometry.index.count;
+crowdMesh.onBeforeShadow = () => { crowdRange.count = crowdAll - balconyIndices; };
+crowdMesh.onAfterShadow = () => { crowdRange.count = Infinity; };
 crowdMesh.material = sootMaterial([...crowd, ...plaza.band, ...plaza.balcony], crowdMesh.skeleton.bones.length); // its own copy of SKIN_MAT: anyone in it can be charred (free mode's fire)
 scene.add(crowdMesh);

@@ -3,7 +3,9 @@
 - Every tap is a melody note. Exceptions: the final hit, and on DIFÍCIL the part-A backbeat PAs where the tune rests.
 - **GUA** = left = orange `#FF7A1A` = `don`. **PA** = right = turquoise `#14B8A6` = `ka`. Never swap them.
 - **GUAPA!** = both buttons on every level, within 80 ms (FÀCIL: 150 ms); one button alone = ERROR «ELS DOS ALHORA!»; half orange / half turquoise disc, double points.
-- **MANTÉN** holds: NORMAL and DIFÍCIL only (the long part-A notes), judged at head and tail.
+- **MANTÉN** holds: NORMAL and DIFÍCIL only (the long part-A notes), judged at head and tail. The Bou holds on FÀCIL too
+  (`easyHolds` in its song, read by `chart.js`): its opening is the long do held, then a BRAMA. A hold's end may be
+  one per level (`[FÀCIL, NORMAL, DIFÍCIL]`): the Bou's held runs, from NORMAL up, in the third bar of each four-bar phrase.
 - Judge windows (`WINDOWS`, progress.js), ± PERFECTE / BÉ / earliest ERROR: FÀCIL 60 / 140 / 180 ms, NORMAL 45 / 110 / 150,
   DIFÍCIL 35 / 90 / 125; the practice uses FÀCIL's. They assume the de-stepped song clock (below); no «expert» level.
 - **One song clock** (`audioClock`, audio-clock.js) for drawing, judging and the sync calibration: `ctx.currentTime` de-stepped
@@ -24,6 +26,9 @@
   JSON and port it to the generator by hand: `build_taiko.py` still picks each note's level. The proposals read
   `chart-events.json`, the hits the song plays; after the Mulassa's audio changes, `tests/game/chart-proposals.mjs` fails
   until it is regenerated with `CHART_EVENTS=tools/dev/notes-propostes/chart-events.json` + the generator command (no audio written).
+- **Hand-editing the Bou's levels**: `/tools/dev/bou-notes.html`: the three levels under the score's tune (gold = tapped
+  at the chosen level), playable on the MP3 with a click per note, the same editor; «Copia el JSON» is ported by hand to
+  `tools/music/build_bou_chart.mjs`.
 - **Record** = most comparable points per level, device (`beatsRecord`; keys per version: the Mulassa's `record-points-mulassa-v3-<level>`, the Drac's `record-drac-valls-<level>`; the previous dance's keys are only read, as «Rècord del ball anterior» in Perfil, and never compared) and
   server (`submit_result`), as the board ranks; the % only breaks ties. Points: thousands dots, `C.score` lilac (points only). `?repte` stays on %.
 - **Ànim de la plaça** (energy/health): starts full, misses drain it, hits refill; empty = the mulassa collapses.
@@ -31,7 +36,7 @@
 - In-game top HUD (`drawTop`): one row, the pixel mulassa (`mulaPortrait`: leans back and throbs below 35%, hops on a refill) + the ÀNIM bar (health); under it, a centred pill of a fixed width with no captions, in the pixel font, hidden until a note is judged: the PUNTS (six digits, one sprite per digit, `C.score`, those not reached yet dimmed like LEDs, the same value as the results), a dash and the ENCERTS % (the quality: perfect = 1, good = 0.8); the 70% goal is only on the results screen.
   Song progress: a ring round the pause button (`drawProgressRing`, hud/top.js; `PROG_T0`/`PROG_T1` bound it, first note → `song.end` on `songTime()`); the «x2 PUNTS» tag sits on the panel's top edge.
 - Lane (`lane()`): the band scales with the screen (1.4x phones, up to 2x big desktops); notes scale only as far as the
-  chart's closest two notes keep half a diameter clear with >= 0.9 s look-ahead (`NOTE_GAP`, `MIN_LOOK`). Nothing
+  chart's closest two notes keep half a diameter clear with >= 0.5 s look-ahead (0.9 shrank DIFÍCIL's notes to 3/4 on phones) (`NOTE_GAP`, `MIN_LOOK`). Nothing
   is drawn inside the ring but hit words. The streak is the «RATXA» badge (`drawStreak`, `streakBox`, knobs in `STREAK`), from
   5 in a row: inside the band just behind the ring (where notes have passed) when there is room, else (portrait phones)
   above-left of the ring, left of the top panel; clear of the ring at its biggest, a missed GUAPA's reach, the judge word,

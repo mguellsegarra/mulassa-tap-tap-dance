@@ -3,7 +3,7 @@
 // twice in a row (across the loop too), every angle on the camera's side of the action, every shot held or moving slowly
 // (the dizziness was the camera turning, not the cut), and the dance clock locked to the menu loop's beat.
 import assert from 'node:assert/strict';
-import { SHOWREELS, SHOT_KINDS, REEL_GLIDE, REEL_GLIDE_AZ, REEL, followBeat, shotAt, tickReel } from '../../../src/game/showreel.js';
+import { SHOWREELS, SHOT_KINDS, REEL_GLIDE, REEL_GLIDE_AZ, REEL, followBeat, shotAt, tickReel, tickStill, stillBeat, REEL_STILL } from '../../../src/game/showreel.js';
 import menuSong from '../../../src/song-mulassa.json' with { type: 'json' };
 import dracSong from '../../../src/song-drac.json' with { type: 'json' };
 import bouSong from '../../../src/song-bou.json' with { type: 'json' };
@@ -109,9 +109,21 @@ r = tickReel(true, DRAC.id, 0, 0.04); assert.ok(r.cut && r.beat >= 8 && r.beat <
 r = tickReel(false, DRAC.id, 0.1, 0.04); assert.ok(!r.on && !r.cut);
 // «Mira el ball»: the same shots on the song's own beat, from its first beat, fresh after the selector's reel; once through, no wrap
 r = tickReel(false, DRAC.id, 0.2, 0.04, false, 0); assert.ok(r.on && r.fresh && r.beat === 0, 'the demo opens on its first shot, fresh');
-r = tickReel(false, DRAC.id, 0.3, 0.04, false, 10); assert.ok(r.cut && !r.fresh, 'a cut of the list cuts (and dissolves) in the demo too');
+r = tickReel(false, DRAC.id, 0.3, 0.04, false, 10); assert.ok(!r.cut && !r.fresh, 'its demo is its own film (figures/drac/drac-clip.js), which cuts dry: no dissolve on the list\'s cuts');
 r = tickReel(false, DRAC.id, 0.3, 0.04, false, 14); assert.ok(r.beat === 14 && !r.cut, 'the song beat itself; inside a shot, no cut');
-r = tickReel(false, DRAC.id, 0.4, 0.04, false, 97); assert.ok(r.cut, 'the stare\'s close-up cuts in');
+r = tickReel(false, DRAC.id, 0.4, 0.04, false, 97); assert.ok(!r.cut, 'nor on the stare\'s');
+tickReel(false, MULASSA.id, 0.4, 0.04, false, 0); r = tickReel(false, MULASSA.id, 0.4, 0.04, false, 17); assert.ok(r.cut && !r.fresh, 'a cut of the list cuts (and dissolves) in a demo filmed by the showreel');
+tickReel(false, DRAC.id, 0.4, 0.04, false, 97);
 r = tickReel(false, DRAC.id, 0.5, 0.04, false, 400); assert.ok(r.beat === 400, 'past the loop it holds the last shot (no wrap)');
 r = tickReel(true, DRAC.id, 0.6, 0.04); assert.ok(r.fresh && r.beat >= 8, 'back on the selector: its own reel afresh');
+// Under the selector's UI one held shot (tickStill); the music video only on the idle screen, the two never at once
+tickReel(false, MULASSA.id, 0.7, 0.04);
+let st = tickStill(true, MULASSA.id); assert.ok(st.on && st.cut && REEL.may, 'the selector with its UI: the held shot, framed by a cut');
+st = tickStill(true, MULASSA.id); assert.ok(st.on && !st.cut, 'then held: no cut, ever, while the UI is up');
+st = tickStill(true, DRAC.id); assert.ok(st.cut, 'another figure: framed afresh');
+tickReel(true, DRAC.id, 0.8, 0.04); st = tickStill(true, DRAC.id); assert.ok(REEL.on && !st.on && REEL.may, 'the idle screen: the music video instead');
+tickReel(false, DRAC.id, 0.9, 0.04); st = tickStill(true, DRAC.id); assert.ok(st.on && st.cut, 'the UI back: the held shot, framed again');
+st = tickStill(false, DRAC.id); assert.ok(!st.on && !REEL.may, 'photo mode or a pending card: neither');
+assert.ok(st.shot.lock && st.shot.fixed, 'the held shot never follows her');
+for (let b = -300; b < 600; b += 7.3) { const x = stillBeat(MULASSA.id, b); assert.ok(x >= mula.start && x < mula.loop, `her dance on her spot stays inside its loop (${x} at ${b})`); }
 console.log('showreel ok');

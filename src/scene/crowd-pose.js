@@ -9,7 +9,7 @@ import { M } from './figure-springs.js';
 import { RING } from './crowd-build.js';
 import { lensShrink, OUTGOING_LENS } from './framing.js';
 import { easeIn, smooth01, TAU } from '../core/math.js';
-import { crowdPose, crowdPace, crowdHop, crowdArms } from './crowd-effects.js';
+import { crowdPose, crowdPace, crowdHop, crowdArms, crowdBand } from './crowd-effects.js';
 const ARMS = { tx: 0, tz: 0 }; // the arm targets a figure's effect bends (crowdArms), reused
 import { GROOVE, mood, PRES, PARTY_HOP, NEAR, F } from './crowd-mood.js';
 
@@ -55,10 +55,10 @@ export function pose(p, dt, beat, live) {
     ringUp = nk * (nv * NEAR.bob + ringBeat * NEAR.bounce * (0.5 + 0.5 * Math.cos(TAU * (beat - p.lag * 0.15)))); // up on the beat
     ringNod = nk * nv * NEAR.nod; ringArms = nk * nv * NEAR.arms;
   }
-  const lens = Math.min(lensShrink(F.lens, p.pos.x, p.pos.y), F.lens && OUTGOING_LENS.on ? lensShrink(OUTGOING_LENS, p.pos.x, p.pos.y) : 1);
+  const lens = Math.min(lensShrink(F.lens, p.pos.x, p.pos.y, F.lensK), F.lens && OUTGOING_LENS.on ? lensShrink(OUTGOING_LENS, p.pos.x, p.pos.y) : 1);
   if (lens !== (p.lensK ?? 1)) { p.lensK = lens; p.g.scale.setScalar(p.scale * (p.pres ?? 1) * p.qualityScale * lens); }
   if (p.thr) { // one of those who come and go with how well it goes (PRES)
-    const to = smooth01((presK - p.thr) / PRES.soft);
+    const to = p.parade ? 1 : smooth01((presK - p.thr) / PRES.soft); // (in a figure's procession they stay: a gap would walk round with it)
     if (to !== p.pres) {
       p.pres += (to - p.pres) * presE; if (Math.abs(to - p.pres) < 1e-3) p.pres = to;
       p.g.scale.setScalar(p.pres < 0.01 ? (p.pres = 0) : p.scale * p.pres * p.qualityScale * lens);
@@ -127,6 +127,7 @@ export function pose(p, dt, beat, live) {
 export function poseScenery(beat, live) {
   const { moodK, ex } = F, { festK, clapK, partyK, waveK, gr2 } = mood;
   poseBand(plaza.band, beat, live);
+  crowdBand(plaza.band, beat, live);
   for (const p of plaza.balcony) { // up on the balconies (high quality): one waves on the beat, the other leans on the rail
     const still = 1 - 0.8 * moodK; // the song: a slow small wave
     p.arms[0].rotation.x = -2.4 - 0.4 * smooth01(Math.max(festK, waveK * 2 - 0.5)); p.arms[0].rotation.z = 0.35 + Math.sin(beat * Math.PI + p.ph) * 0.35 * still;

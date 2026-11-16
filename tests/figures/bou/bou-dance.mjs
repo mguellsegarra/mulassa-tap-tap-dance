@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
-import { bouPose,createBouDance,BOU_TIMING,BOU_CARRY,LAP } from '../../../src/figures/bou/bou-dance.js';
+import { bouPose,createBouDance,BOU_TIMING,BOU_CARRY,LAP,lapWay } from '../../../src/figures/bou/bou-dance.js';
 import { buildBou } from '../../../src/figures/bou/bou.js';
 import { createBouMotion } from '../../../src/figures/bou/bou-motion.js';
-import { shoeSeparation } from '../../../src/figures/mulassa/mula-supports.js';
+import { shoeGap } from '../../../src/figures/mulassa/mula-supports.js';
 const approval=JSON.parse(readFileSync(new URL('../../../music/bou-tradicional/approval.json',import.meta.url)));
 assert.equal(createHash('sha256').update(readFileSync(new URL('../../../music/bou-tradicional/'+approval.audio,import.meta.url))).digest('hex'),approval.audioSha256);
 const dance=createBouDance(),rig=buildBou(),motion=createBouMotion(rig),p=new THREE.Vector3();
@@ -46,16 +46,19 @@ assert(Math.abs(bouPose(BOU_TIMING.duration).yaw-(2+2*LAP.turns+12)*Math.PI)<1e-
 assert(Math.abs(bouPose(BOU_TIMING.duration).lift)<1e-9,"settled at the end");
 assert(Math.abs(bouPose(12).yaw-Math.PI)<1e-9,'first phrase ends facing E');
 // the opening's long notes (and his reference video): the front carrier's leg forward on the long note,
-// swung back on the second; left (bar 1), right (2), left (5), right (6), the calderó too; the rear carrier stands
+// swung back on the second; left (bar 1), right (2), left (5), right (6); the rear carrier stands
 { const P=bouPose, B=BOU_TIMING.bars, at=(n,b)=>{const k=B.findIndex(x=>x.sourceBar===n);return B[k].time+(B[k+1].time-B[k].time)*b/4;};
   const ahead=(t,i)=>{const p=P(t),f=dance.foot(t,i);return (f.x-p.x)*Math.sin(p.yaw)+(f.z-p.z)*Math.cos(p.yaw);};
-  for(const [n,i] of [[1,3],[2,2],[5,3],[6,2],[61,3],[62,2]]) for(const [b,way] of [[1,1],[2.75,-1]]){
+  for(const [n,i] of [[1,3],[2,2],[5,3],[6,2]]) for(const [b,way] of [[1,1],[2.75,-1]]){
     const t=at(n,b),f=dance.foot(t,i),w=`bar ${n} beat ${b}, foot ${i}`;
     assert(way>0?f.tilt<-.3:f.tilt>.3,`${w}: no ${way>0?'forward':'back'} swing`);
     assert(way*(ahead(t,i)-ahead(t,i^1))>.2,`${w}: not ${way>0?'ahead':'behind'}`);
     for(const k of [i^1,0,1]) assert(Math.abs(dance.foot(t,k).tilt??0)<.01,`${w}: foot ${k} stretches too`);
     assert(Math.abs(P(t).roll)<.03,`${w}: sways on the long note`);
   }
+  // the calderó's run of notes (61-62): no long-note swings (the owner, 05/11/2026), short steps instead
+  { let steps=0;for(let t=at(61,0);t<at(63,0);t+=1/60)for(let i=0;i<4;i++){const f=dance.foot(t,i);assert(Math.abs(f.tilt??0)<.3,'a leg swing in the calderó');if(!f.contact)steps++;}
+    assert(steps>60,'the calderó stands still'); }
   // its slow half turns (3-4, 7-8) go round its rump: the rear carrier steps round a small circle while the front one
   // walks the whole arc, and no moment has all four feet up (walked, not run)
   for(const n of [3,7]){ const end=(t,z)=>{const p=P(t);return [p.x+z*Math.sin(p.yaw),p.z+z*Math.cos(p.yaw)];};
@@ -75,8 +78,8 @@ assert(Math.abs(bouPose(12).yaw-Math.PI)<1e-9,'first phrase ends facing E');
     if(prev[i]&&!prev[i].contact&&x.contact&&open[i]!=null){dur+=t-open[i];open[i]=null;}});prev=f;}
   assert(on/all>.8,`steps off the music: ${on}/${all}`);assert(dur/all>.17,`steps too quick: ${(dur/all).toFixed(3)} s`);
   // a stepping shoe passes over the other, never through it
-  const sep={};for(let t=0;t<BOU_TIMING.duration;t+=1/120){const f=[0,1,2,3].map(i=>({...dance.foot(t,i)}));
-   for(const [a,b] of [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]])if(Math.abs(f[a].y-f[b].y)<.085)assert(shoeSeparation(f[a],f[b],sep).gap>=0,`shoes ${a} and ${b} through each other at ${t.toFixed(2)} s`);}
+  for(let t=0;t<BOU_TIMING.duration;t+=1/120){const f=[0,1,2,3].map(i=>({...dance.foot(t,i)}));
+   for(const [a,b] of [[0,1],[2,3],[0,2],[1,3],[0,3],[1,2]])if(Math.abs(f[a].y-f[b].y)<.085)assert(shoeGap(f[a].x,f[a].z,f[a].yaw,f[b].x,f[b].z,f[b].yaw)>=0,`shoes ${a} and ${b} through each other at ${t.toFixed(2)} s`);}
   console.log('Bou steps:',all,'on the half beats',(on/all).toFixed(2),'mean swing',(dur/all).toFixed(2),'s');
 }
 // a carrier's two legs never through each other: its trouser legs (thigh .16,
@@ -92,9 +95,10 @@ assert(Math.abs(bouPose(12).yaw-Math.PI)<1e-9,'first phrase ends facing E');
   for(const [a,z] of [[0,T(19)],[T(60),T(64)]])for(let t=a;t<z;t+=1/60){motion(t);const L=rig.legs.map(ends);
     for(const c of [0,4])for(const a of [0,1])for(const b of [0,1])assert(seg(L[c+a],L[c+2+b])-R[a]-R[b]>-.005,`legs ${c/2} and ${c/2+1} through each other at ${t.toFixed(2)} s`);}
 }
-// the festa: lifted by its colla, carried once round N -> W -> S -> E
-{ const seen=[];for(let b=BOU_CARRY.lap[0];b<=BOU_CARRY.lap[1];b+=.25){const t=BOU_TIMING.subdivisionTimes[Math.round(b*BOU_TIMING.subdivision)],p=bouPose(t);
-  assert(p.lift>.25,'carried high');assert(Math.abs(Math.hypot(p.x,p.z)-LAP.r)<.15,'on the lap');
+// the festa: lifted by its colla, rolled out of the middle onto the lap (never back in), carried round N -> W -> S -> E
+{ const seen=[];let out=0;for(let b=BOU_CARRY.lap[0];b<=BOU_CARRY.lap[1];b+=.25){const t=BOU_TIMING.subdivisionTimes[Math.round(b*BOU_TIMING.subdivision)],p=bouPose(t);
+  assert(p.lift>.25,'carried high');const r=Math.hypot(p.x,p.z);
+  if(lapWay(b)<LAP.out/(16*LAP.turns)){assert(r>=out-.02,'back into the middle');out=r;}else assert(Math.abs(r-LAP.r)<.15,'on the lap');
   const d=['S','W','N','E'][[p.x,p.z,-p.x,-p.z].indexOf(Math.max(p.x,p.z,-p.x,-p.z))];if(seen.at(-1)!==d)seen.push(d);}
   assert.equal(seen.join(''),'S'+'ENWS'.repeat(LAP.turns),'lap order (the N W S E round, from S)'); }
 // the carriers' trunks and arms (figures/bou/bou-rig.js) show under a raised end (the see-saw, the festa), their hands never

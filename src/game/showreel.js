@@ -71,7 +71,8 @@ export const SHOWREELS = {
   // plaça, cut to the one it runs across or charges at; a crane over the spins and the end. Close-ups of a head only where its
   // root stands still (beats 0-10 before the dance, 96-104 after the charge). A fresh selection opens on the plaça as it sets
   // off (a close-up first read as a framing bug); the opening close-up plays from the second loop on.
-  [DRAC.id]: { start: 8, loop: 236, shots: [
+  // film 'song': only «Mira el ball» is filmed by its own cameras (figures/drac/drac-clip.js), which cut dry
+  [DRAC.id]: { start: 8, loop: 236, film: 'song', shots: [
     [0, 'close', 'cut'], [8, 'camWide', 'cut'], [16, 'camR', 'cut'], [28, 'camL', 'cut'], // its faces; it sets off; A2 to and fro across one camera, then the other
     [42, 'camTight', 'cut'], [56, 'camLow', 'cut'], [70, 'camFront', 'cut'], // B: the torsions; C: its snaps from low; D: the charge grows in the front camera, the arc
     [96, 'close', 'cut'], [104, 'camR', 'cut'], [132, 'jibUp', 'cut'], [146, 'camTight', 'cut'], // the stare; E; B3 under the crane; C3
@@ -80,16 +81,18 @@ export const SHOWREELS = {
   // on its source bars (figures/bou/bou-dance.js): 1 the first steps, 9 the changes of facing, 19 the lateral pass, 27 the
   // drums and turns, 64 the start, 72 the festive turns, 88 the ending
   // fill: a smaller share of the band (the Bou is low: at full share the lens came within the crowd's front rows)
-  [BOU.id]: { start: 12, loop: 324, fill: 0.8, shots: [
+  // film: «Mira el ball» and the idle selector are filmed by its own cameras (figures/bou/bou-clip.js), which cut dry: this list's cuts dissolve only under the selector's UI
+  [BOU.id]: { start: 12, loop: 308, fill: 0.8, film: true, shots: [
     [0, 'wide', 'cut'], [16, 'left', 'glide'], [44, 'front', 'glide'], // the entrance, the first steps, the changes of facing
-    [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [176, 'front', 'glide'], // the lateral pass; the turns
-    [208, 'left', 'cut'], [240, 'high', 'glide'], [272, 'right', 'glide'], // the start; the festive turns
-    [304, 'front', 'cut'], // the ending and the settle
+    [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [172, 'front', 'glide'], // the lateral pass; the turns
+    [192, 'left', 'cut'], [224, 'high', 'glide'], [256, 'right', 'glide'], // the start; the festive turns
+    [288, 'front', 'glide'], // the ending and the settle (a glide: the cut fell in the end's banknote rain, bou-bills.js, a jolt)
   ] },
 };
 
 // Live state (owned here; main.js runs tickReel each frame). acc: menu beats counted since the page began (unwrapped).
-export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null, eye: null, fixed: false }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1, song: false, idle: false };
+export const REEL = { on: false, id: null, beat: 0, cut: false, fresh: false, shot: { az: 0, el: 0.5, fill: 0.75, part: null, eye: null, fixed: false }, acc: 0, prev: null, alone: false, still: 0, err: 0, locked: false, anchor: 0, idx: -1, song: false, idle: false, may: false };
+// may: the selector could show it (a playable figure, no photo mode); it plays only once its UI has faded (REEL.idle)
 // idle: the selector's UI faded out (ui/reel-idle.js, through main.js); the Drac's night and fire play only then (drac-show.js)
 export const setReelIdle = on => { REEL.idle = on; };
 
@@ -149,6 +152,22 @@ export function tickReel(on, id, menuBeat, dt, calm = false, songBeat = null) {
   REEL.on = true;
   REEL.beat = song ? Math.max(0, songBeat) : reelMod(reel.start + REEL.acc - REEL.anchor, reel.loop);
   const i = shotAt(reel, REEL.beat, REEL.shot, calm);
-  REEL.cut = i !== REEL.idx; REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
+  REEL.cut = i !== REEL.idx && !(reel.film === 'song' ? song : (song || REEL.idle) && reel.film); REEL.fresh = REEL.idx === -1; REEL.idx = i; // fresh: a new selection's first shot (no dissolve: the old shot is gone)
   return REEL;
 }
+
+// With the selector's UI up (2026-11-12, «més controlat i estàtic, barat de renderitzar»): one held camera, no cuts, and
+// each figure dances on its spot (its own hooks: the Mulassa her song dance, the Drac its walker standing, the Bou its
+// changes of facing; the colla at rest, no night). Her music video is the idle screen's, dissolved in and out (main.js).
+// lock: framed by its cut (scene/cameras.js), then only a slow drift round it (scene/still-drift.js).
+export const REEL_STILL = { on: false, id: null, cut: false, shot: { az: 0.35, el: 0.3, fill: 0.75, part: null, eye: null, fixed: true, lock: true } };
+export function tickStill(may, id) {
+  REEL.may = may && !!SHOWREELS[id];
+  const on = REEL.may && !REEL.on;
+  REEL_STILL.cut = on && (!REEL_STILL.on || REEL_STILL.id !== id); REEL_STILL.on = on; REEL_STILL.id = id;
+  REEL_STILL.shot.fill = 0.75 * (SHOWREELS[id]?.fill ?? 1);
+  return REEL_STILL;
+}
+// Her song dance under the held shot, for figures that dance it on their spot (the Mulassa): its whole loop on the
+// music's beat, from her first move
+export const stillBeat = (id, beat) => { const r = SHOWREELS[id]; return r.start + reelMod(beat, r.loop - r.start); };

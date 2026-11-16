@@ -6,8 +6,10 @@
 // and the rump rise in turn (see-saw). It never stands still: on a hold it still bounces on the music.
 import bouSong from '../../song-bou.json' with { type: 'json' };
 import { beatAtTime } from '../../core/beat-grid.js';
-import { sampleTrack, planBouFeet } from './bou-feet.js';
+import { sampleTrack, planBouFeet, prepareBouFeet } from './bou-feet.js';
 import { clamp01, quintic } from '../../core/math.js';
+// The owner's retimes and value changes from the timeline tool (tools/dev/bou-timeline.html): { keys: { id: { shift (beats), ...values } } }
+import BOU_DANCE_EDITS from './bou-dance-edits.json' with { type: 'json' };
 
 // timing.json's landmarks and grid, as tools/music/build_bou_chart.mjs copies them into the song (the same numbers)
 const timing = { duration: bouSong.duration, beats: bouSong.beats, ...bouSong.dance, bars: bouSong.dance.bars.map(([sourceBar, beat, time]) => ({ sourceBar, beat, time })) };
@@ -19,16 +21,18 @@ const at = (n, beats = 0) => (n === 0 ? 0 : bar(n).beat) + beats;
 const PI = Math.PI;
 // The carried lap (m, source bars): round the plaça's centre inside the colla's marks (5.5 m), from its N point
 // Twice round: r 3 m, ~2.7 m/s (faster, a carrier's stride outruns the other's feet), its carriers'
-// steps on the half beats
-export const LAP = { r: 3, from: 72, in: 3, beats: 35, turns: 2, ease: .15, a0: Math.PI / 2 }; // a0: its S point, where it faces its way already (E)
+// steps on the half beats. From the lift (BOU_CARRY.lap, the owner retimes it) it rolls straight out of the middle, opening to `r` over its first
+// `out` keys (eighths of a turn): no sideways carry out to S first (the owner, 05/11/2026: the round starts sooner)
+export const LAP = { r: 3, from: 72, in: 3, beats: 35, out: 4, turns: 2, ease: .15, a0: Math.PI / 2 }; // a0: its S point, where it faces its way already (E)
 // The colla's part in the festa, in song beats: they come in from their marks, grip and lift it (`lift` m) over their
 // heads in a single heave on bar 71's last beat: up on bar 72's downbeat, where the music's festa starts), its nose up (`rear` rad), pump it on the beat (`pump` m) and rock it (`wobble`
 // rad), lower it and walk back (figures/bou/bou-colla.js carries it,
 // figures/bou/bou-parade.js runs the public behind it). The videos (2xG98OA1QqI 208-228 s, G_R-ZvzS95k 200-215 s, Klr8m3U6qzg
 // 216-232 s): raised at arm's length, the front well up, everyone's hands up under it.
 // (off round 3 beats after the lift, set down in 4)
-export const BOU_CARRY = { come: at(71), grip: at(71,3), up: at(72), lower: at(81,2), down: at(82,0), back: at(84,0), bounce: .14, lift: .75, rear: .3, pump: .1, wobble: .07, buck: .1,
-  lap: [at(LAP.from, LAP.in), at(LAP.from, LAP.in) + LAP.beats] };
+export const BOU_CARRY = { bounce: .14, lift: .75, rear: .3, pump: .1, wobble: .07, buck: .1 }; // + its beats (CARRY_AT, edits applied by rebuild)
+// [label, beat]: come, grip, up, lower, down, back; lap: [start, end] of the carried laps
+const CARRY_AT = { come: at(71), grip: at(71,3), up: at(72), lower: at(81,2), down: at(82,0), back: at(84,0), lap: at(LAP.from, LAP.in), lapEnd: at(LAP.from, LAP.in) + LAP.beats };
 // 0-1, how far into the festa's carry (the colla coming in to walking back), eased: the play camera holds the whole ring
 export function bouFestaAt(beat) {
   const r = (a, b) => ease((beat - a) / (b - a));
@@ -42,7 +46,7 @@ function lapTime(f) { // (constant acceleration over `ease`, then steady: the in
 }
 // its inverse: the share of the laps' way run at song beat `beat` (figures/bou/bou-parade.js runs the public on the same clock)
 export function lapWay(beat) {
-  const e = LAP.ease, k = 2 * e * (1 - e), t = Math.min(1, Math.max(0, (beat - at(LAP.from, LAP.in)) / LAP.beats));
+  const e = LAP.ease, k = 2 * e * (1 - e), t = Math.min(1, Math.max(0, (beat - BOU_CARRY.lap[0]) / (BOU_CARRY.lap[1] - BOU_CARRY.lap[0])));
   return t < e ? t * t / k : t > 1 - e ? 1 - (1 - t) * (1 - t) / k : (t - e / 2) / (1 - e);
 }
 const LAPS = 2 * PI * (LAP.turns - 1); // the extra laps' turn, carried on to the end (it still ends facing W)
@@ -86,67 +90,93 @@ const PATH = [
   [34,0, 0,-RUSH.diag,RUSH.diag], [34,1, 0,-RUSH.diag+.2,RUSH.diag-.2], [35,0, 0,0,0],
   // 35-38: a rush forward to W and a skid; backing off, half a turn (via S) to face E
   [35,2, 0,0,.4], [37,0, 0,0,RUSH.head], [37,2, 0,0,RUSH.head-.5], [38,2, PI,.2,RUSH.head-.9], [39,0, PI,.1,1.4],
-  // 39-42: facing E, a turn and a quarter the other way (via N) while it comes back to the middle: faces S
-  [43,0, -1.5*PI,0,0],
-  // 43-45: a rush out to S and a skid; backing off, it turns back (via E) and heads N; 47: the turn carries on, a
-  // side-step, to W
-  [43,1, -1.5*PI,.3,0], [44,0, -1.5*PI,RUSH.head,0], [44,2, -1.5*PI,RUSH.head-.5,0],
-  [47,0, -.5*PI,.7,-.1], [60,0, 0,.3,.1],
-  // 60-63: near W, short steps, the fermata breathing (the beat itself slows); 61-62 held for the leg swings (GESTURES)
-  [61,0, .1,.15,.15], [63,0, .1,.15,.15], [64,0, 0,0,0],
+  // 39-42: facing E, half a turn the other way (via N) while it walks back, to face W near the middle (the run of bars
+  // 43-47 that followed, a rush out to S, is not played since music revision 21: this one leads into 60)
+  [60,0, 0,.3,.1],
+  // 60-63: near W, short steps and weight changes on the half bar (the music runs on: no long notes for leg swings,
+  // the owner, 05/11/2026), then still on the fermata, breathing (the beat itself slows) before the slow start
+  [61,0, .1,.15,.15], [61,2, -.08,.22,.12], [62,0, .12,.12,.2], [62,2, -.05,.2,.14], [63,0, .1,.15,.15], [64,0, 0,0,0],
   // 64-67: very slow, speeding up with the music: a progressive arc out to N, turning to face E
   [65,0, .15,-.05,.3], [66,0, .45*PI,-1.2,1], [68,0, PI,-RUSH.arc,.15],
   // 68-71: out and back with nearly a whole turn, ending near the middle
   [70,0, 2*PI,-.1,-RUSH.turn], [71,0, 3*PI,0,0],
-  // 72-83, the festa: in the middle facing E while the colla comes in and lifts it (BOU_CARRY); carried
-  // out sideways to S, then once round the plaça on LAP (S -> E -> N -> W -> S: the owner's N W S E round, facing its way) with
+  // 72-83, the festa: in the middle facing E while the colla comes in and lifts it (BOU_CARRY); then round the plaça
+  // on LAP, opening out of the middle (S -> E -> N -> W -> S: the owner's N W S E round, facing its way) with
   // part of the public running behind (figures/bou/bou-parade.js); back to the middle, set down
-  [72,0, 3*PI,0,0], [LAP.from,LAP.in, 3*PI,LAP.r,0],
-  ...Array.from({ length: 16 * LAP.turns }, (_, k) => { const a = LAP.a0 + PI * (k + 1) / 8, b = LAP.in + LAP.beats * lapTime((k + 1) / (16 * LAP.turns));
-    return [LAP.from + Math.floor(b / 4), b % 4, 2*PI + a + PI / 2, LAP.r * Math.sin(a), LAP.r * Math.cos(a)]; }),
+  [72,0, 3*PI,0,0], 'lap', // (lapKeys: on the carry's lap beats)
   [83,2, 5*PI+LAPS,LAP.r,0], // set down where they stop, still while its colla walks off (it never runs into them)
   // 84-91, the final disco: six turns in 8 bars on the
   // spot, pulsed on the beat (COMIC's warp); 92: it stops dead on the last chord and its inertia carries it on (INERTIA)
   ...Array.from({ length: 9 }, (_, i) => [84 + i, 0, 5*PI+LAPS + PI*Math.min(10*i/7, 11), LAP.r*Math.max(0, 1-(i+1)/3), 0]), // five and a half turns from where it was set down (ending facing W), on round, never back, drifting back to the middle; its last bar slower (its stop)
 ];
+// the laps' keys from their start to their end (BOU_CARRY.lap): the first in the middle, where it was lifted
+const lapKeys = ([a, b]) => [[0, a, 3*PI, 0, 0], ...Array.from({ length: 16 * LAP.turns }, (_, k) => {
+  const g = LAP.a0 + PI * (k + 1) / 8, u = Math.min(1, (k + 1) / LAP.out), r = LAP.r * u * (2 - u); // (eased out to the ring)
+  return [0, a + (b - a) * lapTime((k + 1) / (16 * LAP.turns)), 2*PI + g + PI / 2, r * Math.sin(g), r * Math.cos(g)]; })];
 const SWING = { out: .7, hold: 1.4, cross: 1, back: 3.2, len: 3.9, kick: .07, knee: .12 }; // beats; kick: rad, the front's lift
 // while out; knee: m the foot rises on each of its three moves (out, through, home), a step with the knee up, not a slide
 // [bar, beats in, leg ('R' right = feet 0 and 2, 'L' left = 1 and 3), beats out, way]: a leg stretched forward, heel
 // down, toe up (way 1), or back on its toes (-1), both carriers together; way 'swing' (SWING): the front carrier's leg
 // alone, forward on the bar's long note and swung back on its second (the reference video: the
-// rear carrier stands), the left leg first, then the right. The calderó (61-62) the same.
-const GESTURES = [
+// rear carrier stands), the left leg first, then the right.
+const GESTURE_KEYS = [
   [1,0,'L',SWING.len,'swing'], [2,0,'R',SWING.len,'swing'], [5,0,'L',SWING.len,'swing'], [6,0,'R',SWING.len,'swing'],
   [19,0,'R',1.5], [19,2,'L',1.5], [20,0,'R',1.5], [20,2,'L',1.5], [22,0,'R',1.5], [22,2,'L',1.5],
   [35,0,'R',1.5], [35,2,'L',1.5], [36,0,'R',1.5], [36,2,'L',1.5],
-  [61,0,'L',SWING.len,'swing'], [62,0,'R',SWING.len,'swing'],
-].map(([n, b, leg, len, way = 1]) => ({ start: at(n, b), len, side: leg === 'R' ? 0 : 1, way }));
+];
 // The comic layer per phrase: [bar, beats in, dip (m, knees on the beat), sway (rad a side a beat), nod (rad, front
 // down on the dip), see-saw (rad, front up / rump up on alternate beats), warp (0-1: the path moves between beats and
 // eases on them)]. Eased from key to key. The dip always covers the see-saw (front hips never rise past the legs' reach).
 const DIP = 1.25; // the dips read small at the play camera's distance
 // (the intro only bounces and waddles: no nod nor see-saw before the tune)
-const COMIC = [
-  [0,0, .03,.02,0,0,0], [1,0, .015,.005,.01,0,0], [2,3, .015,.005,.01,0,0], [3,0, .05,.03,.02,0,0], [4,3, .05,.03,.02,0,0],
-  [5,0, .015,.005,.01,0,0], [6,3, .015,.005,.01,0,0], [7,0, .05,.03,.04,0,0], [8,3, .05,.025,.02,0,0],
+// (bars 0-8, the steps, are solemn: knees on the beat but hardly a waddle, the owner 11/11/2026; it lets go from bar 9, BOU_SOLEMN)
+const COMIC_KEYS = [
+  [0,0, .02,.005,0,0,0], [1,0, .015,.005,.01,0,0], [2,3, .015,.005,.01,0,0], [3,0, .03,.008,.02,0,0], [4,3, .03,.008,.02,0,0],
+  [5,0, .015,.005,.01,0,0], [6,3, .015,.005,.01,0,0], [7,0, .03,.008,.04,0,0], [8,3, .03,.008,.02,0,0],
   [9,0, .06,.02,.01,.13,0], [18,-.5, .06,.02,.01,.13,0], [18,0, .055,.04,.02,0,0],
   [19,0, .05,.055,.02,0,0], [23,0, .05,.035,.02,0,0], [26,0, .07,.045,.03,0,0],
   [27,0, .09,.045,.03,0,.4], [34,3, .09,.045,.03,0,.4], // (warp .4: the rushes pulsed harder outran the carriers' legs) [35,0, .05,.05,.02,0,0],
-  [39,0, .05,.035,.02,0,0], [60,0, .045,.045,.02,0,0], [61,0, .015,.005,.01,0,0], [62,3, .015,.005,.01,0,0], [63,0, .045,.045,.02,0,0], [64,0, .05,.03,.02,0,0], [68,0, .06,.04,.02,0,0],
+  [39,0, .05,.035,.02,0,0], [60,0, .045,.045,.02,0,0], [62,3, .045,.04,.04,0,0], [63,0, .02,.02,.01,0,0], [63,3, .02,.02,.01,0,0], // (the front dips and rises; the fermata, a breath)
+  [64,0, .05,.03,.02,0,0], [68,0, .06,.04,.02,0,0],
   [72,0, .08,.05,.02,.04,0], [82,2, .055,.035,.02,0,0], [84,0, .07,.045,.03,0,.35], [91,2, .07,.045,.03,0,.35], [92,0, .03,.02,.01,0,0],
-].map(([n, b, dip, ...v]) => [at(n, b), DIP * dip, ...v]);
-const track = (keys, c) => keys.map(k => [at(k[0], k[1]), k[c]]);
-const YAW = track(PATH, 2), X = track(PATH, 3), Z = track(PATH, 4);
+];
 // set down in two beats, landing with a comic bounce
-const LIFT = [[0,0],[BOU_CARRY.grip,0],[BOU_CARRY.up,BOU_CARRY.lift],[BOU_CARRY.lower,BOU_CARRY.lift],[BOU_CARRY.down,0],[BOU_CARRY.down+.5,BOU_CARRY.bounce],[BOU_CARRY.down+1,0],[at(92),0]];
+const liftKeys = C => [[0,0],[C.grip,0],[C.up,C.lift],[C.lower,C.lift],[C.down,0],[C.down+.5,C.bounce],[C.down+1,0],[at(92),0]];
 // The skid at the end of each rush (a cartoon stop): it slides on `slide` m past where it was going and settles back,
 // fishtails (its rear swinging out `tail` rad to one side then the other, dying away) and sits back on its haunches
 // (front up `sit` rad) while it brakes; over `len` beats from a little before it arrives.
 const SKID = { slide: .3, tail: .22, sit: .12, len: 1.6, lead: .3, wag: 1 };
-const SKIDS = [[20,0,1],[23,0,-1],[28,0,1],[30,0,-1],[32,0,1],[34,0,-1],[37,0,1],[44,0,-1],[81,2,1]].map(([n, b, side]) => {
-  const t = at(n, b), dx = sampleTrack(X, t) - sampleTrack(X, t - .3), dz = sampleTrack(Z, t) - sampleTrack(Z, t - .3), d = Math.hypot(dx, dz) || 1;
-  return { t, dx: dx / d, dz: dz / d, side };
-});
+const SKID_KEYS = [[20,0,1],[23,0,-1],[28,0,1],[30,0,-1],[32,0,1],[34,0,-1],[37,0,1],[81,2,1]];
+// The keys as played: each authored key's id (`kind:bar+beats`), its beat after the owner's edits (BOU_DANCE_EDITS), and its values.
+let YAW, X, Z, GESTURES, COMIC, LIFT, SKIDS, KEYS;
+// [from, to] song beats: the opening's solemn steps end, the head's gags (googly eyes, waggle, gape) come in (pose.calm 1 -> 0)
+export const BOU_SOLEMN = [0, 0];
+const keyId = (kind, n, b) => `${kind}:${n}+${b}`;
+export function setBouDanceEdits(edits = BOU_DANCE_EDITS) {
+  const E = edits?.keys ?? {}, at2 = (id, beat) => beat + (E[id]?.shift ?? 0), v = (id, f, x) => E[id]?.[f] ?? x;
+  const C = Object.fromEntries(Object.entries(CARRY_AT).map(([k, b]) => [k, at2(`carry:${k}`, b)]));
+  Object.assign(BOU_CARRY, C, { lap: [C.lap, C.lapEnd] }); delete BOU_CARRY.lapEnd;
+  const path = PATH.flatMap(k => k === 'lap' ? lapKeys(BOU_CARRY.lap).map((l, i) => ({ id: `lap:${i}`, lock: true, base: l[1], beat: l[1], yaw: l[2], x: l[3], z: l[4] }))
+    : [(id => ({ id, base: at(k[0], k[1]), beat: at2(id, at(k[0], k[1])), yaw: v(id, 'yaw', k[2]), x: v(id, 'x', k[3]), z: v(id, 'z', k[4]) }))(keyId('path', k[0], k[1]))]);
+  path.sort((a, b) => a.beat - b.beat);
+  YAW = path.map(k => [k.beat, k.yaw]); X = path.map(k => [k.beat, k.x]); Z = path.map(k => [k.beat, k.z]);
+  const gestures = GESTURE_KEYS.map(([n, b, leg, len, way = 1]) => { const id = keyId('gest', n, b);
+    return { id, base: at(n, b), start: at2(id, at(n, b)), len: v(id, 'len', len), side: v(id, 'leg', leg) === 'R' ? 0 : 1, leg: v(id, 'leg', leg), way }; });
+  GESTURES = gestures;
+  const comic = COMIC_KEYS.map(([n, b, ...c]) => { const id = keyId('comic', n, b), f = ['dip', 'sway', 'nod', 'saw', 'warp'];
+    return { id, base: at(n, b), beat: at2(id, at(n, b)), ...Object.fromEntries(f.map((k, i) => [k, v(id, k, c[i])])) }; }).sort((a, b) => a.beat - b.beat);
+  COMIC = comic.map(k => [k.beat, DIP * k.dip, k.sway, k.nod, k.saw, k.warp]);
+  LIFT = liftKeys(BOU_CARRY);
+  const skids = SKID_KEYS.map(([n, b, side]) => { const id = keyId('skid', n, b), t = at2(id, at(n, b));
+    const dx = sampleTrack(X, t) - sampleTrack(X, t - .3), dz = sampleTrack(Z, t) - sampleTrack(Z, t - .3), d = Math.hypot(dx, dz) || 1;
+    return { id, base: at(n, b), beat: t, t, dx: dx / d, dz: dz / d, side: v(id, 'side', side) }; });
+  SKIDS = skids;
+  BOU_SOLEMN[0] = comic.find(k => k.id === 'comic:8+3').beat; BOU_SOLEMN[1] = comic.find(k => k.id === 'comic:9+0').beat;
+  KEYS = { path, gestures, comic, skids, carry: Object.entries(CARRY_AT).map(([k, b]) => ({ id: `carry:${k}`, name: k, base: b, beat: C[k] })) };
+}
+setBouDanceEdits();
+// the keys as played, for the timeline tool
+export const bouDanceKeys = () => KEYS;
 function skid(beat, out) {
   for (const k of SKIDS) {
     const s = beat - k.t; if (s < -SKID.lead || s > SKID.len) continue;
@@ -169,8 +199,9 @@ export const BOU_PHASES = [
 // DIP included: k/DIP).
 export const BOU_COMIC = 3;
 const HEM_DROP = .23; // the skirt's hem (43 cm) stays 20 cm up: clear of a stepping shoe (8.5 cm tall, lifted 10)
+const SAW_SOFT = .07; // rad of see-saw over which its turn from one end to the other is rounded
 const SAW_RISE = 1.0; // m of lift a radian of see-saw: the low end's hem (~1 m from the middle) holds its height
-export function newBouPose() { return {x:0,z:0,yaw:0,pitch:0,roll:0,lift:0,beat:0,inertiaRoll:0}; }
+export function newBouPose() { return {x:0,z:0,yaw:0,pitch:0,roll:0,lift:0,beat:0,inertiaRoll:0,calm:0}; }
 const END_BEAT = at(92);
 const INERTIA = { turn: .7, lean: .12, decay: 1.6, swing: 2.2 }; // rad on past the stop and back, rad of lean, 1/beat, beats a swing
 export function bouPose(t,out=newBouPose()) {
@@ -200,7 +231,7 @@ export function bouPose(t,out=newBouPose()) {
   // the rump, heaved high on alternate beats; the body rises as far as the low end would sink, so that end stays where
   // it was and the high one shows its carrier's legs (and trunk, figures/bou/bou-rig.js) under the lifted hem
   const saw=-k*comic(beat,4)*Math.cos(PI*beat);
-  out.pitch+=saw;out.lift+=SAW_RISE*Math.abs(Math.sin(saw));
+  out.pitch+=saw;out.lift+=SAW_RISE*(Math.hypot(Math.sin(saw),SAW_SOFT)-SAW_SOFT); // (|sin| rounded at its turn: a sharp V there bounced the whole body like a ball on every beat, its carriers' knees snapping with it)
   // the front carrier's leg out in front (SWING): its front lifts a touch, on the rear carrier, so the straight leg comes
   // out under the hem, not through the cloth (a rigid skirt: in the reference video the cloth gives)
   const kick=SWING.kick*frontKick(beat);out.pitch-=kick;out.lift+=.66*Math.sin(kick);
@@ -209,6 +240,7 @@ export function bouPose(t,out=newBouPose()) {
   // frantic up there: heaved on every beat, rocking side to side and
   // bucking nose up on alternate beats
   out.lift+=carried-BOU_CARRY.pump*up*(1-dip);out.pitch-=up*(BOU_CARRY.rear+BOU_CARRY.buck*Math.sin(PI*beat));out.roll+=up*BOU_CARRY.wobble*Math.sin(PI*beat+PI/4);
+  out.calm=1-ease((beat-BOU_SOLEMN[0])/(BOU_SOLEMN[1]-BOU_SOLEMN[0]));
   out.beat=beat;return out;
 }
 // The swing in beats from the bar's start: out with the long note, swung back through (brushing the floor) to arrive
@@ -234,8 +266,9 @@ function swingArc(s) {
 }
 // 0-1: how far the front carrier's leg is out in front or its knee up, at song beat `beat`
 function frontKick(beat) {
-  for (const g of GESTURES) if (g.way === 'swing') { const s = beat - g.start; if (s > 0 && s < g.len) return Math.max(0, swing(s), swingArc(s)); }
-  return 0;
+  let k = 0; // (the larger of two swings a retime made overlap: taking the first jumped as it ended)
+  for (const g of GESTURES) if (g.way === 'swing') { const s = beat - g.start; if (s > 0 && s < g.len) k = Math.max(k, swing(s), swingArc(s)); }
+  return k;
 }
 // 0-1: how far leg `index` is stretched at song second t (a quick reach, held, a quick fold); negative: back
 function gesture(t, index) {
@@ -249,4 +282,7 @@ function gesture(t, index) {
 }
 export function createBouDance() {
   return {pose:bouPose,foot:planBouFeet(bouPose,0,timing.duration,gesture,swingRaise)};
+}
+export async function prepareBouDance() {
+  return {pose:bouPose,foot:await prepareBouFeet(bouPose,0,timing.duration,gesture,swingRaise)};
 }

@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { createColla } from '../common/colla.js';
 import { HELPER_HIP } from '../../scene/models/colla.js';
 import { BOU_HELPER_LOOKS } from './bou-suit.js';
-import { bouPose, BOU_TIMING } from './bou-dance.js';
+import { bouPose, newBouPose, BOU_TIMING } from './bou-dance.js';
 
 // Its dance travels ≤ 1.1 m from the plaça's centre with a 2.7 m body (its ends ~1.6 m from its middle): the
 // attendants 5.5 m out, as hers (4.6 put W and S in the play shot's corners), keep 2.5 m of air (tests/figures/bou/bou-colla.mjs).
@@ -38,26 +38,58 @@ const SLOT_SIGN = { W: [-1, -1], S: [-1, 1], N: [1, -1], E: [1, 1] };
 const carryRamp = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
 // Where attendant `h` stands (compass frame) and how far into the carry (w: 0 at its mark, 1 at its flank; grip: arms up)
 export function carryAt(h, pose, C, out = {}) {
-  const b = pose.beat, w = carryRamp(C.come, C.grip, b) * (1 - carryRamp(C.down, C.back, b));
+  if (carryDownAt !== C.down) { carryDownAt = C.down; bouPose(BOU_TIMING.subdivisionTimes[Math.round(C.down * BOU_TIMING.subdivision)], CARRY_DOWN); } // (again after a retime: the timeline tool)
+  // back to their mark at a jog (BACK_PACE m a beat on average), each as long as its way asks: all in the festa's last
+  // beats, the far ones ran backwards at up to 8.8 m/s (legs all over the place)
+  const b = pose.beat, [sx, sz] = SLOT_SIGN[h.id], tx = sx * CARRY_SLOT.side, tz = sz * CARRY_SLOT.along, r1 = Math.hypot(tx, tz);
+  backWay(h, tx, tz, r1);
+  const gone = carryJog((b - C.down) / Math.max(C.back - C.down, CARRY_BACK.len / BACK_PACE));
+  const w = carryRamp(C.come, C.grip, b) * (1 - gone);
   // worked round it (its frame, polar): they swing round to their side as they come (the angle linear) and close in
-  // late (the distance eased in); going back they step out first and turn for their mark after (it may have turned), so the ones coming from its head or tail (E, W) pass wide of the horns (2.7 m across) and the tail
-  // set down, they walk off in the frame it had then: its turn into the final disco must not swing them round with it
-  const yaw = b > C.down ? (carryDownYaw ??= bouPose(BOU_TIMING.subdivisionTimes[Math.round(C.down * BOU_TIMING.subdivision)]).yaw) : pose.yaw;
-  const [sx, sz] = SLOT_SIGN[h.id], c = Math.cos(yaw), s = Math.sin(yaw), dx = h.x - pose.x, dz = h.z - pose.z;
-  const hx = dx * c - dz * s, hz = dx * s + dz * c, tx = sx * CARRY_SLOT.side, tz = sz * CARRY_SLOT.along;
-  const a0 = Math.atan2(hx, hz), r0 = Math.hypot(hx, hz), r1 = Math.hypot(tx, tz);
+  // late (the distance eased in)
+  const yaw = b > C.down ? CARRY_DOWN.yaw : pose.yaw;
+  const c = Math.cos(yaw), s = Math.sin(yaw), dx = h.x - pose.x, dz = h.z - pose.z;
+  const hx = dx * c - dz * s, hz = dx * s + dz * c;
+  const a0 = Math.atan2(hx, hz), r0 = Math.hypot(hx, hz);
   let da = Math.atan2(tx, tz) - a0; da -= Math.round(da / (2 * Math.PI)) * 2 * Math.PI;
-  const a = a0 + da * (b > C.down ? 1 - (1 - w) * (1 - w) : w), r = r0 + (r1 - r0) * w * w * w, lx = r * Math.sin(a), lz = r * Math.cos(a);
+  const a = a0 + da * w, r = r0 + (r1 - r0) * w * w * w, lx = r * Math.sin(a), lz = r * Math.cos(a);
   out.x = pose.x + lx * c + lz * s; out.z = pose.z - lx * s + lz * c;
   out.w = w; out.grip = carryRamp(C.grip - 1.5, C.grip, b) * (1 - carryRamp(C.down - 0.5, C.down + 1, b));
   // facing the point of its flank beside them; turned from their mark's heading as they set off
   let face = Math.atan2(pose.x + tz * s - out.x, pose.z + tz * c - out.z) - h.yaw;
   face -= Math.round(face / (2 * Math.PI)) * 2 * Math.PI;
   out.yaw = h.yaw + face * carryRamp(0, 0.15, w);
+  if (b > C.down) { // set down: back to their mark round where it was set down, facing their way (not it)
+    backSpot(gone, out); const px = out.x, pz = out.z;
+    backSpot(Math.min(1, gone + 0.02), out);
+    let go = Math.atan2(out.x - px, out.z - pz) - h.yaw; go -= Math.round(go / (2 * Math.PI)) * 2 * Math.PI;
+    const D = CARRY_DOWN, dc = Math.cos(D.yaw), ds = Math.sin(D.yaw); backSpot(0, out);
+    let from = Math.atan2(D.x + tz * ds - out.x, D.z + tz * dc - out.z) - h.yaw; from -= Math.round(from / (2 * Math.PI)) * 2 * Math.PI; // (as they stood: facing its flank)
+    let turn = go - from; turn -= Math.round(turn / (2 * Math.PI)) * 2 * Math.PI;
+    out.x = px; out.z = pz; out.yaw = h.yaw + (from + turn * carryRamp(1.5, 3.5, CARRY_BACK.len) * carryRamp(0, 0.2, gone)) * (1 - carryRamp(0.75, 1, gone)); // then round to the centre as they arrive (a couple of steps' way: no turning about, they step back)
+  }
   return out;
 }
 const CARRY_AT = {};
-let carryDownYaw = null; // (its heading as it was set down: a pure function of the dance)
+let carryDownAt = null; const CARRY_DOWN = newBouPose(); // (its pose as it was set down: a pure function of the dance)
+const BACK_CLEAR = 2.3; // m from where it was set down they keep on their way back (its ends reach 1.6 m)
+// Their way back, round where it was set down (CARRY_DOWN; polar, plaça frame): from their place at its flank (a1, r1)
+// to their mark (a0, r0), the angle and the distance at one steady pace, never nearer than BACK_CLEAR once clear of it.
+// len: m, about (what the jog's time is counted on)
+const CARRY_BACK = { a0: 0, a1: 0, r0: 0, r1: 0, out: 0, len: 0 };
+function backWay(h, tx, tz, r1) {
+  const D = CARRY_DOWN, c = Math.cos(D.yaw), s = Math.sin(D.yaw);
+  CARRY_BACK.a1 = Math.atan2(tx * c + tz * s, -tx * s + tz * c); CARRY_BACK.r1 = r1;
+  CARRY_BACK.r0 = Math.hypot(h.x - D.x, h.z - D.z); let da = Math.atan2(h.x - D.x, h.z - D.z) - CARRY_BACK.a1; da -= Math.round(da / (2 * Math.PI)) * 2 * Math.PI;
+  CARRY_BACK.a0 = CARRY_BACK.a1 + da; CARRY_BACK.out = r1 + (BACK_CLEAR - r1) * Math.min(1, Math.abs(da)); CARRY_BACK.len = Math.hypot(Math.max(BACK_CLEAR, (r1 + CARRY_BACK.r0) / 2) * da, CARRY_BACK.r0 - r1);
+}
+function backSpot(u, out) {
+  const a = CARRY_BACK.a1 + (CARRY_BACK.a0 - CARRY_BACK.a1) * u, r = Math.max(CARRY_BACK.r1 + (CARRY_BACK.r0 - CARRY_BACK.r1) * u, CARRY_BACK.r1 + (CARRY_BACK.out - CARRY_BACK.r1) * carryRamp(0, 0.2, u) * (1 - carryRamp(0.8, 1, u))); // (out: round it only as far as their way turns)
+  out.x = CARRY_DOWN.x + r * Math.sin(a); out.z = CARRY_DOWN.z + r * Math.cos(a);
+}
+const BACK_PACE = 0.7; // m a beat (~1.9 m/s), its peak 1.25x: under the gait's sprint
+// 0-1 along a way walked at a steady pace, setting off and pulling up over a fifth of it each
+const carryJog = x => { const u = Math.min(1, Math.max(0, x)), e = 0.2; return u < e ? u * u / (2 * e * (1 - e)) : u > 1 - e ? 1 - (1 - u) * (1 - u) / (2 * e * (1 - e)) : (u - e / 2) / (1 - e); };
 // Their run: each sole is planted on the paving (the colla's frame) and
 // stays put until it steps; a step starts on the music's half beat (quarter, sprinting) when that foot has fallen `due`
 // m behind where the body wants it, the other foot planted, and lands on the next where the hip will be half way through its

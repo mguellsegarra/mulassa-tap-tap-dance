@@ -2,7 +2,7 @@
 // (figures/<key>/<key>-crowd.js); a new figure adds its line here. An effect set may have: anchored(p) (rooted to the
 // spot), pose(p) (drawn over the live pose), steer(p, dt) (moves them itself: true), knock(p, dt, dx, dz) (free play: after
 // their own steering), tick(crowd), pace(p) (m/s its drawn bodies may catch up), hop(p, beat, festa),
-// arms(p, beat, clock, festa, A) and festa() (0-1: how wild the plaça goes).
+// arms(p, beat, clock, festa, A), band(players, beat, live) and festa() (0-1: how wild the plaça goes).
 import { MULA_CROWD } from '../figures/mulassa/mula-crowd.js';
 import { DRAC_CROWD } from '../figures/drac/drac-crowd.js';
 import { BOU_CROWD } from '../figures/bou/bou-crowd.js';
@@ -12,6 +12,7 @@ export const CROWD_EFFECTS = [MULA_CROWD, DRAC_CROWD, BOU_CROWD].filter(Boolean)
 export function crowdAnchored(p) { for (const e of CROWD_EFFECTS) if (e.anchored?.(p)) return true; return false; }
 export function crowdSteer(p, dt) { for (const e of CROWD_EFFECTS) if (e.steer?.(p, dt)) return true; return false; }
 export function crowdPose(p) { for (const e of CROWD_EFFECTS) e.pose?.(p); }
+export function crowdBand(players, beat, live) { for (const e of CROWD_EFFECTS) e.band?.(players, beat, live); }
 export function crowdKnock(p, dt, dx, dz) { for (const e of CROWD_EFFECTS) e.knock?.(p, dt, dx, dz); }
 export function crowdTick(crowd) { for (const e of CROWD_EFFECTS) e.tick?.(crowd); }
 export function crowdPace(p) { let v = 0; for (const e of CROWD_EFFECTS) v = Math.max(v, e.pace?.(p) ?? 0); return v; }

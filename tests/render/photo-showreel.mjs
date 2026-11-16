@@ -218,7 +218,7 @@ import { THREE, models, framing, dance, nodes, keyHandlers, windowHandlers, docu
   assert(run('pfTip.dataset.visible === "false" && pfHelp.textContent.includes("rugeix")'), 'after fade the accessible help remains');
   if (run("PLAYABLE_IDS.includes('bou-tradicional-valls')")) {
     keyDown('Tab');
-    assert(run('pfTip.innerHTML.includes("Ara mous el Bou") && pfHelp.textContent.includes("envesteix") && pfHelp.textContent.includes("Tab")'), 'the Bou comes next, and Tab goes on from it');
+    assert(run('pfTip.innerHTML.includes("Ara mous el Bou") && pfHelp.textContent.includes("salta") && pfHelp.textContent.includes("guspires") && pfHelp.textContent.includes("s’alça") && !pfHelp.textContent.includes("guitza") && !pfHelp.textContent.includes("rugeix")'), 'the Bou comes next: it jumps, lifts its snout and burns its carretilles');
   }
   keyDown('Tab');
   assert(run('pfTip.innerHTML.includes("Ara mous la Mulassa")'), 'each switch identifies the actual actor');
@@ -620,18 +620,38 @@ verifyManualSway(run, assert);
 // The showreel's idle screen (ui/reel-idle.js): untouched on the selector, its UI fades (she keeps her framing);
 // any move brings it back; never in photo mode.
 { let it = 300000; const idleFrames = n => { for (let i = 0; i < n; i++) run(`frame(${it += 1000 / 60})`); };
+  const bodyCl = document.body.classList, bodyClWas = { toggle: bodyCl.toggle, contains: bodyCl.contains }, bodyCls = new Set();
+  bodyCl.toggle = (c, on) => { if (on ?? !bodyCls.has(c)) bodyCls.add(c); else bodyCls.delete(c); }; bodyCl.contains = c => bodyCls.has(c);
   run("var idleSel = sheets.select; sheets.select = { pending: false, figure: MULASSA, visible() {}, sheetOpen: false, band: { top: 300, bottom: 600 } }; setView(false); G.state = 'select'; setFigureSong(MULASSA);"); windowHandlers.pointermove.forEach(h => h({})); idleFrames(30);
-  assert(run('REEL.on && !reelIdleOn'), 'showreel: the selector stays while it was just touched');
+  assert(run('!REEL.on && REEL_STILL.on && !reelIdleOn'), 'showreel: the selector stays while it was just touched, on its held shot');
+  // under the UI the held shot never cuts: framed once, then a slow drift (scene/still-drift.js: ±0.1 rad in 24 s, ≤ ~0.4 m/s)
+  run('var heldCam = camera.position.clone(), heldStep = 0, heldPrev = camera.position.clone();');
+  for (let i = 0; i < 120; i++) { windowHandlers.pointermove.forEach(h => h({})); run(`frame(${it += 1000 / 60}); heldStep = Math.max(heldStep, camera.position.distanceTo(heldPrev)); heldPrev.copy(camera.position);`); }
+  assert(run('heldStep < 0.01 && camera.position.distanceTo(heldCam) < 1 && !REEL_STILL.cut'), `showreel: the held shot under the UI only drifts (${run('JSON.stringify([heldStep, camera.position.distanceTo(heldCam)])')})`);
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30);
   assert(run('reelIdleOn'), 'showreel idle: untouched, the UI fades and the dance has the screen');
   assert(run('reelGone'), 'showreel idle: once faded, the UI is not rendered at all (an iPhone hitched under the invisible layers)');
   windowHandlers.pointermove.forEach(h => h({})); idleFrames(1);
   assert(run('!reelIdleOn && !reelGone'), 'showreel idle: a move brings the selector back at once, rendered again');
+  // ...but shown two frames later: its pending cards painted first, or the card strip is rastered with MSAA (~50 GPU programs on a Galaxy S10)
+  assert(bodyCls.has('reel-idle') && !bodyCls.has('reel-wake'), 'showreel idle: woken from data-reel-gone, the UI waits at opacity 0');
+  idleFrames(1); assert(bodyCls.has('reel-idle'), 'showreel idle: still waiting on the second frame');
+  idleFrames(1); assert(!bodyCls.has('reel-idle') && bodyCls.has('reel-wake'), 'showreel idle: then it fades in');
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); // the press that wakes it only wakes it: it, its up and its click never reach the game
   const ptr = type => { const e = { type, pointerId: 7, cancelable: true, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {} }; windowHandlers[type].forEach(h => h(e)); return e.stopped; };
   assert(ptr('pointerdown') && run('!reelIdleOn') && ptr('pointerup') && ptr('click'), 'showreel idle: the waking tap is swallowed whole');
   assert(!ptr('pointerdown') && !ptr('pointerup') && !ptr('click'), 'showreel idle: the next tap is a real one');
   idleFrames(1); assert(run('!reelIdleOn'), 'awake after that tap');
+  // its one control, «Mira el ball sencer» (#idle-watch): a press on it neither wakes nor is swallowed, so its click starts the demo
+  const idleBtn = document.getElementById('idle-watch'), onBtn = {}; idleBtn.contains = t => t === onBtn;
+  idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); assert(run('reelIdleOn') && idleBtn.inert === false && idleBtn.hidden === false, 'showreel idle: «Mira el ball sencer» on offer');
+  const btnPtr = type => { const e = { type, pointerId: 8, target: onBtn, cancelable: true, stopped: false, stopImmediatePropagation() { this.stopped = true; }, preventDefault() {} }; windowHandlers[type].forEach(h => h(e)); return e.stopped; };
+  assert(!btnPtr('pointerdown') && !btnPtr('pointermove') && !btnPtr('pointerup') && !btnPtr('click'), 'showreel idle: the button takes its own tap');
+  idleFrames(1); assert(run('reelIdleOn'), 'showreel idle: pressing the button does not wake the selector under it');
+  assert.equal(run('idleBand({}, 375, 667, { t: 0, b: 0, l: 0, r: 0 }).bottom'), 667 - run('REEL_IDLE_BTN'), 'showreel idle: she stands clear of the button');
+  assert.equal(idleBtn.listeners.click, document.getElementById('select-watch').listeners.click, 'showreel idle: the button starts the same dance demo as the song row\'s');
+  windowHandlers.pointermove.forEach(h => h({})); idleFrames(1); assert(run('!reelIdleOn') && idleBtn.inert === true, 'showreel idle: awake, the faded button takes no focus');
+  idleBtn.contains = () => false;
   // leaving the page puts the selector back (everything pauses), and coming back the time away never counts
   idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30); assert(run('reelIdleOn'));
   document.focused = false; (windowHandlers.blur || []).forEach(h => h());
@@ -640,7 +660,7 @@ verifyManualSway(run, assert);
   assert(run('!reelIdleOn'), 'showreel idle: a minute away is not idleness');
   run('setView(true);'); idleFrames(Math.ceil(run('REEL_IDLE.after') * 60) + 30);
   assert(run('!reelIdleOn'), 'showreel idle: never in photo mode');
-  run('setView(false);'); console.log('showreel idle screen ok');
+  run('setView(false);'); Object.assign(bodyCl, bodyClWas); console.log('showreel idle screen ok');
 // The showreel never shoots over an attendant's shoulder: over a stretch of her dance (runs to the attendants' marks
 // included), no colla helper between the lens and her stands near the line of sight.
 run(`frame(${it += 1000 / 60})`); // (leaving photo mode hands its camera over: the player's angle, held for a while)
@@ -657,14 +677,16 @@ const cutSettle = JSON.parse(run('JSON.stringify(cutSettle)'));
 assert(cutSettle.length > 0 && cutSettle.every(d => d < 0.1), `showreel: one step per cut, the next frame holds it (${JSON.stringify(cutSettle.map(d => +d.toFixed(3)))})`);
 assert(fades.length > 0 && fades.every(d => d < 1e-6), `showreel: every cut dissolves from the outgoing shot (${fades.length} cuts, ${JSON.stringify(fades)})`);
 // a figure change is one plain cut: its "outgoing shot" would already show the new figure (the owner saw two shot changes)
+windowHandlers.pointermove.forEach(h => h({})); for (let i = 0; i < 3; i++) run(`frame(${it += 1000 / 60})`); // (awake first: the tap that wakes the idle screen only wakes it; its own dissolve back to the held shot)
 run("fades.length = 0; setSelectedFigure('drac-valls');"); windowHandlers.pointermove.forEach(h => h({}));
 const swapMoves = []; for (let i = 0; i < 4; i++) { run(`lastCam.copy(camera.position); frame(${it += 1000 / 60});`); swapMoves.push(run('camera.position.distanceTo(lastCam)')); }
-assert(run('REEL.id') === 'drac-valls' && run('fades.length') === 0, 'showreel: a figure change cuts without a dissolve');
+assert(run('REEL_STILL.id') === 'drac-valls' && run('fades.length') === 0, 'showreel: a figure change cuts without a dissolve');
 // and that cut is final in its own frame: the new figure measured where it stands now (a provisional frame, then a snap)
 assert(swapMoves[0] > 0.3 && swapMoves.slice(1).every(d => d < 0.1), `showreel: a figure change is one step (${JSON.stringify(swapMoves.map(d => +d.toFixed(3)))})`);
 // the Drac's close-up (beats 96-104: in on a long lens at the orbit's nearest, out to a wide shot) is one step each way too
-run('sheets.select.band = { top: 430, bottom: 600, hardTop: 60, left: 0, right: 1280 }; REEL.anchor = REEL.acc + SHOWREELS[DRAC.id].start - 93; cutSettle.length = 0; seenFades = fades.length; cutLast = false;');
-windowHandlers.pointermove.forEach(h => h({})); // (awake: the selector's band, not the idle screen's)
+run('sheets.select.band = { top: 430, bottom: 600, hardTop: 60, left: 0, right: 1280 };'); // (the music video plays only on the idle screen)
+for (let i = 0; i < Math.ceil(run('REEL_IDLE.after') * 60) + 30; i++) run(`frame(${it += 1000 / 60})`);
+run('REEL.anchor = REEL.acc + SHOWREELS[DRAC.id].start - 93; cutSettle.length = 0; seenFades = fades.length; cutLast = false;');
 for (let i = 0; i < 60 * 6; i++) run(`frame(${it += 1000 / 60}); if (cutLast) cutSettle.push(camera.position.distanceTo(lastCam)); cutLast = fades.length > seenFades; seenFades = fades.length; lastCam.copy(camera.position);`);
 const dracSettle = JSON.parse(run('JSON.stringify(cutSettle)'));
 assert(dracSettle.length >= 2 && dracSettle.every(d => d < 0.1), `showreel: the Drac's close-up cuts in and out in one step (${JSON.stringify(dracSettle.map(d => +d.toFixed(3)))})`);

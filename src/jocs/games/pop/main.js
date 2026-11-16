@@ -82,7 +82,7 @@ $('play').addEventListener('click', () => help.play(levelStep.open));
 $('again').addEventListener('click', flow.start);
 $('to-menu').addEventListener('click', flow.showMenu);
 $('quit').addEventListener('click', flow.showMenu);
-$('pause').addEventListener('click', flow.pause);
+$('pause').addEventListener('click', () => flow.pause(true));
 $('resume').addEventListener('click', flow.resume);
 // ⚙ Configuració (settings.js, mulassa.cat's sheets and code), loaded at the boot (below), opened by a tap; closed, the focus is back on ⚙
 // A chunk that cannot load (a page from before a deploy, the dev server restarted) is reported and the page reloads, once;
@@ -112,7 +112,7 @@ const back = () => {
   if (rankingUI.escape()) return;
   if (levelStep.isOpen()) return levelStep.close();
   if (help.isOpen()) return help.close();
-  if (inRun()) flow.pause(); else flow.resume();
+  if (inRun()) flow.pause(true); else flow.resume();
 };
 addEventListener('keydown', e => { if (e.key === 'Escape') back(); });
 closeOnBackdrop(back);

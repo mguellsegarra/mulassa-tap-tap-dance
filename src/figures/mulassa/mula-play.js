@@ -10,7 +10,7 @@ import { mula, mulaCarriers } from './mula-objects.js';
 import { songTimeAtBeat } from '../../game/figure-song.js';
 import { danceMula, stepMulaFeet } from './mula-stage.js';
 import { G, clock } from '../../game/state.js';
-import { REEL } from '../../game/showreel.js';
+import { REEL, REEL_STILL, stillBeat } from '../../game/showreel.js';
 import { pulse, hold } from '../../core/anim.js';
 import { smooth, easeIn } from '../../core/math.js';
 import { PIVOT, S, M, CAP, stepSprings, capSpring, holdGesture } from '../../scene/figure-springs.js';
@@ -21,6 +21,9 @@ let photoGait = 1, photoStride = 0, photoGround = 1, photoRear = 0, photoKick = 
 // Q held: she rears up like a horse (front up, on her rear legs); E held: a kick (rear up, on her front legs). rad.
 export const PHOTO_REAR = { front: 0.5, rear: 0.45, legZ: 1.05, ease: 0.15 };
 const POSE = newMulaPose(); // the base choreography's pose this frame (mula-dance.js, its dance frame), reused
+// Under the selector's held shot she dances her song dance where she stands (its travel taken out, her shoes stepped
+// live under her), turned three-quarter away from the lens: the menu's four gestures every two beats read robotic
+const SPOT = { on: false, x: 0, z: 0 }, SPOT_TURN = 1.8; // (rad: over her whole loop she faces the lens 9% of the time, 20% at 0.9)
 const SHELL = { x: 0, z: 0, yaw: 0, roll: 0, pitch: 0 }; // her body this frame, for the live steps (mula-stage.js)
 // splash: { pair, keepClear } (figures/drac/drac-play.js): the Drac beside her on the splash, fading out after it
 export function animPlayableMula(dt, beat, live, reel, { pair: PAIR, keepClear }) {
@@ -32,10 +35,13 @@ export function animPlayableMula(dt, beat, live, reel, { pair: PAIR, keepClear }
       PHOTO.action = false;
     }
   }
-  const danceNow = reel ? REEL.beat : beat;
+  const onSpot = REEL_STILL.on && G.state === 'select' && !PHOTO.on, showing = reel || onSpot;
+  if (onSpot && !SPOT.on) { SPOT.x = M.pos.x; SPOT.z = M.pos.y; }
+  SPOT.on = onSpot;
+  const danceNow = reel ? REEL.beat : onSpot ? stillBeat('mulassa-valls', beat) : beat;
   const breath = Math.sin(clock * 2.2) * (1 - live); // standing still, only breathing
-  const col = G.collapseT && !reel ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0; // (a run's collapse is still in G on the selector)
-  const dancing = G.state === 'play' || reel;
+  const col = G.collapseT && !showing ? smooth(Math.min(1, (clock - G.collapseT) / 0.6)) : 0; // (a run's collapse is still in G on the selector)
+  const dancing = G.state === 'play' || showing;
   if (M.dancing && !dancing) { // back to the free demo from wherever she faces and stands
     S.yaw.x = S.yaw.t = M.yaw; S.yaw.v = 0;
     M.pivot.set(M.pos.x + Math.sin(M.yaw) * PIVOT, M.pos.y + Math.cos(M.yaw) * PIVOT);
@@ -45,12 +51,13 @@ export function animPlayableMula(dt, beat, live, reel, { pair: PAIR, keepClear }
   const miss = pulse(M.missT, 0.7);
   let danceYaw = 0;
   if (dancing) { // the song's choreography (the practice holds its opening stance); a collapse freezes it where she fell
-    if (reel || !G.collapseT) M.danceBeat = danceNow;
+    if (showing || !G.collapseT) M.danceBeat = danceNow;
     M.danceT = songTimeAtBeat(M.danceBeat);
     danceYaw = danceMula(POSE, M.danceT, M.danceBeat, !!G.practice, M.pos);
+    if (onSpot) { M.pos.set(SPOT.x, SPOT.z); danceYaw += SPOT_TURN; }
     // Missing note after note calms her body (her path, heading and turns stay: the shoes are planned on them): she
     // eases down slowly, and springs back quickly on the first hit.
-    const target = reel ? 1 : 1 - 0.92 * Math.min(1, G.streak / 2);
+    const target = showing ? 1 : 1 - 0.92 * Math.min(1, G.streak / 2);
     M.vigor += (target - M.vigor) * easeIn(dt, target < M.vigor ? 0.8 : 0.25);
     for (const k of ['roll', 'pitch', 'lift', 'waddle', 'headRoll', 'headYaw', 'drive']) POSE[k] *= M.vigor;
   } else if (!manualMula && !col && live) { // the demo walks: solemn = slowly round the plaça, playful = trotting about
@@ -94,7 +101,7 @@ export function animPlayableMula(dt, beat, live, reel, { pair: PAIR, keepClear }
   if (contact) {
     S.squash.v -= 4; S.pitch.v += 1;
     if (manualMula) manualContact('mulassa-valls', hit);
-    else if (dancing) landingImpact(0.35);
+    else if (dancing && !onSpot) landingImpact(0.35); // (the held shot never shakes)
   }
   if (M.air === 0) M.airV = 0;
   if (manualMula && PHOTO.id === 'mulassa-valls') PHOTO.air = M.air > 0; // airborne: she keeps her momentum (movePhoto)
@@ -129,7 +136,7 @@ export function animPlayableMula(dt, beat, live, reel, { pair: PAIR, keepClear }
   poseMulaBody(mula, M.pos.x, col ? -0.42 * col : bounce + M.air + hop + rearLift - manualDip, M.pos.y, M.yaw,
     col * 0.25 + S.roll.x + sway + buzz + Math.sin(clock * 35) * 0.06 * miss,
     S.pitch.x + rearPitch + gallop * 0.08 * photoRun + (dancing ? POSE.pitch * base + buzz * 0.6 : MULA_OFF_COMIC.pitch * (manualMula ? still : amp)));
-  if (dancing) setTrauma(Math.max(trauma, Math.min(0.5, Math.abs(buzz) * 14)));
+  if (dancing && !onSpot) setTrauma(Math.max(trauma, Math.min(0.5, Math.abs(buzz) * 14)));
   const sq = 1 + S.squash.x * 0.08 + breath * 0.012 - 0.03 * miss;
   mula.body.scale.set(1 / Math.sqrt(sq), sq, 1 / Math.sqrt(sq));
   mula.neck.rotation.x = 0.15 - 0.35 * photoRear + 0.2 * photoKick + breath * 0.03 + col * 1.2 + S.neck.x + Math.sin(bp * 2) * 0.08 * amp;
@@ -150,5 +157,5 @@ export function animPlayableMula(dt, beat, live, reel, { pair: PAIR, keepClear }
   // her otherwise; off the song a jump or the gallop's hop takes the carriers up with her, Q / E keeps one end's shoes down
   mulaCarriers.group.visible = col < 0.5;
   SHELL.x = M.pos.x; SHELL.z = M.pos.y; SHELL.yaw = M.yaw; SHELL.roll = mula.body.rotation.z; SHELL.pitch = mula.body.rotation.x;
-  stepMulaFeet(dt, dancing && !G.practice ? M.danceT : null, SHELL, CALM.matches ? 0.4 : 1, dancing ? 0 : M.air, rearLift, rearPitch);
+  stepMulaFeet(dt, dancing && !G.practice && !onSpot ? M.danceT : null, SHELL, CALM.matches ? 0.4 : 1, dancing ? 0 : M.air, rearLift, rearPitch);
 }

@@ -4,11 +4,11 @@
 // own: a pause or a collapse freezes the song second shown, a restart seeks it, the results keep the last one.
 import * as THREE from 'three';
 import { bou, bouColla, BOU_COLLA_YAW } from './bou-objects.js';
-import { G } from '../../game/state.js';
-import { REEL } from '../../game/showreel.js';
+import { G, clock } from '../../game/state.js';
+import { REEL, REEL_STILL } from '../../game/showreel.js';
 import { songTimeAtBeat } from '../../game/figure-song.js';
 import { createBouMotion } from './bou-motion.js';
-import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose, bouFestaAt } from './bou-dance.js';
+import { BOU_TIMING, BOU_CARRY, bouPose, newBouPose, bouFestaAt, prepareBouDance } from './bou-dance.js';
 import { liveBouFeet } from './bou-feet.js';
 import { PHOTO } from '../../game/photo-control.js';
 import { LETTERS } from '../../core/env.js';
@@ -18,11 +18,18 @@ import { lensShrink } from '../../scene/framing.js';
 import { bouToWorld, carryColla } from './bou-colla.js';
 import { PARADE } from './bou-parade.js';
 import { smooth } from '../../core/math.js';
+import { CALM } from '../../core/env.js';
+import { stepManualJump, beginManualFlight, manualContact } from '../../scene/manual-jump.js';
 
 export const BOU_DANCE = { t: 0 }; // the song second shown
 export const BOU_END = BOU_TIMING.duration;
+const SPLASH_LOOP = [9, 88].map(n => BOU_TIMING.bars.find(b => b.sourceBar === n).time); // s: source bars 9 to 88
+const STILL_LOOP = [9, 18].map(n => BOU_TIMING.bars.find(b => b.sourceBar === n).time); // s: source bars 9 to 18, where its root stays within 5 cm of its spot
 const BOU_WORLD = new THREE.Vector3();
 let bouMotion = null, bouShown = -1;
+export async function prepareBouMotion() {
+  if (!bouMotion) bouMotion = createBouMotion(bou, await prepareBouDance());
+}
 
 // acc: { roll, pitch } accents (rad) leaning the shell on the carriers, `col` 0-1 the collapse. The shell never lifts
 // off its carriers: the reference's collective overhead lift needs exterior carriers, not modelled.
@@ -31,9 +38,11 @@ export function danceBou(beat, dt, acc, pos) {
   bouMotion ??= createBouMotion(bou);
   const reel = REEL.on && G.state === 'select', dancing = G.state === 'play' || reel;
   if (BOU_LIVE.parked && !dancing && G.state === 'select') return driveBou(dt, BOU_LIVE.at, 0, 0, pos); // free play, just looking: it stays where it was driven
-  if (BOU_LIVE.parked) { BOU_LIVE.parked = false; bouSteps = null; bouShown = -9; } // back to its dance: fresh steps next time, the tail hangs still
-  bou.frame.rotation.y = BOU_COLLA_YAW; // (the dance frame, its colla's compass, which free play turned to the plaça's)
-  if (G.practice || !dancing && G.state !== 'results') BOU_DANCE.t = 0; // the practice and the menus: its opening stance
+  if (BOU_LIVE.parked) { BOU_LIVE.parked = false; bouSteps = null; bouShown = -9; BOU_JUMP.air = BOU_JUMP.airV = 0; } // back to its dance: fresh steps next time, the tail hangs still
+  bou.frame.position.y = 0; bou.frame.rotation.y = BOU_COLLA_YAW; // (the dance frame, its colla's compass, which free play turned to the plaça's)
+  if (G.state === 'splash') BOU_DANCE.t = SPLASH_LOOP[0] + clock % (SPLASH_LOOP[1] - SPLASH_LOOP[0]); // alone on the splash (scene/stage-motion.js): its lively bars on a loop, past the solemn steps and before the banknotes
+  else if (REEL_STILL.on) BOU_DANCE.t = STILL_LOOP[0] + clock % (STILL_LOOP[1] - STILL_LOOP[0]); // under the selector's held shot: its changes of facing, on its spot
+  else if (G.practice || !dancing && G.state !== 'results') BOU_DANCE.t = 0; // the practice and the menus: its opening stance
   else if (reel || dancing && !G.collapseT && !G.paused) BOU_DANCE.t = Math.max(0, songTimeAtBeat(beat));
   const jump = Math.abs(BOU_DANCE.t - bouShown) > 0.5; // a seek (restart, a new reel loop): the tail hangs still again
   bouShown = BOU_DANCE.t;
@@ -60,11 +69,15 @@ export function bouBrama() { BRAMA.from = bramaAt(BOU_DANCE.t); BRAMA.at = BOU_D
 export function poseBou(t) { bouMotion ??= createBouMotion(bou); return bouMotion(t, 0); }
 
 // Free play (photo mode, the Bou alone): driven like the others (game/photo-control.js movePhoto), its carriers stepping
-// live under it (figures/bou/bou-feet.js liveBouFeet). Q lifts its head, E stretches the carriers' left legs (the dance's
-// gesture), Space charges head down, R is the half turn every figure has. No hop, no lift: its feet never leave the
-// floor together. Parked where it stopped while free play looks around; the next dance takes it back to its frame.
-export const BOU_LIVE = { parked: false, at: { x: 0, z: 0, yaw: 0 }, charge: 0, head: 0, reach: 0 };
-const BOU_FEET = Array.from({ length: 4 }, () => ({})), BOU_REACH = i => (i % 2 ? 0 : BOU_LIVE.reach);
+// live under it (figures/bou/bou-feet.js liveBouFeet). As the Mulassa: Space jumps (the whole rig, carriers and all, as
+// the Drac), E held lifts its front (its snout up), Q held burns its carretilles, the back's and the ones on its horn tips and in its mouth
+// (bou-show.js), R is the half turn every figure has. Parked where it stopped while
+// free play looks around; the next dance takes it back to its frame.
+export const BOU_LIVE = { parked: false, at: { x: 0, z: 0, yaw: 0 }, front: 0 };
+// rad the shell tips its front up on the hind hips, which stay down (.66 m aft of its middle)
+const BOU_TIP = { front: 0.3, hips: 0.66, ease: 0.15 };
+const BOU_JUMP = { air: 0, airV: 0 };
+const BOU_FEET = Array.from({ length: 4 }, () => ({})), BOU_REACH = () => 0;
 let bouSteps = null, bouClock = 0;
 // body: { x, z, yaw } in the plaça (m, rad); vx, vz its velocity (m/s), for where the feet land.
 export function driveBou(dt, body, vx, vz, pos) {
@@ -72,15 +85,17 @@ export function driveBou(dt, body, vx, vz, pos) {
   bouClock += dt; BOU_LIVE.parked = true;
   Object.assign(BOU_LIVE.at, { x: body.x, z: body.z, yaw: body.yaw });
   const driving = PHOTO.on && PHOTO.id === 'bou-tradicional-valls', keys = PHOTO.keys;
-  if (driving && PHOTO.action) { BOU_LIVE.charge = 0.7; PHOTO.action = false; }
-  BOU_LIVE.charge = Math.max(0, BOU_LIVE.charge - dt);
-  const ease = 1 - Math.exp(-dt / 0.15);
-  BOU_LIVE.head += ((driving && keys.has('KeyQ') ? -0.12 : 0) + (BOU_LIVE.charge > 0 ? 0.2 : 0) - BOU_LIVE.head) * ease;
-  BOU_LIVE.reach += ((driving && keys.has('KeyE') ? 1 : 0) - BOU_LIVE.reach) * ease;
-  bou.frame.rotation.y = 0; // the plaça's own frame: the driven body is in world metres
-  bou.root.position.set(body.x, 0, body.z); bou.root.rotation.y = body.yaw;
+  if (driving && PHOTO.action) { if (BOU_JUMP.air === 0 && dt > 0) { BOU_JUMP.airV = CALM.matches ? 1.4 : 4.8; beginManualFlight('bou-tradicional-valls'); } PHOTO.action = false; }
+  const hit = stepManualJump(BOU_JUMP, dt);
+  if (hit > 2) manualContact('bou-tradicional-valls', hit);
+  if (driving) PHOTO.air = BOU_JUMP.air > 0; // airborne: it keeps its momentum (movePhoto)
+  const ease = dt > 0 ? 1 - Math.exp(-dt / BOU_TIP.ease) : 0, reduce = CALM.matches ? 0.4 : 1;
+  BOU_LIVE.front += ((driving && keys.has('KeyE') ? reduce : 0) - BOU_LIVE.front) * ease;
+  const tip = -BOU_TIP.front * BOU_LIVE.front; // (- = front up)
+  bou.frame.rotation.y = 0; bou.frame.position.y = BOU_JUMP.air; // the plaça's own frame: the driven body is in world metres
+  bou.root.position.set(body.x, BOU_TIP.hips * Math.abs(Math.sin(tip)), body.z); bou.root.rotation.y = body.yaw; // pivots on the hips that stay down
   const speed = Math.hypot(vx, vz);
-  bou.body.rotation.set(BOU_LIVE.head + 0.012 * Math.min(1, speed / 3) * Math.sin(bouClock * 9), 0, 0); // a little trot nod
+  bou.body.rotation.set(tip + 0.012 * Math.min(1, speed / 3) * Math.sin(bouClock * 9), 0, 0); // a little trot nod
   bouSteps(bouClock, body, vx, vz, BOU_REACH, BOU_FEET);
   for (let i = 0; i < 4; i++) { const f = BOU_FEET[i]; bou.feet[i].position.set(f.x, f.y, f.z); bou.feet[i].rotation.set(f.tilt ?? 0, f.yaw, 0, 'YXZ'); }
   bou.cap?.play(bouClock); // free play: the head's gags on its own steady beat

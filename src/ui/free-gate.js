@@ -14,7 +14,7 @@ export function hugBubble(menu, doc = document) {
   const right = Math.max(...[...r.getClientRects()].map(x => x.right));
   b.style.width = `${Math.ceil(right - b.getBoundingClientRect().left + parseFloat(getComputedStyle(b).paddingRight))}px`;
 }
-export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.userAgent ?? '', standalone = navigator.standalone, portrait = () => innerHeight > innerWidth, doc = document, listen = addEventListener }) {
+export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.userAgent ?? '', standalone = navigator.standalone, media = globalThis.matchMedia?.('(orientation: portrait)'), portrait = () => (typeof media?.matches === 'boolean' ? media.matches : innerHeight > innerWidth), doc = document, listen = addEventListener }) {
   const by = id => doc.getElementById(id), turn = by('free-hint-menu'), fs = by('free-fs-menu');
   const iphone = /iPhone|iPod/.test(ua), isOpen = () => Boolean(turn.open || fs.open);
   // Safari's own steps: Chrome, Firefox and Edge on iOS are WebKit too, but their menus differ
@@ -29,6 +29,9 @@ export function setupFreeGate({ focusIn, onEnter, store = null, ua = navigator.u
   by('free-fs-ok').addEventListener('click', () => { fs.close(); askTurn(); });
   const turned = () => { if (isOpen() && !portrait()) { turn.close(); fs.close(); onEnter(); } };
   listen('resize', turned); listen('orientationchange', turned);
+  // iOS tells the turn through the media query first, the new size later: closing only then, the sheet was laid out again
+  // on its side meanwhile and was seen turning and growing with the screen
+  media?.addEventListener?.('change', turned);
   listen('resize', () => { if (turn.open) hug(turn); if (fs.open) hug(fs); });
   return {
     get isOpen() { return isOpen(); },

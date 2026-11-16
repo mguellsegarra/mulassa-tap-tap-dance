@@ -123,7 +123,7 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 
 ### Joc lliure (mode foto)
 - [ ] **Què fa l'Espai**: saltar o envestir, en el cas del Bou. Va a la fitxa (`photoSpace`) i a `ui.photo.act.<clau>.space`.
-- [ ] **Tecles Q, E i R** i el seu text curt: el Bou "alça el cap", "estira la cama" i "mitja volta". Van a `ui.photo.act.<clau>.q|e|r`, a les icones de `src/ui/photo-icons.js` i a l'acció del moviment, a `<clau>-play.js`.
+- [ ] **Tecles Espai, Q, E i R**, iguals per a totes les figures: Espai salta (la mateixa icona per a tothom), Q aixeca el morro, E aixeca el cul i R fa mitja volta. Les icones de Q i E són el retrat de la figura en aquestes postures, com les de la Mulassa (`public/photo-icons/`, `src/ui/photo-icons.js`); l'acció va a `<clau>-play.js` o `<clau>-stage.js`.
 - [ ] **Acció especial de la E**: les espurnes del Drac. Va a la fitxa (`photoE`).
 - [ ] **"Mou el Bou" i "Ara mous el Bou"**: van a `ui.photo.move<Clau>` i `ui.photo.now<Clau>`, i a la barra de figures de `src/ui/photo-avatars.js`.
 - [ ] **Espai que necessita**: el Drac en vol més. Va a la fitxa (`wideClearance`).

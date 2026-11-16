@@ -9,7 +9,7 @@ import { tr } from '../i18n/messages.js';
 // select: the selector's api (figure, pending, visible, toLevels); busy(): another sheet or «mode foto» is up; walk(): free play
 export function setupWatch({ select, busy, walk }) {
   const $ = id => document.getElementById(id);
-  const menu = $('watch-menu'), tag = $('watch-tag'), walkBtn = $('watch-walk');
+  const menu = $('watch-menu'), tag = $('watch-tag'), walkBtn = $('watch-walk'), idleBtn = $('idle-watch');
   let offered = false; // this demo's end sheet has opened (once: closing it always leaves the results)
   function start() { // from the song row, which only a playable figure's panel shows
     const figure = select.figure;
@@ -26,6 +26,7 @@ export function setupWatch({ select, busy, walk }) {
     select.toLevels();
   }
   $('select-watch').addEventListener('click', start);
+  idleBtn.addEventListener('click', start); // the selector at rest (ui/reel-idle.js)
   $('watch-play').addEventListener('click', () => leave(true));
   $('watch-again').addEventListener('click', () => { menu.close(); startWatch(); });
   $('watch-figures').addEventListener('click', () => leave(false));
@@ -37,6 +38,7 @@ export function setupWatch({ select, busy, walk }) {
     frame() { // every frame (ui/controls.js): the label while it plays; the sheet once the plaça has cheered a moment
       hide(tag, !(G.state === 'play' && G.watch));
       hide(walkBtn, !(G.state === 'play' && G.watch && !G.paused));
+      hide(idleBtn, !(G.state === 'select' && select.figure && !select.pending));
       const end = G.state === 'results' && G.watch && clock - G.resT > 1;
       if (!end) { offered = false; return; }
       if (offered || document.hidden) return;

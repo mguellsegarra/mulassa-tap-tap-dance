@@ -1,13 +1,14 @@
 // Quality recovery owns its evidence windows, not the scene. The caller supplies drawn-frame CPU cost and cadence.
 import { frameMonitor, SLOW_SHARE, rememberGpuLoss } from './render-quality.js';
 
+const CPU_BOUND = 10; // ms of JavaScript a frame (60% of a 60 Hz frame): above it an overload is the CPU's, not the GPU's
 // A stable cadence is necessary but not proof of GPU headroom. A menu-only one-level trial, followed by the existing
 // overload monitor, tests actual restored work. Failed trials back off (30 s → 5 min); never probe during a song.
-export function adaptiveQuality({ ceiling, level, change, report = () => {}, canvas }) {
+export function adaptiveQuality({ ceiling, level, change, report = () => {}, canvas, halve = () => {} }) {
   let time = 0, elapsed = 0, samples = 0, late = 0, costSum = 0, costPeak = 0, good = 0;
   let cooldown = 2000, retry = 12000, sinceChange = 0, trial = false, failures = 0, cadence = 0;
   let lastHold = null, lastPlay = null, lastHalf = null, lastLowPower = null, suspended = false;
-  let frameMs = 0, frameCost = 0, currentPace = null, held = false, playing = false;
+  let frameMs = 0, frameCost = 0, currentPace = null, held = false, playing = false, costAvg = NaN, halved = false;
   // Allocate diagnostic objects only at a decision/window boundary, never in the per-frame sample path.
   const context = () => ({ hz: currentPace.hz, fps: currentPace.fps, half: currentPace.half, lowPower: currentPace.lowPower,
     hold: held, play: playing, budget: 1000 / currentPace.fps, frame: frameMs, cpu: frameCost });
@@ -36,12 +37,45 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
   // Some phones miss a share of refreshes with any canvas redrawn every frame (a Galaxy S10: ~17%, a tiny WebGL clear
   // included): no profile helps. When the lowest one gains less than the overload threshold over the level the drops
   // started from, that level is restored and the threshold counts from this device's floor. A drowning one stays down.
-  let drops = null, tolerated = 0; // drops: the level and slow share the current run of drops started from
+  // And once a drop proved futile, the song in play is left alone: a Galaxy S10 with its CPU slowed three times (JS 15-19 ms
+  // a frame, no profile's to shed) went medium, low, minimal, medium, low, minimal in one song, a hitch of up to 787 ms
+  // at every switch, never under 40 fps nor over 53 (13/11/2026). Only frames way too slow still step down in a song.
+  // A drowning menu is the exception: an iPhone 8 (iOS 16.7) drew the selector at 11 fps at medium and at minimal alike, its
+  // own HTML's cost (59 fps with #select hidden, 14/11/2026), and then played its song at minimal, which it holds at
+  // medium at 60. No profile is to blame there either: out of a song the level is restored and the menu keeps that
+  // share as its own floor (menuFloor), which a song never inherits.
+  let drops = null, tolerated = 0, futile = false, menuFloor = 0; // drops: the level and slow share the current run of drops started from
+  let probe = null, throttled = false; // probe: the level and slow share a capped step down started from; throttled: it bought nothing
   const down = frameMonitor((steps, evidence) => {
     const share = evidence.slowShare, spiky = evidence.spiky;
-    if (!spiky && share <= tolerated) return;
-    if (drops && level() === -1 && !spiky && share < 0.35 && drops.share - share < SLOW_SHARE) {
-      tolerated = share + SLOW_SHARE; const to = drops.from; drops = null;
+    if (!spiky && share <= (playing ? tolerated : Math.max(tolerated, menuFloor))) return;
+    // A song whose JavaScript alone takes most of a 60 Hz frame is not helped by a profile (they shed GPU work; the
+    // people, the CPU's load, step a level later): it is drawn at an even 30 for the rest of the song instead, half the
+    // work and the heat (halve: the pacer's cap, core/timing.js). A 2015 MacBook Pro went 55 to 85 °C in a minute of play
+    // and its JavaScript from 7.6 to 14 ms a frame, medium and low changing nothing (13/11/2026).
+    // (only where the pacer can halve: over 50 Hz, not a 120 Hz screen)
+    if (playing && !halved && costAvg > CPU_BOUND && currentPace.hz > 50 && currentPace.hz <= 95) { halved = true; halve(true); down.reset(); clear(); report({ time, reason: 'cpu-cap', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
+    // Under a cap (a screen the pacer reads under 45 fps) with light JavaScript, late frames have two possible owners that
+    // read alike from here: the browser withholding frames (Low Power Mode: an iPhone 18 Pro's Safari played the Bou
+    // switching between 30 and 24 Hz with frames of 50-79 ms in between, 14% of them «slow», 9 ms of JavaScript, at medium,
+    // low and minimal alike, and lost its crowd for nothing; tests/render/fixtures/low-power-bou.json, 14/11/2026) or a GPU
+    // that cannot keep up (a 60 Hz phone drawing 33 and 50 ms frames in turns). Only a step tells them apart: one level
+    // down is a probe (the near people lag a level, stage.js stepPeople: nobody leaves), and when the late share does not
+    // fall by the overload threshold it is put back and the cap is the browser's until the pace is fast again
+    // (`throttled`). A step that helped stays, and the next one is probed the same way. Way too slow or hitching steps as ever.
+    // (not at the game's own 30, `halved`: its overload is real)
+    if ((evidence.capped || currentPace.fps < 45) && steps < 2 && !spiky && !halved && costAvg < 1000 / currentPace.fps * 0.45) {
+      if (throttled) { report({ time, reason: 'throttled', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
+      if (probe && level() === probe.from - 1 && probe.share - share < SLOW_SHARE) {
+        throttled = true; const to = probe.from; probe = drops = null;
+        switchTo(to, 'throttled', evidence); return;
+      }
+      probe = { from: level(), share };
+    }
+    if (futile && playing && steps < 2 && !spiky) return; // repeated hitches still step down
+    if (drops && level() === -1 && !spiky && (share < 0.35 || !playing) && drops.share - share < SLOW_SHARE) {
+      if (share < 0.35) tolerated = share + SLOW_SHARE; else menuFloor = share + SLOW_SHARE;
+      futile = true; const to = drops.from; drops = null;
       switchTo(to, 'futile', evidence); return;
     }
     drops ??= { from: level(), share };
@@ -57,6 +91,10 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     if (!(ms > 0 && ms <= 1000)) { reset('gap'); return; }
     time += ms; sinceChange += ms;
     frameMs = ms; frameCost = cost; currentPace = pace; held = hold; playing = play;
+    if (Number.isFinite(cost)) costAvg = costAvg >= 0 ? costAvg + (cost - costAvg) * 0.02 : cost; // ~1 s of frames
+    if (halved && !play) { halved = false; halve(false); } // the song is over: menus and the next song start at the full rate
+    if (!play) futile = false; // only the song in play is left alone: the next one is judged afresh
+    if (pace.fps >= 45) { throttled = false; probe = null; } // the cap is gone: the next one is probed afresh
     if (restored && lostTo !== null) { // on a drawn frame: the profile's precompile needs a live context and a finished boot
       const to = lostTo; lostTo = null; restored = false;
       switchTo(to, 'context-lost', {}); trial = false;

@@ -18,7 +18,7 @@ L'ordre és Valls primer i la resta de poblacions per ordre alfabètic català (
 
 Cada població té un accent editorial (`--town`, `select-cards.css`) per a l'estendard, la targeta i l'avatar de foto. No són colors oficials municipals ni la camisa d'una colla. Es repassen perquè dues poblacions veïnes no es confonguin: la distància OKLab entre accents queda per sobre de ~0,06 (Valls es manté vermell i cap altra població n'hi comparteix). Alguns van néixer d'una referència de l'àrea (Marrecs de Salt per a Girona, la Fil·loxera groga a Sant Sadurní, el faldó de l'Haca a Castelló, les faldetes de la Pilara a Fraga), però el criteri és la camisa de la colla castellera del poble quan n'hi ha i no xoca amb un altre accent (Reus, Berga, Lleida, Manresa), i si no, la distinció visual; Solsona i Girona (0,044) queden acceptades tan a prop; el motiu original de cada color és al dossier de recerca (`towns[].colorReason`).
 
-Els escuts (`src/ui/escuts.js`) són versions simplificades dels de Wikimedia Commons, que conserven les seves llicències. Molins de Rei porta la versió oficialitzada el 2025, amb la mola blanca i la nadilla negra.
+Els escuts (`src/ui/escuts.js`) són versions simplificades dels de Wikimedia Commons, que conserven les seves llicències. Les pastilles del selector en porten els PNG generats (`npm run build:escuts`, que cal córrer després de tocar-ne cap; `tests/build/escut-assets.mjs` ho comprova). Molins de Rei porta la versió oficialitzada el 2025, amb la mola blanca i la nadilla negra.
 
 Les armes que no es reconeixen sense un element exterior el dibuixen a fora del contorn (`over`): el rat penat damunt el caironat de València i el llorer amb el llaç d'Andorra de Sant Julià de Lòria. Campos porta la bordura de porpra de l'escut aprovat (`ESC_T.porpra`).
 
@@ -132,4 +132,4 @@ El **Gegant del Calçot** (`gegant-calcot-valls`, UAF) és l'emblema de la Gran 
 
 El **Gegant del Campanar** (`gegant-campanar-valls`, UAF) es dibuixa en clau còmica, a partir de fotos del gegant al carrer i de l'exposició dels 300 anys: penell sobre una punxa, campanar quadrat amb dents i rosasses, cara quadrada amb somriure i un nas gros cap a l'esquerra, orelles amb campanes, la torre amb rellotge i finestra, i la faldilla llarga.
 
-Les fotos de referència d'aquestes revisions (`tools/dev/bou-turba-propostes/ref/`) són de tercers i no s'incorporen al joc ni al repositori.
+Les fotos de referència d'aquestes revisions són de tercers i no s'incorporen al joc ni al repositori.

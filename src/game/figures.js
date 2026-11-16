@@ -1,11 +1,11 @@
-// Catalog metadata lives in JSON; only the two integrated songs are playable.
+// Catalog metadata lives in JSON; the integrated songs are playable.
 import { tr } from '../i18n/messages.js';
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
 import { bestRecord, recordPointsKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
-import { PLAYABLE_IDS } from '../figures/index.js';
+import { PLAYABLE_IDS, FIGURE_TRAITS } from '../figures/index.js';
 // Valls first, the rest alphabetical by Catalan name, so the catalogue grows without a hand-kept order.
 const byTown = (a, b) => (a.id === 'valls' ? -1 : b.id === 'valls' ? 1 : a.name.localeCompare(b.name, 'ca'));
 export const TOWNS = [...figureCatalog.towns].sort(byTown);
@@ -13,8 +13,8 @@ const playableSongs = {
   // i18n-ok: song titles and composers are proper names
   'mulassa-valls': { song: 'Ball de la Mulassa', composer: 'Francesc Bofarull i Figuerola', year: 1987, version: CURRENT_SCORE_VERSION },
   'drac-valls': { song: 'Ball del Drac', composer: 'Francesc Bofarull i Figuerola', year: 1985, version: DRAC_SCORE_VERSION },
-  // the UAF's Bou Tradicional (2012), not the Turba's; no board yet: its version is not publishable (leaderboard-rules.js)
-  'bou-tradicional-valls': { song: 'Ball del Bou', composer: 'Francesc Bofarull i Figuerola', year: 2012, version: BOU_SCORE_VERSION, noBoard: true },
+  // the UAF's Bou Tradicional (2012), not the Turba's; board enabled with the 1.4.0 migration
+  'bou-tradicional-valls': { song: 'Ball del Bou', composer: 'Francesc Bofarull i Figuerola', year: 2012, version: BOU_SCORE_VERSION },
 };
 const townRank = f => TOWNS.findIndex(t => t.id === f.town);
 // Hidden entries keep their catalog data and portraits but cannot enter selector navigation.
@@ -31,7 +31,7 @@ export const townOf = f => f.town === INVITE_TOWN.id ? INVITE_TOWN : TOWNS.find(
 // «Població · Comarca» in Catalunya; elsewhere the island or the territory instead of the comarca (the data keeps them apart).
 export const locationOf = f => { const t = townOf(f); return t?.comarca || t?.island ? `${t.name} · ${t.island || (t.territory && t.territory !== 'Catalunya' ? t.territory : t.comarca)}` : ''; };
 export const playable = f => f.status === 'playable';
-export const hasBoard = f => playable(f) && (!f.noBoard || MOCK_BOARD); // the mock boards have the Bou too; an online board (Classificació, the ranking line, publishing)
+export const hasBoard = f => playable(f) && (!f.noBoard || MOCK_BOARD); // online board eligibility (Classificació, ranking line, publishing)
 // Shown before the fold: the playable figures (an unreleased one, src/figures/index.js, waits behind the fold)
 export const upFront = f => playable(f);
 
@@ -54,6 +54,10 @@ export function readFigureRecord(store, figure, level) {
   if (figure.id === MULASSA.id) return bestRecord(store, level);
   try { return JSON.parse(store.get(recordKey(figure, level))) || null; } catch { return null; }
 }
+// The newest figure (its trait) stays new until this device has a record of it at any level, or has watched its whole ball or walked it in free play (markSeen).
+const noveltySeenKey = figure => `seen-${figure.id}`;
+export const markSeen = (store, figure) => { if (FIGURE_TRAITS[figure.id]?.novelty && !store.get(noveltySeenKey(figure))) store.set(noveltySeenKey(figure), '1'); };
+export const isNovelty = (store, figure) => !!FIGURE_TRAITS[figure.id]?.novelty && !store.get(noveltySeenKey(figure)) && [0, 1, 2].every(level => !readFigureRecord(store, figure, level));
 export function saveFigureRecord(store, figure, level, quality, rawScore, combo) {
   if (figure.id === MULASSA.id) saveRecord(store, level, quality, rawScore, combo);
   else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));

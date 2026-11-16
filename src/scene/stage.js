@@ -18,6 +18,7 @@ const qualityGuess = initialQuality({ mobile: COARSE.matches, cores: navigator.h
   memory: navigator.deviceMemory, saveData: navigator.connection?.saveData, renderer: GPU.renderer });
 export let qualityLevel = softwareGl ? -1 : Math.min(qualityGuess, gpuLossLevel());
 export const setQualityLevel = v => (qualityLevel = v);
+export const BOOT_QUALITY = qualityLevel; // the level this load started at: under it, the session has stepped down for overload
 // the session's people: the boot level's; on the splash they follow adaptive quality (the title screen is where a device that
 // boots too high finds its level), after it they only step down, one level behind it: sharpness, shadows and effects go first,
 // people only when those were not enough (a CPU-bound 2016 MacBook stayed at ~35 fps at minimal with high's 109 dancers)
@@ -49,6 +50,9 @@ glc.addEventListener('webglcontextrestored', () => { restorePending = true; erro
 renderer.shadowMap.enabled = renderProfile.shadow > 0;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 export const scene = new THREE.Scene();
+// The scene never moves: left auto-updating, it recomposed its matrix every render and so forced the walk on every child,
+// hidden ones included (renderScreen's walkIfShown never skipped one: 285 of the Bou's 920 objects, 13/11/2026).
+scene.matrixAutoUpdate = false;
 buildSky(scene, qualityLevel >= 0); // gradient dome + voxel clouds (sky.js); its horizon is the fog's colour
 export const camera = new THREE.PerspectiveCamera(38, 1, 0.5, 200); // near 0.5: nothing gets closer (props by the lens are hidden)
 // warm light (a cool sky fill greyed the paving); fx.js puts these back after the finale's colours

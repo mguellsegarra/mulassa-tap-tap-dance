@@ -81,14 +81,10 @@ Each game page repeats the main page's viewport, `theme-color`, manifest and App
 
 ## Shared base
 
-Plassa, `packages/plassa/` (its README; games import `#plassa/<file>`), is the mini-games' own library: every game page stands on it, and mulassa.cat (the main game) does
-not use it yet. It was built from mulassa.cat's pieces, copied and consolidated, and is proven on the games first;
-once several games run on it, mulassa.cat moves onto it and drops its own copies. Until then both exist on purpose:
-the main game stays exactly as it is. **A game never copies a base piece; if the base lacks it, add it to the base**
-(from mulassa.cat's version when it has one) and use it from the game. The how-to is the skill
-`.agents/skills/mulassacat-minijoc/SKILL.md`. Its future name is **Plassa**: what it will hold (the games selector as the
-home page, one account and social layer for every game, general and per-game settings) and what each piece's state is
-are in `packages/plassa/docs/inventari.md`.
+Plassa, `packages/plassa/`, owns the shared base. Games import `#plassa/<file>`; the main game uses thin re-exports
+and the shared audio wake/recovery contract. A game never copies a base piece: extend the base and use it.
+The how-to is `.agents/skills/mulassacat-minijoc/SKILL.md`; the wider account and settings migration is tracked in
+`packages/plassa/docs/inventari.md`.
 
 - Look: `base.css` (tokens, `button`, `.round-btn`, the `.btn` family, `.sheet`, `.switch-row`, the «?» pill, «Juga»,
   the focus ring) and `game.css` (the games' shell: fonts with Cyrillic and CJK, page, `.cover`, the boot screen and
@@ -97,7 +93,8 @@ are in `packages/plassa/docs/inventari.md`.
   `--sheet-color`, `--sheet-bg`, `--sheet-radius`, `--page-edge`, `--page-bg`, `--game`) and its own screens.
 - Interaction: `focus.js` (keyboard vs pointer, `<html data-keys>`), `sheet-keys.js` (arrows, Enter/Space and focus
   recovery in the open cover), `ui-sound.js` (a blip on keyboard moves and every press), `backdrop.js` (a tap outside a
-  cover's sheet does what Escape does), `scroll-hint.js`, `gesture.js` (every tap or key), `double-tap.js`,
+  cover's sheet does what Escape does; a cover that comes up by itself, `data-unasked`, ignores its backdrop and every
+  tap for 400 ms), `scroll-hint.js`, `gesture.js` (every tap or key), `double-tap.js`,
   `tap-start.js` (the home waits for the tap its music needs).
 - The page's life: `page-leave.js` (hidden, blur, pagehide: a run pauses) and `page-audio.js` (one AudioContext: fade
   before stopping, back on return and checked, iOS's audio session, a clock that stands still; reported to Sentry).
@@ -118,12 +115,16 @@ are in `packages/plassa/docs/inventari.md`.
   the badge, the Bústia, the language, Privadesa; its CSS through `scoped-css.js`). When mulassa.cat moves onto Plassa,
   that code moves with it.
 - Imports: `packages/plassa/src/` reaches outside itself only for `core/` and data (`i18n/meta.json`, the loading lines'
-  `i18n/locales/*/boot.json`); mulassa.cat never imports it yet; a game never imports another game. Pop still imports
+  `i18n/locales/*/boot.json`); mulassa.cat imports it through thin re-exports and audio-wake.js; a game never imports another game. Pop still imports
   mulassa.cat's modules directly (`platform/`, `services/`, `ui/`, `i18n/`, `styles/`, `dev/`, `core/`: the list is in
   `docs/architecture.md`), a transitional exception that moves into Plassa with the settings and account layer.
-- Copies of mulassa.cat kept in step until it moves onto the base: `storage`, `haptics`, `boot`, `double-tap`,
-  `errors`, `sentry-load`, `update-watch`, `update-rules`, `locale`, `focus`, `badge-tip`, `render-quality` (same code, other paths),
-  `mula-load.html` (ui/loader.js's art). The rest is consolidated from several of its modules (see each file's header).
+- mulassa.cat's `storage`, `haptics`, `boot`, `double-tap`, `update-rules`, `focus`, `badge-tip`, `render-quality`,
+  `errors`, `sentry-load`, `update-watch` and `locale` are one-line re-exports of Plassa. Only `mula-load.html`
+  still mirrors ui/loader.js's art. `audio-wake.js` shares gesture unlock, resume failures and checked stall recovery;
+  `page-audio.js` retains its page lifecycle, session and fade timings; Chip retains its own session and fade timings.
+- `src/jocs/main-sheets.js`, `src/jocs/install.js` and `src/jocs/menu/install.js` remain main-game adapters:
+  they depend on main-game translation, sheet fade/backdrop and install UI modules. Moving those imports into Plassa
+  would violate its dependency boundary; the settings/account migration must address them together.
 
 ## Steps
 

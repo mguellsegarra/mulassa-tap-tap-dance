@@ -135,11 +135,13 @@ export function createFlow({ board, hero, hud, results, rankingUI, t, booted }) 
     if (booted()) { rankingUI.sync(); startHomeMusic(); } // at boot, main.js starts it once the home is up
   }
 
-  function pause() {
+  // asked: the ⏸ button or Escape; anything else (leaving the page, a stalled clock, a lost GPU) pauses under busy fingers
+  function pause(asked) {
     if (mode !== 'play' && mode !== 'count') return;
     count.stop();
     mode = 'paused';
     pauseMusic();
+    $('pause-menu').toggleAttribute('data-unasked', asked !== true); // #plassa/backdrop.js: «Surt» would end the run at once
     $('pause-menu').hidden = false;
     $('resume').focus({ focusVisible: false });
   }

@@ -62,7 +62,7 @@ function steer(p, dt, beat, live) {
     if (G.state === 'play' && want - clear > 0.6 && clock - (G.uiT || -9) > 1.2 && Math.random() < dt * 3) { // one shout at a time (per second, not per frame: same at 60 and 120 fps)
       G.uiT = clock; bubble(pick(['UI!', 'COMPTE!', 'ALERTA!', 'AI!']), at(p.g, 2.3));
     }
-  } else if (!PHOTO.on && G.state !== 'play' && clear > want + 0.4) { // creep in to watch (not while the song plays: they hold their spot)
+  } else if (!PHOTO.on && !p.ring && G.state !== 'play' && clear > want + 0.4) { // creep in to watch (not while the song plays, nor in a rotllana: they hold their spot)
     tmp.set(-dx, -dz).normalize().multiplyScalar(Math.min(0.7, (clear - want) * 0.35) * live);
   } else if (p.away && clear > want + RING.back) { // she has gone: back to their spot, slowly
     const sx = p.spot.x - p.pos.x, sz = p.spot.y - p.pos.y, sd = Math.hypot(sx, sz);

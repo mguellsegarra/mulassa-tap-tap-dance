@@ -1,3 +1,4 @@
+import { UNRELEASED_IDS } from '../../src/figures/index.js';
 // The production build plays: built with the real vite.config.js (an unreleased figure swapped out by
 // tools/deploy/unreleased-figure.mjs, which dev and every other test never run), a Mulassa run starts, the plaça moves
 // and nothing throws; the pending Bou's card shows on the way. Needs Playwright (PLAYWRIGHT_DIR, default /tmp/ui-inv-pw)
@@ -40,12 +41,14 @@ try {
     const was = await selected(); await page.waitForFunction(id => !document.getElementById(id).disabled, `select-${dir}`, { timeout: 10000 }); await page.click(`#select-${dir}`, { force: true });
     await page.waitForFunction(was => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id !== was, was, { timeout: 10000 });
   };
-  await page.waitForFunction(() => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === 'mulassa-valls', null, { timeout: 30000 });
-  await step('forward'); await step('forward');
-  assert.equal(await selected(), 'bou-tradicional-valls', 'the pending Bou is in the strip');
-  assert(await page.evaluate(() => document.getElementById('select-next').disabled), 'the pending Bou cannot be played');
-  await step('prev'); await step('prev');
-  assert.equal(await selected(), 'mulassa-valls');
+  const bouPending = UNRELEASED_IDS.has('bou-tradicional-valls');
+  // a released Bou is the new figure: it leads the strip and opens the selector (figures.js isNovelty); a pending one sits two cards on
+  await page.waitForFunction(id => document.querySelector('.sel-card[aria-selected="true"]')?.dataset.id === id, bouPending ? 'mulassa-valls' : 'bou-tradicional-valls', { timeout: 30000 });
+  if (bouPending) { await step('forward'); await step('forward'); }
+  assert.equal(await selected(), 'bou-tradicional-valls', 'the Bou is in the strip');
+  assert.equal(await page.evaluate(() => document.getElementById('select-next').disabled), bouPending, 'the production selector follows the Bou release switch');
+  if (bouPending) { await step('prev'); await step('prev'); }
+  assert.equal(await selected(), bouPending ? 'mulassa-valls' : 'bou-tradicional-valls');
   await page.waitForFunction(() => !document.getElementById('select-next').disabled, null, { timeout: 10000 });
   // back from the pending Bou the dock slides «Tria la dificultat» up from below the screen: tap it once it rests on screen
   await page.waitForFunction(() => {
@@ -66,7 +69,7 @@ try {
   const crowd = await page.evaluate(() => window.__dbg.crowd.map(p => [p.pos.x, p.pos.y]).flat());
   assert(crowd.length && crowd.every(Number.isFinite), 'every spectator stands somewhere');
   assert.deepEqual(errors, [], 'no page error in the production build');
-  console.log('prod play: the production build plays a Mulassa run ok');
+  console.log(`prod play: the production build plays ${bouPending ? 'Mulassa' : 'Bou'} ok`);
   // Mulassa Pop's splash tap: the live figures' box shrinks to the home's, and their WebGL buffer must stay as it is
   // (hero.js fit): a new one stalled the tap 75-146 ms on the S10, as the title glided
   await page.goto(`${server.resolvedUrls.local[0]}pop/?mute`, { waitUntil: 'domcontentloaded' });

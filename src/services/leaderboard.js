@@ -3,7 +3,6 @@ import { badgeReads } from './leaderboard-badges.js';
 import { ownRecords } from './leaderboard-own.js';
 import { codeSignIn } from './leaderboard-code.js';
 import { DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from '../game/score-scale.js';
-import { MOCK_BOARD } from '../core/mock-board.js';
 import { fail, translated } from './leaderboard-errors.js';
 import { getClient } from './supabase-client.js';
 export { LEADERBOARD_VERSION, normalizeAlias } from './leaderboard-rules.js';
@@ -13,7 +12,7 @@ const env = import.meta.env ?? {};
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i; // a player's public_id
 export const PAGE = 50; // rows per page of the joint board (the server's cap too)
 // The version each figure publishes to now (the board of its current dance); get_seasons takes the figure itself.
-export const FIGURE_VERSIONS = Object.freeze({ 'mulassa-valls': LEADERBOARD_VERSION, 'drac-valls': DRAC_SCORE_VERSION, ...(MOCK_BOARD && { 'bou-tradicional-valls': BOU_SCORE_VERSION }) });
+export const FIGURE_VERSIONS = Object.freeze({ 'mulassa-valls': LEADERBOARD_VERSION, 'drac-valls': DRAC_SCORE_VERSION, 'bou-tradicional-valls': BOU_SCORE_VERSION });
 
 // Dependency injection keeps network and auth contracts testable without a browser or credentials.
 export function createLeaderboardService({ configured, publishingEnabled, captchaRequired, getClient }) {
@@ -84,14 +83,14 @@ export function createLeaderboardService({ configured, publishingEnabled, captch
     onAccount(listener) { listeners.add(listener); return () => listeners.delete(listener); },
     // One all-time board per figure and season, for every level, by score, each player's best, in pages: ranks
     // offset+1 .. offset+limit (at most 50 a call, so a crowded board never loads at once), plus on the first page the caller's
-    // row with 5 neighbours each side. `version` (or `figure`: 'mulassa-valls' | 'drac-valls', its current dance) picks the
+    // row with 5 neighbours each side. `version` (or `figure`: 'mulassa-valls' | 'drac-valls' | 'bou-tradicional-valls', its current dance) picks the
     // board; `season` a season id (null = the open one; a closed one for the Saló de la fama, the version from seasons()).
     // Rows: { position, alias, difficulty (0-2), quality, score, max_combo, is_self, total,
     // verified, season_id, public_id (the card's key), released (a faded row) }. No weekly board (202609280004): p_period is always 'all'.
     async listAll({ version, figure, season: seasonId = null, offset = 0, limit = PAGE } = {}) {
       offset = Math.max(0, Math.floor(Number(offset) || 0)); limit = Math.min(PAGE, Math.max(1, Math.floor(Number(limit) || PAGE)));
       const v = version ?? (figure ? FIGURE_VERSIONS[figure] : LEADERBOARD_VERSION);
-      if (!v) return []; // a figure with no board (the Bou): never another figure's
+      if (!v) return []; // a figure with no board: never another figure's
       try {
         return await withBadges(await client(), 'get_leaderboard_all', { p_version: v,
           p_period: 'all', p_offset: offset, p_limit: limit, ...season(seasonId) });

@@ -2,7 +2,10 @@
 // without a cable) opens the proxy's URL and the probe posts every 2 s what its rAF saw (fps, frames over 40 ms), the
 // game state (+idle, open sheets, hidden), `window.__perf` when the URL has ?perf, and the [load]/[quality] console lines.
 // Nothing in the game changes; Vite's HMR socket is passed through. Docs: docs/agents/device-profiling.md.
-// usage: node tools/qa/device/probe-proxy.mjs <listenPort> <targetPort> <label> [logDir=/tmp/mulassa-device]
+// usage: node tools/qa/device/probe-proxy.mjs <listenPort> <targetPort> <label> [logDir=/tmp/mulassa-device] [rec]
+// rec: a session the owner plays for the record (a frame-monitor verdict to replay in node, tests/render/fixtures/):
+// every rAF interval is posted (`all`) and a big message over the page says it is recording, that the quality stepped
+// (keep playing 6 s, then stop) or that the song ended without a step. Catalan: only the owner reads it.
 // One JSON line per post in <logDir>/<label>.jsonl ({hello, ua, dpr…} first, then {t, fps, long, state, ev, perf, logs}).
 // A/B on a phone without a cable: `curl -H 'x-cmd-token: <printed at start>' -d '<js>' http://<mac>:<port>/__cmd` queues an
 // expression; the page runs it at its next post (2 s) and the result lands in the log as {cmd, result}. LAN dev tool only:
@@ -13,24 +16,32 @@ import net from 'node:net';
 import { appendFileSync, mkdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 
-const [port, target, label, logDir = '/tmp/mulassa-device'] = process.argv.slice(2);
+const [port, target, label, logDir = '/tmp/mulassa-device', rec] = process.argv.slice(2);
 const PAGE_KEY = randomBytes(16).toString('hex'); // in the probe the proxy serves: the page's own capability to take commands
-if (!port || !target || !label) { console.error('usage: probe-proxy.mjs <listenPort> <targetPort> <label> [logDir]'); process.exit(2); }
+if (!port || !target || !label) { console.error('usage: probe-proxy.mjs <listenPort> <targetPort> <label> [logDir] [rec]'); process.exit(2); }
 mkdirSync(logDir, { recursive: true });
 const LOG = `${logDir}/${label}.jsonl`;
 const PERF_KEYS = ['state', 'fps', 'hz', 'half', 'late', 'frame', 'worst', 'js', '3d', 'hud', 'crowd', 'quality', 'lowPower', 'dpr', 'glPx', 'hudPx'];
 // (innerWidth in `hello` is read before the viewport meta applies: Safari reports 980; the probe's own numbers are rAF's)
 const PROBE = `<script>(()=>{const L=${JSON.stringify(label)},sid=Math.random().toString(36).slice(2,7),t0=performance.now();
-let p=0,n=0,sum=0,long=[],last='',ev=[],logs=[];const cl=console.log;
+let p=0,n=0,sum=0,long=[],all=[],last='',ev=[],logs=[];const REC=${rec === 'rec'};const cl=console.log;
 console.log=(...a)=>{if(/^\\[(load|quality)\\]/.test(String(a[0])))logs.push(Math.round(performance.now()-t0)+' '+a.map(x=>typeof x==='string'?x:JSON.stringify(x)).join(' ').slice(0,300));return cl.apply(console,a)};
 const st=()=>{let s='';try{s=window.__dbg?.G?.state??''}catch{};const d=[...document.querySelectorAll('dialog[open]')].map(x=>x.id).join(',');return s+(document.body?.classList.contains('reel-idle')?'+idle':'')+(d?'['+d+']':'')+(document.hidden?' hidden':'')};
-const f=t=>{if(p){const d=t-p;n++;sum+=d;if(d>40)long.push(Math.round(d))}p=t;requestAnimationFrame(f)};requestAnimationFrame(f);
+const f=t=>{if(p){const d=t-p;n++;sum+=d;if(d>40)long.push(Math.round(d));if(REC)all.push(Math.round(d))}p=t;requestAnimationFrame(f)};requestAnimationFrame(f);
 setInterval(()=>{const s=st();if(s!==last){ev.push(Math.round(performance.now()-t0)+':'+s);last=s}},250); // (per frame, this state read was the 4th hottest function on an iPhone)
 const send=o=>{try{navigator.sendBeacon('/__probe',JSON.stringify({L,sid,...o}))}catch{}};
 send({hello:1,ua:navigator.userAgent,dpr:devicePixelRatio,w:innerWidth,h:innerHeight});
-setInterval(()=>{send({t:Math.round((performance.now()-t0)/1000),fps:n?+(n/(sum/1000)).toFixed(1):0,long,state:st(),ev,perf:window.__perf?Object.fromEntries(${JSON.stringify(PERF_KEYS)}.map(k=>[k,__perf[k]])):undefined,logs:logs.splice(0)});n=sum=0;long=[];ev=[]},2000);
+setInterval(()=>{send({t:Math.round((performance.now()-t0)/1000),fps:n?+(n/(sum/1000)).toFixed(1):0,long,all:REC?all.splice(0):undefined,state:st(),ev,perf:window.__perf?Object.fromEntries(${JSON.stringify(PERF_KEYS)}.map(k=>[k,__perf[k]])):undefined,logs:logs.splice(0)});n=sum=0;long=[];ev=[]},2000);
 addEventListener('error',e=>send({err:String(e.message).slice(0,200)}));
-setInterval(()=>fetch('/__cmd',{headers:{'x-probe-page':'${PAGE_KEY}'}}).then(r=>r.text()).then(c=>{if(!c)return;let result;try{result=String((0,eval)(c))}catch(e){result='ERR '+e.message}send({cmd:c.slice(0,200),result:String(result).slice(0,500)})}).catch(()=>{}),2000);})()</script>`;
+setInterval(()=>fetch('/__cmd',{headers:{'x-probe-page':'${PAGE_KEY}'}}).then(r=>r.text()).then(c=>{if(!c)return;let result;try{result=String((0,eval)(c))}catch(e){result='ERR '+e.message}send({cmd:c.slice(0,200),result:String(result).slice(0,500)})}).then(()=>{net=true}).catch(()=>{net=false}),2000);
+let box,dropAt=0,q0='',net=true,seenPlay=false;const show=(t,c)=>{if(!document.body)return;if(!box){box=document.createElement('div');box.style.cssText='position:fixed;left:0;right:0;top:34%;z-index:99999;pointer-events:none;text-align:center;font:900 34px/1.15 system-ui,sans-serif;color:#fff;text-shadow:0 2px 0 #000,0 0 12px #000;padding:14px 8px;';document.body.append(box)}box.textContent=t;box.style.background=c};
+if(REC)setInterval(()=>{const s=st(),q=window.__perf?.quality||'',now=performance.now();if(s.startsWith('play')){seenPlay=true;if(!q0)q0=q}
+if(q0&&q&&q!==q0&&!dropAt)dropAt=now;
+if(!net)show('SENSE CONNEXIO: no grava','#b00020cc');
+else if(dropAt&&now-dropAt>6000)show('JA POTS PARAR ('+q0+' > '+q+')','#0a7d33dd');
+else if(dropAt)show('HA BAIXAT: segueix 6 s...','#c77700dd');
+else if(seenPlay&&s.startsWith('results'))show('NO HA BAIXAT: ja pots parar','#1e5fbfdd');
+else show(s.startsWith('play')?'● GRAVANT':'● GRAVANT: tria figura i juga',s.startsWith('play')?'#00000055':'#00000099')},500);})()</script>`;
 
 let pendingCmd = '';
 const CMD_TOKEN = randomBytes(16).toString('hex');

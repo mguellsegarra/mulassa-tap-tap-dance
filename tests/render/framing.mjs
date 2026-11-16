@@ -97,6 +97,7 @@ import { lensShrink, LENS_CLEAR } from '../../src/scene/framing.js';
   assert.equal(lensShrink(low, 1, 1), 0, 'right by a low lens: gone');
   assert.equal(lensShrink(low, 8, 0), 1, 'a few metres off: their own size');
   const mid = lensShrink(low, 4.2, 0); assert(mid > 0 && mid < 1, 'in between: part way');
+  assert.equal(lensShrink(low, 1, 1, 0), 1, 'an end shot not begun (k 0): nobody shrinks'); assert.equal(lensShrink(low, 1, 1, 0.5), 0.5, 'half in: half the shrinking'); assert.equal(lensShrink(low, 1, 1, 1), 0, 'all in: gone, as on the selector');
   assert.equal(lensShrink({ x: 0, y: LENS_CLEAR.high + 0.1, z: 0 }, 1, 1), 1, 'a high lens hides nobody');
 }
 console.log('lens clearance ok');

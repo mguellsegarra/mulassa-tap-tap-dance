@@ -30,7 +30,8 @@ function shell(x, y, z, w, h, d, part, keep = [0, 1, 2, 4, 5], col = '#2e3444') 
 // ring: the mid band instead (main.js midCrowd): an arc of the same figures, r0..r1 from the middle, within `half`
 // radians of `far`; avoid: [[azimuth, half arc, r0 there]] (the band's sector starts further out). share: another
 // backdrop whose material (one shader program for both) and figure geometry it reuses, with its own looks and phases.
-export function buildBackdrop(n, inner, props = [], { ring = null, share = null } = {}) {
+// given: [[x, z]] the figures' places, each facing the middle (scene/rotllana.js)
+export function buildBackdrop(n, inner, props = [], { ring = null, share = null, given = null } = {}) {
   const geo = share ? new THREE.BufferGeometry() : mergeGeometries([
     shell(0, 0, 0, 0.36, 0.78, 0.22, 0), shell(0, 0.78, 0, 0.46, 0.6, 0.28, 1),
     shell(0, 1.38, 0, 0.32, 0.36, 0.3, [2, 2, 3, 2, 2, 3]), // (the back of the head is hair too)
@@ -60,8 +61,8 @@ export function buildBackdrop(n, inner, props = [], { ring = null, share = null 
     }
   }
   cand.sort(() => Math.random() - 0.5);
-  const spots = [];
-  for (const [x, z] of cand) {
+  const spots = given ? [...given] : [];
+  for (const [x, z] of given ? [] : cand) {
     if (!ring && (Math.abs(x) > lim || Math.abs(z) > lim || (Math.abs(x) < lo && Math.abs(z) < lo))) continue;
     if (props.some(p => Math.hypot(p.x - x, p.z - z) < (p.r > 1 ? 0.6 : 0.45))) continue; // trunks and lamp posts
     if (spots.some(([sx, sz]) => (sx - x) ** 2 + (sz - z) ** 2 < (ring ? 0.44 : 0.42) ** 2)) continue;
@@ -92,7 +93,7 @@ transformed.x += sin(uTime * 1.3 + aSkin.w * 3.0) * 0.04 * position.y * still;`)
   const o = new THREE.Object3D(), c = new THREE.Color();
   spots.forEach(([x, z], i) => {
     o.position.set(x, 0, z);
-    o.rotation.set(0, Math.atan2(-x, -z) + rnd(-0.5, 0.5), 0); // roughly towards the middle
+    o.rotation.set(0, Math.atan2(-x, -z) + (given ? rnd(-0.08, 0.08) : rnd(-0.5, 0.5)), 0); // roughly towards the middle
     o.scale.setScalar(Math.random() < 0.15 ? 0.72 : rnd(0.92, 1.06));
     o.updateMatrix();
     mesh.setMatrixAt(i, o.matrix);

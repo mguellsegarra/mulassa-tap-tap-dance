@@ -1,0 +1,63 @@
+{
+ "keys": {
+  "carry:back": {
+   "shift": -3
+  },
+  "carry:come": {
+   "shift": -6
+  },
+  "carry:grip": {
+   "shift": -6
+  },
+  "carry:lap": {
+   "shift": -8
+  },
+  "carry:up": {
+   "shift": -6
+  },
+  "comic:8+3": {
+   "shift": 1
+  },
+  "comic:9+0": {
+   "shift": 1.5
+  },
+  "gest:1+0": {
+   "len": 4,
+   "shift": -0.5
+  },
+  "gest:2+0": {
+   "shift": -0.25
+  },
+  "gest:5+0": {
+   "len": 4,
+   "shift": -0.5
+  },
+  "gest:6+0": {
+   "shift": -0.25
+  },
+  "path:65+0": {
+   "shift": -0.5
+  },
+  "path:66+0": {
+   "shift": -1.25
+  },
+  "path:68+0": {
+   "shift": -2.25
+  },
+  "path:70+0": {
+   "shift": -3.5
+  },
+  "path:71+0": {
+   "shift": -4
+  },
+  "path:72+0": {
+   "shift": -6
+  },
+  "path:83+2": {
+   "shift": -2.5
+  },
+  "path:84+0": {
+   "shift": -3.5
+  }
+ }
+}

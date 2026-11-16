@@ -12,7 +12,7 @@ import { danceDrac } from './drac-dance.js';
 import { DRAC_SCALE } from './drac.js';
 import { newWalker, resetWalker, demoStep, turn, manualDracStep, resumeWalker } from './drac-demo.js';
 import { G, clock } from '../../game/state.js';
-import { REEL } from '../../game/showreel.js';
+import { REEL, REEL_STILL } from '../../game/showreel.js';
 import { smooth, easeIn } from '../../core/math.js';
 import { PIVOT, S, M, CAP, stepSprings, capSpring, holdGesture } from '../../scene/figure-springs.js';
 import { stepManualJump, beginManualFlight, manualContact } from '../../scene/manual-jump.js';
@@ -69,7 +69,7 @@ export function animPlayableDrac(dt, beat, live, reel) {
     if (!soloOn) { resetWalker(SOLO, M.pos.x, M.pos.y, M.yaw); SOLO.hx = SOLO.hz = 0; soloOn = true; }
     PHOTO.drac.roar = PHOTO.on && PHOTO.id === 'drac-valls' && PHOTO.keys.has('KeyQ');
     if (PHOTO.on) manualDracStep(SOLO, DRAC_POSE, dt, beat, PHOTO.drac, DRAC_SCALE, CALM.matches);
-    else demoStep(SOLO, DRAC_POSE, dt, beat, null, DRAC_SCALE);
+    else demoStep(SOLO, DRAC_POSE, dt, beat, null, DRAC_SCALE, REEL_STILL.on); // (the selector's held shot: on its spot)
     placeLife(SOLO.x, SOLO.z, SOLO.face, PHOTO.on && PHOTO.id === 'drac-valls' ? dracJump(dt) : (DRAC_JUMP.air = 0));
     poseDrac(drac, DRAC_POSE, 0, SOLO.feetAt); dogDrac(drac, beat, DOG_TAME); dressCarrier(drac);
     const prev = M.yaw;

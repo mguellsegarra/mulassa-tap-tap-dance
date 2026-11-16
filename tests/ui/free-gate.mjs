@@ -50,3 +50,11 @@ for (const app of ['CriOS/130.0', 'FxiOS/131.0', 'EdgiOS/130.0']) {
   const g = make({ ua: IPHONE.replace('Version/18.0', app) }); g.gate.ask();
   assert.deepEqual([g.fs.open, g.turn.open, g.home.hidden], [false, true, true], app); }
 console.log('free-gate ok');
+{ // iOS reports the turn through the media query before the new size: the sheet closes and free play enters then
+  const on = [], media = { matches: true, addEventListener: (k, f) => on.push(f) };
+  const t = make({ media, portrait: undefined });
+  assert.equal(t.gate.ask(), true, 'upright by the media query: asked to turn');
+  media.matches = false; on.forEach(f => f());
+  assert(!t.turn.open && !t.fs.open && t.entered === 1, 'turned by the media query alone: closed and in');
+}
+

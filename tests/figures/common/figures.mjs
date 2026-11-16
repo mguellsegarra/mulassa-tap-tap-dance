@@ -2,7 +2,7 @@ import { UNRELEASED_IDS } from '../../../src/figures/index.js';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { selectCss } from '../../ui/page.mjs';
-import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
+import { FIGURES, TOWNS, MULASSA, DRAC, BOU, portraitArt, portraitPalette, portraitStand, STAND, playable, upFront, townOf, rememberedLevel, rememberLevel, recordKey, locationOf, heartCall, inviteText, isNovelty, markSeen, saveFigureRecord, INVITE, INVITE_TOWN } from '../../../src/game/figures.js';
 import { FIGURE_PORTRAITS } from '../../../src/game/figure-portraits.js';
 import { setupSelect, peekGap, pixelSvg } from '../../../src/ui/select-ui.js';
 import { cellOutline } from '../../../src/ui/selector-portraits.js';
@@ -74,6 +74,15 @@ assert.equal(rememberedLevel(store, MULASSA.id), 1);
 rememberLevel(store, MULASSA.id, 2); assert.equal(rememberedLevel(store, MULASSA.id), 2);
 assert.equal(rememberedLevel(store, 'another'), 1, 'memory belongs to the figure');
 for (const value of ['-1', '3', 'NaN', '1.5', '']) { memory.set('level-mulassa-valls', value); assert.equal(rememberedLevel(store, MULASSA.id), 1); }
+{ // the new figure (its trait) stays new until a record of it at any level, and only it
+  const m = new Map(), fresh = { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) };
+  assert(isNovelty(fresh, BOU) && !isNovelty(fresh, MULASSA) && !isNovelty(fresh, DRAC), 'only the Bou is new');
+  saveFigureRecord(fresh, BOU, 2, 0.8, 1000, 40);
+  assert(!isNovelty(fresh, BOU), 'a record on any level ends it');
+  const w = new Map(), seen = { get: k => w.get(k) ?? null, set: (k, v) => w.set(k, v) };
+  markSeen(seen, MULASSA); assert.equal(w.size, 0, 'a figure without the trait stores nothing');
+  markSeen(seen, BOU); assert(!isNovelty(seen, BOU), 'watching the ball or free play ends it, with no record');
+}
 assert.equal(recordKey(MULASSA, 2), 'record-points-mulassa-v3-2', 'each Mulassa score version has its own record namespace');
 assert.equal(sourceCatalog.figures.find(f => f.id === 'nans-valls').music, 'Francesc Sans', 'pending Valls figures credit their own music');
 const pendingName = id => sourceCatalog.figures.find(f => f.id === id);
@@ -129,6 +138,7 @@ const $ = id => nodes.get(id), win = { innerWidth: 393, innerHeight: 852, addEve
 let boards = [], sounds = [], played = [], how = 0, drafts = [], busy = false, selected = [];
 const heartN = new Map(), heartMine = new Set();
 let standingOf = async f => (f === DRAC.id ? { pos: 3, total: 12 } : { pos: 7, total: 1350 });
+saveFigureRecord(store, BOU, 1, 0.5, 500, 10); // the Bou already played: the strip in catalogue order, the Mulassa first
 const api = setupSelect({ doc, win, store, keyboard: () => true, reduced: () => true, busy: () => busy,
   sfx: k => sounds.push(k), firstLevel: 0, standing: f => standingOf(f), onBoard: f => boards.push(f.id), ranked: true, demo: true, // ?demo stays off outside a dev build
   onPlay: (d, f) => played.push([d, f.id]), onSelect: f => selected.push(f.id), onHowto: () => how++, onWrite: draft => drafts.push(draft), hearts: { count: id => heartN.get(id) ?? 0, mine: id => heartMine.has(id), paint() {}, tap() {} } });
@@ -315,7 +325,7 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert.match(escutSvg('sant-julia'), /stroke-linejoin="round"\/><g stroke="none"><g fill="#2e8b3e">/, 'Sant Julià: the laurel outside the oval');
   assert(!/stroke-linejoin="round"\/><g stroke="none">/.test(escutSvg('valls')), 'arms without an outside charge add nothing');
   assert(escutSvg('campos').includes('#8a2a8c'), 'Campos: the purple bordure');
-  assert.match($('select-towns').innerHTML, /data-town="sant-joan"[^>]*>.*?<\/svg>Sant Joan \(Mallorca\)<\/button>/, 'Sant Joan: its pill says which one');
+  assert.match($('select-towns').innerHTML, /data-town="sant-joan"[^>]*><img class="escut"[^>]*>Sant Joan \(Mallorca\)<\/button>/, 'Sant Joan: its pill says which one');
   assert.equal(locationOf({ town: 'sant-joan' }), 'Sant Joan · Mallorca', 'its location line keeps the plain name');
   const shortOf = new Map(); // one association, one short name on every card (the Lleó and the Gegants del Pi share theirs)
   for (const f of sourceCatalog.figures) { assert.equal(shortOf.get(f.entityName) ?? f.entity, f.entity, `${f.id}: ${f.entityName} keeps one short name`); shortOf.set(f.entityName, f.entity); }
@@ -332,7 +342,7 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   assert.equal(banners.at(-1), INVITE_TOWN.id, 'the invitation stays last');
   assert.deepEqual(banners.filter(t => t !== 'valls' && t !== INVITE_TOWN.id), TOWNS.slice(1).filter(t => FIGURES.some(f => f.town === t.id)).map(t => t.id), 'the strip groups follow the pills');
   assert.equal(strip.banners[0].dataset.town, 'valls');
-  const vallsOrder = ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls'].filter(id => UNRELEASED_IDS.has(id) || id !== 'bou-tradicional-valls'); // (the Bou, until its release)
+  const vallsOrder = ['bou-tradicional-valls', 'os-trabucaires-valls', 'cavallets-valls', 'basilisc-valls', 'aliga-valls', 'gegants-ciutat-valls', 'bou-valls'].filter(id => UNRELEASED_IDS.has(id) || id !== 'bou-tradicional-valls'); // (the Bou, until its release)
   assert.deepEqual(FIGURES.filter(f => f.town === 'valls' && !playable(f)).map(f => f.id).slice(0, 6), vallsOrder.slice(0, 6), "Valls' agreed order");
 }
 
@@ -564,7 +574,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   const ids = TOWNS.flatMap(t => [escutSvg(t.id), escutSvg(t.id)]).map(svg => svg.match(/clipPath id="([^"]+)"/)[1]);
   assert.equal(new Set(ids).size, ids.length);
   assert.equal(escutSvg('nowhere'), '');
-  assert.match(strip, /escutSvg\(t\.id\) \|\|/); assert.match(strip, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
+  assert.match(strip, /escutImg\(t\.id\) \|\|/); assert.match(strip, /aria-hidden="true"><span>\$\{\(t\.short/, 'banners carry the name only');
   // One accent per town: its banner's cloth and its cards'/avatars' tint at one fixed lightness (the owner chose the game's
   // own palette, 2026-10-19). The accents are the banners' agreed colours.
   const css = selectCss();
@@ -652,6 +662,16 @@ console.log('catalog selection, pending panel, town pills, town arms, touch stri
 const wasPlural = figure => / i /.test(figure.name) || /^\S{3,}s(?=\s|$)/.test(figure.fullName || figure.name);
 for (const figure of sourceCatalog.figures) assert.equal(heartCall(figure).title, `Vols que ${wasPlural(figure) ? 'surtin' : 'surti'} a la plaça?`, figure.id);
 for (const figure of sourceCatalog.figures) assert.equal(heartCall({ ...figure, name: 'Noms canviats', fullName: 'Altres noms' }).title, heartCall(figure).title, 'grammar is keyed by ID, never inferred from names');
+{ // a device that has not played the Bou: it leads the strip and the selector opens on it
+  const m = new Map(), fresh = { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) };
+  const opened = setupSelect({ doc, win, store: fresh, reduced: () => true, onPlay() {}, hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  assert.deepEqual($('select-strip').children.slice(0, 3).map(c => c.dataset.id), [BOU.id, MULASSA.id, DRAC.id], 'the new figure first');
+  assert($('select-strip').children[0].cls.split(' ').includes('sel-new') && !$('select-strip').children[1].cls.includes('sel-new'), 'its card alone shines');
+  assert.equal(opened.figure.id, BOU.id, 'and chosen on opening');
+  saveFigureRecord(fresh, BOU, 0, 0.5, 500, 10);
+  setupSelect({ doc, win, store: fresh, reduced: () => true, onPlay() {}, hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
+  assert.equal($('select-strip').children[0].dataset.id, MULASSA.id, 'played: back in catalogue order');
+}
 { // the rehearsal under the page cover (ui/select-warm.js): shown and inert, the host told nothing, the challenge's level kept for the real opening
   const m = new Map(), st = { get: k => m.get(k) ?? null, set: (k, v) => m.set(k, v) }, told = [];
   const sel = setupSelect({ doc, win, store: st, reduced: () => true, firstLevel: 2, onPlay() {}, onSelect: f => told.push(f.id), hearts: { count: () => 0, mine: () => false, paint() {}, tap() {} } });
@@ -662,8 +682,8 @@ for (const figure of sourceCatalog.figures) assert.equal(heartCall({ ...figure, 
   assert($('select').hidden, 'rehearsal over: hidden again');
   sel.visible(true);
   assert(!$('select').inert, 'the real opening takes input');
-  assert.deepEqual(told, [sel.figure.id], 'and tells its figure');
+  assert.deepEqual(told, [BOU.id], 'and tells its figure');
   assert.equal($('select-level').children[2].attrs['aria-pressed'], 'true', 'the challenge\'s level survived the rehearsal');
   sel.visible(false); sel.visible(true, true); sel.visible(true);
-  assert.deepEqual(told, [sel.figure.id, sel.figure.id], 'a rehearsal turning straight into the real opening still tells the host');
+  assert.deepEqual(told, [BOU.id, BOU.id], 'a rehearsal turning straight into the real opening still tells the host');
 }

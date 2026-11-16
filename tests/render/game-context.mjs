@@ -1,7 +1,7 @@
 // The game's systems running together in a mocked DOM (main.js and every module it reaches, as ONE script: load-main.mjs),
 // shared by the contract files render-quality.mjs runs in order (one module instance: one game for all of them).
 import { loadMainSource } from './load-main.mjs';
-import { PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, smoothClock, isSoftwareRenderer, probeRenderer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
+import { PROFILES, sessionProfile, initialQuality, renderDpr, closeUpDpr, frameMonitor, hudScale, framePacer, profileAt, hudBudget, smoothClock, isSoftwareRenderer, probeRenderer, gpuLossLevel, rememberGpuLoss } from '../../src/platform/render-quality.js';
 import { buildPerson } from '../../src/scene/models.js';
 
 // Execute the actual scene/simulation with Three.js geometry and a CPU renderer stub.
@@ -34,7 +34,7 @@ const windowHandlers = {};
 const drawnText = [];
 const hudWork = { ops: 0, clears: 0 }; // every read of a canvas method or property («mode foto» draws nothing)
 const drawing = new Proxy({}, { get: (_, key) => (hudWork.ops++, key === 'clearRect' && hudWork.clears++, key === 'fillText') ? value => drawnText.push(value)
-  : key === 'measureText' ? s => ({ width: String(s).length * 6 }) : key === 'createLinearGradient' ? () => ({ addColorStop() {} }) : () => {}, set: () => true });
+  : key === 'measureText' ? s => ({ width: String(s).length * 6 }) : key === 'createLinearGradient' || key === 'createRadialGradient' ? () => ({ addColorStop() {} }) : () => {}, set: () => true });
 const document = {
   hidden: false,
   focused: true,
@@ -43,7 +43,7 @@ const document = {
   addEventListener(type, handler) { const previous = this.listeners[type]; this.listeners[type] = previous ? (...args) => { previous(...args); handler(...args); } : handler; },
   body: { appendChild() {}, classList: { contains: () => false, toggle() {} }, style: { setProperty() {}, removeProperty() {} } },
   documentElement: { toggleAttribute() {} }, // (focus.js: <html data-keys>)
-  createElement: () => ({ style: { setProperty() {} }, dataset: {}, after() {}, click() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({ style: { setProperty() {} }, classList: { toggle() {} } }) }), // (ui/free-music.js listens on its own button; ui/photo-stick.js draws its stick)
+  createElement: tag => ({ getContext: tag === 'canvas' ? () => drawing : undefined, style: { setProperty() {} }, dataset: {}, after() {}, click() {}, setAttribute() {}, appendChild() {}, addEventListener() {}, contains: () => false, querySelectorAll: () => [], querySelector: () => ({ style: { setProperty() {} }, classList: { toggle() {} } }) }), // (ui/free-music.js listens on its own button; ui/photo-stick.js draws its stick)
   getElementById(id) {
     if (!nodes.has(id)) nodes.set(id, {
       style: { setProperty() {} }, dataset: {}, options: [{}, {}], listeners: {}, open: false, toggleAttribute() {}, // (#free dances on the menu beat: controls.js freeDance)
@@ -72,6 +72,7 @@ privacyMenuStub.querySelector = () => privacyBodyStub;
 privacyMenuStub.close = function () { this.open = false; this.listeners.close(); };
 document.getElementById('privacy-content').content = privacyFragmentStub;
 class Renderer {
+  capabilities = { getMaxAnisotropy: () => 8 };
   constructor() { this.shadowMap = {}; this.lost = false; }
   getContext() { return { isContextLost: () => this.lost }; }
   setPixelRatio() {}
@@ -87,8 +88,8 @@ const context = vm.createContext({
   buildBou: (await import('../../src/figures/bou/bou.js')).buildBou, createBouMotion: (await import('../../src/figures/bou/bou-motion.js')).createBouMotion, ...await import('../../src/figures/bou/bou-dance.js'), liveBouFeet: (await import('../../src/figures/bou/bou-feet.js')).liveBouFeet, // the Bou (provided)
   ...await import('../../src/dev/final-test.js'), MOCK_BOARD: false, ALIAS_KEY: 'leaderboard-alias', // ?final: off here (no hostname)
   errors, errorName, audioFailureTags: (await import('../../src/platform/audio-load.js')).audioFailureTags,
-  THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../../src/scene/crowd-fx.js'), ...models, ...chart, ...progress, ...stars,
-  PROFILES, sessionProfile, initialQuality, renderDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, gpuLossLevel, rememberGpuLoss, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...logoMotionLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
+  THREE: { ...THREE, WebGLRenderer: Renderer }, ...await import('../../src/scene/crowd-fx.js'), ...models, seeded: (await import('../../src/scene/models/colla.js')).seeded, ...chart, ...progress, ...stars,
+  PROFILES, sessionProfile, initialQuality, renderDpr, closeUpDpr, frameMonitor, hudScale, framePacer, smoothClock, profileAt, hudBudget, isSoftwareRenderer, probeRenderer, gpuLossLevel, rememberGpuLoss, Chip: class { constructor(song, opts) { context.chipOpts = opts; } menu() {} setMenuMusic(on) { (context.menuMusicCalls ||= []).push(on); } }, ...practice, ...energy, ...bubblesLogic, ...framing, ...dance, ...logoMotionLogic, ...orbitLogic, setupSync: hooks => { context.syncHooks = hooks; return context.syncSheet = { open: false, show() { this.open = true; } }; },
   pixelSvg: () => '<svg></svg>', // src/ui/select-ui.js (provided)
   curtain: swap => swap(), curtainCover() {}, // src/ui/curtain.js (provided: its timing is tests/ui/curtain.mjs's; here free play's switch runs at once)
   setupSelect: opts => (context.selectScreen = { opts, sheetOpen: false, visible(on) { this.shown = on; }, refocus() {} }),
@@ -113,7 +114,7 @@ const context = vm.createContext({
   setupShare: opts => (context.shareSheet = setupShare({ ...opts, doc: document, nav: {}, fonts: null, url: { createObjectURL: () => 'blob:card', revokeObjectURL() {} } })),
   document, navigator: { hardwareConcurrency: 8, deviceMemory: 8 },
   MutationObserver: class { observe() {} disconnect() {} }, // src/ui/backdrop.js watches the document for unasked sheets opening: tests/ui/backdrop-unasked.mjs
-  location: { hostname: 'localhost', search: '?representation=off' }, localStorage: { getItem() {}, setItem() {} }, // this mocked DOM supplies the original cast; representation-motion tests the new rigs
+  location: { hostname: 'localhost', search: '?representation=off' }, localStorage: { getItem: k => k === 'splash-turn' ? '3' : undefined, setItem() {} }, // a returning player: the splash's pair, which builds the Drac the flows start from (figures/index.js splashSoloAt); this mocked DOM supplies the original cast; representation-motion tests the new rigs
   matchMedia: () => ({ matches: false, addEventListener() {} }), addEventListener(type, handler) {
     (windowHandlers[type] ||= []).push(handler);
     if (type === 'keydown') keyHandlers.push(handler);
@@ -124,7 +125,7 @@ const context = vm.createContext({
 // The vm context has its own Math; models.js's rnd()/pick() (buildPerson, placeHome...) are this realm's, so the
 // tests below seed BOTH (they stay seeded from here on): `seedR = n` inside the context and hostSeed(n) here (else crowd variety is unseeded).
 const hostSeed = n => { let s = n; Math.random = () => (s = (s * 16807) % 2147483647) / 2147483647; };
-hostSeed(5); vm.runInContext('var seedR = 5, seeded = () => (seedR = (seedR * 16807) % 2147483647) / 2147483647, mathRandom = Math.random; Math.random = seeded;', context);
+hostSeed(5); vm.runInContext('var seedR = 5, testRandom = () => (seedR = (seedR * 16807) % 2147483647) / 2147483647, mathRandom = Math.random; Math.random = testRandom;', context);
 vm.runInContext(mainSource, context);
 // The camera-fit silhouettes are test-only (the game no longer computes them): they fold her, so the last call restores the standing pose.
 vm.runInContext(`// Fit each part separately: a single tall box wastes the empty space above her back. The margins are the dance's reach

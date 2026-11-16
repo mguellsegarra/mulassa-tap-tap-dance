@@ -10,7 +10,7 @@ const fail = code => Object.assign(new Error(code), { code });
 async function client() {
   const c = await getClient();
   const { data } = await c.auth.getSession();
-  return { c, signed: !!data.session, uid: data.session?.user.id ?? null };
+  return { c, signed: !!data.session, uid: data.session?.user.id ?? null, token: data.session?.access_token ?? null };
 }
 async function rpc(c, name, args) {
   const { data, error } = await c.rpc(name, args);
@@ -43,12 +43,13 @@ export async function player(publicId) {
 
 // → { score, best, improved, position }; throws { code }: 'noname', 'released', 'pop_rate_limited', 'pop_seed_used', 'unavailable'…
 export async function publish(run) {
-  const { c, uid } = await client();
+  const { c, uid, token } = await client();
   const { owner, ...body } = run;
   if (owner && owner !== uid) throw fail('owner'); // kept under another account on this device: never sent under this one
-  if (!uid) throw fail('noname');
+  if (!uid || !token) throw fail('noname');
   claim(body, uid);
-  const { data, error } = await c.functions.invoke('pop-score', { body });
+  // Pin the checked session: the SDK may read a different account before sending.
+  const { data, error } = await c.functions.invoke('pop-score', { body, headers: { Authorization: `Bearer ${token}` } });
   if (!error) return data;
   const code = (await error.context?.json?.().catch(() => null))?.error ?? 'unavailable';
   throw fail(code === 'pop_profile_required' ? 'released' : code === 'authentication_required' ? 'noname' : code);

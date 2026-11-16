@@ -7,7 +7,8 @@ import { bouPose, BOU_TIMING, BOU_CARRY, bouFestaAt } from '../../../src/figures
 import { buildBou } from '../../../src/figures/bou/bou.js';
 import { createBouMotion } from '../../../src/figures/bou/bou-motion.js';
 import { BOU_CAPATAS, bouToWorld, createBouColla, carryColla } from '../../../src/figures/bou/bou-colla.js';
-import { PARADE, PARADE_K, paradeTick, paradeSteer, paradeSlot, paradeLeaveAt } from '../../../src/figures/bou/bou-parade.js';
+import { PARADE, PARADE_K, paradeTick, paradeSteer, paradeSlot, paradeLeaveAt, paradeShape } from '../../../src/figures/bou/bou-parade.js';
+import { LAP } from '../../../src/figures/bou/bou-dance.js';
 import { ARM, HELPER_HIP } from '../../../src/scene/models/colla.js';
 import { PROFILES } from '../../../src/platform/render-quality.js';
 
@@ -33,7 +34,9 @@ const crowd = [];
 for (const [row, n] of [[0, 17], [1, 21], [2, 21]]) for (let i = 0; i < n; i++) {
   const a = 2 * Math.PI * (i + row * 0.37) / n, r = 6.9 + row * 1.1, pos = new THREE.Vector2(r * Math.sin(a), r * Math.cos(a));
   crowd.push({ row, pos, vel: new THREE.Vector2(), spot: pos.clone(), qualityScale: 1 });
+  if (row && i % 5 === 0) Object.assign(crowd.at(-1), { thr: 0.6, pres: i % 10 ? 1 : 0 }); // those who come and go (crowd-pose.js): here now, or away
 }
+const away = crowd.filter(p => p.thr && !p.pres), wentAway = new Set();
 const capatas = bouToWorld(BOU_CAPATAS.x, BOU_CAPATAS.z, YAW);
 const C = BOU_CARRY, dt = 1 / 60, pose = { x: 0, z: 0, yaw: 0, beat: 0 }, hand = new THREE.Vector3(), w = new THREE.Vector3();
 const beatTime = b => BOU_TIMING.subdivisionTimes[Math.min(BOU_TIMING.subdivisionTimes.length - 1, Math.round(b * BOU_TIMING.subdivision))];
@@ -75,7 +78,7 @@ for (let t = beatTime(C.come - 4); t < beatTime(C.back + 10); t += dt) {
   PARADE.on = true; PARADE.beat = pose.beat; PARADE.yaw = YAW; PARADE.x = pose.x; PARADE.z = pose.z; PARADE.heading = pose.yaw; PARADE.colla = [...helpers, capatas].map(h => ({ pos: new THREE.Vector2(h.x, h.z) })); paradeTick(crowd); // (as bou-stage.js; the capatàs too: tickColla's obstacles)
   const moving = crowd.filter(p => p.parade);
   for (const p of moving) paradeSteer(p, dt);
-  joined = Math.max(joined, moving.length);
+  joined = Math.max(joined, moving.length); for (const p of moving) if (away.includes(p)) wentAway.add(p);
   for (const p of moving) if (p.parade === 'home' && p.paradeSlot != null && !(p.paradeSlot in leftAt)) leftAt[p.paradeSlot] = pose.beat; // when each left the file
   if (pose.beat >= C.lower) stillIn = Math.max(stillIn, moving.filter(p => p.parade === 'run').length);
   if (formed === null && pose.beat >= C.up + 1) { // a beat after the lift: the file in place behind it
@@ -109,11 +112,25 @@ assert.ok(worst.crowdShell > 0.1, `the public runs into the Bou (${worst.crowdSh
 assert.ok(worst.crowdHelper > 0.4, `the public runs through an attendant (${worst.crowdHelper.toFixed(2)} m)`);
 assert.ok(worst.crowdCap > 0.5, `the public runs through the capatàs (${worst.crowdCap.toFixed(2)} m)`);
 assert.ok(worst.crowdEach > 0.4, `two of the public through each other (${worst.crowdEach.toFixed(2)} m)`);
-assert.equal(joined, Math.min(PARADE_K.count, Math.floor(crowd.length * PARADE_K.share)), 'the snake fills');
+assert.equal(joined, PARADE_K.count, `a snake of ${joined}, not ${PARADE_K.count}: the crowd has room for it all`);
 assert.ok(joined >= 10, `a file of ${joined} at medium quality`);
+// however many are free, the snake reaches round to `nose` m short of its muzzle (the owner, 15/11/2026): one file
+// while its rows stay `single` m apart, two beyond
+for (const n of [12, 18, 22, 23, PARADE_K.count]) {
+  const { abreast, space } = paradeShape(n), last = PARADE_K.gap + space * (Math.ceil((n - PARADE_K.tail) / abreast) - 1);
+  assert.ok(Math.abs(2 * Math.PI * LAP.r - PARADE_K.muzzle - last - PARADE_K.nose) < 1e-9, `${n} in the snake: its tail ${(2 * Math.PI * LAP.r - PARADE_K.muzzle - last).toFixed(2)} m from the muzzle`);
+  assert.equal(abreast, n <= 22 ? 1 : 2, `${n} in the snake: ${abreast} abreast, rows ${space.toFixed(2)} m apart`);
+}
+paradeShape(joined); // (back to this run's)
 assert.ok(formed > 0.8, `the file is not formed a beat after the lift (${(formed * 100).toFixed(0)}% in place)`);
 assert.ok(behind < 1.5, `nobody right at its tail (${behind.toFixed(2)} m)`);
 assert.ok(crowd.every(p => !p.parade || p.parade === 'home'), 'everyone heads home');
+assert.ok(away.length > 2 && !wentAway.size, 'someone who is not in the plaça joined the snake');
+assert.ok(crowd.some(p => p.thr && p.pres && p.paradeSlot != null), 'those who come and go join while they are there');
+// and gets there: a second song finds them all free again (a row once shared one spot to walk back to, waited on it for
+// ever, and the next snake had nobody: the owner, 15/11/2026)
+for (let t = 0; t < 20; t += dt) { paradeTick(crowd); for (const p of crowd) if (p.parade) paradeSteer(p, dt); }
+assert.equal(crowd.filter(p => p.parade).length, 0, 'someone never got back from the snake');
 // they leave before it is lowered, from the tail, one after another
 assert.equal(stillIn, 0, 'someone still behind it as it is lowered');
 const order = Object.entries(leftAt).sort((a, b) => a[1] - b[1]).map(([k]) => +k);

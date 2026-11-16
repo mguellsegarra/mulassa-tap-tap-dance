@@ -10,7 +10,7 @@ for(let i=0;i<phrases.length;i++){
  for(let t=p.start;t<p.end;t+=.1)assert.ok(sourceRate(p,t)>.125&&sourceRate(p,t)<8);
 }
 // The removed central return must jump in source time, not compress the omitted dance into one phrase.
-const beforeCut=phrases.find(p=>p.id==='bar-47'),afterCut=phrases.find(p=>p.id==='bar-60');
+const beforeCut=phrases.find(p=>p.id==='bar-39'),afterCut=phrases.find(p=>p.id==='bar-60'); // (bars 43-47 too, out since music revision 21)
 assert.equal(beforeCut.end,afterCut.start);assert.ok(afterCut.sourceStart-beforeCut.sourceEnd>15);
 assert.equal(validBounds(NaN,20),false);assert.equal(validBounds(20,19),false);assert.equal(validBounds(20,9999),false);
 phrases[4].wanted='Va cap al N; fa 3 tombs.';assert.match(scriptText(phrases,'test.mp3'),/PROPOSTA: Va cap al N; fa 3 tombs\./);

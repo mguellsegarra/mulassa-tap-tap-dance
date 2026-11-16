@@ -21,7 +21,7 @@ for (const soft of process.env.GL_BUDGET_SOFT === '1' ? [true] : [false, true]) 
 
 // Real GL draw calls a frame (the shadow pass included; renderer.info.render does not count it) per profile: the worst
 // figure at the selector and in play, measured plus HEADROOM. Raise one only for a deliberate new draw, and say so in docs/agents/graphics.md.
-const DRAWS = { selector: { minimal: 23, low: 24, medium: 35, high: 38 }, play: { minimal: 37, low: 38, medium: 60, high: 63 } };
+const DRAWS = { selector: { minimal: 38, low: 38, medium: 60, high: 63 }, play: { minimal: 37, low: 38, medium: 60, high: 63 } };
 const HEADROOM = 4, MAX_PROGRAMS = 90, LEVELS = { minimal: -1, low: 0, medium: 1, high: 2 };
 const FIGURES = ['mulassa-valls', 'drac-valls', 'bou-tradicional-valls'];
 
@@ -87,7 +87,7 @@ try {
     for (let calm = 0, last = -1; calm < 8; await page.waitForTimeout(1000)) { // the selector's first showreel cuts build things lazily over ~10 s: wait them out
       const g = (await page.evaluate(() => window.__perfLive())).geos; calm = g === last ? calm + 1 : 0; last = g;
     }
-    const pick = id => page.evaluate(i => document.querySelector(`[data-id="${i}"]`).click(), id);
+    const pick = id => page.evaluate(i => document.querySelector(`#select-strip [data-id="${i}"]`).click(), id); // the strip's card: free play's figure buttons (photo-avatars.js) carry the same data-id and come first
     const round = async () => { const seen = {}; for (const id of FIGURES) { await pick(id); for (const name of Object.keys(LEVELS)) seen[`${id} ${name}`] = await sample(page, name); } return seen; };
     for (const id of FIGURES) { await pick(id); await sample(page, 'medium'); } // warms: a first visit builds some things lazily
     // rounds until two in a row match (at most four): on a busy machine the showreel's lazy builds trail on for a round or

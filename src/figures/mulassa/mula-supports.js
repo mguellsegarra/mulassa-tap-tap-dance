@@ -7,21 +7,22 @@
 // Pure: no three.js. Units: metres, yaw rad (+z forward at 0), in the frame of the poses they are given.
 import { quintic } from '../../core/math.js';
 
-// Oriented shoe footprints. Positive gap means separation; negative means overlap.
+// Oriented shoe footprints: the gap (m) between two shoes at (x, z) heading yaw; positive means apart, negative overlapping.
+// On numbers, not on the callers' objects: the Bou's planner (bou-feet.js) passes other shapes, and once it had run this
+// under the loader the Mulassa's own calls every frame ran it unoptimised, 2 MB/s of garbage on the splash.
 export const SHOE = { width: .105, length: .20, height: .075 };
-export function shoeSeparation(a, b, out) {
-  let gap = -Infinity, nx = 0, nz = 0;
+export function shoeGap(ax, az, ayaw, bx, bz, byaw) {
+  let gap = -Infinity;
   for (let i = 0; i < 4; i++) {
-    const angle = (i < 2 ? a.yaw : b.yaw) + (i % 2) * Math.PI / 2;
+    const angle = (i < 2 ? ayaw : byaw) + (i % 2) * Math.PI / 2;
     const x = Math.cos(angle), z = -Math.sin(angle);
-    const ra = SHOE.width / 2 * Math.abs(x * Math.cos(a.yaw) - z * Math.sin(a.yaw))
-      + SHOE.length / 2 * Math.abs(x * Math.sin(a.yaw) + z * Math.cos(a.yaw));
-    const rb = SHOE.width / 2 * Math.abs(x * Math.cos(b.yaw) - z * Math.sin(b.yaw))
-      + SHOE.length / 2 * Math.abs(x * Math.sin(b.yaw) + z * Math.cos(b.yaw));
-    const d = (a.x - b.x) * x + (a.z - b.z) * z, g = Math.abs(d) - ra - rb;
-    if (g > gap) { gap = g; nx = x * (d >= 0 ? 1 : -1); nz = z * (d >= 0 ? 1 : -1); }
+    const ra = SHOE.width / 2 * Math.abs(x * Math.cos(ayaw) - z * Math.sin(ayaw))
+      + SHOE.length / 2 * Math.abs(x * Math.sin(ayaw) + z * Math.cos(ayaw));
+    const rb = SHOE.width / 2 * Math.abs(x * Math.cos(byaw) - z * Math.sin(byaw))
+      + SHOE.length / 2 * Math.abs(x * Math.sin(byaw) + z * Math.cos(byaw));
+    gap = Math.max(gap, Math.abs((ax - bx) * x + (az - bz) * z) - ra - rb);
   }
-  out.gap = gap; out.x = nx; out.z = nz; return out;
+  return gap;
 }
 
 // Four human carriers in two rows, two shoes each (shell frame, m): front row z 1.05, rear -1.05.
@@ -42,7 +43,7 @@ export function nominalFoot(pose, index, out) {
 }
 // Each carrier places a foot beside their own stance foot; slide it fore/aft until it clears every standing shoe.
 // A shared offset pushed a whole row sideways when front and back carriers turned in opposite arcs.
-const separation = {}, candidate = {};
+const candidate = {};
 function clearLanding(target, i, group, planted) {
   for (let ring = 0; ring <= 14; ring++) {
     for (let a = 0; a < (ring ? 2 : 1); a++) {
@@ -53,7 +54,7 @@ function clearLanding(target, i, group, planted) {
       let clear = true;
       for (let j = 0; j < 8 && clear; j++) {
         if (j === i || (j % 2 === group && j > i)) continue; // the group's later shoes are still to land
-        if (shoeSeparation(candidate, planted[j], separation).gap < .012) clear = false;
+        if (shoeGap(candidate.x, candidate.z, candidate.yaw, planted[j].x, planted[j].z, planted[j].yaw) < .012) clear = false;
       }
       if (clear) { target.x = candidate.x; target.z = candidate.z; return true; }
     }

@@ -16,7 +16,8 @@ import { drawTop, drawProgressRing } from './top.js';
 import { drawLane } from './lane.js';
 import { drawResults } from './results.js';
 import { loader } from '../ui/handles.js';
-import { BOU_FINALE, bouWaiting } from '../figures/bou/bou-bills.js';
+import { selectedFigure } from '../game/figure-song.js';
+import { sceneOf } from '../scene/figure-scenes.js';
 
 const DRAW_TXT = { goOn: [tr('hud.title.enterTouch'), tr('hud.title.enterClick')], practice: tr('hud.practice.title'), tap: tr('hud.audio.tap'), tapSub: tr('hud.audio.tapSub'), syncHint: tr('hud.sync.hint') };
 let offKey, offLine; // the offset toast's line, built once per value
@@ -62,7 +63,13 @@ export function drawHud(t) {
   if (G.state === 'splash') drawSplash();
   if (G.state === 'play') {
     if (G.collapseT) { drawCollapse(); return; }
-    if (BOU_FINALE.k > 0.3) { drawPraise(); if (bouWaiting()) drawGoOn(); else goOnT = -1; return; } // the Bou's banknotes' close-up: the plaça's chant, and how to go on, nothing of the game over it
+    const figure = sceneOf(selectedFigure.id);
+    if (figure?.endHud?.()) {
+      drawPraise();
+      if (figure.endWaiting?.()) drawGoOn();
+      else goOnT = -1;
+      return;
+    }
     drawBubbles();
     if (!G.watch) drawJudge();
     drawPraise(); // (the chant after the song: the plaça's, not a score)

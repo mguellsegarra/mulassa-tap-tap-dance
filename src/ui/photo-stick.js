@@ -7,7 +7,6 @@ import { PHOTO, PHOTO_RUN, photoPress, photoRelease } from '../game/photo-contro
 import { STICK, TOUCH, touchDown, touchMove, touchUp, touchReset } from '../game/photo-touch.js';
 import { PHOTO_ICONS, swapArt } from './photo-icons.js';
 import { tr } from '../i18n/messages.js';
-import { traitsOf } from '../figures/index.js';
 
 const PS_CODES = ['Space', 'KeyQ', 'KeyE', 'KeyR', 'Tab'];
 export const touchEl = document.createElement('div');
@@ -43,7 +42,7 @@ export function showStick(on, labels, id) {
   touchEl.hidden = !on;
   if (!labels || id === psFor) return;
   psFor = id;
-  const name = { Space: tr(traitsOf(id).photoSpace), Tab: tr('ui.photo.act.swap') }, icons = PHOTO_ICONS[id] ?? {};
+  const name = { Space: tr('ui.photo.act.jump'), Tab: tr('ui.photo.act.swap') }, icons = PHOTO_ICONS[id] ?? {};
   for (const [key, label] of labels) name['Key' + key] = label;
   for (const b of psButtons) {
     b.setAttribute('aria-label', name[b.dataset.code] ?? ''); // icons only, as phone action games; the ? help names them

@@ -69,6 +69,13 @@ for (const [w, h] of [[393, 852], [375, 667], [852, 393], [1280, 720], [2000, 10
     assert(L.bottom - L.top >= 40, `${w}x${h}: the band never shrinks`);
   }
 }
+// phones: DIFÍCIL's notes as big as NORMAL's (MIN_LOOK 0.9 shrank them to 3/4: «les notes més petites del normal»)
+for (const [w, h] of [[393, 852], [375, 667], [320, 568]]) {
+  context.innerWidth = w; context.innerHeight = h; run('resize()');
+  const sOf = d => run(`startGame(${d}); G.state = 'play'; lane().s`);
+  assert.equal(sOf(2), sOf(1), `${w}x${h}: DIFÍCIL's notes the size of NORMAL's`); // the Drac's and Bou's closest gaps (0.198, 0.202 s) match the Mulassa's 0.197 (chart-playable)
+}
+context.innerWidth = 2000; context.innerHeight = 1060; run('resize()');
 assert(run('var big = lane(); big.sb') >= 1.6, 'big desktops get the tablet band (K grows with the screen, so the HUD keeps its proportions)');
 assert(run('var c = insidePlaza(new THREE.Vector3(3, 10, 30), 0, 1, 12); Math.abs(c.z) <= plaza.inner - 1.5 + 1e-9 && c.y > 10'), 'the camera stays inside the plaça, higher instead');
 // Trees and lamps stand out of the play camera's path: wherever she dances (during play her centre stays within
@@ -584,3 +591,21 @@ console.log('selector camera lock and splash entry ok');
   document.body.classList = bodyCl;
 }
 console.log('view mode ok');
+
+// The lane draws far notes first, so a hold's tail or a roll's bar ran over the double right after it: every double
+// (GUAPA / CREMA / BRAMA) is drawn after all the tails and bars on screen.
+{
+  const order = JSON.parse(run(`(() => {
+    const saved = { holdTail, noteDisc, balloonHead, chart: G.chart, state: G.state, next: G.next, hold: G.hold }, out = [];
+    holdTail = () => out.push('tail'); balloonHead = () => out.push('roll'); noteDisc = (dir, x, y, r, big) => out.push(big ? 'big' : 'note');
+    G.state = 'play'; G.next = 0; G.hold = null;
+    G.chart = [{ t: 1, end: 1.3, input: 'L' }, { t: 1.35, input: 'B', big: true }, { t: 1.4, end: 1.6, balloon: true, need: 4, count: 0, input: 'P' }, { t: 1.65, input: 'B', big: true }]; // all within 0.4 s: on screen at any MIN_LOOK
+    drawLane(1.25);
+    Object.assign(G, { chart: saved.chart, state: saved.state, next: saved.next, hold: saved.hold });
+    holdTail = saved.holdTail; noteDisc = saved.noteDisc; balloonHead = saved.balloonHead;
+    return JSON.stringify(out);
+  })()`));
+  assert.equal(order.filter(k => k === 'big').length, 2, `both doubles drawn (${order})`);
+  assert(order.indexOf('big') > Math.max(order.lastIndexOf('tail'), order.lastIndexOf('roll')), `doubles over the hold's tail and the roll's bar (${order})`);
+}
+console.log('lane doubles over tails and bars ok');

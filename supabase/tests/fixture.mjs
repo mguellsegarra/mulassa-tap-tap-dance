@@ -34,9 +34,9 @@ export async function fixture() {
   const unlock = async () => {
     await db.exec("reset role; update leaderboard_private.profiles set last_write_at=clock_timestamp()-interval '11 seconds'");
   };
-  const migrate = async () => {
+  const migrate = async ({ exclude = [] } = {}) => {
     await db.exec('reset role');
-    for (const f of migrations.filter(f => f >= '202610200001')) {
+    for (const f of migrations.filter(f => f >= '202610200001' && !exclude.includes(f))) {
       if (!/^[\x00-\x7f]*$/.test(sql(f))) throw new Error(`${f}: must be ASCII`);
       await db.exec(sql(f)); await db.exec(sql(f));
     }

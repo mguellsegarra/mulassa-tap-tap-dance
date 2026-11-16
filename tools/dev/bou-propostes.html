@@ -46,7 +46,7 @@ const setView = () => { const [p, t] = VIEWS[$('view').value] ?? VIEWS[q.get('vi
 $('view').onchange = setView; setView();
 
 const rig = buildBou();
-scene.add(rig.root, ...rig.feet, ...rig.legs);
+scene.add(rig.root, ...rig.feet, ...rig.legs, rig.limbs);
 const motion = createBouMotion(rig);
 
 // ---- Disco floor: the plaça's own 2 m tiles (plaza.js: 34 m, light where (x+z)/2 is even) light up a parity a beat.

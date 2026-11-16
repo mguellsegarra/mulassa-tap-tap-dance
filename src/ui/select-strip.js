@@ -1,6 +1,6 @@
 // The selector's strip and pills as HTML strings, plus the pixel-art portrait and the scrolling rows' peeking gap (split from select-ui.js).
 import { townOf, playable, portraitArt, portraitPalette, portraitStand } from '../game/figures.js';
-import { escutSvg } from './escuts.js';
+import { escutImg } from './escuts.js';
 import { entityLabel, cardEntityHtml } from './figure-entities.js';
 import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
 import { silhouetteBox } from './pending-silhouettes.js';
@@ -15,7 +15,7 @@ export function pixelSvg(art, palette, rim) {
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (on(x, y)) cell(palette[art[y][x]], x, y);
   return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${[...paths].filter(([, d]) => d).map(([fill, d]) => `<path fill="${fill}" d="${d}"/>`).join('')}</svg>`;
 }
-export const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.pill ?? t.name}</button>`; // `pill`: a name shared with other towns, told apart
+export const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutImg(t.id) || '<i aria-hidden="true"></i>'}${t.pill ?? t.name}</button>`; // `pill`: a name shared with other towns, told apart
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 // A card's vector portrait as one <img>: its ~30 paths inline (1,600 across the strip) made every forced layout of the selector walk them.
 const svgImg = svg => svg.startsWith('<svg') ? `<img class="${svg.match(/^<svg[^>]*?\sclass="([^"]*)"/)?.[1] ?? ''}" src="data:image/svg+xml,${encodeURIComponent(svg.includes('xmlns=') ? svg : svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'))}" alt="" decoding="async">` : svg;
@@ -31,7 +31,7 @@ export function paintCardHearts(cards, hearts) {
     box.toggleAttribute('data-mine', hearts.mine(c.dataset.id));
   }
 }
-export function stripHtml(figures, later = false, last = null) { // later: the figures still to come, after the playable ones; last: the town before (no banner twice)
+export function stripHtml(figures, later = false, last = null, fresh = []) { // later: the figures still to come, after the playable ones; last: the town before (no banner twice); fresh: the new figure, its card shining (.sel-new)
   let html = '';
   for (const f of figures) {
     const t = townOf(f);
@@ -40,7 +40,7 @@ export function stripHtml(figures, later = false, last = null) { // later: the f
     const name = f.name || tr('ui.select.aviat'), entity = f.entity || t.name;
     const ok = playable(f), art = f.thumbnail ? null : portraitArt(f); // the portrait's grid with its rim: whole-pixel sizing (select-cards.css)
     const box = art && ((!ok && silhouetteBox(f.id)) || [art[0].length + 2, art.length + 2]); // a pending figure's drawn silhouette sizes its card (no pixel portrait until it is playable)
-    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-town="${t.id}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? tr('ui.select.cardInvite', { name, entity: entity.toLowerCase() }) : tr(ok ? 'ui.select.card' : 'ui.select.cardSoon', { name, entity: entityLabel(f), town: t.name }))}"${box ? ` style="--gw:${box[0]};--gh:${box[1]};--s:${portraitStand(f)}"` : ''}><span class="por">${svgImg(SELECTOR_PORTRAITS[f.id] || (ok || f.thumbnail ? portraitHtml(f) : pendingSilhouette(art)))}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}${f.invite ? '' : HEARTS_HTML}</span></button>`;
+    html += `<button type="button" class="btn btn-secondary sel-card${ok ? '' : ' aviat'}${later ? ' later' : ''}${fresh.includes(f) ? ' sel-new' : ''}" role="option" data-id="${escapeHtml(f.id)}" data-town="${t.id}" tabindex="-1" aria-selected="false" aria-label="${escapeHtml(f.invite ? tr('ui.select.cardInvite', { name, entity: entity.toLowerCase() }) : tr(ok ? 'ui.select.card' : 'ui.select.cardSoon', { name, entity: entityLabel(f), town: t.name }))}"${box ? ` style="--gw:${box[0]};--gh:${box[1]};--s:${portraitStand(f)}"` : ''}><span class="por">${svgImg(SELECTOR_PORTRAITS[f.id] || (ok || f.thumbnail ? portraitHtml(f) : pendingSilhouette(art)))}</span><span class="nb"><span class="sel-card-name">${escapeHtml(name)}</span>${cardEntityHtml(f)}${f.invite ? '' : HEARTS_HTML}</span></button>`;
   }
   return html;
 }

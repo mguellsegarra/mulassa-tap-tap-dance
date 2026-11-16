@@ -5,7 +5,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
-const src = readFileSync(new URL('../../src/ui/audio-resume.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
+const shared = readFileSync(new URL('../../packages/plassa/src/audio-wake.js', import.meta.url), 'utf8').replace(/^export /gm, '');
+const adapter = readFileSync(new URL('../../src/ui/audio-resume.js', import.meta.url), 'utf8');
+const src = shared + '\n' + adapter.replace(/^import .*;\n/gm, '').replace(/^export /gm, '');
 let wakes = 0, suspends = 0, focus = true;
 const reports = [], later = [], on = {};
 // Like Chip.wake(): refused without focus, and only a stopped context resumes (a `running` one is just unhushed)

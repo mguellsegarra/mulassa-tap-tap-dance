@@ -1,7 +1,6 @@
-// A game page's AudioContext through the page's life, consolidated from mulassa.cat's own (platform/audio.js suspend and
-// wake, platform/audio-session.js, ui/audio-resume.js, ui/pause-actions.js's page activity and watchAudio), which keeps
-// its copy until it moves onto this base. One context and its last gain node (`out`); the game says when something
-// should sound (`hearing`) and what a stalled clock does (`stall`). Pausing a run on leaving is page-leave.js's.
+// A page's AudioContext lifecycle. audio-wake.js owns the shared unlock and checked recovery;
+// this host owns the page listeners, iOS session, fade timing and continuous stall watch.
+// The game says when something should sound (hearing) and handles a run's stall (stall).
 // - Leaving (hidden, blur, pagehide): the sound fades (a bare suspend() left the device's last buffer behind: a stray note)
 //   and the context stops. Back: an unlocked context resumes on its own when something should sound, and is checked.
 // - iOS often keeps it stopped until a tap after another app or tab, or keeps it `running` with its clock standing still
@@ -9,17 +8,14 @@
 // - iOS's audio session: 'playback' while something sounds (the other app's music pauses, the ringer switch can't mute
 //   it), 'ambient' when silent, 'auto' hidden; a running context even as 'ambient' pauses the other app, so a silent page stays stopped.
 import { errors, errorName } from './errors.js';
+import { resumeAudioContext, wakeAudioContext, createAudioRecovery } from './audio-wake.js';
 import { pageActive } from './page-leave.js';
 
-const BACK_MS = 700; // the unprompted resume() takes a moment even when iOS allows it
-const MOVED = 0.1; // seconds of audio clock that prove the sound came back
 const STALL_MS = 1000;
 const coarse = matchMedia('(pointer: coarse)');
 
 export function createPageAudio(ctx, out, { hearing, stall = () => false }) {
   let hushT = 0, woke = false, epoch = 0, lastCt = NaN, stallT = null;
-  let waiting = false; // true: stalled, the next tap wakes it; 'quiet': only our own suspend on a blur
-  let pending = null; // the stall's report, sent only if a tap with focus does not bring the sound back (iOS waiting for a tap is expected)
   const running = () => ctx.state === 'running';
   const silent = () => !!navigator.audioSession && !hearing();
 
@@ -43,55 +39,22 @@ export function createPageAudio(ctx, out, { hearing, stall = () => false }) {
     const t = ctx.currentTime;
     out.gain.cancelScheduledValues(t); out.gain.setTargetAtTime(1, t, .02);
   }
-  // without a gesture: allowed once the page has been tapped (Chrome also right after the tap that led here)
-  function resume() {
-    session();
-    if (silent()) return Promise.resolve(false);
-    unhush();
-    // refused without a tap is iOS's rule after another app, not a failure: only a refusal inside a tap is reported
-    const tapped = navigator.userActivation?.isActive;
-    const failed = e => { if (tapped) errors.report('audio-resume-failed', { name: errorName(e), audioState: ctx.state }); return false; };
-    try { return Promise.resolve(ctx.resume()).then(running, failed); } catch (e) { return Promise.resolve(failed(e)); }
-  }
-  // inside a real tap or key: resume, and iOS's silent sample the first time
-  function wake() {
-    session();
-    if (silent() || !pageActive() || navigator.userActivation?.isActive === false) return;
-    if (!running()) resume(); else unhush(); // a hidden page's timer may never have suspended it
-    if (woke) return;
-    const b = ctx.createBufferSource();
-    b.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
-    b.connect(ctx.destination); b.start();
-    woke = true;
-  }
-  // every tap or key on the page (gesture.js)
+  const wakeHost = {
+    session, silent, unhush, resume,
+    get woke() { return woke; }, set woke(value) { woke = value; },
+    failed: e => errors.report('audio-resume-failed', { name: errorName(e), audioState: ctx.state }),
+  };
+  const recovery = createAudioRecovery({
+    context: () => ctx, epoch: () => epoch, hearing, hush, wake, focused: pageActive,
+    report: (kind, tags) => errors.report(kind, tags),
+  });
+  const { checkBack, stalled } = recovery;
+  function resume() { return resumeAudioContext(ctx, wakeHost); }
+  function wake() { wakeAudioContext(ctx, wakeHost); }
   function gesture() {
-    if (waiting && running()) { waiting = false; pending = null; } // it came back
-    else if (waiting || (hearing() && !running())) { wake(); if (pending && pageActive()) confirm(); }
-    else if (hearing()) woke = true; // autoplay let it run: this is the first audible tap anyway, so the stall watch and the return from hidden apply
-  }
-  function stalled(kind = 'menu-audio-stalled') {
-    if (kind && waiting !== true) pending = kind;
-    if (running()) hush(); // frozen while `running`: wake() only resumes a stopped context, so the tap can restart it
-    waiting = kind ? true : waiting || 'quiet';
-  }
-  function confirm() {
-    const from = ctx.currentTime;
-    setTimeout(() => {
-      if (!pending) return;
-      if (running() && ctx.currentTime - from >= MOVED) { waiting = false; pending = null; return; }
-      errors.report(pending, { audioState: ctx.state });
-      pending = null; // once per stall
-    }, BACK_MS);
-  }
-  // `left`: a blur with the page still on screen (Android's address bar): stopped because we suspended it, nothing failed
-  function checkBack(left = false) {
-    const from = ctx.currentTime, at = epoch;
-    setTimeout(() => {
-      if (at !== epoch || document.hidden || !hearing()) return; // left again meanwhile, or nothing to hear
-      if (running() && ctx.currentTime - from >= MOVED) return; // it plays
-      stalled(left ? null : 'audio-not-back');
-    }, BACK_MS);
+    if (recovery.gesture()) return;
+    if (hearing() && !running()) wake();
+    else if (hearing()) woke = true;
   }
   function activity(e) {
     if (!pageActive()) {

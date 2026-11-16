@@ -11,6 +11,7 @@ import { activeCrowd } from './quality.js';
 import { M } from './figure-springs.js';
 import { festaNow } from './crowd-effects.js';
 import { RING } from './crowd-build.js';
+import { END_LENS } from './framing.js';
 import { easeIn, smooth01 } from '../core/math.js';
 
 // During the song (not the finale) the plaça stands still and only answers the player's hits, gently: one "groove"
@@ -123,5 +124,5 @@ export function updateMood(dt, t, live) {
   let shotX = camera.position.x - M.pos.x, shotZ = camera.position.z - M.pos.y, shotD = G.state === 'play' ? Math.hypot(shotX, shotZ) : 0;
   if (shotD > 1e-3) { shotX /= shotD; shotZ /= shotD; } else shotD = 0;
   F.shotX = shotX; F.shotZ = shotZ; F.shotD = shotD;
-  F.lens = G.state === 'select' ? camera.position : null; // (framing.js lensShrink: on the selector, gone by a low lens)
+  F.lens = G.state === 'select' || END_LENS.k ? camera.position : null; F.lensK = G.state === 'select' ? 1 : END_LENS.k; // (framing.js lensShrink: on the selector, gone by a low lens; in play only under a figure's end shot)
 }

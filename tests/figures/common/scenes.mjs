@@ -22,9 +22,21 @@ for (const x of shapes) {
   assert.equal(x.heroScale, 'number', `${x.id}: hero.scale`);
   assert.equal(x.heroPose, 'function', `${x.id}: hero.pose`);
 }
+assert.equal(run(`sceneOf('bou-tradicional-valls').band`), 'grallers', 'the Bou selects its new formation on every shared game screen');
+run(`setSelectedFigure('bou-tradicional-valls'); setBandLineup(sceneOf('bou-tradicional-valls').band); G.state = 'play'; poseScenery(.4, 0);`);
+assert(run(`plaza.band.find(p => p.lineup === 'grallers' && p.kind === 'timbal').arms[1].rotation.x < -1.4`), 'the real crowd pose drives Bou percussion during its intro');
+run(`G.state = 'select'; setSelectedFigure('mulassa-valls');`);
 // what each still takes from a figure's folder: the splash's Drac beside the Mulassa
-const ALLOWED = { 'scene/stage-motion.js': ['drac/drac-play.js', 'drac/drac-demo.js'], 'scene/crowd.js': ['drac/drac-play.js'] };
-for (const f of ['scene/share-capture.js', 'scene/crowd-grid.js', 'scene/crowd-pose.js', 'scene/crowd-mood.js', 'scene/photo-obstacles.js', 'scene/play-camera.js']) ALLOWED[f] = [];
+const ALLOWED = {
+  'scene/stage-motion.js': ['drac/drac-play.js', 'drac/drac-demo.js'],
+  'scene/crowd.js': ['drac/drac-play.js'],
+  'ui/frame-camera.js': ['drac/drac-play.js'],
+};
+for (const f of [
+  'game/tick.js', 'hud/draw.js', 'ui/input.js', 'game/figure-song.js', 'ui/figure-theme-dom.js',
+  'scene/share-capture.js', 'scene/crowd-grid.js', 'scene/crowd-pose.js', 'scene/crowd-mood.js',
+  'scene/photo-obstacles.js', 'scene/play-camera.js',
+]) ALLOWED[f] = [];
 // what the figures do to the people round them comes from their own folders too (crowd-effects.js)
 for (const [, f] of read('scene/crowd-effects.js').matchAll(/^import \{ \w+ \} from '\.\.\/(figures\/[a-z]+\/[a-z-]+\.js)';$/gm))
   assert(Object.keys(FIGURE_TRAITS).some(id => f.startsWith(`figures/${FIGURE_TRAITS[id].key}/`)), `${f}: a figure's own folder`);
@@ -33,3 +45,26 @@ for (const [f, allowed] of Object.entries(ALLOWED)) {
   assert.deepEqual(other, [], `${f} reaches the other figures through the registry`);
 }
 console.log('figure scenes: one hook set per figure in its folder, shared scene files free of them ok');
+
+// Optional finale hooks retain the crane's distinct thresholds and automatic watch timeout.
+run(`var finaleScene = sceneOf('bou-tradicional-valls');
+  Object.assign(BOU_FINALE, { on: true, endT: 0, t: 0, k: 0, go: false }); G.watch = false;`);
+assert(run('finaleScene.endStarted() && finaleScene.endHold() && !finaleScene.endHud() && !finaleScene.endTap()'));
+assert.equal(run('finaleScene.endImpact()'), Math.SQRT1_2);
+run('BOU_FINALE.k = 0.3');
+assert.equal(run('finaleScene.endHud()'), false);
+run('BOU_FINALE.k = 0.31');
+assert(run('finaleScene.endHud() && !finaleScene.endWaiting()'));
+run('BOU_FINALE.k = 0.98');
+assert.equal(run('finaleScene.endTap()'), false);
+run('BOU_FINALE.k = 1');
+assert(run('finaleScene.endWaiting() && finaleScene.endTap() && finaleScene.endReady() && !finaleScene.endHold()'));
+assert.equal(run('finaleScene.endImpact()'), 0);
+run('BOU_FINALE.go = false; G.watch = true; BOU_FINALE.t = 7');
+assert.equal(run('finaleScene.endHold()'), true);
+run('BOU_FINALE.t = 7.01');
+assert.equal(run('finaleScene.endHold()'), false);
+for (const id of ['mulassa-valls', 'drac-valls']) {
+  assert(run(`!sceneOf('${id}').endHold?.() && !sceneOf('${id}').endTap?.()`), `${id}: normal completion and input`);
+}
+run('bouBillsClear(); G.watch = false');

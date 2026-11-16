@@ -54,15 +54,24 @@ function bonas(neck) {
   // beat: the music's (the song's grid); without music a steady ~96 bpm of its own. All of it on the beat, smooth:
   // a nod on each, the head a side a beat, the ears flapping, and a big gape with the tongue's tip out every six bars.
   // sq 0-1: a BRAMA (both buttons) squashes it, the mouth wide and the whole tongue out (bou-stage.js bouBrama).
-  return { head, jaw, ears, play(t, beat = t * 1.6, sq = 0) {
-    const c = (1 + Math.cos(2 * Math.PI * beat)) / 2, dip = c * c, gape = win(beat % 24, 20, 23.6);   // every six bars (every two was too often)
+  // where its head carries carretilles (bou.js hangs the tubes; a tube's foot, its heading): one lying on each horn's tip,
+  // pointing out, and one held in its lips like a cigar, ahead: against the mouth's roof, the jaw closed up to it
+  // (jaw.userData.bite 0-1, set by bou-show.js while it burns: BITE rad, the tube's thickness at the lips) and the mouth
+  // still, no gape, no BRAMA, no tongue (loose in an open mouth it floated). Square to the blocks and resting on their
+  // faces: turned, or through a block, they read as stuck into the horn
+  const sockets = [[-.93, .501, .15, -1, 0, 0], [.93, .501, .15, 1, 0, 0], [0, -.298, .44, 0, 0, 1]], BITE = .11;
+  // calm 0-1: the dance's solemn opening (bou-dance.js BOU_SOLEMN): eyes still and ahead, no gape, the head and ears barely moving
+  return { head, jaw, ears, sockets, play(t, beat = t * 1.6, sq = 0, calm = 0) {
+    const bite = jaw.userData.bite ?? 0, lively = 1 - calm; sq *= 1 - bite;
+    const squash = sq * (1 - .6 * calm); sq *= lively;   // solemn, a BRAMA only squashes it a little: no tongue, no popping eyes
+    const c = (1 + Math.cos(2 * Math.PI * beat)) / 2, dip = c * c, gape = win(beat % 24, 20, 23.6) * (1 - bite) * lively;   // every six bars (every two was too often)
     eyes.forEach((e, i) => { const k = 1 + Math.max(.25 * gape, .35 * sq) * (i ? 1.4 : 1); e.scale.set(k, k, 1); });   // not deeper: into the brow
-    pupils[0].position.set(.04 * Math.sin(t * 6), .04 * Math.cos(t * 6), .052);          // one spins round
-    pupils[1].position.set(.03 * Math.sin(t * 2.3 + 1), .03 * Math.sin(t * 3.7), .052);  // the other wanders
+    pupils[0].position.set(.04 * lively * Math.sin(t * 6), .04 * lively * Math.cos(t * 6), .052);          // one spins round
+    pupils[1].position.set(.03 * lively * Math.sin(t * 2.3 + 1), .03 * lively * Math.sin(t * 3.7), .052);  // the other wanders
     // gaping, it throws its head back: the open jaw clears the dewlap
-    neck.rotation.x = .12 * dip - .05 - .22 * Math.max(gape, sq); head.rotation.z = .13 * Math.sin(Math.PI * beat) * (1 - sq);
-    neck.scale.set(1 + .1 * sq, 1 - .14 * sq, 1);   // squashed from above, bulging out
-    jaw.rotation.x = Math.max(.55 * Math.min(1, gape * 1.6), .7 * sq);
+    neck.rotation.x = .12 * dip - .05 - .22 * Math.max(gape, sq); head.rotation.z = .13 * Math.sin(Math.PI * beat) * (1 - sq) * (1 - .8 * calm);
+    neck.scale.set(1 + .1 * squash, 1 - .14 * squash, 1);   // squashed from above, bulging out
+    jaw.rotation.x = Math.max(.55 * Math.min(1, gape * 1.6), .7 * sq, BITE * bite);
     // The tongue comes out with every gape, but only its tip (TONGUE_PEEK of the way, no curl over the lip):
     // the whole of it, stretched long with a tremble, only when a BRAMA squashes it. It slides
     // forward as it thickens and thins away to nothing before it hides (it popped out of existence).
@@ -71,7 +80,7 @@ function bonas(neck) {
     const k = Math.max(.01, shown, sq); tongue[0].scale.set(.4 + .6 * k + .15 * sq, k, .5 + 1.1 * sq);   // half length: just past the lip base.scale.set(.4 + .6 * k, k, 1);   // thins away on the mouth's floor
     base.visible = tongue[0].visible = k > .01;
     tongue.forEach((l, i) => { l.rotation.x = .12 * sq; l.rotation.y = .1 * sq * Math.sin(t * 30 - i); });   // only its tip peeks: no curl over the lip
-    ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (.15 + .35 * dip); });
+    ears.forEach((e, i) => { e.rotation.z = (i ? 1 : -1) * (.15 + .35 * dip * (1 - .7 * calm)); });
     ring.rotation.x = -.25 - .25 * Math.sin(Math.PI * beat);   // swings out only: back past hanging it would sink into the muzzle
   } };
 }

@@ -13,6 +13,7 @@ Apply only to Mulassa and its checkouts. Read the current rules first: `docs/ui/
 | --- | --- | --- | --- |
 | Selector (home) framing | `G.state = 'select'` | `scene/cameras.js` `frameMenuCamera` / `frameMenuLens` / `zoomMenu`, `scene/framing.js` (`menuFit`, `envelope`, `smoothDamp`), the band from `sheets.select.band` | [selector](references/selector-and-showreel.md) |
 | Showreel shots | selector, playable figure; «Mira el ball» on the song's beat | `game/showreel.js` (`SHOWREELS`, `SHOT_KINDS`, `followBeat`), framed by cameras.js; cuts dissolve through `ui/reel-fade.js` | [selector](references/selector-and-showreel.md) |
+| A figure's own film | «Mira el ball» (Bou, Drac) and the Bou's idle screen | `figures/common/clip-camera.js` (`createClip`), hooked by `figures/common/clip-shot.js` as the scene's `filmShot`; shots and cuts in `figures/bou/bou-clip.js`, `figures/drac/drac-clip.js` | [directing](references/directing.md), section 7 |
 | Idle screen | selector untouched 10 s | `ui/reel-idle.js` (`idleBand`), `MENU_T.soft` / `.wake` in cameras.js | [selector](references/selector-and-showreel.md) |
 | Play camera | run, practice, results | `framePlayCamera` (`CAMV`, `DRIFT`, `DRAC_CAM`, `MULA_CAM`), tuned with `?cam` | [play](references/play-camera.md) |
 | Free play / photo mode | `#free`, `PHOTO.on` | `scene/orbit.js` (`ORBIT`), `ui/input.js`, `ui/mouse-look.js`, `game/photo-touch.js`, `ui/photo-stick.js`, `game/photo-control.js`, `applyCameraImpact` | [free play](references/free-play-camera.md) |
@@ -49,4 +50,4 @@ For a whole new figure, start from `mulassacat-nova-figura`; this skill owns pha
 - A framing size that fits its whole dance envelope (props, fire, carried lifts), measured over the full dance, not its rest pose.
 - Its own `SHOWREELS` entry in `game/showreel.js`: a fresh selection opens on a wide shot as it sets off; long, open takes per part of the dance; dissolves, not hard cuts, placed where the figure stands still; comic close-ups (short, a long lens, `part`) only where its root is still. Repeat the review at the owner's large display.
 - A play-camera follow that keeps it in shot without swinging the plaça under the note lane (`DRAC_CAM`/`MULA_CAM` pattern), and a festa camera when the figure is carried or leaves the usual area (`FESTA_CAM` for the Bou's lap).
-- "Mira el ball" plays the showreel's shot list on the song's beat; the user can orbit and zoom while the dance and music go on, then it eases back to the reel's shot.
+- "Mira el ball" plays the showreel's shot list on the song's beat unless the figure has its own film (the Bou, the Drac: [directing](references/directing.md), section 7); a new figure gets its own film once its path is a pure function of the song time.

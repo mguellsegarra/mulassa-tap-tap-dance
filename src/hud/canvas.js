@@ -1,8 +1,9 @@
 // The HUD canvas: its size and scale (K), the safe areas, resize.
-import { hudBudget, hudScale, renderDpr } from '../platform/render-quality.js';
+import { hudBudget, hudScale, renderDpr, closeUpDpr } from '../platform/render-quality.js';
 import * as THREE from 'three';
-import { qualityLevel, renderer, renderProfile, camera } from '../scene/stage.js';
+import { qualityLevel, BOOT_QUALITY, renderer, renderProfile, camera } from '../scene/stage.js';
 import { COARSE } from '../core/env.js';
+import { pace } from '../core/timing.js';
 
 // ------------------------------------------------------------------ HUD
 // All HUD drawing happens in "logical" units: 1 unit = K css px (2 on desktop, 1.5 on phones).
@@ -20,6 +21,15 @@ function uiScale(m, coarse) {
   if (m < 520) return 1.5;
   return coarse ? Math.max(2, Math.min(2.9, 2 * m / 768)) : Math.max(2, Math.min(2.9, 2 + (m - 800) / 600));
 }
+// A figure's held close-up (figure-scenes.js closeUp: the Bou's banknote) is drawn at the screen's own pixels
+// (render-quality.js closeUpDpr): frame-camera.js says when. Not on a device that stepped quality down this session: the
+// end shot and the results at 2-3.4 Mpx read 41 fps on a ThinkPad X230, 53 on a 2015 MacBook Pro, 40-46 on a Galaxy S10
+// that had dropped (13/11/2026); it keeps the profile's pixels there. Nor under a ~30 Hz cap (iOS Low Power Mode): an
+// iPhone 18 Pro went from 33 to 50-60 ms frames at 2.6 Mpx and down to minimal on the results (13/11/2026).
+const sharpDpr = () => (closeUpOn && qualityLevel >= BOOT_QUALITY && pace.hz >= 50 ? closeUpDpr : renderDpr);
+let closeUpOn = false, resizedFov = camera.fov; // resizedFov: the lens resize() last gave the camera
+// Only the 3D's buffer changes (not the HUD's canvas, nor the layout: a whole resize() cost the S10 a 100-170 ms frame)
+export function setCloseUp(on) { if (on !== closeUpOn) { closeUpOn = on; renderer.setPixelRatio(sharpDpr()(renderProfile, sizedW, sizedH, devicePixelRatio)); } }
 export function resize() {
   try {
     const st = getComputedStyle(document.documentElement);
@@ -34,7 +44,7 @@ export function resize() {
   sizedW = cw; sizedH = ch; sizedDpr = devicePixelRatio; padTop = null;
   K = uiScale(Math.min(cw, ch), COARSE.matches); // the HUD's scale (css px per HUD unit)
   try { document.documentElement.style.setProperty('--ui', K / 2); } catch { /* no DOM styles (tests) */ } // the pad follows (index.html)
-  renderer.setPixelRatio(renderDpr(renderProfile, cw, ch, devicePixelRatio));
+  renderer.setPixelRatio(sharpDpr()(renderProfile, cw, ch, devicePixelRatio));
   renderer.setSize(cw, ch, false);
   camera.aspect = cw / ch;
   hud.width = Math.ceil(cw * DPR);
@@ -43,7 +53,11 @@ export function resize() {
   H.setTransform(K * hud.width / cw, 0, 0, K * hud.height / ch, 0, 0);
   PXU = K * DPR;
   W = cw / K; HH = ch / K;
-  camera.fov = baseFov(); camera.updateProjectionMatrix(); // (after HH: the lens depends on it; framePlayCamera sets its own each frame)
+  // (after HH: the lens depends on it; framePlayCamera sets its own each frame.) A lens some shot has set since is left
+  // alone: a resize in the same frame, after the camera and before the draw (a change of quality, the run's end), showed
+  // one frame through the menu's wide lens (the Bou's banknote close-up flashed to a wide shot as its demo ended)
+  if (camera.fov === resizedFov) camera.fov = resizedFov = baseFov();
+  camera.updateProjectionMatrix();
 }
 // iOS home-screen app with a translucent status bar (icons added before the bar went opaque): innerHeight (and 100vh/dvh) can come
 // out one status bar short, leaving an empty band at the bottom. There is no browser chrome there, so the screen height is exact.

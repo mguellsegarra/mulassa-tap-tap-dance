@@ -18,9 +18,9 @@ export const PROFILES = [
 export const MINIMAL = { name: 'minimal', dpr: 1, pixels: 350_000, shadow: 0, rows: 1, stride: 2, confetti: 40, fireworks: 90, backdrop: 60, mid: 40, balconies: 0, near: 10, ripple: -1, band: 6, smoke: 0, jets: 140, wheels: 64 };
 export const profileAt = level => (level < 0 ? MINIMAL : PROFILES[Math.min(level, PROFILES.length - 1)]);
 // A session's near people (the skinned ring's rows, balconies, the band, a colla's seated) lag adaptive quality (stage.js
-// stepPeople): people leaving the plaça read as broken. The armless backdrop and mid band step with the level, along with
-// sharpness, shadows and effects: far off, the fewest notice them go.
-const PROFILE_PEOPLE = ['rows', 'stride', 'balconies', 'near', 'band'];
+// stepPeople): people leaving the plaça read as broken, the armless backdrop and mid band too (far off, yet the owner saw
+// them go on a one-level probe, 15/11/2026). Sharpness, shadows and effects step with the level.
+const PROFILE_PEOPLE = ['rows', 'stride', 'balconies', 'near', 'band', 'backdrop', 'mid'];
 export const sessionProfile = (level, people) => {
   const p = profileAt(people);
   return { ...profileAt(level), ...Object.fromEntries(PROFILE_PEOPLE.map(k => [k, p[k]])), people: p.name };
@@ -89,6 +89,15 @@ export function gpuLossLevel(now = Date.now()) {
 export function renderDpr(profile, width, height, dpr) {
   return Math.min(dpr || 1, profile.dpr, Math.sqrt(profile.pixels / Math.max(1, width * height)));
 }
+// A held close-up on small print (mulassa.cat: the Bou's banknote) is drawn nearer the screen's own pixels than the
+// profile's: at the profile's resolution it read as a blur (an iPhone Pro at `medium` draws a quarter of its pixels, a
+// Galaxy S10 gone down to `low` a twelfth). The shot is still and near, so it has the pixels to spare: up to
+// CLOSE_UP_PIXELS from `medium` up, CLOSE_UP_PIXELS_LOW under it. Never fewer than the profile's own.
+export const CLOSE_UP_PIXELS = 3_400_000, CLOSE_UP_PIXELS_LOW = 2_000_000;
+export function closeUpDpr(profile, width, height, dpr) {
+  const pixels = profile.dpr > 1 ? CLOSE_UP_PIXELS : CLOSE_UP_PIXELS_LOW;
+  return Math.max(renderDpr(profile, width, height, dpr), Math.min(dpr || 1, Math.sqrt(pixels / Math.max(1, width * height))));
+}
 // Quality steps normally judge the drawn frames against 60 fps: a 120 Hz screen that misses its 8.3 ms halves its
 // rate first (framePacer). A sustained 30 Hz cadence uses the capped budget below instead.
 // Spikes: a device that keeps hitching during play (SPIKE.count frames over SPIKE.ms within SPIKE.within ms) steps
@@ -100,6 +109,9 @@ export const SLOW_SHARE = 0.12;
 const SPIKE = { ms: 50, count: 5, within: 3000 };
 // The session's first seconds (monitor time: the loader's excluded): a clear overload (a third of the frames late) decides on a
 // 2 s window, not 4: a ThinkPad X230 that booted a level too high spent ~10 s at 30–40 fps before its two steps down.
+// Two such windows in a row, though: Safari on an iPhone 18 Pro in Low Power Mode draws its first seconds after the cover
+// slow at any level (frames of 41-163 ms, 30-40 ms of JavaScript, then 13-16 at medium and a steady 30 fps): one window
+// dropped it from medium to minimal at the splash, the crowd thinned for the session (14/11/2026).
 const EARLY = { until: 15000, window: 2000, share: 0.3 };
 // iOS Low Power Mode (and thermal throttling) caps Safari's rAF at 30 Hz (WebKit AnimationFrameRate.cpp): every frame is
 // 33 ms, all of them read as slow and medium fell straight to minimal. CAP.run frames in a row at a steady ~33 ms suggest
@@ -112,19 +124,45 @@ const EARLY = { until: 15000, window: 2000, share: 0.3 };
 const CAP = { lo: 29, hi: 44, run: 12 };
 export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot
-  let run = 0, runSlow = 0, capped = false, capMs = 0; // runSlow: this window's slow frames of the current run; capMs: the cap's interval
+  let run = 0, runSlow = 0, capped = false, capMs = 0, earlyHit = false, quick = 0; // quick: which of the last 12 frames were under 24 ms (bits) // runSlow: this window's slow frames of the current run; capMs: the cap's interval
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
+  const group = new Float64Array(4); let gN = 0, gSum = 0, gPlay = true; // a late frame and the early ones after it, judged together
   const reset = (settle = true) => {
-    elapsed = samples = slow = late = n = run = runSlow = capMs = 0; spiky = capped = false;
+    elapsed = samples = slow = late = n = run = runSlow = capMs = gN = gSum = quick = 0; spiky = capped = earlyHit = false;
     if (settle) warmup = 2000;
   };
+  // WebGL in Safari under the 30 Hz cap jitters its timestamps: a late callback, then one or two early ones, together a
+  // whole number of slots (50 + 16, 68 + 2 + 30, 81 + 2 + 17 ms), on time on average. A page that only clears a WebGL
+  // canvas does it too, a plain page hardly. Judged one by one the early one read as a faster screen (no cap) and the late
+  // one as a hitch: an iPhone 18 Pro in Low Power Mode, 8 ms of JavaScript a frame, fell from medium to minimal
+  // (13/11/2026). A late frame waits for the early ones after it: a group of up to four that fills its slots and is
+  // followed by a frame at the cap's own pace (29-44 ms) is judged at its mean. A 60 Hz screen's hitches (80 then 16.7s,
+  // 50/16.7 alternating) never close one; one that steadily draws 50, 16.7, 33 is a 30 fps device, read as capped like
+  // a steady 33 (the shortcut above).
+  const flush = paced => {
+    const k = gN, sum = gSum, fills = paced && k > 1 && Math.abs(sum - k * (capMs || 1000 / 30)) <= 8; gN = gSum = 0;
+    for (let i = 0; i < k; i++) judge(fills ? sum / k : group[i], gPlay);
+  };
   const monitor = (ms, play = true) => {
+    if (gN && ms > 0 && ms < CAP.lo && gN < group.length) { group[gN++] = ms; gSum += ms; gPlay = play; return; }
+    if (gN) flush(ms >= CAP.lo && ms <= CAP.hi);
+    if (ms > CAP.lo * 1.25 && ms < 1000) { group[gN++] = ms; gSum += ms; gPlay = play; return; } // (over 36 ms: past a 30 Hz slot's jitter)
+    judge(ms, play);
+  };
+  const judge = (ms, play) => {
     if (ms <= 0 || ms > 1000) { reset(false); return; }
     clock += ms;
     const inCap = ms >= CAP.lo && ms <= CAP.hi, was = capped;
     if (inCap) capMs = capMs ? capMs + (ms - capMs) * 0.1 : ms;
-    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 ? run : 0; // one refresh late (50 ms at 24 Hz) neither builds nor breaks the run
-    if (ms < 24) capped = false; else if (run >= CAP.run) capped = true;
+    // One refresh late (50 ms at 24 Hz) or an early frame now and then neither builds nor breaks the run: under the 30 Hz cap
+    // Safari draws early ones (a touch, its jitter, two in a row catching up after a late one: 96, 71, 16, 21 ms), and one
+    // every 10 frames made every 33 ms frame read as slow, two steps down at once (an iPhone 18 Pro in Low Power Mode, its
+    // notes tapped, 14/11/2026). The cap is off only while a third of the last 12 frames were early: a screen back at 60 Hz,
+    // or one missing every second or third refresh (overload, not a cap).
+    quick = (quick << 1 | (ms < 24 ? 1 : 0)) & 0xfff;
+    let quicks = 0; for (let b = quick; b; b &= b - 1) quicks++;
+    run = inCap ? run + 1 : ms > CAP.hi && ms < CAP.hi * 1.25 || ms < 24 && quicks < 4 ? run : 0;
+    if (quicks >= 4) capped = false; else if (run >= CAP.run) capped = true;
     if (warmup > 0) { warmup = Math.max(0, warmup - ms); return; }
     const k = capped ? 2 : 1;
     if (play && ms > SPIKE.ms * k) {
@@ -136,9 +174,11 @@ export function frameMonitor(onSlow) {
     else if (capped && ms > capMs * 1.15) late++; // a refresh late: now and then a cap's jitter; a third of the frames is overload
     if (!inCap) runSlow = 0; else if (!capped) runSlow++;
     if (capped && !was) { slow -= runSlow; runSlow = 0; } // the run that showed the cap was its pace, not misses
-    if (elapsed >= 4000 || clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share) {
+    const early = elapsed < 4000 && clock < EARLY.until && elapsed >= EARLY.window && samples >= 8 && slow / samples > EARLY.share;
+    if (elapsed >= 4000 || early) {
       const share = samples >= 8 ? (slow + (late / samples > 0.3 ? late : 0)) / samples : 0; // (41.7/50 ms alternating: a busy 120 Hz GPU)
-      if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
+      const wait = early && !earlyHit && elapsed / samples < 100; earlyHit = early; // (the first early window only marks it, the next one confirms; under 10 fps no wait)
+      if (!wait && (share > SLOW_SHARE || spiky)) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
       elapsed = samples = slow = late = runSlow = 0; spiky = false;
     }
   };
@@ -161,6 +201,8 @@ export function hudScale(width, height, dpr, budget) {
 // A try is a 2 s window of missed refreshes when it fails, and every switch changes the notes' step on screen: tried
 // mid-song, a device that reads a steady 60 broke the lane's motion a few times a song.
 // pace(now, hold) -> draw this frame?; pace.hz (refresh rate), pace.fps (target rate), pace.half, pace.lowPower (~30 Hz).
+// pace.cap (set by its owner, adaptive-quality.js): a 60 Hz screen draws every other refresh too, an even 30, for a song
+// whose JavaScript does not fit a 60 Hz frame (a 2015 MacBook Pro throttled by heat a minute into it: 14 ms a frame).
 const PACE = { window: 2000, slowShare: 0.15, recover: 5000, perMinute: 3, warmup: 1500 };
 export function framePacer(opts) {
   const o = { ...PACE, ...opts }, N = 31, d = new Float32Array(N).fill(Infinity), sorted = new Float32Array(N);
@@ -182,7 +224,8 @@ export function framePacer(opts) {
     }
     const hz = 1000 / iv, fast = hz > 95;
     pace.hz = hz; pace.lowPower = hz > 27 && hz < 34; // Low Power Mode is 30 exactly
-    if (!fast) { pace.fps = hz; lastDraw = now; return true; } // (a slow patch can read as 60 Hz: `half` is kept)
+    if (!fast && !(pace.cap && hz > 50)) { pace.fps = hz; lastDraw = now; return true; } // (a slow patch can read as 60 Hz: `half` is kept)
+    if (!fast) { pace.fps = hz / 2; if (now - lastDraw < 1.5 * iv) return false; lastDraw = now; return true; } // capped: every other refresh, evenly
     pace.fps = pace.half ? hz / 2 : hz;
     const since = now - lastDraw;
     if (pace.half && since < 1.5 * iv) return false; // every other refresh, evenly
@@ -202,7 +245,7 @@ export function framePacer(opts) {
     }
     return true;
   };
-  Object.assign(pace, { hz: 60, fps: 60, half: false, lowPower: false });
+  Object.assign(pace, { hz: 60, fps: 60, half: false, lowPower: false, cap: false });
   pace.reset = () => {
     d.fill(Infinity); i = n = prev = good = winN = winSlow = 0; start = -1; lastDraw = -1e9;
   }; // no hidden/resize time or old refresh samples in the next cadence window; retain anti-oscillation history

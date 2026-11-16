@@ -57,7 +57,7 @@ export function tickColla(c, show, beat, dt, { obstacles, toWorld, frozenBeat, r
   if (shrink) for (let i = 0; i < c.crew.length + c.count; i++) { // a helper or seated member right by a low menu lens (run.lens) shrinks away: shrink = framing.js lensShrink
     const p = i < c.crew.length ? c.crew[i] : c.members[i - c.crew.length];
     p.g.getWorldPosition(COLLA_AT);
-    const k = shrink(run.lens, COLLA_AT.x, COLLA_AT.z);
+    const k = shrink(run.lens, COLLA_AT.x, COLLA_AT.z, run.lensK);
     if (k !== (p.lensK ?? 1)) { p.base ??= p.g.scale.x; p.lensK = k; p.g.scale.setScalar(p.base * k); }
   }
 }

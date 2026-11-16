@@ -22,7 +22,7 @@ export function resetWalker(w, x, z, face) { Object.assign(w, { x, z, h: face, f
 
 // One frame: fills `out` (a dance-drac pose, for poseDrac with front 0 and w.feetAt) and moves w; w.face is its world
 // heading. shy (optional {x, z}): someone it slows down short of when walking their way. s: the rig's scale (model → m).
-export function demoStep(w, out, dt, beat, shy, s = 1) {
+export function demoStep(w, out, dt, beat, shy, s = 1, still = false) { // still: it dances where it stands
   const lb = SHOW.from + (((beat - SHOW.from) % SHOW.len) + SHOW.len) % SHOW.len;
   dracPose(out, lb);
   if (w.lb >= 0 && lb > w.lb && SHOW.crema.some(c => w.lb < c && lb >= c)) SHOWCASE.crema = true;
@@ -37,7 +37,7 @@ export function demoStep(w, out, dt, beat, shy, s = 1) {
   else w.h += Math.sin(beat * 0.37) * dt * 0.35;
   w.face = w.h + spin;
   const fx = Math.sin(w.face), fz = Math.cos(w.face);
-  let speed = SHOW.speed * (1 - out.rear) * Math.max(0, 1 - Math.abs(dSpin) / Math.max(dt, 1e-3) / 1.5);
+  let speed = still ? 0 : SHOW.speed * (1 - out.rear) * Math.max(0, 1 - Math.abs(dSpin) / Math.max(dt, 1e-3) / 1.5);
   if (shy) {
     const ax = w.x - shy.x, az = w.z - shy.z, d = Math.hypot(ax, az);
     if (ax * fx + az * fz < 0) speed *= Math.max(0, Math.min(1, (d - 3) / 1.8));

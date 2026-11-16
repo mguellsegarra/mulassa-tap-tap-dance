@@ -217,9 +217,8 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
 .publish-offer:not([hidden]) + .sheet-actions > #publish-send { min-height: 44px; border-color: transparent; background: none; color: #fff3d6; text-decoration: underline; box-shadow: none; } /* «Ara no»: the card leads */
 #publish-form[data-view="done"] .publish-offer { animation: board-in .3s ease-out both; }
 @media (min-height: 501px) { #publish-menu:has(#publish-form[data-view]) { padding: 24px 24px 24px; } } /* even air all round (not the compact landscape sheet) */
-#publish-menu .sheet-actions { margin-top: 0; gap: 8px; }
+#publish-menu .sheet-actions { margin-top: 0; }
 #publish-menu:has(#publish-form[data-view="wait"]) #publish-cancel { display: none; }
-#publish-menu .sheet-actions:has(> #publish-never:not([hidden])) > .btn-link { min-height: 36px; padding-block: 2px; } /* the two quiet links stack tight under Publica */ /* «Ara no» as tall as «Mira la classificació», which takes its place: the buttons don't shift */
 @media (max-width: 400px) { #publish-menu { padding-inline: 16px; } #publish-menu h2 { font-size: 27px; } .publish-hint { font-size: 13px; } } /* the hint and «Publica el teu resultat!» stay one line (the title never shrinks to «Publicat!» with a jump) */
 @media (max-height: 500px) { /* landscape phones: the list gets the height, the settings row spans */
   #board-menu, #publish-menu { width: min(600px, calc(100vw - 32px - var(--sal) - var(--sar))); padding: 12px 16px 8px; }
@@ -238,7 +237,7 @@ html:not([lang="ca"]) .board-links { row-gap: 16px; } /* longer words wrap the t
   .publish-body { gap: 8px; }
   .publish-end { margin-top: 12px; }
   #publish-menu .sheet-actions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; }
-  #publish-menu .sheet-actions > .btn-link { grid-column: 1 / -1; }
+  #publish-menu .sheet-actions > :is(.btn-link, #publish-never) { grid-column: 1 / -1; }
   :where(#publish-menu .sheet-actions:has(> #publish-board[hidden])) > .btn-primary { grid-column: 1 / -1; } /* :where — the landscape grid places «Publica» itself */
 }
 @media (max-height: 500px), (min-width: 700px) and (max-height: 700px) { /* landscape / short windows: the run and the field | status and actions */

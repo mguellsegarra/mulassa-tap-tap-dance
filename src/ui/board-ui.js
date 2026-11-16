@@ -107,7 +107,7 @@ export function setupBoard({ focusIn, store = defaultStore, service = leaderboar
     // every frame: only real changes touch the DOM. `show`: the results screen, once taps may land (after its first second).
     // The row (#results-actions) itself is src/ui/share-ui.js's: Comparteix is there even offline; these are its buttons.
     results(show) {
-      const offBoard = FIGURES.some(f => f.id === currentFigure() && !hasBoard(f)); // the Bou: no board to show it on
+      const offBoard = FIGURES.some(f => f.id === currentFigure() && !hasBoard(f)); // a figure whose server board is not enabled
       const key = !show || !service.configured || offBoard ? 0 : canWrite && runs.snapshot && runs.published !== runs.snapshot ? 2 : 1;
       if (key === shown) return;
       if (doc.activeElement === resultsPublish || doc.activeElement === resultsBoard) doc.activeElement.blur?.(); // no focus on a hidden button

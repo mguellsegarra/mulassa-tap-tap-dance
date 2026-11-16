@@ -42,7 +42,7 @@ const doc = { addEventListener(k, f) { (handlers[k] ||= []).push(f); }, body: { 
   } };
 const $ = id => doc.getElementById(id), sheets = { sync: {}, board: { configured: true, results() {} }, share: { results() {} }, feedback: { configured: false }, select: { visible(on) { this.shown = on; } } };
 const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, navigator: { userActivation: { isActive: true } }, performance: { now: () => time },
-  G: state, selectedFigure: { id: 'mulassa-valls' }, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
+  G: state, selectedFigure: { id: 'mulassa-valls' }, markSeen: () => {}, store: {}, COARSE: { matches: false }, sheets, clock: 10, CHALLENGE: null, keyboardNav: true, hide: (el, hidden) => { el.hidden = hidden; },
   howtoMenu: {}, settingsMenu: {}, privacyMenu: {}, pauseMenu: {},
   howtoEl: $('howto'), settingsEl: $('settings'), freeEl: $('free'), musicEl: $('music'), pauseEl: $('pause'), skipEl: $('skip'), retryEl: $('retry'),
   addEventListener(k, f) { (handlers[k] ||= []).push(f); }, clearTimeout() {}, setTimeout() { return 1; },
@@ -52,7 +52,7 @@ const state = { state: 'splash', paused: false }, ctx = { tr, document: doc, nav
   store: { set() {} }, unlock() { state.state = 'select'; }, toTitle() { state.state = 'select'; },
   startMenuAudio() {}, setFreeSound() {}, photoOrient() {}, curtain: swap => swap(), photoHelpAvailable: () => false, showAvatars: () => run('setPhotoControl(false)'), syncAvatars() {} }; // src/ui/photo-avatars.js (its DOM: tests/render/render-quality.mjs)
 let time = 1000;
-const photoSource = ['figures/index', 'game/photo-control', 'platform/double-tap'].map(name => readFileSync(new URL(`../../src/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n'); // the figures' traits first: photo-control reads them
+const photoSource = ['figures/index', 'game/photo-control', '../packages/plassa/src/double-tap'].map(name => readFileSync(new URL(`../../src/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n'); // the figures' traits first: photo-control reads them
 const code = photoSource + '\n' + ['mouse-look', 'select-warm', 'controls', 'input'].map(name => readFileSync(new URL(`../../src/ui/${name}.js`, import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, '')).join('\n');
 vm.createContext(ctx); vm.runInContext(code, ctx);
 const run = code => vm.runInContext(code, ctx);
@@ -314,7 +314,7 @@ ctx.press = (dir, e) => presses.push({ dir, stamp: e.timeStamp });
 ctx.haptic = ctx.padFeedback = ctx.syncPad = ctx.settleHold = () => {};
 ctx.songTime = () => 0;
 ctx.eventAt = e => e.timeStamp;
-ctx.bouTap = () => false; // (no Bou close-up waiting: keys play)
+ctx.sceneOf = () => null; // no finale hook: keys play normally
 ctx.KEYS = { ArrowLeft: 'L', ArrowRight: 'R', KeyD: 'L', KeyK: 'R' };
 let activeDialog = null;
 doc.querySelectorAll = () => activeDialog ? [activeDialog] : [];
@@ -350,6 +350,17 @@ for (const practice of [null, { step: 0 }]) {
     assert.deepEqual(sounds, [], `${pointerType} pad and bubbled click never emit menu selection`);
   }
 }
+// The selected scene may consume a continuation key before it reaches the judge.
+let finaleInputs = 0;
+ctx.sceneOf = id => {
+  assert.equal(id, ctx.selectedFigure.id);
+  return { endTap: () => { finaleInputs++; return true; } };
+};
+presses.length = 0;
+for (const code of ['KeyD', 'Space', 'Enter']) dispatchKey(code);
+assert.equal(finaleInputs, 3);
+assert.deepEqual(presses, [], 'accepted finale inputs do not judge notes');
+ctx.sceneOf = () => null;
 const menuItems = [$('resume'), $('exit')];
 for (const b of menuItems) { b.tagName = 'BUTTON'; b.offsetParent = doc.body; b.closest = () => null; }
 activeDialog = { dataset: {}, querySelectorAll: () => menuItems };

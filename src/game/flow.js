@@ -2,7 +2,7 @@
 import { tr } from '../i18n/messages.js';
 import { clearLeaderboardResult, captureLeaderboardResult } from '../services/leaderboard-result.js';
 import { makeDanceChart } from './chart.js';
-import { recordKey, readFigureRecord, saveFigureRecord } from './figures.js';
+import { recordKey, readFigureRecord, saveFigureRecord, markSeen } from './figures.js';
 import { comparableScore } from './score-scale.js';
 import { beatsRecord } from './records.js';
 import { song, selectedFigure, countInAt, startCueAt, BEATS, beatAt, FINALE_T } from './figure-song.js';
@@ -104,6 +104,7 @@ export function startWatch() {
 }
 function watched() { // the plaça cheers the dance; ui/watch-ui.js then offers to play it
   chip.stop();
+  markSeen(store, selectedFigure); // the whole ball watched ends the new figure's shine, as a record does
   Object.assign(G, { state: 'results', resT: clock, reason: 'clear', challenge: null, shareRun: null });
   burst(M.pos.x, M.pos.y);
   chip.sfx('ovation');

@@ -1,15 +1,16 @@
-// The Bou's pending board (supabase/pending/202610230001_bou_board.sql), applied ONLY to the in-memory PGlite fixture:
+// The Bou's board (supabase/migrations/202611150001_bou_board.sql), applied ONLY to the in-memory PGlite fixture:
 // before it, the server refuses a Bou result and its statistics; after it, both pass, on the Bou's own board, with
 // the ceilings of its real chart. Nothing here touches a real database.
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fixture } from '../../../supabase/tests/fixture.mjs';
+import { buildWorld } from '../../../src/dev/demo-data.js';
 import { VERSION_RULES } from '../../../src/services/leaderboard-rules.js';
 import { perfectMax, ceilingOf } from '../../../tools/data/score-ceiling.mjs';
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
-const { newStats, endRun } = await import('../../../src/game/stats.js');
+const { newStats, endRun, payload } = await import('../../../src/game/stats.js');
 const song = JSON.parse(readFileSync(new URL('../../../src/song-bou.json', import.meta.url)));
-const pending = readFileSync(new URL('../../../supabase/pending/202610230001_bou_board.sql', import.meta.url), 'utf8');
+const pending = readFileSync(new URL('../../../supabase/migrations/202611150001_bou_board.sql', import.meta.url), 'utf8');
 assert(/^[\x00-\x7f]*$/.test(pending), 'ASCII, as the migrations');
 const { db, q, as, player, unlock, migrate } = await fixture();
 const submit = (d, score) => q('select * from public.submit_result($1,$2,$3,0,$4,$5,$3,$6)', ['bou-v1', d, VERSION_RULES['bou-v1'].judgments[d], 0, score, 'BouFan']);
@@ -19,12 +20,15 @@ const bucket = d => ({ runs: 1, completed: 1, collapsed: 0, seconds: Math.floor(
   errors: { early: 0, late: 0, silent: 0, both: 0, hold: 0, move: 0 }, best: { score: 1000, perfect: VERSION_RULES['bou-v1'].judgments[d], good: 0, miss: 0, maxCombo: VERSION_RULES['bou-v1'].judgments[d] } });
 const merge = (device, buckets) => q('select public.merge_stats($1,$2::jsonb,$3::date[],auth.uid())', [device, JSON.stringify(buckets), ['2026-10-23']]);
 try {
-  await migrate();
+  await migrate({ exclude: ['202611150001_bou_board.sql'] });
   await db.exec("update leaderboard_private.seasons set starts_at='2026-09-21 00:00 Europe/Madrid' where id=1");
   const me = await player('BouFan'); await as(me);
   await assert.rejects(() => submit(1, 1000), /leaderboard/, 'today\'s server has no Bou board');
   await assert.rejects(() => merge('00000000-0000-4000-8000-000000000001', { 'bou-tradicional-valls/bou-v1/1': bucket(1) }), /leaderboard_invalid_bucket/, 'nor its statistics');
-  await db.exec('reset role'); await db.exec(pending); await db.exec(pending); // idempotent, as every migration
+  const historicalDevice = '00000000-0000-4000-8000-000000000009';
+  await merge(historicalDevice, { practice: { runs: 1, seconds: 10 } });
+  await db.exec("reset role; update leaderboard_private.player_devices set updated_at=clock_timestamp()-interval '2 minutes'; update leaderboard_private.profiles set last_stats_at=null");
+  await db.exec(pending); await db.exec(pending); // idempotent, as every migration
   const rules = await q("select difficulty,judgments,max_score,extras_max,figure_id,duration_seconds,guapa_count,balloon_count,hold_count from leaderboard_private.versions where version='bou-v1' order by difficulty");
   assert.deepEqual(rules.map(r => r.judgments), [0, 1, 2].map(d => perfectMax(song, d).judgments));
   assert.deepEqual(rules.map(r => r.max_score), [0, 1, 2].map(d => ceilingOf(perfectMax(song, d).max)));
@@ -32,6 +36,7 @@ try {
   assert.deepEqual(rules.map(r => r.judgments), VERSION_RULES['bou-v1'].judgments, 'the client mirror (leaderboard-rules.js)');
   assert.deepEqual(rules.map(r => r.max_score), VERSION_RULES['bou-v1'].ceilings);
   assert.deepEqual(rules.map(r => r.extras_max), VERSION_RULES['bou-v1'].extras);
+  assert.deepEqual(rules.map(r => r.hold_count), [16,27,27]);
   assert(rules.every(r => r.figure_id === 'bou-tradicional-valls' && Number(r.duration_seconds) === song.end && r.guapa_count === 12 && r.balloon_count === 1));
   await unlock(); await as(me); await submit(1, 120000);
   const rows = await board();
@@ -43,10 +48,31 @@ try {
   const stats = newStats();
   for (const d of [0, 1, 2]) endRun(stats, 'u', { kind: 'end', date: '2026-10-23', figureId: 'bou-tradicional-valls', version: 'bou-v1', level: d, seconds: song.end,
     counts: { perfect: rules[d].judgments, good: 0, miss: 0 }, errors: {}, guapa: 12, guapaTotal: 12, balloons: 0, holds: rules[d].hold_count, maxCombo: rules[d].judgments, stars: 3, score: rules[d].max_score, quality: 100 });
-  // payload()'s shape (it leaves the Bou out until its board is switched on: tests/figures/bou/bou-chart.mjs), quality stays local
-  const buckets = Object.fromEntries(Object.entries(stats.owners.u.counters).map(([k, c]) => { const { quality, ...best } = c.best; return [k, { ...c, best }]; })); // eslint-disable-line no-unused-vars
+  const buckets = payload(stats, 'u').buckets;
   await merge('00000000-0000-4000-8000-000000000002', buckets);
   const own = (await q('select * from public.my_stats()'))[0];
   assert.equal(Object.keys(own.buckets).filter(k => k.startsWith('bou-tradicional-valls/bou-v1/')).length, 3, 'its statistics are accepted once its board exists');
-  console.log('bou pending board: refused before, accepted after (results, ceilings, statistics), only in PGlite ok');
+  await db.exec('reset role');
+  for (const d of [0,1,2]) {
+    await unlock(); await as(me); await submit(d, rules[d].max_score);
+    await unlock(); await as(me); await assert.rejects(() => submit(d, rules[d].max_score+1), /leaderboard/);
+    await db.exec("reset role; update leaderboard_private.profiles set last_stats_at=null"); await as(me);
+    for (const invalid of [{ balloons: 2 }, { holds: rules[d].hold_count+1 }, { guapaTotal: 13 }, { seconds: 141 }, { runs: -1 }]) {
+      await assert.rejects(() => merge('00000000-0000-4000-8000-000000000003',
+        { ['bou-tradicional-valls/bou-v1/'+d]: { ...bucket(d), ...invalid } }), /leaderboard_invalid_stats/);
+    }
+  }
+  await as(null,'anon');
+  await assert.rejects(() => submit(1,1000), /permission denied/);
+  await as(me);
+  await assert.rejects(() => q('select * from leaderboard_private.player_devices'), /permission denied/);
+  await assert.rejects(() => q('select public.merge_stats($1,$2::jsonb,$3::date[],$4)', [historicalDevice,'{}',[], '01000000-0000-4000-8000-000000000099']), /leaderboard_owner_mismatch/);
+  await db.exec('reset role');
+  for (const buckets of buildWorld().stats.values()) for (const [key,c] of Object.entries(buckets)) {
+    await q('select leaderboard_private.merge_bucket($1,$2::jsonb,null)', [key,JSON.stringify(c)]);
+  }
+  await db.exec("update leaderboard_private.versions set max_score=1 where version='bou-v1' and difficulty=0");
+  await assert.rejects(() => db.exec(pending), /bou_version_contract_mismatch/);
+  await db.exec('rollback');
+  console.log('bou board: refused before, accepted after (results, ceilings, statistics), only in PGlite ok');
 } finally { await db.close(); }

@@ -94,7 +94,7 @@ function animateFrameScene(dt, beat, vt, live, pendingSel) {
   animConfetti(dt);
   animFireworks(dt);
   dracFrame(dt, vt); // the Drac's fire, red smoke and traca; nothing for the Mulassa
-  bouFrame(dt, vt); // the Bou's disco night, carretilles and banknotes
+  bouFrame(dt, vt); // the Bou's disco night and carretilles
   animFinaleLights(beat);
 
 }
@@ -190,7 +190,12 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
   if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
   window.__mulassaSetBootPhase?.('shaders');
-  Promise.all([prepareFigureScenes(), waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs)).then(() => { if (loader.covering) warmDraw(); }))]).then(([, result]) => {
+  // (under the cover the wait goes on while programs keep compiling or linking, up to 8 s: boot.js waitForWarmup)
+  let warmSteps = 0;
+  const warmProgress = () => warmSteps + (renderer.info.programs ?? []).reduce((n, p) => n + (p.isReady() ? 1 : 0), 0);
+  const warmup = () => localPeopleReady.then(() => { warmSteps++; return precompile(true); })
+    .then(() => { warmSteps++; return linkPrograms(renderer.info.programs, { onSlice: () => warmSteps++ }); }).then(() => { if (loader.covering) warmDraw(); });
+  Promise.all([prepareFigureScenes(), waitForWarmup(warmup, { progress: warmProgress, cap: 8000 })]).then(([, result]) => {
     if (window.__mulassaBootFailure) return;
     window.__mulassaSetBootPhase?.('frame');
     loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');

@@ -1,7 +1,7 @@
 // The Bou's final disco as a rave (after the Mulassa's music video, tools/videoclip on tool/videoclip-mulassa: stage.js's
 // lasers, fx.js's haze and CO2 jets): two fans of laser beams from behind the Bou as the camera sees it, a low haze the
 // beams cut through and four CO2 cannons that fire on the final's first bar and its fifth; and the first techno's strobe
-// scene and the banknotes' rain (bouFollowSpot): the clip's follow spot, warm, from high above onto the Bou. Posed from the song beat;
+// scene (bouFollowSpot): the clip's follow spot, warm, from high above onto the Bou. Posed from the song beat;
 // built once at import, hidden (precompile reaches hidden meshes), nothing allocated per frame.
 import * as THREE from 'three';
 import { scene, camera, glc } from '../../scene/stage.js';
@@ -191,12 +191,11 @@ const bouPoolTex = (() => { const S = 128, px = new Uint8Array(S * S * 4), stops
 const bouPool = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 5.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: bouPoolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffd9a8', fog: false }));
 bouPool.position.y = 0.02;
 for (const o of [bouFollow, bouPool]) { o.visible = false; o.frustumCulled = false; scene.add(o); }
-// n: 0..1 how far the spot is on (the first techno, the banknotes' rain); bx, bz: the Bou; wide: x its width (the rain: the notes round it)
-export function bouFollowSpot(n, bx, bz, wide) {
+// n: 0..1 how far the spot is on (the first techno); bx, bz: the Bou
+export function bouFollowSpot(n, bx, bz) {
   const on = n > 0.01;
   bouFollow.visible = bouPool.visible = on;
   if (!on) return;
   bouFollow.position.set(bx, 0, bz); bouPool.position.x = bx; bouPool.position.z = bz;
-  bouFollow.scale.set(wide, 1, wide); bouPool.scale.set(wide, 1, wide);
   bouFollowMat.uniforms.power.value = 0.32 * n; bouPool.material.opacity = 0.5 * n;
 }

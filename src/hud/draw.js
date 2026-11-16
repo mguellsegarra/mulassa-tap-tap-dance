@@ -3,7 +3,7 @@ import { tr } from '../i18n/messages.js';
 import { STEPS } from '../game/practice.js';
 import { G, clock, chip, offsetMs } from '../game/state.js';
 import { HUD_CY, PRACTICE_Y } from './layout.js';
-import { W, H, HH, SAFE, K } from './canvas.js';
+import { W, H, HH } from './canvas.js';
 import { text, textWidth, panel } from './primitives.js';
 import { C, spriteBudget, SPRITES_NEW, warmups, warmT, setSpriteBudget, setWarmT } from './sprites.js';
 import { COARSE } from '../core/env.js';
@@ -16,10 +16,8 @@ import { drawTop, drawProgressRing } from './top.js';
 import { drawLane } from './lane.js';
 import { drawResults } from './results.js';
 import { loader } from '../ui/handles.js';
-import { selectedFigure } from '../game/figure-song.js';
-import { sceneOf } from '../scene/figure-scenes.js';
 
-const DRAW_TXT = { goOn: [tr('hud.title.enterTouch'), tr('hud.title.enterClick')], practice: tr('hud.practice.title'), tap: tr('hud.audio.tap'), tapSub: tr('hud.audio.tapSub'), syncHint: tr('hud.sync.hint') };
+const DRAW_TXT = { practice: tr('hud.practice.title'), tap: tr('hud.audio.tap'), tapSub: tr('hud.audio.tapSub'), syncHint: tr('hud.sync.hint') };
 let offKey, offLine; // the offset toast's line, built once per value
 // Practice: progress at the top and the step's instruction above the pad.
 function drawPractice() {
@@ -46,30 +44,11 @@ function drawCollapse() {
   text(trf('collapse.line1'), W / 2, y - size * 0.62, size, C.red, 'center', C.cream);
   text(trf('collapse.line2'), W / 2, y + size * 0.62, size, C.red, 'center', C.cream);
 }
-// The Bou's close-up waits for a tap: the results' own «go on» pill (results.js), low on the screen, fading in
-let goOnT = -1;
-function drawGoOn() {
-  if (goOnT < 0) goOnT = clock;
-  const s = DRAW_TXT.goOn[COARSE.matches ? 0 : 1], b = Math.sin(clock * 3), h = 30, w = textWidth(s, 10.5) + 40, cy = HH - SAFE.b / K - 30;
-  H.globalAlpha = Math.min(1, (clock - goOnT) * 2);
-  H.beginPath(); H.roundRect(W / 2 - w / 2, cy - h / 2, w, h, h / 2);
-  H.fillStyle = 'rgba(42,26,16,0.92)'; H.fill();
-  H.strokeStyle = C.gold; H.lineWidth = 2 + 0.6 * (b + 1); H.stroke();
-  text(s, W / 2, cy + 1, 10.5, C.gold);
-  H.globalAlpha = 1;
-}
 export function drawHud(t) {
   setSpriteBudget(SPRITES_NEW);
   if (G.state === 'splash') drawSplash();
   if (G.state === 'play') {
     if (G.collapseT) { drawCollapse(); return; }
-    const figure = sceneOf(selectedFigure.id);
-    if (figure?.endHud?.()) {
-      drawPraise();
-      if (figure.endWaiting?.()) drawGoOn();
-      else goOnT = -1;
-      return;
-    }
     drawBubbles();
     if (!G.watch) drawJudge();
     drawPraise(); // (the chant after the song: the plaça's, not a score)

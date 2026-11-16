@@ -1,7 +1,7 @@
 // One frame of the game's rules: the play clock's section and claps, the finale's triggers (fireworks, confetti, the chant),
 // the meters' easing, autoplay, judging and the end of the run; on the selector, the demo dance on the menu loop's beat.
 // An orchestrator like flow.js: it fires the scene's and the HUD's effects, so it may reach them (tests/build/modules.mjs).
-import { song, selectedFigure, beatAt, FINALE_T } from './figure-song.js';
+import { song, beatAt, FINALE_T } from './figure-song.js';
 import { sectionAt } from './chart.js';
 import { judgedCount } from './progress.js';
 import { Q, playFrom, AUTOPLAY } from '../core/env.js';
@@ -12,7 +12,6 @@ import { REEL, REEL_STILL } from './showreel.js';
 import { figTheme } from './figure-theme.js';
 import { autoplay, advance } from './judge.js';
 import { practiceTick, finish } from './flow.js';
-import { sceneOf } from '../scene/figure-scenes.js';
 import { spawnConfetti, burst, setConfettiSettled } from '../scene/confetti.js';
 import { firework } from '../scene/fx.js';
 import { rnd } from '../scene/models.js';
@@ -46,9 +45,10 @@ export function tickGame(t, vt, beat, dt) {
     if (t >= song.end && G.next >= G.chart.length && !G.hold && !bigPending && !G.eeeh && !G.collapseT) { // the "eeeeh!": grand finale volley, for everyone
       G.eeeh = true;
       for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
-      burst(M.pos.x, M.pos.y, 'end'); // (the Bou: its banknotes, bou-show.js)
+      burst(M.pos.x, M.pos.y, 'end');
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      figTheme.chant.forEach(([w, at, dur]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, dur, 0.5); }));
+      // step: one letter every `step` s (the Bou's BOOOUUUUU!, hud/praise.js drawLetters)
+      figTheme.chant.forEach(([w, at, dur, step]) => afterActive(at * 1000, () => { if (G.state === 'play' && headline(w, 'rainbow', 4, dur, 0.5) && step) G.praise.step = step; }));
       setTrauma(1);
     }
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
@@ -58,11 +58,7 @@ export function tickGame(t, vt, beat, dt) {
     if (!G.collapseT) {
       advance(t);
       if (G.practice) practiceTick(t);
-      else {
-        const figure = sceneOf(selectedFigure.id);
-        // A previous run's accepted tap must not finish a retry before its song ends.
-        if (figure?.endReady?.() && t >= song.end || t > song.tail + 1 && !figure?.endHold?.()) finish('end');
-      }
+      else if (t > song.tail + 1) finish('end');
     } else if (clock - G.collapseT > 3.5) finish('collapse');
   } else if (G.state === 'select' && !REEL.on && !REEL_STILL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu (not under the selector's held shot: each figure dances there on its own)
     G.lastBeat = Math.floor(beat);

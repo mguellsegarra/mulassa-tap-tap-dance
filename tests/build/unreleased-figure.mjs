@@ -6,19 +6,19 @@ import { unreleasedFigure } from '../../tools/deploy/unreleased-figure.mjs';
 const ctx = {};
 const file = name => resolve('src/figures/bou', name);
 const on = unreleasedFigure(new Set(['bou-tradicional-valls']));
-assert.match(on.load.call(ctx, file('bou-bills.js')), /^export \* from ".*src[\\/]figures[\\/]unreleased-bou\.js";$/);
+assert.match(on.load.call(ctx, file('bou-show.js')), /^export \* from ".*src[\\/]figures[\\/]unreleased-bou\.js";$/);
 assert.equal(on.load.call(ctx, file('bou-portrait.js')), null);
 assert.equal(on.load.call(ctx, file('bou-suit.js')), null);
 assert.equal(on.load.call(ctx, '\0unreleased-song'), 'export default null;');
-assert.equal(unreleasedFigure(new Set()).load.call(ctx, file('bou-bills.js')), null);
+assert.equal(unreleasedFigure(new Set()).load.call(ctx, file('bou-show.js')), null);
 console.log('unreleased-figure: ok');
 
 // The real build, both ways: the Bou's code is in it exactly when the figure is released (empty set, as on feat/bou).
-// Marker: a name private to the Bou's own module (bou-bills.js).
+// Marker: a name private to the Bou's own module (bou-show.js).
 import { build } from 'vite';
 const bundled = async set => {
   const out = await build({ configFile: false, logLevel: 'silent', plugins: [unreleasedFigure(set)], build: { write: false, minify: false, reportCompressedSize: false } });
-  return (Array.isArray(out) ? out : [out]).flatMap(o => o.output).some(c => c.type === 'chunk' && c.code.includes('BILL_AUTO'));
+  return (Array.isArray(out) ? out : [out]).flatMap(o => o.output).some(c => c.type === 'chunk' && c.code.includes('BOU_GROW'));
 };
 assert.equal(await bundled(new Set(['bou-tradicional-valls'])), false, 'unreleased: the Bou is not in the build');
 assert.equal(await bundled(new Set()), true, 'released: the Bou is in the build');

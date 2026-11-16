@@ -46,25 +46,3 @@ for (const [f, allowed] of Object.entries(ALLOWED)) {
 }
 console.log('figure scenes: one hook set per figure in its folder, shared scene files free of them ok');
 
-// Optional finale hooks retain the crane's distinct thresholds and automatic watch timeout.
-run(`var finaleScene = sceneOf('bou-tradicional-valls');
-  Object.assign(BOU_FINALE, { on: true, endT: 0, t: 0, k: 0, go: false }); G.watch = false;`);
-assert(run('finaleScene.endStarted() && finaleScene.endHold() && !finaleScene.endHud() && !finaleScene.endTap()'));
-assert.equal(run('finaleScene.endImpact()'), Math.SQRT1_2);
-run('BOU_FINALE.k = 0.3');
-assert.equal(run('finaleScene.endHud()'), false);
-run('BOU_FINALE.k = 0.31');
-assert(run('finaleScene.endHud() && !finaleScene.endWaiting()'));
-run('BOU_FINALE.k = 0.98');
-assert.equal(run('finaleScene.endTap()'), false);
-run('BOU_FINALE.k = 1');
-assert(run('finaleScene.endWaiting() && finaleScene.endTap() && finaleScene.endReady() && !finaleScene.endHold()'));
-assert.equal(run('finaleScene.endImpact()'), 0);
-run('BOU_FINALE.go = false; G.watch = true; BOU_FINALE.t = 7');
-assert.equal(run('finaleScene.endHold()'), true);
-run('BOU_FINALE.t = 7.01');
-assert.equal(run('finaleScene.endHold()'), false);
-for (const id of ['mulassa-valls', 'drac-valls']) {
-  assert(run(`!sceneOf('${id}').endHold?.() && !sceneOf('${id}').endTap?.()`), `${id}: normal completion and input`);
-}
-run('bouBillsClear(); G.watch = false');

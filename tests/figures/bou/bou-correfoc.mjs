@@ -1,6 +1,6 @@
 // The Bou's festa rules (src/figures/bou/bou-correfoc.js) and its carretilles on the model (models/bou.js).
 import assert from 'node:assert/strict';
-import { BOU_FX, BOU_BILLS, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTubeOn, bouTileLight, bouTileRing, bouTileColour, bouSoftTileLight, bouHeroSpot, bouBillPlan, bouFlutterDrop, bouWind } from '../../../src/figures/bou/bou-correfoc.js';
+import { BOU_FX, bouTechno, bouHush, bouJetsWant, bouCarried, bouTubeBurns, bouTubeOn, bouTileLight, bouTileRing, bouTileColour, bouSoftTileLight } from '../../../src/figures/bou/bou-correfoc.js';
 import * as THREE from 'three';
 import { buildBou, BOU_TUBE_K } from '../../../src/figures/bou/bou.js';
 
@@ -21,33 +21,6 @@ assert(!bouJetsWant(early, early + 1), 'a moment from a later run (a restart) li
 // carried round: on fire all the way; stopped and set down: no sparks, even after a confetti moment
 assert(bouJetsWant(BOU_FX.festaStart, Infinity) && bouJetsWant(BOU_FX.carryEnd - 0.01, Infinity), 'it burns all the way round');
 assert(!bouJetsWant(BOU_FX.carryEnd, BOU_FX.carryEnd) && !bouJetsWant(BOU_FX.quietEnd - 0.01, BOU_FX.quietEnd - 1), 'no sparks while it is set down');
-
-// the end's banknotes: they rain through the bombo (dur s); the hero lands `hero` m from the Bou towards the camera, last
-// and on top of the mound round it; the rest round the Bou, never all in one spot, all from above
-const hero = bouHeroSpot(0, 0, 0, 12, {}), dur = 6.4;
-assert(Math.abs(hero.x) < 1e-9 && Math.abs(hero.z - BOU_BILLS.hero) < 1e-9, 'the hero spot is towards the lens');
-const n = 600, plans = Array.from({ length: n }, (_, i) => bouBillPlan(i, n, hero.x, hero.z, 0, 0, dur, {}));
-const top = plans[n - 1], rest = plans.slice(0, -1);
-assert(top.x === hero.x && top.z === hero.z, 'the hero lands on its spot');
-assert(rest.every(p => p.y < top.y), 'the hero lies on top');
-assert(rest.every(p => p.delay >= 0 && p.delay <= dur), 'they all fall within the bombo');
-assert(rest.filter(p => p.delay > dur / 2).length > n * 0.4, 'the rain keeps up to the end');
-const heap = plans.slice(0, Math.floor(n * BOU_BILLS.near));
-assert(heap.every(p => p.delay < top.delay && Math.hypot(p.x - hero.x, p.z - hero.z) < BOU_BILLS.heap + 1e-9), 'the mound falls round the hero, before it');
-assert(heap.length >= n * 0.25, `a mound under the camera (${heap.length})`);
-const hi = heap.filter(p => p.y > 0.006 + BOU_BILLS.step * BOU_BILLS.layers / 2), lo = heap.filter(p => p.y <= 0.006 + BOU_BILLS.step * BOU_BILLS.layers / 2);
-const meanR = a => a.reduce((s, p) => s + Math.hypot(p.x - hero.x, p.z - hero.z), 0) / a.length;
-assert(meanR(hi) < meanR(lo), 'the mound is higher in its middle (no note floating over bare floor at its edge)');
-assert(plans.every(p => Math.hypot(p.x - hero.x, p.z - hero.z) <= BOU_BILLS.spread + 1e-9 && p.high > 0.5 && p.drop > 0), 'all round the hero, from above');
-assert(rest.filter(p => p.delay === 0).length > n * 0.1, 'the sky is full at once');
-assert(new Set(plans.map(p => p.y)).size >= BOU_BILLS.layers, 'stacked on distinct heights');
-const ys = [...new Set(plans.map(p => p.y))].sort((a, b) => a - b);
-assert(ys.every((y, k) => !k || y - ys[k - 1] >= BOU_BILLS.step / 2 - 1e-9), 'any two heights at least half a step apart: two overlapping notes never share a plane');
-assert(BOU_BILLS.ripple * 2 * BOU_BILLS.scale < BOU_BILLS.step / 2, 'a lying note\'s wind ripple stays under the step to the next');
-// fluttering: fastest through the middle of its swing, nearly hanging at its ends, never rising
-for (let p = 0; p < 7; p += 0.05) { const v = bouFlutterDrop(1, p); assert(v > 0 && v <= 1.8 + 1e-9, `descent ${v}`); }
-assert(bouFlutterDrop(1, 0) > 4 * bouFlutterDrop(1, Math.PI / 2), 'it hangs at the ends of its swing');
-for (let t = 0; t < 60; t += 0.25) { const w = bouWind(t); assert(w >= 0.1 && w <= 1, `the wind in 0..1 (${w})`); }
 
 // its back's tubes all burn at once (in turns the fire walked along its back); carried by its colla, its head's instead
 for (let i = 0; i < BOU_FX.back + 3; i++) {
@@ -121,7 +94,7 @@ bou.cap.play(0, 21.8, 1);
 assert.equal(bou.cap.jaw.rotation.x, bite, 'a BRAMA does not open the mouth round the tube either');
 let tongue = false; bou.cap.jaw.traverse(o => { if (o !== bou.cap.jaw && o.isGroup && o.visible && o.children.some(c => c.isMesh) && o.position.z > 0.4) tongue = true; });
 assert(!tongue, 'no tongue out while it holds the tube');
-console.log('bou correfoc: techno window, the tubes that burn, the end\'s banknotes, disco floor and the tubes ok');
+console.log('bou correfoc: techno window, the tubes that burn, disco floor and the tubes ok');
 
 // First techno: alternating warm tiles, dimmer than the final and bounded around the Bou.
 assert.equal(BOU_FX.softDisco.colour, '#ffd66b');

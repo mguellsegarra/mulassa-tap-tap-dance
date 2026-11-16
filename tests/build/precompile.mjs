@@ -39,6 +39,6 @@ assert.notEqual(calls[0], 'driver-query', 'the old warmup leaves the synchronous
   vm.runInContext('warmDraw()', c);
   assert.deepEqual(seen, [[[true, null, false], [true, 1, false], [true, 7, false]]], 'the boot draws every object once: shown, one instance at least, not culled');
   assert.equal(JSON.stringify(objs), before, 'and puts each one back');
-  assert.match(readFileSync(new URL('../../src/main.js', import.meta.url), 'utf8'), /linkPrograms\(renderer\.info\.programs\)\)\.then\(\(\) => \{ if \(loader\.covering\) warmDraw\(\); \}\)/, 'the boot draws it after linking, and only under the cover');
+  assert.match(readFileSync(new URL('../../src/main.js', import.meta.url), 'utf8'), /linkPrograms\(renderer\.info\.programs, \{[^}]*\}\); \}\)\.then\(\(\) => \{ if \(loader\.covering\) warmDraw\(\); \}\)/, 'the boot draws it after linking, and only under the cover');
   console.log('precompile: the boot warm-up draws the whole scene once and restores it ok');
 }

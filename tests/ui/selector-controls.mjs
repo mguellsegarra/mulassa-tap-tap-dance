@@ -314,7 +314,6 @@ ctx.press = (dir, e) => presses.push({ dir, stamp: e.timeStamp });
 ctx.haptic = ctx.padFeedback = ctx.syncPad = ctx.settleHold = () => {};
 ctx.songTime = () => 0;
 ctx.eventAt = e => e.timeStamp;
-ctx.sceneOf = () => null; // no finale hook: keys play normally
 ctx.KEYS = { ArrowLeft: 'L', ArrowRight: 'R', KeyD: 'L', KeyK: 'R' };
 let activeDialog = null;
 doc.querySelectorAll = () => activeDialog ? [activeDialog] : [];
@@ -350,17 +349,6 @@ for (const practice of [null, { step: 0 }]) {
     assert.deepEqual(sounds, [], `${pointerType} pad and bubbled click never emit menu selection`);
   }
 }
-// The selected scene may consume a continuation key before it reaches the judge.
-let finaleInputs = 0;
-ctx.sceneOf = id => {
-  assert.equal(id, ctx.selectedFigure.id);
-  return { endTap: () => { finaleInputs++; return true; } };
-};
-presses.length = 0;
-for (const code of ['KeyD', 'Space', 'Enter']) dispatchKey(code);
-assert.equal(finaleInputs, 3);
-assert.deepEqual(presses, [], 'accepted finale inputs do not judge notes');
-ctx.sceneOf = () => null;
 const menuItems = [$('resume'), $('exit')];
 for (const b of menuItems) { b.tagName = 'BUTTON'; b.offsetParent = doc.body; b.closest = () => null; }
 activeDialog = { dataset: {}, querySelectorAll: () => menuItems };

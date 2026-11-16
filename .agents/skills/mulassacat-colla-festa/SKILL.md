@@ -14,7 +14,7 @@ Apply only to Mulassa and its checkouts. For a whole new figure, start from `mul
 | Colla bodies and dress | `scene/models/colla.js` (`COLLA`, `HELPER_LOOKS`, the Drac's seated looks), `scene/models/colla-seated.js`, `figures/mulassa/mula-suit.js` (`MULA_SUIT`), `figures/bou/bou-suit.js` (`BOU_SUIT`, `BOU`) |
 | Each figure's colla | built by `figures/common/colla.js` (+ `colla-run.js`); `figures/drac/drac-colla.js`, `figures/mulassa/mula-colla.js`, `figures/bou/bou-colla.js` (+ `figures/bou/bou-parade.js` for the carried lap and the crowd file) |
 | Crowd | `scene/crowd-build.js` (who stands where), `scene/crowd.js` (making way; mood and groove in `crowd-mood.js`), `scene/crowd-fx.js` (ripple), `scene/representation/` (looks, `population.js` weights) |
-| Festa rules / drawing | Drac: `figures/drac/drac-fx-rules.js`, `figures/drac/drac-fx.js`, `figures/common/fire.js`, `figures/drac/drac-show.js`, `figures/drac/drac-soot.js`. Bou: `figures/bou/bou-correfoc.js`, `figures/bou/bou-show.js`, `figures/bou/bou-bills.js`. Shared: `scene/confetti.js` (`CONF_LOOK`), `scene/fx.js` |
+| Festa rules / drawing | Drac: `figures/drac/drac-fx-rules.js`, `figures/drac/drac-fx.js`, `figures/common/fire.js`, `figures/drac/drac-show.js`, `figures/drac/drac-soot.js`. Bou: `figures/bou/bou-correfoc.js`, `figures/bou/bou-show.js`. Shared: `scene/confetti.js`, `scene/fx.js` |
 
 Reuse the existing colla system and suits for a new figure; add a suit and a colla module, do not fork the Drac's.
 
@@ -36,7 +36,7 @@ Reuse the existing colla system and suits for a new figure; add a suit and a col
 
 ## The festa
 
-- **Each figure has its own festa**, drawn from its real festa: the Drac's fire from its real fire points, carretilles and smoke; the Bou's correfoc tubes, disco floor and banknotes ("bou que tot ho mou… busca'm un bon sou"). Do not reuse the Mulassa's confetti and balloons by default.
+- **Each figure has its own festa**, drawn from its real festa: the Drac's fire from its real fire points, carretilles and smoke; the Bou's correfoc tubes and disco floor (its banknotes went on 2026-11-16). Do not reuse the Mulassa's confetti and balloons by default.
 - **One effect at a time.** When the disco floor lights, nothing else plays; sparks, smoke and confetti each get their own moment.
 - **Tie effects to the music and the chart:** a streak, a drumroll, the final phrase. Effects that run all the time stop meaning anything; the owner asks to restrict sparks to fixed moments, not during the lift or set-down.
 - **Fade in and out.** A figure that disappears does so with a smoke puff and an opacity fade, not by shrinking; nothing pops in or out.

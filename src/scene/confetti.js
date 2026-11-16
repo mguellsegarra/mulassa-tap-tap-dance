@@ -28,30 +28,6 @@ confetti.frustumCulled = false;
 confetti.receiveShadow = true; // in her shadow it darkens with the floor instead of glowing (no shadows: low/minimal draw none)
 confetti.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 scene.add(confetti);
-// The Bou throws banknotes instead: 14 x 7 cm, folded down
-// the middle; until its «BANC DEL BOU» note loads (figures/bou/bou-bills.js swaps the map) the 💵 emoji's, drawn in pixels (no
-// canvas: it works headless too). The same pieces, the same throws and flight: a second mesh on the confetti's own
-// matrices, shown instead of it while CONF_LOOK.bills (figures/bou/bou-show.js). The end's carpet (bou-bills.js) shares its
-// geometry and material, so its program is the one already compiled.
-export const CONF_LOOK = { bills: false };
-function confBillTexture() {
-  const W = 48, H = 24, d = new Uint8Array(W * H * 4), ink = [47, 122, 52], paper = [124, 197, 118], line = [108, 182, 104], seal = [185, 227, 168];
-  const put = (x, y, c) => { const i = (y * W + x) * 4; d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255; };
-  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-    const edge = x < 1 || y < 1 || x >= W - 1 || y >= H - 1, frame = (x === 3 || x === W - 4) && y >= 3 && y <= H - 4 || (y === 3 || y === H - 4) && x >= 3 && x <= W - 4;
-    put(x, y, edge || frame ? ink : (x + y) % 5 === 0 ? line : paper); // the dark edge, a fine frame, a guilloche
-    for (const [cx, cy, r] of [[24, 12, 7], [9, 8, 3], [39, 16, 3]]) { const q = Math.hypot(x + 0.5 - cx, y + 0.5 - cy); if (q < r) put(x, y, q > r - 1.5 ? ink : seal); }
-  }
-  for (const [x0, y0, w, h] of [[22, 10, 5, 5], [19, 9, 3, 1], [27, 9, 3, 1], [19, 7, 1, 2], [29, 7, 1, 2]]) for (let y = y0; y < y0 + h; y++) for (let x = x0; x < x0 + w; x++) put(x, y, ink); // a little bou: head and horns
-  const t = new THREE.DataTexture(d, W, H); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = THREE.NearestFilter; t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
-  return t;
-}
-export const confBillGeo = new THREE.PlaneGeometry(0.14, 0.07, 2, 1); confBillGeo.attributes.position.setZ(1, 0.005).setZ(4, 0.005); confBillGeo.computeVertexNormals();
-export const confBills = new THREE.InstancedMesh(confBillGeo, new THREE.MeshLambertMaterial({ map: confBillTexture(), side: THREE.DoubleSide }), CONF);
-confBills.instanceMatrix = confetti.instanceMatrix; // (one attribute, written once a frame)
-['#ffffff', '#e8f4e2', '#d6ead0'].forEach((c, k) => conf.forEach((_, i) => i % 3 === k && confBills.setColorAt(i, new THREE.Color(c)))); // three greens
-confBills.count = 0; confBills.visible = false; confBills.frustumCulled = false; confBills.receiveShadow = true;
-scene.add(confBills);
 export const dummy = new THREE.Object3D();
 const flat = new THREE.Euler(-Math.PI / 2, 0, 0, 'YXZ');
 // The Drac throws no confetti: drac-show.js uses the reason to light rodes de foc only at selected combo milestones (true = taken)
@@ -63,7 +39,7 @@ export function burst(x, z, reason = 'burst') {
   if (confettiDivert(4, reason)) return;
   confettiSettled = false;
   ox = x; oz = z; // a share of the pool, so a second throw finds pieces of its own; what's short follows as the oldest shrink away
-  owed = spawnConfetti(Math.round(renderProfile.confetti * (CALM.matches ? 0.35 : 0.7)), throwUp, true);
+  owed = spawnConfetti(Math.round(renderProfile.confetti * (CALM.matches ? 0.35 : 0.7)), throwUp, true, true);
 }
 let ox = 0, oz = 0, owed = 0; // the last burst's spot and the pieces it is still owed
 function throwUp(c) { // up from above her back in a wide fountain, its top (~5 m) well under the note lane
@@ -76,8 +52,10 @@ let cursor = 0; // the ring's next slot: pieces are thrown in ring order, so the
 // Throws up to n pieces, parked ones only. Short of pieces, the oldest ones lying on the floor shrink away quickly, ready
 // for the next throw (air: a burst also takes the oldest still in the air; null: they already are): the pool never grows,
 // and nothing on screen jumps or vanishes in one frame. Returns how many it couldn't throw yet.
-export function spawnConfetti(n, place, air = false) {
-  if (confettiDivert(1.5)) return 0; // the Drac also suppresses the finale's confetti puffs
+// passed: a throw the diverts already let through (burst and what it still owes): asked again without its reason, the
+// Bou's took it and its end threw nothing
+export function spawnConfetti(n, place, air = false, passed = false) {
+  if (!passed && confettiDivert(1.5)) return 0; // the Drac also suppresses the finale's confetti puffs
   const N = Math.min(renderProfile.confetti, CONF), calm = CALM.matches; // (the pool keeps its boot size: a later step up the quality ladder only asks for more)
   let left = Math.min(n, N);
   const from = cursor % N;
@@ -163,14 +141,14 @@ export function animConfetti(dt) {
     }
     const x = c.out < 0 ? 0 : c.out / c.dur, s = Math.min(1, c.age / GROW) * (c.gust ? 1 - x * x : 1 - smooth01(x));
     dummy.position.copy(c.p);
-    if (CONF_LOOK.bills) dummy.scale.set(s, s, 1); else dummy.scale.set(c.sx * s, c.sy * s, 1); // (a note keeps its own shape)
+    dummy.scale.set(c.sx * s, c.sy * s, 1);
     dummy.updateMatrix();
     confetti.setMatrixAt(i, dummy.matrix);
   }
-  if (freed && owed) owed = spawnConfetti(owed, throwUp, null); // (drawn from the next frame)
+  if (freed && owed) owed = spawnConfetti(owed, throwUp, null, true); // (drawn from the next frame)
   dummy.scale.setScalar(1); dummy.quaternion.identity(); // (fx.js shares the dummy)
   if (dirty) confetti.instanceMatrix.needsUpdate = true;
-  confBills.count = confetti.count = top + 1;
-  confetti.visible = top >= 0 && !CONF_LOOK.bills; confBills.visible = top >= 0 && CONF_LOOK.bills;
+  confetti.count = top + 1;
+  confetti.visible = top >= 0;
   confettiSettled = top < 0 && !freed;
 }

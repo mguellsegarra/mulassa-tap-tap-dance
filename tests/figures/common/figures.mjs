@@ -419,7 +419,7 @@ assert.equal(api.figure, soon[0], 'the arrows go on into the pending figures');
 assert(!$('select-pending').hidden && $('select-info').hidden, 'a pending figure shows its own panel');
 assert.equal($('aviat-title').textContent, soon[0].fullName || soon[0].name);
 assert.equal(soon[0].id, UNRELEASED_IDS.has('bou-tradicional-valls') ? 'bou-tradicional-valls' : 'os-trabucaires-valls', 'the agreed order: (the Bou, until its release) Ós, Cavallets, Basilisc, Àliga, Gegants'); assert.match($('aviat-entity').innerHTML, /viewBox="0 0 525 829".*Unió Anelles de la Flama/, 'a pending figure shows its entity\'s mark, as its card does'); assert.doesNotMatch($('aviat-entity').innerHTML, /class="escut"/);
-assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?'); assert.match($('aviat-status').textContent, /Pròximament|Encara no té data/);
+assert.equal($('aviat-love-title').textContent, 'Vols que surti a la plaça?'); assert.match($('aviat-status').textContent, /Pròximament|Encara no té data|Ho tenim tot/);
 { // The count leads before the vote too, and the button only says what a tap does: give, or already given (a quiet state).
   assert.equal($('aviat-love-sub').textContent, 'Dona un cor');
   heartN.set(soon[0].id, 16); api.paintHearts();

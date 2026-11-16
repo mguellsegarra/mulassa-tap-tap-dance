@@ -4,12 +4,9 @@
 //   as if by a spot (no light on the floor); nothing else happens meanwhile (no carretilles, no confetti);
 // - its CARRETILLES (UAF videos 2021/2024: a comb of tubes along both edges of its back, jets out of both flanks, one
 //   straight up) burn in short bursts wherever another figure throws confetti (a combo praise, a GLOBUS pop, the
-//   finale's beats; no banknotes during the dance, a streak lights nothing for now): all of its back's at once; while
+//   finale's beats; a streak lights nothing for now): all of its back's at once; while
 //   its colla carries it, the ones on its horn tips and in its mouth instead; each tube grows in before it fires and
-//   shrinks away once burnt;
-// - its BANKNOTES («BANC DEL BOU · UN BON SOU · REMOV LA TERRA», public/textures/bitllet-bou.png) only at the end: a
-//   downpour when the song ends that carpets the floor round it, stirred by the wind, one note landing face up where
-//   the camera comes down to it (figures/bou/bou-bills.js lays them, bou-end-shot.js films it).
+//   shrinks away once burnt.
 import { BOU_TIMING, BOU_CARRY } from './bou-dance.js';
 
 export const BOU_FX = {
@@ -23,8 +20,6 @@ export const BOU_FX = {
   // second), never two within `gap` s (WCAG 2.3.1: no more than 3 flashes a second); none with reduced motion (bou-show.js)
   strobe: { on: 0.06, gap: 0.34, gain: 0.55, glow: 1.1, spot: '#ffc98a' }, // glow, spot: the follow spot's warm light on the Bou, from above (bou-rave.js draws the beam)
   co2: BOU_TIMING.bars.find(b => b.sourceBar === 84).time, // song s the final's CO2 cannons fire (bou-rave.js)
-  rainNight: 0.88, // how dark the plaça stays while the banknotes rain (song.finale on): the disco off, the floor plain, a warm spot on
-  // the Bou and the rain (bou-rave.js bouFollowSpot); darker, the notes (lit by the scene) went black
   disco: ['#ff3b30', '#ffcc00', '#34c759', '#0a84ff', '#ff2bd6'], // The owner\'s «Disco 70 multicolor»
   glass: '#262838', // every disco tile's base: the Mulassa clip's cool dark grey (tools/videoclip/stage.js), not black
   pulse: 3, low: 0.35, // a lit tile's flash fades by e^(-pulse * beat fraction) down to `low`
@@ -73,54 +68,3 @@ export function bouTileRing(beat, d) {
 }
 export const bouTileColour = (i, j, n, beat) => ((i * n + j) * 7 + i * 3 + Math.floor(beat)) % BOU_FX.disco.length;
 
-// The end's banknotes: they rain from the sky through the final bombo (song.finale to the end) and
-// carpet the plaça. hero: m from the Bou towards the camera where the filmed note lands (up to `far` m so the Bou's last
-// steps stay `clear` m off); spread: m round the hero the rain covers (in front of the Bou: where the play camera sees it); `near` of them land in a mound of `heap` m round the
-// hero, the later on top and nearer its middle; they start `high` m up and come down at `drop` m/s on average, `early` of
-// them already on their way down when the bombo starts (the sky is full at once). Lying
-// notes sit at least on `layers` (the mound) or `wideLayers` (the rest) heights `step` apart, and a step over any note
-// already lying within `reach` m (bouStackOn: two notes in one plane flickered), so their wind ripple (`ripple` m on the
-// note, x `scale`, bou-bills.js) stays under the step. Once the hero comes down the rest keep `reach` m off it, and when the
-// song ends any note still `late` s from landing moves `shot` m off it (one falling past the lens in the close-up flashed). `scale`: the notes
-// are drawn twice life size, a 28 cm note (at the play camera's 11 m a real one is a 10 px speck: no rain of money).
-export const BOU_BILLS = { hero: 3, clear: 2.3, far: 5.5, spread: 6.5, near: 0.3, heap: 1.3, high: [4, 10], drop: [1.05, 1.6], early: 0.18, step: 0.005, layers: 14, wideLayers: 5, ripple: 0.0005, reach: 0.32, late: 3, shot: 2, scale: 2, heroHigh: 4.2, wind: 0.18, tumble: 0.3 };
-const hash = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); }; // 0..1, the same every time
-// where the hero note lands: `hero` m from the Bou (bx, bz) towards the camera (cx, cz)
-export function bouHeroSpot(bx, bz, cx, cz, out) {
-  const dx = cx - bx, dz = cz - bz, d = Math.hypot(dx, dz) || 1;
-  out.x = bx + dx / d * BOU_BILLS.hero; out.z = bz + dz / d * BOU_BILLS.hero;
-  return out;
-}
-// note i of n (n - 1: the hero, last and on top) for a rain of `dur` s: where it lands, when it starts falling (s after
-// the rain starts), from how high, how fast, its heading, and whether it tumbles (rocks wide, bou-bills.js) instead of fluttering
-export function bouBillPlan(i, n, hx, hz, bx, bz, dur, out) {
-  const B = BOU_BILLS, a = 2 * Math.PI * hash(i, 1), h2 = hash(i, 2);
-  out.yaw = 2 * Math.PI * hash(i, 6); out.tumble = hash(i, 7) < B.tumble; out.ph = 2 * Math.PI * hash(i, 8);
-  if (i === n - 1) { // the hero: last, from lower, a calm flutter, onto the top of the mound
-    Object.assign(out, { x: hx, z: hz, delay: Math.max(0, dur - 0.4), high: B.heroHigh, drop: 1.25, tumble: false, y: 0.006 + B.step * (B.layers + 1) });
-    return out;
-  }
-  if (i < n * B.near) { // the mound: its layer by landing order, the higher ones nearer the middle
-    const L = i % B.layers, f = (L + hash(i, 3)) / B.layers, r = B.heap * Math.sqrt(h2) * (1 - 0.55 * L / B.layers);
-    Object.assign(out, { x: hx + Math.cos(a) * r, z: hz + Math.sin(a) * r, delay: dur * 0.85 * f, high: 6, drop: 1.6 + 0.1 * hash(i, 5), y: 0.006 + B.step * L }); // (lower and quicker: it lies under the hero by the time the camera is down)
-    return out;
-  }
-  const r = B.spread * Math.sqrt(h2), early = hash(i, 9) < B.early, high = B.high[0] + hash(i, 4) * (B.high[1] - B.high[0]); // the rest round the hero, heavier as the bombo goes on
-  Object.assign(out, { x: hx + Math.cos(a) * r, z: hz + Math.sin(a) * r, delay: early ? 0 : dur * Math.pow(hash(i, 3), 0.7), high: early ? 0.8 + hash(i, 10) * (high - 0.8) : high,
-    drop: B.drop[0] + hash(i, 5) * (B.drop[1] - B.drop[0]), y: 0.006 + B.step * (i % B.wideLayers + 0.5) }); // (half a step off the mound's: one landing on it never shares its plane)
-  return out;
-}
-// the height note n lies at, landing at (n.ax, n.az): its plan (n.base), or a step over the highest note in `notes` within
-// `reach` m (centres closer than a note's diagonal may overlap) already lying (land >= 0) or landing just before it (claim:
-// in its last stretch and lower; two landing together shared a plane)
-export function bouStackOn(n, notes) {
-  let y = n.base;
-  for (const o of notes) if (o !== n && (o.land >= 0 || o.claim && o.cy < n.cy) && o.y + BOU_BILLS.step > y && Math.hypot(o.ax - n.ax, o.az - n.az) < BOU_BILLS.reach) y = o.y + BOU_BILLS.step;
-  return y;
-}
-// A falling paper (Cornell's flutter: it swings like a pendulum, fastest through the middle of the swing, nearly hanging
-// at its ends, tilted into its motion; or it tumbles, rocking wide, drifting sideways): its descent speed (m/s) at phase p
-export const bouFlutterDrop = (drop, p) => drop * (1 + 0.8 * Math.cos(2 * p));
-// the wind at time t: strength 0..1 (gusts) and its heading (rad), turning slowly
-export const bouWind = t => 0.55 + 0.45 * Math.sin(t * 0.7) * Math.sin(t * 0.23 + 1);
-export const bouWindDir = t => 0.6 + 0.4 * Math.sin(t * 0.05);

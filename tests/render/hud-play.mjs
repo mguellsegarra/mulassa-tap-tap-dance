@@ -338,6 +338,16 @@ for (const [perfect, miss, doubled] of [[50, 50, false], [100, 0, true]]) {
   assert(run('G.eeeh'), `the post-song chant and volley play at ${q.toFixed(0)}%`);
 }
 console.log('finale festa for everyone, x2 from 70% ok');
+// The Bou's chant is one BOOOUUUUU!, a letter every 0.12 s: the finale hands its step to the praise and the HUD
+// draws it one letter at a time (the step once got lost on the way and the whole word showed at once).
+run(`var keepTimeout = setTimeout; setTimeout = f => f(); figTheme = figThemes.bou; startGame(1); clock = 1300;
+  for (const n of G.chart) n.hit = 'perfect'; G.next = G.chart.length; G.hold = null; bigPending = null; songNow = song.end + 0.1; frame(1300);`);
+assert.equal(run('G.praise?.word === "BOOOUUUUU!" && G.praise.step'), 0.12, 'the Bou\'s chant comes letter by letter');
+drawnText.length = 0;
+run('clock = G.praise.t0 + 0.5; drawPraise();');
+assert.deepEqual(drawnText, ['B', 'O', 'O', 'O', 'U'], 'half a second in, five letters, each drawn on its own');
+run('setTimeout = keepTimeout; figTheme = figThemes.mulassa;');
+console.log('the Bou\'s letter-by-letter chant ok');
 
 // Dance integration (figures/mulassa/mula-dance.js + accents): the song's choreography owns the heading, hits only accent it and
 // settle back, taps never pile up, holds release smoothly, misses recover, the practice holds its opening stance and a

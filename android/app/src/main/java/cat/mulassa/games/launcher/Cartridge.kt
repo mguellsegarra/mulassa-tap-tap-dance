@@ -117,28 +117,31 @@ private fun DrawScope.body(c: Color, u: Float) {
     }
 }
 
-// The Mulassa Games lockup (round 8's kit.js logo at 128 dp): MULASSA in Jersey 10 stretched to its width, red on a cream
-// stroke over a dark red copy, GAMES in Baloo under it. Glyph outlines, so the strokes are real strokes.
+// The Mulassa Games lockup at 128 dp, as jocs/index.html's: MULASSA in Baloo stretched to its width, red on a cream
+// stroke over a darker cream copy, a thin dark line round both, GAMES in Baloo under it. Glyph outlines, so the strokes
+// are real strokes.
 @Composable
 fun Logo(modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
-    val faces = remember { ResourcesCompat.getFont(ctx, R.font.jersey) to ResourcesCompat.getFont(ctx, R.font.baloo_extrabold) }
+    val baloo = remember { ResourcesCompat.getFont(ctx, R.font.baloo_extrabold) }
     Canvas(modifier.size(128.dp, 44.7.dp).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
         .semantics { contentDescription = "Mulassa Games" }) {
         val s = 128.dp.toPx() / 320.6f
-        val mulassa = glyphs("MULASSA", faces.first, 100 * s, 0f, 300 * s, 160.3f * s)
-        val games = glyphs("GAMES", faces.second, 34 * s, 7 * s, null, 160.3f * s)
+        val mulassa = glyphs("MULASSA", baloo, 77 * s, -5.5f * s, 300 * s, 160.3f * s)
+        val games = glyphs("GAMES", baloo, 34 * s, 7 * s, null, 160.3f * s)
         fun line(p: Path, y: Float, edge: Color, width: Float, fill: Color) = translate(top = y) {
             drawPath(p, edge, style = Stroke(width, join = StrokeJoin.Round)); drawPath(p, fill)
         }
         // the lockup's drop shadow
         translate(top = 3 * density) {
-            translate(top = 74.6f * s) { softShadow(mulassa, Color.Black.copy(alpha = 0.45f), 3 * density, 0f) }
-            translate(top = 106 * s) { softShadow(games, Color.Black.copy(alpha = 0.45f), 3 * density, 0f) }
+            translate(top = 72f * s) { softShadow(mulassa, Color.Black.copy(alpha = 0.45f), 3 * density, 0f) }
+            translate(top = 108 * s) { softShadow(games, Color.Black.copy(alpha = 0.45f), 3 * density, 0f) }
         }
-        line(mulassa, 74.6f * s, hex("#5e1514"), 12 * s, hex("#5e1514"))
-        line(mulassa, 68.6f * s, Palette.cream, 12 * s, hex("#c0283c"))
-        line(games, 106 * s, hex("#3a1608"), 7 * s, Palette.yellow)
+        val ink = hex("#2a1a10"); val ext = hex("#d8bf8f")
+        line(mulassa, 72f * s, ink, 15 * s, ink); line(mulassa, 68f * s, ink, 15 * s, ink)
+        line(mulassa, 72f * s, ext, 11 * s, ext)
+        line(mulassa, 68f * s, Palette.cream, 11 * s, hex("#e8382f"))
+        line(games, 108 * s, hex("#3a1608"), 7 * s, Palette.yellow)
     }
 }
 

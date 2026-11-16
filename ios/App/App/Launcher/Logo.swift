@@ -1,20 +1,26 @@
 import SwiftUI
 import CoreText
 
-// The Mulassa Games lockup (round 8's kit.js logo at 128 pt): MULASSA in Jersey 10 stretched to its width, red on a cream
-// stroke over a dark red copy, GAMES in Baloo under it. Glyph outlines, so the strokes are real strokes.
+// The Mulassa Games lockup at 128 pt, as jocs/index.html's: MULASSA in Baloo stretched to its width, red on a cream
+// stroke over a darker cream copy, a thin dark line round both, GAMES in Baloo under it. Glyph outlines, so the strokes
+// are real strokes.
 struct Logo: View {
     var body: some View {
         let s = 128 / 320.6 // the mock's viewBox (-6 -8 320.6 112) at 128 pt
-        let mulassa = GlyphLine(text: "MULASSA", font: "Jersey10-Regular", size: 100 * s, kern: 0, width: 300 * s, centreX: 160.3 * s)
+        let mulassa = GlyphLine(text: "MULASSA", font: "Baloo2-ExtraBold", size: 77 * s, kern: -5.5 * s, width: 300 * s, centreX: 160.3 * s)
         let games = GlyphLine(text: "GAMES", font: "Baloo2-ExtraBold", size: 34 * s, kern: 7 * s, width: nil, centreX: 160.3 * s)
         ZStack(alignment: .topLeading) {
-            mulassa.baseline(74.6 * s).stroke(Color(UIColor(hex: "#5e1514")), style: StrokeStyle(lineWidth: 12 * s, lineJoin: .round))
-            mulassa.baseline(74.6 * s).fill(Color(UIColor(hex: "#5e1514")))
-            mulassa.baseline(68.6 * s).stroke(Palette.cream, style: StrokeStyle(lineWidth: 12 * s, lineJoin: .round))
-            mulassa.baseline(68.6 * s).fill(Color(UIColor(hex: "#c0283c")))
-            games.baseline(106 * s).stroke(Color(UIColor(hex: "#3a1608")), style: StrokeStyle(lineWidth: 7 * s, lineJoin: .round))
-            games.baseline(106 * s).fill(Color(Palette.yellow))
+            let line = Color(UIColor(hex: "#2a1a10")), ext = Color(UIColor(hex: "#d8bf8f"))
+            ForEach([72.0, 68.0], id: \.self) { y in
+                mulassa.baseline(y * s).stroke(line, style: StrokeStyle(lineWidth: 15 * s, lineJoin: .round))
+                mulassa.baseline(y * s).fill(line)
+            }
+            mulassa.baseline(72 * s).stroke(ext, style: StrokeStyle(lineWidth: 11 * s, lineJoin: .round))
+            mulassa.baseline(72 * s).fill(ext)
+            mulassa.baseline(68 * s).stroke(Palette.cream, style: StrokeStyle(lineWidth: 11 * s, lineJoin: .round))
+            mulassa.baseline(68 * s).fill(Color(UIColor(hex: "#e8382f")))
+            games.baseline(108 * s).stroke(Color(UIColor(hex: "#3a1608")), style: StrokeStyle(lineWidth: 7 * s, lineJoin: .round))
+            games.baseline(108 * s).fill(Color(Palette.yellow))
         }
         .shadow(color: .black.opacity(0.45), radius: 3, y: 3)
         .drawingGroup()

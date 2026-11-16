@@ -29,6 +29,9 @@ export function onAppInactive(fn) {
   addEventListener('nativeblur', fn);
 }
 export const leaveApp = () => capPlugins?.App?.minimizeApp().catch(() => {}); // the games menu's back: Android's home, the app kept
+// The app's native launcher (ios/App/App/Launcher): a game's way out closes it there. The website, and an app without
+// the launcher, go to the page given, as before.
+export const exitGame = path => (capPlugins?.Mulassa ? capPlugins.Mulassa.exitToLauncher() : location.replace(path));
 // The app's live updates are checked by the games' pages (packages/plassa/src/native.js), where it starts; this page only
 // tells the updater it loaded, or a new bundle opened here would be rolled back.
 capPlugins?.CapacitorUpdater?.notifyAppReady().catch(() => {});

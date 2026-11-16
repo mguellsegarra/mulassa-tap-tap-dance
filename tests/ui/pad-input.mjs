@@ -29,7 +29,7 @@ const context = vm.createContext({
   // Android's back button in the app (platform/native.js): the handler is kept to be pressed below
   onNativeBack(f) { context.nativeBack = f; }, performance: { now: () => 0 }, // (Escape asks the mouse look first)
   togglePause() { context.pauses = (context.pauses || 0) + 1; }, clock: 10,
-  toTitle() { context.titles = (context.titles || 0) + 1; }, location: { replace(url) { context.left = url; } },
+  toTitle() { context.titles = (context.titles || 0) + 1; }, exitGame(url) { context.left = url; },
   KeyboardEvent: class { constructor(type, o) { Object.assign(this, o, { type }); this.defaultPrevented = false; } preventDefault() { this.defaultPrevented = true; } },
   addEventListener(type, handler) {
     if (!listeners.has(type)) listeners.set(type, []);

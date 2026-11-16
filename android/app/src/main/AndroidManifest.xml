@@ -10,12 +10,12 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <!-- The app's entry: the native launcher (launcher/LauncherActivity.kt); each game opens in MainActivity on top of it. -->
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
-            android:name=".MainActivity"
+            android:name=".launcher.LauncherActivity"
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
-            android:launchMode="singleTask"
             android:exported="true">
 
             <intent-filter>
@@ -24,6 +24,13 @@
             </intent-filter>
 
         </activity>
+
+        <activity
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
+            android:name=".MainActivity"
+            android:label="@string/title_activity_main"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:exported="false" />
 
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -19,7 +19,7 @@ import { hud, W, K } from '../hud/canvas.js';
 import { orbit, look, pnow } from '../scene/cameras.js';
 import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';
 import { bouTap } from '../figures/bou/bou-bills.js';
-import { onNativeBack } from '../platform/native.js';
+import { onNativeBack, exitGame } from '../platform/native.js';
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
@@ -57,7 +57,7 @@ onNativeBack(() => {
   const esc = new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true, cancelable: true });
   if (G.state !== 'splash') (document.activeElement ?? document.body).dispatchEvent(esc); // the splash: a key would start the audio
   if (esc.defaultPrevented || G.state === 'play') return;
-  if (G.state === 'results') toTitle(); else location.replace('/jocs/index.html');
+  if (G.state === 'results') toTitle(); else exitGame('/jocs/index.html');
 });
 function padDown(b, e) {
   e.preventDefault();

@@ -7,7 +7,7 @@ import { createResults } from './results.js';
 import { createFlow } from './flow.js';
 import { setupRankingUI } from './ranking-ui.js';
 import { setupOrientation } from '#plassa/orientation.js';
-import { onNativeBack, onAppInactive } from '#plassa/native.js';
+import { onNativeBack, onAppInactive, exitGame, CAP_APP } from '#plassa/native.js';
 import { t, applyWords } from './i18n.js';
 import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX } from './audio.js';
 import { setupLevelStep } from './level-step.js';
@@ -52,8 +52,9 @@ watchUpdates(() => (flow.mode === 'menu' || flow.mode === 'over') && !document.q
 
 applyWords();
 // From Mulassa Games (/jocs/, location.replace keeps the referrer) the corner's bubble says «Torna als jocs»; a shared
-// link, a typed address or a reload (which keeps the first referrer, the selector no longer behind) gets an invitation (style.css)
-if (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntriesByType('navigation')[0]?.type === 'reload') {
+// link, a typed address or a reload (which keeps the first referrer, the selector no longer behind) gets an invitation (style.css).
+// The app always has its launcher behind (and iOS's capacitor:// sends no referrer).
+if (!CAP_APP && (!document.referrer.startsWith(`${location.origin}/`) || performance.getEntriesByType('navigation')[0]?.type === 'reload')) {
   $('back').classList.add('more');
   $('back').querySelector('.exit-tip').textContent = t('more');
 }
@@ -73,7 +74,7 @@ document.fonts.ready.then(fitExitTip);
 $('back').addEventListener('click', e => {
   if (e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
   e.preventDefault();
-  location.replace($('back').href);
+  exitGame($('back').href);
 });
 $('game').addEventListener('pointerdown', e => flow.tap(e.clientX, e.clientY));
 const levelStep = setupLevelStep({ t, onPlay: flow.start }); // «Juga» asks for the level first; «Torna-hi» keeps it
@@ -119,7 +120,7 @@ addEventListener('keydown', e => { if (e.key === 'Escape') back(); });
 // Android's back button in the app (plassa/native.js): as Escape, and on from the end sheet to the home, from the home to the games menu
 onNativeBack(() => {
   if (flow.mode === 'over') flow.showMenu();
-  else if (flow.mode === 'menu' && !document.querySelector('.cover:not([hidden]):not(#boot)')) location.replace('/jocs/index.html');
+  else if (flow.mode === 'menu' && !document.querySelector('.cover:not([hidden]):not(#boot)')) exitGame('/jocs/index.html');
   else back();
 });
 closeOnBackdrop(back);

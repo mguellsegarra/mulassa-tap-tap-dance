@@ -15,6 +15,7 @@
   "plugins": {
     "CapacitorUpdater": {
       "autoUpdate": false,
+      "keepUrlPathAfterReload": true,
       "appReadyTimeout": 10000,
       "statsUrl": "",
       "updateUrl": "",

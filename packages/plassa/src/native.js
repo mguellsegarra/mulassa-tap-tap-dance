@@ -33,6 +33,9 @@ export function onAppInactive(fn) {
   addEventListener('nativeblur', fn);
 }
 export const leaveApp = () => capPlugins?.App?.minimizeApp().catch(() => {}); // the games menu's back: Android's home, the app kept
+// The app's native launcher (ios/App/App/Launcher): a game's way out closes it there. The website, and an app without
+// the launcher, go to the page given, as before.
+export const exitGame = path => (capPlugins?.Mulassa ? capPlugins.Mulassa.exitToLauncher() : location.replace(path));
 // Live updates (Capgo updater, manual mode): the app runs the web it carries; update-watch.js downloads the site's newer
 // build and switches to it, both only when the page is quiet. Never queued with next(): the plugin applies a queued bundle
 // whenever the app goes to the background, mid-run too. A bundle that never says it is ready is rolled back (appReadyTimeout).

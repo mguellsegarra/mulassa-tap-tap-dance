@@ -50,8 +50,8 @@ assert(existsSync('src/jocs/menu/music.mp3') && loop.start === 0 && loop.end > 3
 // the main game: no sheet left, an old /#jocs link sent on, the gamepad and a game's way back to the page
 assert(!main.includes('games-menu') && !main.includes('games-sheet.css'), 'no games sheet in the main game');
 assert(main.includes("if (location.hash === '#jocs') location.replace('/jocs/')"), 'an old /#jocs link goes to the page');
-assert(readFileSync('src/ui/controls.js', 'utf8').includes("location.replace('/jocs/')"), 'the gamepad goes to the page');
+assert(readFileSync('src/ui/controls.js', 'utf8').includes("exitGame('/jocs/')"), 'the gamepad goes to the page (or, in the app, its launcher)');
 assert(readFileSync('pop/index.html', 'utf8').includes('<a id="back" class="exit corner-l" href="/jocs/">'), 'Pop\'s way back is the page, a real link');
-assert(/\$\('back'\)\.addEventListener\('click'[\s\S]*?location\.replace\(\$\('back'\)\.href\)/.test(readFileSync('src/jocs/games/pop/main.js', 'utf8')), '…replacing Pop\'s page as the selector does, so the history does not grow');
+assert(/\$\('back'\)\.addEventListener\('click'[\s\S]*?exitGame\(\$\('back'\)\.href\)/.test(readFileSync('src/jocs/games/pop/main.js', 'utf8')), '…replacing Pop\'s page as the selector does, so the history does not grow');
 assert(!existsSync('public/jocs/index.html'), 'no redirect stub over the built page');
 console.log(`Mulassa Games: ${ids.length} cards with their pictures and pages, on Plassa, the main game leads there ok`);

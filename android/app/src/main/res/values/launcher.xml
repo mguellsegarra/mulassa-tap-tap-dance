@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- the launcher's background (Palette.bg in launcher/Catalogue.kt) -->
+    <color name="launcherBackground">#1C110A</color>
+</resources>

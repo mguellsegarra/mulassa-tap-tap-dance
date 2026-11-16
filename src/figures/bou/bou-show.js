@@ -1,18 +1,16 @@
 // The Bou's festa drawn (figures/bou/bou-correfoc.js says when): in its run the TECHNO part turns the plaça to night and lights its
 // tiles softly yellow (the final keeps its multicolour disco), with nothing else going on; wherever the others throw confetti it lights its carretilles
-// instead, the Drac's jets (common/fire.js) out of small tubes on its back (on its head while it is carried) that grow in and shrink away; and at the end
-// its banknotes carpet the plaça (bou-bills.js). main.js calls bouFrame once a frame, after dracFrame. Pools are made
-// once, nothing per frame.
+// instead, the Drac's jets (common/fire.js) out of small tubes on its back (on its head while it is carried) that grow in and shrink away.
+// main.js calls bouFrame once a frame, after dracFrame. Pools are made once, nothing per frame.
 import * as THREE from 'three';
-import { scene, renderProfile, glc, camera, camFocus } from '../../scene/stage.js';
+import { scene, renderProfile, glc } from '../../scene/stage.js';
 import { bou, bouGlow, bouSpot } from './bou-objects.js';
 import { PAVING } from '../../scene/models.js';
 import { plazaNight, nightLook } from '../common/night.js';
-import { setFinaleDim, setFinaleCalm } from '../../scene/fx.js';
+import { setFinaleDim } from '../../scene/fx.js';
 import { bouRave, bouFollowSpot } from './bou-rave.js';
 import { createFire } from '../common/fire.js';
-import { setConfettiDivert, CONF_LOOK } from '../../scene/confetti.js';
-import { bouBillsStart, bouBillsEnd, bouBillsClear, bouBillsFrame, bouBillsWarm, loadBouBill, BOU_FINALE } from './bou-bills.js';
+import { setConfettiDivert } from '../../scene/confetti.js';
 import { M } from '../../scene/figure-springs.js';
 import { G } from '../../game/state.js';
 import { selectedFigure, song } from '../../game/figure-song.js';
@@ -24,11 +22,11 @@ import { CALM } from '../../core/env.js';
 
 export const BOU_SHOW = { night: 0, hush: false, jets: 0, t: 0, song: 0, burstAt: Infinity }; // burstAt: the song s of the last confetti moment; t: the sparks' own clock; song: the song s drawn
 // Its confetti: none in its run: a burst of carretilles instead (but in the first disco, which has the
-// plaça to itself); the banknotes rain from the final bombo (bouFrame) and the end's throw (reason 'end', the plaça's
-// «eeeh!») brings the camera down to them. Other figures, the practice and the menus throw as before.
+// plaça to itself); the end's throw (reason 'end', the plaça's «eeeh!») is confetti, as the other figures'. The practice and
+// the menus throw as before.
 setConfettiDivert((sec, reason) => {
   if (selectedFigure.id !== BOU.id || G.state !== 'play' || G.practice) return false;
-  if (reason === 'end') { bouBillsEnd(camera, camFocus); return true; }
+  if (reason === 'end') return false;
   if (!BOU_SHOW.hush && !G.collapseT) BOU_SHOW.burstAt = BOU_SHOW.song;
   return true;
 });
@@ -80,39 +78,30 @@ let bouLit = false;
 // once a frame; t: the song time drawn
 export function bouFrame(dt, t) {
   const mine = selectedFigure.id === BOU.id;
-  CONF_LOOK.bills = mine;
   const run = mine && G.state === 'play' && !G.practice && !!bou?.frame.visible;
   const techno = run && bouTechno(t);
   BOU_SHOW.hush = run && bouHush(t);
   // night and the floor
   const was = BOU_SHOW.night;
-  const rain = t >= song.finale; // the banknotes: the disco off, a warm spot on the Bou and the rain (also as the night fades after the song: with techno the disco and its lasers flashed back on)
-  BOU_SHOW.night += ((techno ? rain ? BOU_FX.rainNight : 1 : 0) - was) * (1 - Math.exp(-dt / BOU_FX.night));
+  BOU_SHOW.night += ((techno ? 1 : 0) - was) * (1 - Math.exp(-dt / BOU_FX.night));
   if (!run && BOU_SHOW.night < 0.01) BOU_SHOW.night = 0;
   const beat = BOU_SHOW.night || was ? beatAtTime(song.beats, t) : 0, b = Math.floor(beat), final = t >= BOU_FX.finalStart;
   const flash = BOU_SHOW.hush && !CALM.matches ? bouStrobe(t - timeAtBeat(song.beats, b), timeAtBeat(song.beats, b + 1) - timeAtBeat(song.beats, b)) : 0;
-  if (BOU_SHOW.night || was) { plazaNight(BOU_SHOW.night, BOU_DARK, flash); bouLight(BOU_SHOW.night, final && !rain); setFinaleDim(BOU_SHOW.night); } // (the finale's lights, scene/fx.js, kept low in its dark: the rain)
-  // the final's floor, rave and banknotes drawn once, unlit, in the page's first frames (under its cover or the splash; as each
+  if (BOU_SHOW.night || was) { plazaNight(BOU_SHOW.night, BOU_DARK, flash); bouLight(BOU_SHOW.night, final); setFinaleDim(BOU_SHOW.night); } // (the finale's lights, scene/fx.js, kept low in its dark)
+  // the final's floor and rave drawn once, unlit, in the page's first frames (under its cover or the splash; as each
   // run's first frame it was a 200 ms count-in on an iPhone 8): their first draw is the GPU's work
   const warm = !!bou && bouWarmth === 1;
-  bouFloor.visible = warm || BOU_SHOW.night > 0.01 && final && !rain; // the first techno's floor stays dark: the strobe is its light
+  bouFloor.visible = warm || BOU_SHOW.night > 0.01 && final; // the first techno's floor stays dark: the strobe is its light
   if (bouFloor.visible) bouDisco(beat, warm ? 0 : BOU_SHOW.night);
-  const raveN = final && !rain ? BOU_SHOW.night : 0;
+  const raveN = final ? BOU_SHOW.night : 0;
   const ready = bouRave(warm ? 0 : raveN, t, beat, beatAtTime(song.beats, BOU_FX.finalStart), M.pos.x, M.pos.y, BOU_DISCO[b % BOU_DISCO.length], t - BOU_FX.co2, warm);
   bouWarmth = warm ? 2 : bouWarmth || (ready ? 1 : 0);
-  bouBillsWarm(warm);
-  bouFollowSpot(final && !rain ? 0 : BOU_SHOW.night, M.pos.x, M.pos.y, rain ? 1.8 : 1); // the first techno and the rain: the follow spot
-  // the banknotes: from the final bombo, out through its results, gone with the next game (a song that starts again) or the menu
-  if (mine) loadBouBill();
-  if (!mine || G.state !== 'play' && G.state !== 'results' || G.state === 'play' && t < song.finale - 0.5) bouBillsClear();
-  else if (run && t >= song.finale && !G.collapseT) bouBillsStart(t, song.end, camera); // the bombo: it rains money
-  bouBillsFrame(dt);
-  setFinaleCalm(BOU_FINALE.k); // the crane down to the notes: the finale's lights ease to the day's (fx.js)
+  bouFollowSpot(final ? 0 : BOU_SHOW.night, M.pos.x, M.pos.y); // the first techno: the follow spot
   // the jets: a burst wherever the confetti would have flown; eased in and out like the Drac's, never in the first disco
   BOU_SHOW.song = t;
   if (!run) BOU_SHOW.burstAt = Infinity;
   const manual = PHOTO.on && PHOTO.id === BOU.id && PHOTO.keys.has('KeyQ') && !!bou?.frame.visible; // free play: Q held burns them all, its back's and the ones on its horn tips and in its mouth
-  const want = manual || run && !BOU_SHOW.hush && !G.collapseT && t < song.finale && bouJetsWant(t, BOU_SHOW.burstAt); // (none while the banknotes rain)
+  const want = manual || run && !BOU_SHOW.hush && !G.collapseT && bouJetsWant(t, BOU_SHOW.burstAt); // (the final bombo's beats too: the banknotes that held them off went, 16/11/2026)
   BOU_SHOW.jets = Math.max(0, Math.min(1, BOU_SHOW.jets + (want ? dt : -dt) / 0.3));
   if (!BOU_SHOW.jets && !bouLit) return;
   if (!bou) return;

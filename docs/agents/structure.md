@@ -66,7 +66,7 @@ autoplay), which orchestrate `hud/`, `scene/` and `ui/`.
   modules, moved together so a figure is one unit. Each, the Mulassa too, builds and owns its model and colla.
   - `<key>-objects.js`, with a line in `figures/objects.js` (`COLLAS`, `figureRoot`, `hideFigures`, which the low layers
     go round; `scene/stage.js` keeps only the plaça).
-  - `<key>-scene.js`: its stage hooks (shown, colla, motion, share photo, end shot); its motion in `<key>-play.js`.
+  - `<key>-scene.js`: its stage hooks (shown, colla, motion, share photo, «Mira el ball» film); its motion in `<key>-play.js`.
   - `<key>-crowd.js`: what it does to the crowd (rooted, posed, steered, its festa), a line in `scene/crowd-effects.js`,
     with one line in `scene/figure-scenes.js` (tests/figures/common/scenes.mjs keeps them in step).
   - `<key>-portrait.js` (the selector's vector portrait) and `<key>-clip.js` («Mira el ball»'s shots).
@@ -282,8 +282,7 @@ Nothing in it may be imported statically unless it is tiny: the published game d
     `notes-propostes.html` + `notes-propostes/` (the Mulassa's three charts against three proposals, playable, with a
     per-level note editor that exports JSON).
   - The Bou: `bou-dance.html`, `bou-review.html`, `notes.html` (the Bou's audio with the score note sounding, per voice,
-    to point at one), `bou-propostes.html` (the Bou's festa ideas on its song: disco floor, banknotes, carretilles,
-    day/night).
+    to point at one).
   - Others: `colla-preview.html`, `musics.html` (the musicians, orbiting them as they play), `reel-review.html` (the
     showreel and "Mira el ball" live at several viewports side by side, with its shot plan, refs M1…, D1…, over the
     dance parts).

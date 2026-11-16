@@ -47,7 +47,7 @@ Scene objects are built once and toggled (shown, hidden, posed), not rebuilt per
    and `docs/agents/structure.md` says so.
 2. Each figure builds and owns its scene objects (`figures/<id>/<id>-objects.js`: its model and colla), listed in
    `figures/objects.js` (`COLLAS`, `figureRoot`), which `quality.js`, `crowd-build.js` and `colla-dodge.js` go round;
-   the motion, the collas' obstacles, the share photo and the end shot go through each figure's hooks
+   the motion, the collas' obstacles, the share photo and the dance film go through each figure's hooks
    (`figures/<key>/<key>-scene.js`, listed in `scene/figure-scenes.js`), and what a figure does to the people round it
    (the Drac's soot, the Bou's conga and festa) through `figures/<key>/<key>-crowd.js`, listed in `scene/crowd-effects.js`.
    The splash's Drac beside her still reaches shared code directly: `PAIR` (`figures/drac/drac-play.js`) in
@@ -56,8 +56,8 @@ Scene objects are built once and toggled (shown, hidden, posed), not rebuilt per
    Id-keyed catalogue data stays where it is (`game/figures.js`, `figure-portraits.js`, `PHOTO_CAM.aimY`),
    and `game/judge.js` reads the drumroll trait;
    `tests/figures/common/scenes.mjs` keeps the rest of `scene/` that walks these lists off the figures' folders.
-   Shared input, frame, HUD and run completion read the active scene's optional finale hooks; only the Bou's folder
-   reads its banknote state. Framing scale, crowd reach and scoped DOM theme overrides come from `FIGURE_TRAITS`.
+   Run completion is the same for every figure (no figure holds the end; the Bou's banknote ending went on 2026-11-16).
+   Framing scale, crowd reach and scoped DOM theme overrides come from `FIGURE_TRAITS`.
 3. `hud/` reads `ui/` (`balloon`, `draw`, `results`).
 4. `tests/render/load-main.mjs` concatenates every module into one script, so top-level names must be unique across
    all of `src/`: two agents adding `const STEP` in different modules collide without sharing a file.

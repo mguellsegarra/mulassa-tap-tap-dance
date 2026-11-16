@@ -223,6 +223,13 @@ import { vm, THREE, chart, practice, energy, dance, errors, windowHandlers, docu
   }
   run('burst(0, 0); spawnConfetti(50, c => c.p.set(0, 5, 0)); animConfetti(0.01); dracFrame(1 / 60, 0);');
   assert(run('conf.map(c => c.p.y).join() === confBefore && dracFx.state().wheels === 0'), 'no confetti or continuous wheels from other effects');
+  { // the Bou throws none in its run (its carretilles burn instead), but its end's «eeeh!» is confetti, as everyone's
+    const was = run('selectedFigure.id');
+    run(`G.state = 'select'; setSelectedFigure('bou-tradicional-valls'); G.state = 'play'; for (let i = 0; i < 400; i++) animConfetti(0.05);`); // (a figure changes only out of a song)
+    run("burst(0, 0, 'combo'); animConfetti(0.01);"); assert.equal(run('confetti.count'), 0, 'no confetti from a Bou combo');
+    run("burst(0, 0, 'end'); animConfetti(0.01);"); assert(run('confetti.count') > 0, 'the Bou\'s end throws confetti');
+    run(`for (let i = 0; i < 400; i++) animConfetti(0.05); G.state = 'select'; setSelectedFigure('${was}'); G.state = 'play';`);
+  }
   // picked on the selector it wanders and shows off from where it stood, burning now and then; a game puts it back on its spot
   run(`G.state = 'select'; REEL.on = false; /* no showreel here: the figure's own selector walk */ var selectorSounds = []; chip = { sfx: k => selectorSounds.push(k) }; var soloFar = 0, soloCrema = false; for (let i = 0; i < 60 * 40; i++) { clock += 1 / 60; animStage(1 / 60, clock / BEAT);
     soloFar = Math.max(soloFar, M.pos.length()); if (SHOWCASE.crema) soloCrema = true; dracFrame(1 / 60, 0); }`);

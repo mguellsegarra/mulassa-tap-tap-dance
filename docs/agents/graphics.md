@@ -27,7 +27,7 @@
 - A new material, hidden mesh or shader variant must be reachable by `precompile`; check a first-use capture for a compile hitch.
 - Whatever is created at runtime and removed (render targets, canvas textures, geometries) has a named owner that calls `dispose()`; leak checks read `renderer.info.memory` after repeated use. Scene objects are built once and toggled (`docs/architecture.md`, Lifetime).
 - No synchronous GL reads (`readPixels`, queries) in the frame loop, except under `?perf=sync` and the one-off GLOBUS stills.
-- No drawing-buffer resize while a song plays: `setPixelRatio`/`setSize` reallocates the framebuffer (S10, 3.4 Mpx with MSAA: 58-81 ms task, 84-117 ms frame). Growing it in two steps was worse, and keeping the big buffer for the whole song cost ~114 MiB of GPU memory and more long frames; a new shot fits the canvas play already has. The Bou's banknote close-up is the one accepted exception (`docs/releases/1.4.0.md`). Outside play too, a WebGL canvas whose box changes size gets a new buffer (Pop's splash tap: `renderer.setSize` stalled a frame 75-146 ms); stretch the buffer instead (hero.js `fit`, same aspect). `tests/render/prod-play.mjs` guards it.
+- No drawing-buffer resize while a song plays: `setPixelRatio`/`setSize` reallocates the framebuffer (S10, 3.4 Mpx with MSAA: 58-81 ms task, 84-117 ms frame). Growing it in two steps was worse, and keeping the big buffer for the whole song cost ~114 MiB of GPU memory and more long frames; a new shot fits the canvas play already has. (The Bou's banknote close-up was the one exception, removed on 2026-11-16.) Outside play too, a WebGL canvas whose box changes size gets a new buffer (Pop's splash tap: `renderer.setSize` stalled a frame 75-146 ms); stretch the buffer instead (hero.js `fit`, same aspect). `tests/render/prod-play.mjs` guards it.
 - No SVG→canvas→`toBlob` rasterising at boot: the selector's town arms cost ~1 s of the S10's longest boot task until they became build-time PNGs (`npm run build:escuts`, 2.0 → 1.1 s). Rasterise at build time and load images.
 - Real-device checks play a full song, not a short burst, and report device, thermal state, refresh rate and the `?perf` summary.
 - No WebGPU, `BatchedMesh` or KTX2 without a measured need; list the `onBeforeCompile` / `ShaderMaterial` patches that would have to be rewritten first.
@@ -133,9 +133,9 @@ What holds:
 - The page cover stays up until the splash runs at the device's pace (20 frames in a row under 45 ms, at most 6 s after
   the first), and a boot step needs two slow 2 s windows in a row (`render-quality.js` EARLY).
 - A first draw is the GPU's work even with its program linked: `precompile()` links, but a clean Safari still paid
-  121-365 ms at the Bou's rave and banknotes. The whole scene is drawn once at boot under the cover (`scene/precompile.js`
-  `warmDraw`: the iPhone 8's bombo frame 87-89 ms → none over 50); the Bou also warms its rave and banknotes
-  (`bouFrame`, `bouBillsWarm`, `renderer.initTexture`). A new effect needs nothing more than being in the scene at boot.
+  121-365 ms at the Bou's rave and (then) banknotes. The whole scene is drawn once at boot under the cover (`scene/precompile.js`
+  `warmDraw`: the iPhone 8's bombo frame 87-89 ms → none over 50); the Bou also warms its rave
+  (`bouFrame`). A new effect needs nothing more than being in the scene at boot.
 - JavaScript per frame still counts on a 120 Hz iPhone: the lasers' hit test walked every triangle of the Bou per beam
   per frame; a grid per mesh, built one mesh a frame beforehand, fixed it.
 
@@ -203,7 +203,6 @@ comes back blank, with its default state (identity transform, default font), and
   three times: 40-53 fps with 30-50 late frames every 3 s before, a steady 29.9 with 0-1 after, the profile kept. Mind a
   laptop's frequency scaling when reading JS ms: a 2015 MacBook Pro holding 60 fps read 7.6 ms at `high` and 13.5 at
   `medium`, the CPU clocked down to what the frame needs; only missed frames and profile changes say it is struggling.
-- A held close-up keeps the profile's pixels on a device that stepped quality down this session (`hud/canvas.js`).
 - A lost context that never comes back shows the reload card after 5 s on screen (`src/ui/pause-actions.js`). Its text
   asks to close the browser and reopen it, since Chrome can block WebGL for the site until it restarts; its retry
   button stays, as a reload may still work elsewhere; a

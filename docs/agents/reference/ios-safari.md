@@ -57,8 +57,8 @@ traps: `docs/agents/device-profiling.md` («A rented phone»). Every number belo
 - **A first draw is the GPU's work even with its program linked.** `precompile()` links every program, yet on a phone
   that never drew them (a clean Safari; it keeps them afterwards, so a second load shows nothing) the Bou's rave was a
   121-181 ms frame where it starts and its banknotes 199-365 ms at the bombo. Fixed by really drawing them once, unseen,
-  in the page's first frames: `bouFrame`'s warm-up (`bouRave(…, warm)` at zero light, `bouBillsWarm`: one note of no
-  size) and `renderer.initTexture` when the banknote's image arrives. After (four clean sessions): no frame over 50 ms
+  in the page's first frames: `bouFrame`'s warm-up (`bouRave(…, warm)` at zero light; the banknotes it also warmed then went on
+  2026-11-16). After (four clean sessions): no frame over 50 ms
   at the rave; the bombo still varies, 63 to 266 ms (not only a first draw, then: its owner is open). A new effect that first shows mid-song needs the same: hidden-but-compiled is
   not drawn.
 - **The whole scene is drawn once at boot, under the page's cover** (`scene/precompile.js` `warmDraw`: hidden objects

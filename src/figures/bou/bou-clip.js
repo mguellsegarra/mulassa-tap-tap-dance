@@ -24,7 +24,7 @@ export const BOU_CLIP_SHOTS = {
 // [song beat, shot, fit?] (what each answers, in Catalan for the owner: tools/dev/bou-clip.html). fit: { tall, wide }, the shot's
 // size (and, where the plaça stops the lens, its widest, up to 75°) times this on a portrait / landscape frame, where the whole-film measure at 9 screen sizes found the Bou or who
 // comes to touch it cut off (2026-11-10, the owner: «el bou surt molt tallat o no es veu l'ajudant que el va a tocar»). The feet only on the opening's leg passes (bars 1-2 and 5-6). The list ends on the
-// last chord (BOU_CLIP_END): from there the game's own end shot comes down to the banknotes.
+// last chord (BOU_CLIP_END).
 export const BOU_CLIP_CUTS = [
   [0, 'vast'],
   [8, 'feet'],

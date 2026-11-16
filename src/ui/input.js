@@ -18,8 +18,6 @@ import { haptic } from '../platform/haptics.js';
 import { hud, W, K } from '../hud/canvas.js';
 import { orbit, look, pnow } from '../scene/cameras.js';
 import { lookDown, lookUp, lookSkip, lookEscape, lookLocked } from './mouse-look.js';
-import { selectedFigure } from '../game/figure-song.js';
-import { sceneOf } from '../scene/figure-scenes.js';
 
 for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => { if (!G.paused && pageActive()) chip?.wake(); }, { passive: true });
 addEventListener('keydown', e => {
@@ -45,7 +43,6 @@ addEventListener('keydown', e => {
     G.offsetT = clock; // hidden sync knob (Bluetooth headphones): show a short toast only when used
   }
   if (G.state === 'play') {
-    if ((dir || e.code === 'Space' || e.code === 'Enter') && sceneOf(selectedFigure.id)?.endTap?.()) return; // the Bou's banknotes' close-up: a key goes on to the results
     if (dir) press(dir, e);
     if (e.code === 'Space') { if (G.watch) togglePause(); else press('P', e); } // the dance demo: Space pauses, as a video
     if (e.code === 'KeyP') togglePause();
@@ -114,7 +111,6 @@ hud.addEventListener('pointerdown', e => {
       orbitDown(orbit, e.pointerId, e.clientX, e.clientY, pnow());
       try { hud.setPointerCapture?.(e.pointerId); } catch { /* already gone */ }
     }
-  } else if (G.state === 'play' && sceneOf(selectedFigure.id)?.endTap?.()) { // the Bou's banknotes' close-up: a tap goes on to the results
   } else if (watchLook() && (e.pointerType !== 'mouse' || e.button === 0)) {
     look.turn = turnFor(W * K);
     orbitDown(look, e.pointerId, e.clientX, e.clientY, pnow());

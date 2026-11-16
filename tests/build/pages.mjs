@@ -41,7 +41,7 @@ console.log('Pages deployment change detection ok');
 
 const song = { audio: 'music/main.mp3?v=abc123', ambient: 'music/menu.mp3?v=def456' };
 const files = ['index.html', '404.html', '_headers', 'favicon.ico', 'favicon.svg', 'favicon-32.png', 'apple-touch-icon.png',
-  'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'og-jocs.jpg', 'og-pop.jpg', 'og-1x1.jpg', 'og-jocs-1x1.jpg', 'og-pop-1x1.jpg', 'share/mulassa-valls.jpg', 'share/drac-valls.jpg', 'sfx/applause.mp3', 'pop.webmanifest', 'pop-icon-180.png', 'pop-icon-512.png', 'jocs.webmanifest', 'jocs-icon-180.png', 'jocs-icon-512.png', 'photo-icons/drac-foc.webp', 'assets/index-abc.js', 'music/main.mp3', 'music/menu.mp3',
+  'icon-512.png', 'manifest.webmanifest', 'og.jpg', 'og-jocs.jpg', 'og-pop.jpg', 'og-1x1.jpg', 'og-jocs-1x1.jpg', 'og-pop-1x1.jpg', 'share/mulassa-valls.jpg', 'share/drac-valls.jpg', 'sfx/applause.mp3', 'pop.webmanifest', 'pop-icon-180.png', 'pop-icon-512.png', 'jocs.webmanifest', 'jocs-icon-180.png', 'jocs-icon-512.png', 'photo-icons/drac-foc.webp', 'escuts/valls.4c7844e3.44.png', 'assets/index-abc.js', 'music/main.mp3', 'music/menu.mp3',
   'music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', '.DS_Store'];
 const root = await mkdtemp(join(tmpdir(), 'mulassa-pages-'));
 async function fixture(name) {
@@ -57,7 +57,10 @@ try {
   const deployWorkflow = await readFile(new URL('../../.github/workflows/deploy-pages.yml', import.meta.url), 'utf8');
   const migrationWorkflow = await readFile(new URL('../../.github/workflows/supabase-migrations.yml', import.meta.url), 'utf8');
   assert.match(deployWorkflow, /  migrate:\n    uses: \.\/\.github\/workflows\/supabase-migrations\.yml/);
-  assert.match(deployWorkflow, /  deploy:\n    needs: migrate\n/);
+  // validate (tag == package.json) → migrate → functions → Pages: no backend change before the tag check
+  assert.match(deployWorkflow, /  migrate:\n    uses: [^\n]+\n    needs: validate\n/);
+  assert.match(deployWorkflow, /  functions:\n    needs: migrate\n/);
+  assert.match(deployWorkflow, /  deploy:\n    needs: functions\n/);
   assert(!/if:.*(?:always\(|failure\(|cancelled\()/.test(deployWorkflow), 'deployment cannot bypass a failed migration');
   assert.match(migrationWorkflow, /  workflow_call:\n(?:    .*\n|      .*\n|        .*\n)*?    secrets:\n      SUPABASE_DB_PASSWORD:\n        required: true/);
   // Two channels from main: a push builds beta on the test project, only a version tag reaches production.
@@ -87,6 +90,12 @@ try {
   await mkdir(join(strayClip, 'jocs/menu/cards'), { recursive: true });
   await writeFile(join(strayClip, 'jocs/menu/cards/pop.mp4'), 'clip');
   await assert.rejects(preparePages(strayClip, song), /Unexpected deployment file/);
+  for (const [build, ok] of [['1.4.0+abc1234', true], ['1.4.0+abc1234-qa', false]]) {
+    const stamped = await fixture(`stamp-${ok}`);
+    await writeFile(join(stamped, 'version.json'), JSON.stringify({ build }));
+    if (ok) assert((await preparePages(stamped, song)).includes('version.json'));
+    else await assert.rejects(preparePages(stamped, song), /QA build/);
+  }
   const multi = await fixture('multi');
   const dracSong = { audio: 'music/drac-taiko.mp3?v=abc123', ambient: 'music/drac-taiko-ambient.mp3?v=def456' };
   for (const name of ['music/drac-taiko.mp3', 'music/drac-taiko-ambient.mp3', 'music/drac-taiko.mid']) await writeFile(join(multi, name), name);

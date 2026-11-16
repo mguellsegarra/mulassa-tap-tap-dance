@@ -5,7 +5,7 @@ current pages until the web gets its own approach.
 
 ## Goal
 The app's launcher home and everything shared between games (sign-in, session, profile, settings) are native
-(SwiftUI on iOS 26+, Jetpack Compose on Android). Each game stays a web page (the current Vite pages, updated
+(SwiftUI on iOS 17+, Jetpack Compose on Android; owner's decision 16 Nov 2026, `launcher-j1.md`). Each game stays a web page (the current Vite pages, updated
 live by Capgo) shown in the Capacitor WebView. The look of the home is a game UI (design rounds in
 `/Volumes/development/design/mulassa-games/app-home/`); this note is about ownership and the bridge.
 

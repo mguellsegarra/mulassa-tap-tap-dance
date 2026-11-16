@@ -443,9 +443,9 @@ console.log('crowd footprints never overlap ok');
     for (let k = 0; k < 600; k++) step(0, 0);
     return JSON.stringify({ worst }); })()`));
   // (the people are made at load, before this test's seed: every three.js object made before them draws a UUID from the
-  // same seeded Math.random, so removing the Bou's banknote meshes, 16/11/2026, drew another crowd, whose closest pass is
-  // 0.028 m; a player's crowd is random on every load anyway. The contract is clearance: nobody walks into a figure)
-  assert(moved.worst > 0.02, `nobody walks into the ring's figures (closest ${moved.worst.toFixed(3)} m)`);
+  // same seeded Math.random, so another module's objects draw another crowd. Across shifted streams the closest pass was
+  // 0.024-0.031 m once the figures' limit had the last word, and -0.0016 m before it, 16/11/2026: crowd-grid.js separate)
+  assert(moved.worst > 0.015, `nobody walks into the ring's figures (closest ${moved.worst.toFixed(3)} m)`);
   { // a change of quality under the ring: the band stays where the ring put it and the figures that leave shrink with
     // the fade (the band walked 5 m off and back, and 230 figures vanished in a frame)
     const q = JSON.parse(run(`(() => { setRotllana(true);

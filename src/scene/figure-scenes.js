@@ -2,7 +2,12 @@
 // (figures/<key>/<key>-scene.js) and a new figure adds its line here. A hook set: id, root(), show(on),
 // collaTick(on, beat, dt, reel), collaSpots, colla(), animate(dt, beat, live, reel, splash), leave() and reset()
 // (optional: another figure took the stage / it takes it afresh), onBoth?() (its answer to a both-buttons hit), endShot?(dt, shift)
-// (ui/frame-camera.js: its song's end shot), closeUp?() (true while that shot holds on small print: drawn at the screen's own pixels, hud/canvas.js), band? (its musicians, a line-up in models/band.js; default the banda), rotllana? (the plaça cleared to one round ring: scene/rotllana.js) and hero { scale, pose(), fx?(), save?(saved), restore?() }. The first is the fallback.
+// (ui/frame-camera.js: its song's end shot), closeUp?() (small print at native pixels, hud/canvas.js),
+// band? (musician lineup, default banda), rotllana? (one round crowd ring), hero { scale, pose(), fx?(), save?(saved), restore?() }.
+// Optional finale queries: endStarted() hides the pad; endHud() leaves only praise and the continuation hint;
+// endWaiting() shows that hint; endTap() consumes an accepted tap; endHold() delays the normal tail timeout;
+// endReady() requests results once the song ends; endImpact() scales camera shake (default 1).
+// Queries read figure-owned state. Missing boolean hooks mean false; the active figure owns input and run completion.
 // prepare?(): asynchronous CPU work under the loader, finished before the first frame.
 import { MULA_SCENE } from '../figures/mulassa/mula-scene.js';
 import { DRAC_SCENE } from '../figures/drac/drac-scene.js';

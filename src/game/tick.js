@@ -1,7 +1,7 @@
 // One frame of the game's rules: the play clock's section and claps, the finale's triggers (fireworks, confetti, the chant),
 // the meters' easing, autoplay, judging and the end of the run; on the selector, the demo dance on the menu loop's beat.
 // An orchestrator like flow.js: it fires the scene's and the HUD's effects, so it may reach them (tests/build/modules.mjs).
-import { song, beatAt, FINALE_T } from './figure-song.js';
+import { song, selectedFigure, beatAt, FINALE_T } from './figure-song.js';
 import { sectionAt } from './chart.js';
 import { judgedCount } from './progress.js';
 import { Q, playFrom, AUTOPLAY } from '../core/env.js';
@@ -12,7 +12,7 @@ import { REEL, REEL_STILL } from './showreel.js';
 import { figTheme } from './figure-theme.js';
 import { autoplay, advance } from './judge.js';
 import { practiceTick, finish } from './flow.js';
-import { BOU_FINALE, bouHolds } from '../figures/bou/bou-bills.js';
+import { sceneOf } from '../scene/figure-scenes.js';
 import { spawnConfetti, burst, setConfettiSettled } from '../scene/confetti.js';
 import { firework } from '../scene/fx.js';
 import { rnd } from '../scene/models.js';
@@ -58,7 +58,11 @@ export function tickGame(t, vt, beat, dt) {
     if (!G.collapseT) {
       advance(t);
       if (G.practice) practiceTick(t);
-      else if (BOU_FINALE.go && t >= song.end || t > song.tail + 1 && !bouHolds()) finish('end'); // (the Bou: its banknotes' close-up waits for a tap, and a tap goes on at once; the last run's tap still set on a retry's first frame, before bou-show.js clears it, ended the new run)
+      else {
+        const figure = sceneOf(selectedFigure.id);
+        // A previous run's accepted tap must not finish a retry before its song ends.
+        if (figure?.endReady?.() && t >= song.end || t > song.tail + 1 && !figure?.endHold?.()) finish('end');
+      }
     } else if (clock - G.collapseT > 3.5) finish('collapse');
   } else if (G.state === 'select' && !REEL.on && !REEL_STILL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu (not under the selector's held shot: each figure dances there on its own)
     G.lastBeat = Math.floor(beat);

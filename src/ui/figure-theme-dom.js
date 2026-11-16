@@ -4,8 +4,10 @@
 // its original markup. On <body> every figure change restyled the whole page and its body :has() rules (~370 elements,
 // 20-35 ms of a selector tap on a Galaxy S10).
 import { onTheme, trf, figTheme } from '../game/figure-theme.js';
-import { DRAC, BOU, portraitArt, portraitPalette } from '../game/figures.js';
+import { portraitArt, portraitPalette } from '../game/figures.js';
+import { FIGURE_TRAITS, traitsByKey, idOfKey } from '../figures/index.js';
 
+const figureDomClasses = Object.values(FIGURE_TRAITS).map(t => t.domTheme).filter(Boolean);
 const THEMED = '#pad, #controls-legend, #sync-pad';
 const VARS = { gua: '--gua', guaLt: '--gua-lt', guaDk: '--gua-dk', pa: '--pa', paLt: '--pa-lt', paDk: '--pa-dk' };
 // Bind semantic roles explicitly; no message is identified by its rendered words.
@@ -19,13 +21,15 @@ const figureDomText = [
 const figureDomAria = [['#pad .gua', 'input.leftAria'], ['#pad .pa', 'input.rightAria']];
 // the default (Mulassa) theme never fires a switch, so it is applied once here: index.html's Catalan fallback text would otherwise stay in every language
 const apply = t => {
+  const themeClass = traitsByKey(t.id).domTheme;
   for (const b of document.querySelectorAll(THEMED)) {
-    b.classList.toggle('fig-drac', t.drac); b.classList.toggle('fig-bou', t.id === 'bou');
-    for (const [k, v] of Object.entries(VARS)) t.id !== 'mulassa' ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
+    for (const name of figureDomClasses) b.classList.toggle(name, name === themeClass);
+    for (const [k, v] of Object.entries(VARS)) themeClass ? b.style.setProperty(v, t.colors[k]) : b.style.removeProperty(v);
   }
   for (const [selector, key] of figureDomText) document.querySelectorAll(selector).forEach(el => { el.textContent = trf(key); if (el.dataset.w) el.dataset.w = el.textContent; });
   document.querySelectorAll('#howto-portrait').forEach(face => { // «Com es juga»'s ÀNIM row: the HUD's portrait of who dances
-    face.dataset.base ??= face.innerHTML; face.innerHTML = t.drac ? portraitSvg(DRAC) : t.id === 'bou' ? portraitSvg(BOU) : face.dataset.base;
+    face.dataset.base ??= face.innerHTML;
+    face.innerHTML = themeClass ? portraitSvg({ id: idOfKey(t.id) }) : face.dataset.base;
   });
   for (const [selector, key] of figureDomAria) document.querySelectorAll(selector).forEach(el => el.setAttribute('aria-label', trf(key)));
 };

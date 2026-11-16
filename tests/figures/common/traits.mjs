@@ -1,5 +1,6 @@
 // The figures' traits (src/figures/index.js): one row per playable figure, every value one the shared systems know.
 import assert from 'node:assert/strict';
+import { DRAC_SIZE, DRAC_SCALE } from '../../../src/figures/drac/drac.js';
 import { existsSync } from 'node:fs';
 import { FIGURE_TRAITS, PLAYABLE_IDS, traitsOf, traitsByKey, idOfKey, figureOfVersion, splashSoloAt } from '../../../src/figures/index.js';
 import { FIGURES, playable } from '../../../src/game/figures.js';
@@ -25,3 +26,10 @@ console.log(`figure traits ok: ${PLAYABLE_IDS.length} playable figures`);
 // The splash: the new figure alone on the first three visits after an update, then taking turns with the pair (null)
 assert.deepEqual(Array.from({ length: 8 }, (_, v) => splashSoloAt(v, ['bou'])), ['bou', 'bou', 'bou', null, 'bou', null, 'bou', null]);
 assert.deepEqual([0, 3, 4].map(v => splashSoloAt(v, [])), [null, null, null], 'no splashSolo figure: always the pair');
+
+assert.equal(traitsOf('drac-valls').sceneScale, DRAC_SIZE.h * DRAC_SCALE / 4.03, 'framing tracks the model dimensions');
+for (const [id, scale, reach] of [['mulassa-valls', 1, 1], ['bou-tradicional-valls', 0.8, 0.9]]) {
+  assert.equal(traitsOf(id).sceneScale, scale);
+  assert.equal(traitsOf(id).sceneReach, reach);
+}
+assert.equal(traitsOf('drac-valls').sceneReach, traitsOf('drac-valls').sceneScale);

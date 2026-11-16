@@ -89,7 +89,7 @@ const mulassa = () => {
   assert.equal(T.figTheme.drac, false);
   assert.deepEqual(T.figTheme.chant, [['GUAPA,', 0, 0.8], ['GUAPA…', 0.8, 0.8], ['I GUAPA!', 1.8, 1.6]]);
   assert.equal(T.figTheme.colors.gua, '#ff7a1a'); assert.equal(T.figTheme.colors.pa, '#14b8a6');
-  assert(!classes.has('fig-drac') && props.size === 0, 'no overrides on the page');
+  assert(classes.size === 0 && props.size === 0, 'no overrides on the page');
 };
 mulassa();
 
@@ -108,6 +108,9 @@ const lum = hex => { const [r, g, b] = hex.match(/\w\w/g).map(n => { const c = p
 assert(lum(T.figTheme.colors.gua) > 2.5 * lum(T.figTheme.colors.pa), 'CRE and MA differ in lightness, not only hue');
 
 assert(setFigureSong(BOU));
+assert.deepEqual([...classes], ['fig-bou'], 'switching removes the previous scoped class');
+assert.equal(props.get('--gua'), '#f0d58a');
+assert.equal(props.get('--pa'), '#7a1f3d');
 assert(face.innerHTML.includes('#8f4124') && !face.innerHTML.includes('#c0283c'), 'the help shows the Bou’s portrait, not the Mulassa’s');
 assert(/^<g transform="scale\(0\.66/.test(face.innerHTML), 'its 18×13 pixels shrink into the 12×10 box, as the HUD draws it');
 assert(setFigureSong(MULASSA));

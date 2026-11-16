@@ -2,7 +2,7 @@
 // CSS and gets the shared watchdog and boot art; its CSS never redefines a base selector; its main.js wires the base's keyboard,
 // UI sound, page life and backdrop. The copies of mulassa.cat's modules stay in step until the main game moves onto Plassa.
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = new URL('../../', import.meta.url).pathname;
@@ -59,12 +59,8 @@ for (const id of games) {
 // the boot art is the main game's (src/ui/loader.js) until mulassa.cat uses Plassa's
 const art = read('src/ui/loader.js').match(/export const MULASSA_SVG = '([^']+)'/)[1];
 assert.equal(read('packages/plassa/src/mula-load.html').trim(), art, 'mula-load.html drifted from src/ui/loader.js MULASSA_SVG');
-// the exact copies of mulassa.cat's modules: the same code, imports and comments aside
-const body = src => src.split('\n').filter(l => !/^\s*(import\b|\/\/)/.test(l)).join('\n');
-const COPIES = { storage: 'platform', haptics: 'platform', boot: 'platform', 'double-tap': 'platform', 'render-quality': 'platform',
-  errors: 'services', 'sentry-load': 'services', 'update-watch': 'services', 'update-rules': 'services', locale: 'i18n', focus: 'ui', 'badge-tip': 'ui' };
-for (const [name, from] of Object.entries(COPIES)) {
-  assert(existsSync(join(root, `src/${from}/${name}.js`)), `src/${from}/${name}.js is gone: drop it from COPIES once mulassa.cat uses Plassa's`);
-  assert.equal(body(read(`packages/plassa/src/${name}.js`)), body(read(`src/${from}/${name}.js`)), `packages/plassa/src/${name}.js drifted from src/${from}/${name}.js: change both`);
-}
-console.log(`shared base: ${games.length} game(s) on Plassa, no base selector redefined, the copies of mulassa.cat in step ok`);
+// two backdrops by design (native dialogs here, the games' covers in Plassa), one arming time for an unasked sheet
+const armMs = p => read(p).match(/const ARM_MS = (\d+);/)[1];
+assert.equal(armMs('src/ui/backdrop.js'), armMs('packages/plassa/src/backdrop.js'), 'an unasked sheet arms after the same time everywhere');
+// Shared source ownership is enforced by tests/build/modules.mjs's thin re-export list.
+console.log(`shared base: ${games.length} game(s) on Plassa, no base selector redefined, shared owners ok`);

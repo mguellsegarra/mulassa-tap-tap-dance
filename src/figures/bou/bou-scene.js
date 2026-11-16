@@ -4,7 +4,7 @@ import { bou, bouColla } from './bou-objects.js';
 import { bouCollaTick, BOU_COLLA_SPOTS, poseBou, BOU_END, bouBrama, prepareBouMotion } from './bou-stage.js';
 import { animPlayableBou } from './bou-play.js';
 import { bouEndShot } from './bou-end-shot.js';
-import { BOU_FINALE } from './bou-bills.js';
+import { BOU_FINALE, bouTap, bouHolds, bouWaiting } from './bou-bills.js';
 import { placeBouClip, BOU_CLIP_END } from './bou-clip.js';
 import { clipShot } from '../common/clip-shot.js';
 
@@ -24,5 +24,12 @@ export const BOU_SCENE = {
   onBoth: bouBrama, // a BRAMA: squashed, mouth wide, tongue out
   endShot: bouEndShot, // its song's end: the camera comes down to its banknotes
   closeUp: () => BOU_FINALE.on && BOU_FINALE.k >= 1, // the crane down on the note: sharp from there until the notes go (not mid-crane: the new buffer costs a frame, seen while the shot still moves)
+  endTap: bouTap,
+  endHold: bouHolds,
+  endWaiting: bouWaiting,
+  endReady: () => BOU_FINALE.go,
+  endStarted: () => BOU_FINALE.endT >= 0,
+  endHud: () => BOU_FINALE.k > 0.3,
+  endImpact: () => (1 - BOU_FINALE.k) * (BOU_FINALE.endT >= 0 ? Math.SQRT1_2 : 1),
   filmShot: bouFilmShot,
 };

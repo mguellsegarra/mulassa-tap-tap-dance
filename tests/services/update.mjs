@@ -13,7 +13,7 @@ console.log('update check: newer builds only, once, on a quiet menu ok');
 // index.html's boot check: the build vite.config.js writes into it, and the same one-try key as update-watch.js
 {
   const { readFileSync } = await import('node:fs');
-  const page = readFileSync(new URL('../../index.html', import.meta.url), 'utf8'), update = readFileSync(new URL('../../src/services/update-watch.js', import.meta.url), 'utf8');
+  const page = readFileSync(new URL('../../index.html', import.meta.url), 'utf8'), update = readFileSync(new URL('../../packages/plassa/src/update-watch.js', import.meta.url), 'utf8');
   const vite = readFileSync(new URL('../../vite.config.js', import.meta.url), 'utf8');
   const check = page.match(/<script id="build-check">([\s\S]*?)<\/script>/)?.[1] ?? '';
   assert(check.includes("var own = '__MULASSA_BUILD__';") && vite.includes(`html.replace("'__MULASSA_BUILD__'", JSON.stringify(build))`), 'the page carries its build (vite.config.js transformIndexHtml)');

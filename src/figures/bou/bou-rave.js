@@ -8,6 +8,9 @@ import { scene, camera, glc } from '../../scene/stage.js';
 import { seeded } from '../../scene/models/colla.js';
 import { bou } from './bou-objects.js';
 
+// Every shader below was tuned on raw output (its numbers are display values, as the approved look). The renderer's output
+// conversion goes through colorspace_fragment, so the colour is made linear first (sRGBTransferEOTF): the sRGB result is the same look.
+const BOU_OUT = '\ngl_FragColor = sRGBTransferEOTF(gl_FragColor);\n#include <colorspace_fragment>\n';
 const BOU_PUFF = 'float d = length(gl_PointCoord - .5) * 2.; if (d > 1.) discard; float a = (1. - d) * (1. - d);'; // a soft round puff
 
 // ---- lasers: two sources 13 m behind the Bou and 9 m to each side, 7 beams each, drawn as real ones in a hall's haze: one
@@ -25,7 +28,7 @@ const bouBeams = new THREE.Mesh(bouBeamGeo, new THREE.ShaderMaterial({
   fragmentShader: `uniform vec3 tint; uniform float power, t; varying vec2 vUv;
     void main(){ float x = vUv.x * vUv.x, haze = .7 + .3 * sin(vUv.y * 1.7 - t * 1.3 + 2. * sin(vUv.y * .37 + t * .5));
       vec3 c = tint * exp(-9. * x) * .5 * haze + mix(tint, vec3(1.), .8) * exp(-220. * x) * 1.3;
-      gl_FragColor = vec4(c * power / (1. + vUv.y * .03), 1.); }`,
+      gl_FragColor = vec4(c * power / (1. + vUv.y * .03), 1.); ${BOU_OUT} }`,
 }));
 const bouDotGeo = new THREE.BufferGeometry(); // where each beam lands, then the two sources
 bouDotGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array((BOU_BEAMS + 2) * 3), 3).setUsage(THREE.DynamicDrawUsage));
@@ -33,7 +36,7 @@ bouDotGeo.setAttribute('size', new THREE.BufferAttribute(Float32Array.from({ len
 const bouDots = new THREE.Points(bouDotGeo, new THREE.ShaderMaterial({
   uniforms: bouBeamLook, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
   vertexShader: 'attribute float size; uniform float scale; void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = scale * size / -mv.z; }',
-  fragmentShader: `uniform vec3 tint; uniform float power; void main(){ ${BOU_PUFF} gl_FragColor = vec4(mix(tint, vec3(1.), a * a) * a * a * power * 1.4, 1.); }`,
+  fragmentShader: `uniform vec3 tint; uniform float power; void main(){ ${BOU_PUFF} gl_FragColor = vec4(mix(tint, vec3(1.), a * a) * a * a * power * 1.4, 1.); ${BOU_OUT} }`,
 }));
 for (const o of [bouBeams, bouDots]) { o.visible = false; o.frustumCulled = false; scene.add(o); }
 const BOU_LASER_GREEN = new THREE.Color('#39ff6a'), BOU_LASER_PINK = new THREE.Color('#ff2bd6');
@@ -109,7 +112,7 @@ const bouHaze = new THREE.Points(bouHazeGeo, new THREE.ShaderMaterial({
     void main(){ vec3 p = seed.xyz + vec3(sin(t * .07 + seed.w * 40.) * 1.2, sin(t * .11 + seed.w * 9.) * .25, cos(t * .05 + seed.w * 23.) * 1.2);
       vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = scale * (1.4 + seed.w * 1.2) / -mv.z;
       vS = seed.w * smoothstep(2., 5., -mv.z); }`,
-  fragmentShader: `uniform vec3 tint; uniform float density; varying float vS; void main(){ ${BOU_PUFF} gl_FragColor = vec4(tint * a * density * (.6 + .4 * vS), 1.); }`,
+  fragmentShader: `uniform vec3 tint; uniform float density; varying float vS; void main(){ ${BOU_PUFF} gl_FragColor = vec4(tint * a * density * (.6 + .4 * vS), 1.); ${BOU_OUT} }`,
 }));
 bouHaze.visible = false; bouHaze.frustumCulled = false; scene.add(bouHaze);
 
@@ -125,7 +128,7 @@ const bouCo2 = new THREE.Points(bouCo2Geo, new THREE.ShaderMaterial({
       vec3 p = vec3(seed.x + (seed.w - .5) * spread, h * (.35 + .65 * seed.w), seed.y + (fract(seed.w * 7.) - .5) * spread);
       vec4 mv = modelViewMatrix * vec4(p, 1.); gl_Position = projectionMatrix * mv; gl_PointSize = scale * (.8 + h * .25) / -mv.z;
       vA = (k > 0. ? exp(-k * 1.4) : 0.) * smoothstep(1.5, 4., -mv.z) * (1. - smoothstep(2.5, 3.5, age)); }`,
-  fragmentShader: `varying float vA; void main(){ ${BOU_PUFF} gl_FragColor = vec4(vec3(.92, .94, 1.), a * vA * .3); }`,
+  fragmentShader: `varying float vA; void main(){ ${BOU_PUFF} gl_FragColor = vec4(vec3(.92, .94, 1.), a * vA * .3); ${BOU_OUT} }`,
 }));
 bouCo2.visible = false; bouCo2.frustumCulled = false; scene.add(bouCo2);
 
@@ -174,7 +177,7 @@ const bouFollowMat = new THREE.ShaderMaterial({
   uniforms: { power: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
   // (edge: a cone seen side-on fades at its outline, so its sides read as light, not as flat panels)
   vertexShader: 'varying float vL, vE; void main(){ vL = uv.y; vec4 mv = modelViewMatrix * vec4(position,1.); vE = abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz))); gl_Position = projectionMatrix * mv; }',
-  fragmentShader: 'uniform float power; varying float vL, vE; void main(){ gl_FragColor = vec4(vec3(1., .82, .58) * power * (.25 + .75 * pow(vL, .6)) * pow(vE, 1.5), 1.); }',
+  fragmentShader: 'uniform float power; varying float vL, vE; void main(){ gl_FragColor = vec4(vec3(1., .82, .58) * power * (.25 + .75 * pow(vL, .6)) * pow(vE, 1.5), 1.);' + BOU_OUT + '}',
 });
 const bouFollow = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 2.6, 13, 32, 1, true).translate(0, 6.5, 0), bouFollowMat); // (uv.y 1 at the top: the lamp)
 // the pool's radial falloff, its alpha worked out per pixel: a canvas gradient is dithered in Safari, and stretched over
@@ -184,7 +187,7 @@ const bouPoolTex = (() => { const S = 128, px = new Uint8Array(S * S * 4), stops
     const r = Math.min(1, Math.hypot(x + 0.5 - S / 2, y + 0.5 - S / 2) / (S / 2)), k = stops.findIndex(s => s[0] >= r), [r0, a0] = stops[Math.max(0, k - 1)], [r1, a1] = stops[k];
     px.set([255, 255, 255, Math.round(255 * (r1 > r0 ? a0 + (a1 - a0) * (r - r0) / (r1 - r0) : a1))], (y * S + x) * 4);
   }
-  const t = new THREE.DataTexture(px, S, S); t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true; return t; })();
+  const t = new THREE.DataTexture(px, S, S); t.colorSpace = THREE.SRGBColorSpace; t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true; return t; })();
 const bouPool = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 5.6).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: bouPoolTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, color: '#ffd9a8', fog: false }));
 bouPool.position.y = 0.02;
 for (const o of [bouFollow, bouPool]) { o.visible = false; o.frustumCulled = false; scene.add(o); }

@@ -1,48 +1,15 @@
-// Back from another app or tab, iOS often keeps the audio stopped until a tap (from another Safari tab the page doesn't even
-// get focus). Stopped means a context that isn't running, or one that says `running` with its clock standing still. No card:
-// the screen stays as it is and the next tap anywhere, which keeps its own action, wakes the sound. A run has its own pause menu.
+// Registered before sheets can stop input; the shared recovery waits for a focused tap.
 import { G, chip } from '../game/state.js';
 import { errors } from '../services/errors.js';
+import { createAudioRecovery } from '#plassa/audio-wake.js';
 
-const AUDIO_BACK_MS = 700; // the unprompted resume() takes a moment even when iOS allows it
-const AUDIO_MOVED = 0.1; // seconds of audio clock that prove the sound came back
-let audioWaiting = false; // true: stalled; 'quiet': only our own suspend on a blur, a real stall after it still counts
-// A stall is only reported when a tap with focus does not bring the sound back: iOS stopping it until that tap is the
-// expected case (hundreds of reports a week), the game handles it, and the report would say nothing.
-let audioPending = null;
-function confirmAudioBack() {
-  const from = chip.ctx.currentTime;
-  setTimeout(() => {
-    if (!audioPending) return;
-    if (chip.running && chip.ctx.currentTime - from >= AUDIO_MOVED) { audioWaiting = false; audioPending = null; return; }
-    errors.report(audioPending, { audioState: chip.ctx.state }); // not `state`: the report's context tags use it for the screen
-    audioPending = null; // once per stall
-  }, AUDIO_BACK_MS);
-}
-
-// Registered at import, before sheets-setup.js's window capture handlers, which can stop a key before later listeners see it
-for (const ev of ['touchend', 'click', 'keydown']) addEventListener(ev, () => {
-  if (!audioWaiting) return;
-  if (chip.running) { audioWaiting = false; audioPending = null; return; } // it came back
-  chip.wake(); // refused without focus (from another Safari tab): the next tap tries again
-  if (audioPending && document.hasFocus()) confirmAudioBack();
-}, { capture: true, passive: true });
-
-// Not afterActive(): back from another Safari tab the page is visible but has no focus until a tap, so pageActive() is false
-// `left`: a blur with the page still on screen (Android's address bar): it stopped because we suspended it, nothing failed to come back
-export function checkAudioBack(left = false) {
-  const from = chip?.ctx?.currentTime, epoch = G.activityEpoch;
-  setTimeout(() => {
-    if (epoch !== G.activityEpoch || document.hidden) return; // left again meanwhile
-    if (G.state === 'play' || !chip || (chip.menuMusic === false && !chip.free)) return; // nothing to hear
-    if (chip.running && chip.ctx.currentTime - from >= AUDIO_MOVED) return; // it plays
-    audioStalled(left ? null : 'audio-not-back');
-  }, AUDIO_BACK_MS);
-}
-// Also on the menu without leaving the page (pause-actions.js watchAudio): AirPods that drop out and back left the loop's
-// clock frozen while `running`, and taps only unhushed it until a run's own stall pause suspended and resumed it.
-export function audioStalled(kind = 'menu-audio-stalled') {
-  if (kind && audioWaiting !== true) audioPending = kind; // reported only if a tap can't wake it (confirmAudioBack)
-  if (chip.running) chip.suspend(); // frozen while `running`: wake() only resumes a stopped context, so the tap can restart it
-  audioWaiting = kind ? true : audioWaiting || 'quiet'; // input.js wakes on taps too, but only with focus, which the Safari-tab case gets after the tap
-}
+const mainAudioRecovery = createAudioRecovery({
+  context: () => chip?.ctx, epoch: () => G.activityEpoch,
+  hearing: () => G.state !== 'play' && !!chip && (chip.menuMusic !== false || !!chip.free),
+  hush: () => chip.suspend(), wake: () => chip.wake(), focused: () => document.hasFocus(),
+  report: (kind, tags) => errors.report(kind, tags),
+});
+for (const ev of ['touchend', 'click', 'keydown'])
+  addEventListener(ev, mainAudioRecovery.gesture, { capture: true, passive: true });
+export function checkAudioBack(left = false) { mainAudioRecovery.checkBack(left); }
+export function audioStalled(kind = 'menu-audio-stalled') { mainAudioRecovery.stalled(kind); }

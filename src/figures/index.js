@@ -2,8 +2,12 @@
 // asking «is it the Drac?». A new figure adds its row (and its own folder beside this file); ids are game/figures.js's.
 // Data only, no imports: anything may read it without an import cycle. Behaviour that differs (a dance, a model) stays
 // in the figure's folder; this table only says which one to use.
+// sceneScale: framing relative to the Mulassa's 4.03 m; sceneReach: body clearance in the same units.
+// The Drac uses its 6.0 model-unit height at 0.492 scale; the low, long Bou needs extra clearance.
+// domTheme: scoped CSS class and colour/portrait overrides; null preserves the page's original theme.
 export const FIGURE_TRAITS = Object.freeze({
   'mulassa-valls': Object.freeze({
+    sceneScale: 1, sceneReach: 1, domTheme: null,
     key: 'mulassa', // the figure's short name: its theme, its words' variant, its ?figura= value
     drumroll: 'balloon', // what a drumroll shows: balloon | carretilles | esquellot
     article: 'fem', // «amb la Mulassa» / «amb el Drac»
@@ -24,17 +28,19 @@ export const FIGURE_TRAITS = Object.freeze({
     frameLength: true, // the selector and showreel frame her by her length, whatever her heading (scene/cameras.js): turned side on at once she outgrew a phone's frame
   }),
   'drac-valls': Object.freeze({
+    sceneScale: 6.0 * 0.492 / 4.03, sceneReach: 6.0 * 0.492 / 4.03, domTheme: 'fig-drac',
     key: 'drac', drumroll: 'carretilles', article: 'masc', cardFile: 'drac-de-valls.jpg', cardAlt: 'hud.card.altDrac',
     shareKey: null, shareLines: 'services.share.drac.', shareEmoji: '🐉', challenge: true, playCam: 'drac', wideClearance: true, photoE: 'sparks',
     photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, splashSolo: false, landing: 0.9, frameLength: false, reelCalm: false, novelty: false,
   }),
   'bou-tradicional-valls': Object.freeze({
+    sceneScale: 0.8, sceneReach: 0.9, domTheme: 'fig-bou',
     key: 'bou', drumroll: 'esquellot', article: 'masc', cardFile: 'bou-tradicional-de-valls.jpg', cardAlt: 'hud.card.altBou',
     shareKey: 'services.share.bou', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoE: null,
     photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, splashSolo: true, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
   }),
 });
-// The Bou is active for the 1.4.0 worktree review; its online board remains disabled.
+// The Bou and its online board ship in 1.4.0; apply the board migration before the client.
 // While the set holds it, a build also leaves its modules and song out (tools/deploy/unreleased-figure.mjs); empty it to ship it.
 export const UNRELEASED_IDS = Object.freeze(new Set([]));
 export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id => !UNRELEASED_IDS.has(id))); // in the order free play's Tab goes round

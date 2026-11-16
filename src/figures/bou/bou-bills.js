@@ -62,7 +62,9 @@ export function loadBouBill() {
   billAsked = true;
   new THREE.TextureLoader().load('/textures/bitllet-bou.png', tex => {
     tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    const old = billMat.map; // the shared fallback DataTexture: freed once both users hold the banknote
     confBills.material.map = billMat.map = tex;
+    if (old && old !== tex) old.dispose();
     renderer.initTexture(tex); // uploaded now: on its first draw, at the bombo, it was a 199 ms frame on an iPhone 8 (21 ms of texSubImage2D on a Mac at 4x)
   });
 }

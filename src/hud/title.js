@@ -4,24 +4,23 @@ import { song, beatAt } from '../game/figure-song.js';
 import { glintAt, POP, popsAt } from './logo-motion.js';
 import { COARSE, CALM } from '../core/env.js';
 import { text, textWidth } from './primitives.js';
-import { C, PIXEL, FONT, textWidths } from './sprites.js';
+import { C, FONT, devScale, qSize, sprite } from './sprites.js';
 import { G, chip, clock } from '../game/state.js';
 import { W, HH, H, K, SAFE } from './canvas.js';
 
-// The logo: MULASSA on a blocky extrusion (one dark copy of its sprite, stacked), a glint of light across its letters
-// every few seconds, and TAP TAP DANCE tapping along to the menu loop, a word a beat (logo-motion.js glintAt/popsAt).
-// Every piece is a cached sprite, blitted (the words at a pop's size, drawn smaller: they stay crisp); reduced motion:
-// all still. warm: paint every sprite (splashWarmups), the glint's too.
-const LOGO_EXT = '#5e1514', LOGO_DEPTH = [0.03, 0.06];
+// The logo: MULASSA in Baloo, cream outlined on a darker cream extrusion (one copy under it: no dark smear on a game's dark page), a glint of light across
+// its letters every few seconds, and TAP TAP DANCE tapping along to the menu loop, a word a beat
+// (logo-motion.js glintAt/popsAt). Every piece is a cached sprite, blitted (the words at a pop's size, drawn smaller: they
+// stay crisp); reduced motion: all still. warm: paint every sprite (splashWarmups), the glint's too.
+const LOGO_RED = '#e8382f', LOGO_EXT = '#d8bf8f', LOGO_FS = 1.09, LOGO_LS = -0.0714; // font px per logo size s (the pixel logo's width), letter spacing in em
 const pops = [0, 0, 0], tapAt = new Map(); // tapAt: s -> TAP, TAP, DANCE's centres from the middle (measured once a size)
 const SPLASH_ENTER = [tr('hud.title.enterTouch'), tr('hud.title.enterClick')];
 export function splashWarmups() { return [() => logo(0, splashS(), true)]; }
 function logo(y, s = splashS(), warm = false) {
   const b = chip && G.state !== 'splash' ? Math.abs(Math.sin(beatAt(Math.max(0, chip.now())) * Math.PI)) : 0, my = y - b * s * 0.06, calm = CALM.matches;
-  for (const d of LOGO_DEPTH) text('MULASSA', W / 2, my + d * s, s, LOGO_EXT, 'center', LOGO_EXT, true);
-  text('MULASSA', W / 2, my, s, C.red, 'center', C.cream, true);
+  const hw = mulassa(W / 2, my, s, false);
   const g = calm ? null : glintAt(clock);
-  if (g != null) glint(W / 2, my, s, g);
+  if (g != null || warm) glint(W / 2, my, s, g ?? 0, hw);
   const ts = s * 0.38, big = 1 + POP.max;
   let at = tapAt.get(ts);
   if (!at) { // (cached per logo size)
@@ -34,22 +33,47 @@ function logo(y, s = splashS(), warm = false) {
   for (let i = 0; i < 3; i++) text(i < 2 ? 'TAP' : 'DANCE', W / 2 + at[i], y + s * 0.82 - pops[i] * POP.lift * ts, ts * big, C.gold, 'center', C.dark, false, (1 + pops[i]) / big);
   return y + s * 1.02; // bottom of the block
 }
-// The glint: a white copy of MULASSA's letters (one sprite; no outline) seen through a slanted band that crosses them
-// (p: 0..1), a soft wide band and a brighter core, fading in and out at the ends
-function glint(x, y, s, p) {
-  const font = `140px ${PIXEL}`, key = `${font}|MULASSA-glint`;
-  let ratio = textWidths.get(key);
-  if (ratio === undefined) {
-    H.font = font; ratio = (H.measureText('MULASSA')?.width || 500) / 100 + 1.4 / 3;
-    textWidths.set(key, ratio); // the shared cache clears when fonts arrive
+// MULASSA centred on (x, y) at logo size s, from one sprite per size (white: only the letters, for the glint); returns
+// its half width. As the selector's SVG: a thin dark line round it all, the extrusion, the cream outline, the red letters; tight letters, so the thin
+// outline still closes the gap between the two S.
+function mulassa(x, y, s, white) {
+  const k = devScale(), fs = s * LOGO_FS, q = k ? qSize(fs * k) / k : fs, font = `800 ${q}px ${FONT}`, lw = q * 0.14, ex = q * 0.05, ol = lw + q * 0.052, pad = ol / 2 + 2;
+  const sp = k && sprite(`MULASSA-logo|${font}|${k}|${white ? 1 : 0}`, k, c => {
+    c.font = font; c.letterSpacing = `${LOGO_LS * q}px`; const m = c.measureText('MULASSA'), asc = m.actualBoundingBoxAscent || q * 0.625;
+    // the ink's own edges: with tight letters the last A reaches past the advance width (it was cut)
+    const left = m.actualBoundingBoxLeft || 0, tw = left + (m.actualBoundingBoxRight || m.width);
+    return { tw, left, w: tw + 2 * pad, h: asc + (m.actualBoundingBoxDescent || 0) + lw + ex + 2 * pad, base: pad + lw / 2 + asc, cy: pad + lw / 2 + asc / 2 };
+  }, (c, d) => {
+    c.font = font; c.letterSpacing = `${LOGO_LS * q}px`; c.textAlign = 'left'; c.textBaseline = 'alphabetic'; c.lineJoin = 'round'; c.lineWidth = lw;
+    if (white) { c.fillStyle = '#fff'; c.fillText('MULASSA', pad + d.left, d.base); return; }
+    c.strokeStyle = C.dark; c.lineWidth = ol; c.strokeText('MULASSA', pad + d.left, d.base + ex); c.strokeText('MULASSA', pad + d.left, d.base);
+    c.lineWidth = lw; c.strokeStyle = c.fillStyle = LOGO_EXT; c.strokeText('MULASSA', pad + d.left, d.base + ex); c.fillText('MULASSA', pad + d.left, d.base + ex);
+    c.strokeStyle = C.cream; c.strokeText('MULASSA', pad + d.left, d.base);
+    c.fillStyle = LOGO_RED; c.fillText('MULASSA', pad + d.left, d.base);
+  }, true);
+  if (sp) {
+    const r = fs / q;
+    H.drawImage(sp.c, x - sp.w / 2 * r, y - sp.cy * r, sp.w * r, sp.h * r);
+    return sp.tw * r / 2;
   }
-  const hw = ratio * s / 2, lean = 0.3 * s, cx = x - hw - lean + p * (2 * hw + 2 * lean), a = Math.sin(Math.PI * p);
+  // no sprite this frame: flat letters straight onto the HUD
+  H.font = `800 ${fs}px ${FONT}`; H.letterSpacing = `${LOGO_LS * fs}px`; H.textAlign = 'center'; H.textBaseline = 'middle'; H.lineJoin = 'round'; H.lineWidth = fs * 0.14;
+  H.strokeStyle = C.cream; if (!white) H.strokeText('MULASSA', x, y);
+  H.fillStyle = white ? '#fff' : LOGO_RED; H.fillText('MULASSA', x, y);
+  const hw = (H.measureText('MULASSA')?.width || fs * 3.85) / 2;
+  H.letterSpacing = '0px'; // the HUD's other text is spaced normally
+  return hw;
+}
+// The glint: the white copy of MULASSA's letters seen through a slanted band that crosses them (p: 0..1), a soft wide
+// band and a brighter core, fading in and out at the ends
+function glint(x, y, s, p, hw) {
+  const lean = 0.3 * s, cx = x - hw - lean + p * (2 * hw + 2 * lean), a = Math.sin(Math.PI * p);
   for (const [w, alpha] of [[0.5 * s, 0.22], [0.16 * s, 0.5]]) {
     H.save();
     H.beginPath(); H.moveTo(cx - w / 2 + lean, y - 0.75 * s); H.lineTo(cx + w / 2 + lean, y - 0.75 * s);
     H.lineTo(cx + w / 2 - lean, y + 0.75 * s); H.lineTo(cx - w / 2 - lean, y + 0.75 * s); H.clip();
     H.globalAlpha *= alpha * a;
-    text('MULASSA', x, y, s, '#fff', 'center', 'rgba(0,0,0,0)', true);
+    mulassa(x, y, s, true);
     H.restore();
   }
 }

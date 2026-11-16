@@ -50,7 +50,7 @@ dialog .feedback-field { border-color: color-mix(in srgb, var(--accent) 60%, tra
 .pop-title { order: 0; flex: none; display: grid; justify-items: center; width: min(300px, 100vw - 2 * var(--m) - 40px, 40dvh); margin: 0; container-type: inline-size; }
 .pop-title .logo-box, .pop-title .logo { width: 100%; }
 /* POP as Mulassa Games' GAMES (src/styles/games-sheet.css): each letter pops now and then, in turn */
-.pop-word { margin-top: -1cqi; font: 800 15cqi/1 'Baloo 2', system-ui, sans-serif; letter-spacing: 2cqi; color: #ff7ac6; -webkit-text-stroke: 2.3cqi #2a1a10; paint-order: stroke fill; }
+.pop-word { margin-top: 1cqi; font: 800 15cqi/1 'Baloo 2', system-ui, sans-serif; letter-spacing: 2cqi; color: #ff7ac6; -webkit-text-stroke: 2.3cqi #2a1a10; paint-order: stroke fill; }
 .pop-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
 @media (prefers-reduced-motion: reduce) { .pop-word i { animation: none; } }
 .c-art { order: 1; flex: 1 1 0; min-height: 72px; width: 100%; display: flex; align-items: center; justify-content: center; position: relative; container-type: size; }

@@ -8,7 +8,7 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 @keyframes games-in { from { opacity: 0; } }
 #games-title { position: absolute; z-index: 3; top: calc(12px + var(--sat, 0px)); left: max(24px, 6vw); margin: 0; display: grid; justify-items: center; pointer-events: none; }
 #games-title .games-logo { display: block; width: clamp(150px, 20vw, 280px); height: auto; overflow: visible; /* the outline's edge */ }
-#games-title .games-word { margin-top: -.15em; font: 800 clamp(18px, 2.6vw, 34px)/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #f5c518; -webkit-text-stroke: .2em #2a1a10; paint-order: stroke fill; }
+#games-title .games-word { margin-top: .1em; font: 800 clamp(18px, 2.6vw, 34px)/1 'Baloo 2', system-ui, sans-serif; letter-spacing: .04em; text-transform: uppercase; color: #f5c518; -webkit-text-stroke: .2em #2a1a10; paint-order: stroke fill; }
 /* GAMES pops letter by letter now and then, as TAP TAP DANCE pops on the title's beat (hud/title.js); after «Juga»'s hop */
 #games-title .games-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
 

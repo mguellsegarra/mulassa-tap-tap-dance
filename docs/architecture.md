@@ -21,13 +21,13 @@ agents touch at once and the lanes that keep them apart. Every folder and file i
 | `hud/` | the 2D canvas | sprite caches | `core`, `game`, `scene` (read only) |
 | `ui/` | DOM, sheets, selector | each sheet's own | everything above |
 | `main.js` | composition, frame loop | `frame()` | everything |
-| `game/tick.js`, `ui/frame-camera.js` | one frame's rules; one frame's camera decision | none (`tick.js` writes `G`) | everything above them: orchestrators called by `frame()` |
-| `packages/plassa/` (`#plassa/*`) | the games' shared base, Plassa (packages/plassa/README.md) | none | `src/core` and data (`src/i18n/meta.json`, `src/i18n/locales/*/boot.json`); only the games import it yet |
+| `game/tick.js`, `ui/frame-camera.js`, `ui/frame-hud.js` | one frame's rules, camera/showreel hand-over and HUD | none (`tick.js` writes `G`) | everything above them: orchestrators called by `frame()` |
+| `packages/plassa/` (`#plassa/*`) | the games' shared base, Plassa (packages/plassa/README.md) | none | `src/core` and data (`src/i18n/meta.json`, `src/i18n/locales/*/boot.json`); the main game also uses thin re-exports and the shared audio wake/recovery contract |
 | `jocs/games/<id>/` | one mini-game, its own page | its own | `#plassa/*` (packages/plassa); never another game. Transitional exception: Pop still imports mulassa.cat's own modules (`core/version.js`, `figures/` palettes and models, `i18n/apply-dom.js` + `messages.js`, `platform/audio-clock.js`, `scene/models/voxel.js`, `services/` captcha, leaderboard and supabase client, `styles/*.css`, `dev/mock-leaderboard.js` (dynamic, dev only), `ui/` badges, profile, feedback, language and sheets; `three`) for the ⚙ settings and account layer and the board, until these move into Plassa (`packages/plassa/docs/inventari.md`) |
 | `jocs/menu/` | Mulassa Games, the games' selector at `jocs/index.html` | its own | `#plassa/*` only |
 | `dev/` | dev modes | — | everything; the editors and reviews load through `import()`, only the small flag readers (`final-test.js`, `debug.js`, `perf.js`, `autoplay-jitter.js`) are imported statically |
 
-`tests/build/modules.mjs` enforces no cycles, the line limits, `core/` as a leaf (bar `anim.js` and `timing.js`), `game/` rules and state importing no `hud/`, `scene/` or `ui/` (bar `flow.js`, `judge.js` and `tick.js`), `scene/stage.js`, `quality.js` and `crowd-build.js` reaching figures only through `figures/objects.js`, and that nothing imports upward: `i18n/` and `platform/` import no `game/`, `scene/`, `hud/`, `ui/`, `services/` or `figures/`; `services/` no `scene/`, `hud/`, `ui/` or `figures/`; `figures/` no `hud/`, `ui/` or `services/`; `scene/` and `hud/` no `ui/` or `services/`. Its allow-list holds the known exceptions (`services/errors.js`, the crash reporter every layer calls; `figures/index.js`, data with no imports; five `hud/` edges to `ui/handles.js`, `ui/sheets.js` and `services/share.js`). It also keeps Plassa (`plassa/`) importing only itself and `core/`, mulassa.cat importing nothing from `jocs/`, and a game never importing another game. Not checked: `scene/` importing `hud/` (canvas size, layout, bubbles) and `hud/` importing `scene/`, and `game/` importing `services/`.
+`tests/build/modules.mjs` enforces no cycles, the line limits, `core/` as a leaf (bar `anim.js` and `timing.js`), `game/` rules and state importing no `hud/`, `scene/` or `ui/` (bar `flow.js`, `judge.js` and `tick.js`), `scene/stage.js`, `quality.js` and `crowd-build.js` importing no figure's `*-objects.js` (they reach the figures' objects through `figures/objects.js`; `crowd-build.js` also takes the Drac's soot material), and that nothing imports upward: `i18n/` and `platform/` import no `game/`, `scene/`, `hud/`, `ui/`, `services/` or `figures/`; `services/` no `scene/`, `hud/`, `ui/` or `figures/`; `figures/` no `hud/`, `ui/` or `services/`; `scene/` and `hud/` no `ui/` or `services/`. Its allow-list holds the known exceptions (`services/errors.js`, the crash reporter every layer calls; `figures/index.js`, data with no imports; five `hud/` edges to `ui/handles.js`, `ui/sheets.js` and `services/share.js`). It also keeps Plassa (`plassa/`) importing only itself and `core/`, mulassa.cat importing nothing from `jocs/`, and a game never importing another game. Not checked: `scene/` importing `hud/` (canvas size, layout, bubbles) and `hud/` importing `scene/`, and `game/` importing `services/`.
 
 ## Time
 
@@ -50,9 +50,15 @@ Scene objects are built once and toggled (shown, hidden, posed), not rebuilt per
    the motion, the collas' obstacles, the share photo and the end shot go through each figure's hooks
    (`figures/<key>/<key>-scene.js`, listed in `scene/figure-scenes.js`), and what a figure does to the people round it
    (the Drac's soot, the Bou's conga and festa) through `figures/<key>/<key>-crowd.js`, listed in `scene/crowd-effects.js`.
-   Only the splash's Drac beside her (`PAIR` in `figures/drac/drac-play.js`) is still imported by `scene/stage-motion.js`, `crowd.js` and `cameras.js`; no figure id is: the splash's host and partner, the PHOTO body, M's owner and the landing shake are `FIGURE_TRAITS` fields. Id-keyed catalogue data stays where it is (`game/figures.js`, `figure-portraits.js`, `PHOTO_CAM.aimY`), and `game/judge.js` still tests `figTheme.id === 'bou'`;
+   The splash's Drac beside her still reaches shared code directly: `PAIR` (`figures/drac/drac-play.js`) in
+   `scene/stage-motion.js`, `scene/crowd.js` and `ui/frame-camera.js`, and its model in `scene/cameras.js`.
+   The splash's host and partner, the PHOTO body, M's owner and landing shake are `FIGURE_TRAITS` fields.
+   Id-keyed catalogue data stays where it is (`game/figures.js`, `figure-portraits.js`, `PHOTO_CAM.aimY`),
+   and `game/judge.js` reads the drumroll trait;
    `tests/figures/common/scenes.mjs` keeps the rest of `scene/` that walks these lists off the figures' folders.
-3. `hud/` reads `ui/` (`balloon`, `draw`, `results`), and `hud/draw.js` imports `figures/bou/bou-bills.js`.
+   Shared input, frame, HUD and run completion read the active scene's optional finale hooks; only the Bou's folder
+   reads its banknote state. Framing scale, crowd reach and scoped DOM theme overrides come from `FIGURE_TRAITS`.
+3. `hud/` reads `ui/` (`balloon`, `draw`, `results`).
 4. `tests/render/load-main.mjs` concatenates every module into one script, so top-level names must be unique across
    all of `src/`: two agents adding `const STEP` in different modules collide without sharing a file.
 
@@ -96,3 +102,17 @@ Parallel agents each take one lane and stay inside its files; two agents never w
 Shared files, one agent at a time: `AGENTS.md`, `main.js`, `index.html`, `ui/sheets-setup.js`,
 `tests/render/render-quality.mjs` (its order), `package.json`, `figures/index.js`, `game/state.js`. Keep edits to them small and targeted; if another agent's
 uncommitted edits there block you, tell the owner and wait (no messages between agents).
+
+## Shared platform ownership
+
+Plassa owns errors, Sentry loading, locale selection and update watching; the corresponding `src/` modules are thin
+re-exports. `plassa/audio-wake.js` owns resume rejection handling, gesture unlock and checked recovery after a stall.
+The main game's Chip and audio-resume adapter and Plassa's page-audio host supply their session, fades and reporting.
+Main-game fade timings (6/40 ms, 10 ms return) and page timings (15/80 ms, 20 ms return) remain intentional.
+
+`ui/frame-camera.js` owns still/showreel transitions and their outgoing-shot capture, called before scene animation.
+`ui/frame-hud.js` owns control visibility, HUD clearing and draw recovery; main composes those steps in the original order.
+
+The remaining `jocs/main-sheets.js` adapter depends on `i18n/apply-dom.js`, `ui/sheet-fade.js` and `ui/backdrop.js`.
+`jocs/install.js` depends on `ui/install-app.js` and `i18n/messages.js`; `jocs/menu/install.js` composes those two adapters
+and warms the main game's install sheet. They cannot move wholesale into Plassa under its current dependency boundary.

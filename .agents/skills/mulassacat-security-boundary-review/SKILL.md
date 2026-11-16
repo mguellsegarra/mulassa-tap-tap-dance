@@ -23,6 +23,9 @@ data merely to populate an audit. This skill grants no access or mutation permis
 - Examine read/check/write races, stale reads, retries and duplicate submissions. State
   whether a quota is approximate or atomic. Choose stronger synchronization only when the
   required guarantee justifies it, rather than claiming a cache-backed counter is strict.
+- When the client checks an owner and then calls an RPC or function, pin the access token from
+  that same session read: the Supabase client reads the session again for the request, so an
+  account switch in between acts as the other user (Pop's publish, fixed in 1.4.0).
 - Verify payload limits and relevant headers at the real boundary, including negative
   cases. Dependency vulnerability reports are a separate input, not a security verdict.
 - For diagnostics, allowlist bounded technical fields. Avoid aliases, free text, private

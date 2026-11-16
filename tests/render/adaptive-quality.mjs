@@ -184,14 +184,16 @@ console.log('context-lost quality step ok');
   // and 24 Hz, frames of 50-79 ms in between, 9 ms of JavaScript. Replayed frame by frame through the pacer and the monitor
   const { recordings } = JSON.parse(readFileSync(new URL('./fixtures/low-power-bou.json', import.meta.url), 'utf8'));
   for (const posts of recordings) {
-  const replay = cost => { let level = 1, now = 0; const pace = framePacer(), changes = [], reasons = [];
-    const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => reasons.push(e.reason) });
+  const replay = cost => { let level = 1, now = 0; const pace = framePacer(), changes = [], reasons = [], events = [];
+    const sample = adaptiveQuality({ ceiling: 1, level: () => level, change: q => { changes.push(q); level = q; }, report: e => { reasons.push(e.reason); events.push(e); } });
     for (const [play, frames] of posts) for (const ms of frames) { now += ms; pace(now, !!play); sample(ms, cost, pace, !!play, true, !!play); }
-    return { changes, reasons }; };
-  const light = replay(9), at = light.changes.findIndex((q, i) => q === 1 && light.changes[i - 1] === 0);
+    return { changes, reasons, events }; };
+  const light = replay(9), at = light.changes.indexOf(1);
   // (the frames are the recording's whatever the level: a step can buy nothing here, as it bought nothing on the phone)
-  assert(light.changes.every(q => q >= 0) && light.changes.at(-1) === 1, `one level down at most, as a probe, and back (${light.changes})`);
+  assert(light.changes.length <= 3 && light.changes.at(-1) === 1, `at most two bounded probe steps, and back (${light.changes})`);
   assert.deepEqual(light.changes.slice(at + 1), [], 'once the probe bought nothing the browser\'s late frames cost no more steps');
+  const extra = light.events.find(e => e.to === -1), restored = light.events.find(e => e.reason === 'throttled');
+  assert(!extra || restored.time - extra.time < 6500, 'the extra probe ends within one settled observation window');
   assert(light.reasons.includes('throttled'), 'and it is reported as the browser\'s throttle');
   assert(replay(22).changes.length >= 1, 'the same frames with the game\'s own work heavy (22 ms of a 33 ms frame) still step down');
   }

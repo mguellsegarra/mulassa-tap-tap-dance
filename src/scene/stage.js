@@ -26,15 +26,8 @@ export let peopleLevel = qualityLevel;
 // free play's own drops cost no people after it (adaptive-quality.js scope): leaving it, its 'scope-end' puts back those it was entered with
 let freePeople = null;
 export const freePlayPeople = on => { freePeople = on ? freePeople ?? peopleLevel : null; };
-// A failed capped probe restores the people it temporarily shed as well as the GPU profile.
-const peopleBeforeSteps = new Map();
-let previousPeopleQuality = qualityLevel;
-export const stepPeople = (level, splash, reason = '') => {
-  if (reason === 'overload') peopleBeforeSteps.set(previousPeopleQuality, peopleLevel);
-  previousPeopleQuality = level;
-  return peopleLevel = splash ? level : reason === 'throttled' ? peopleBeforeSteps.get(level) ?? peopleLevel
-    : (reason === 'scope-end' || reason === true) && freePeople !== null ? Math.max(peopleLevel, freePeople) : Math.min(peopleLevel, level + 1);
-};
+export const stepPeople = (level, splash, scopeEnd = false) => (peopleLevel = splash ? level
+  : scopeEnd && freePeople !== null ? Math.max(peopleLevel, freePeople) : Math.min(peopleLevel, level + 1));
 export let renderProfile = sessionProfile(qualityLevel, peopleLevel);
 export const setRenderProfile = v => (renderProfile = v);
 export const glc = document.getElementById('gl');

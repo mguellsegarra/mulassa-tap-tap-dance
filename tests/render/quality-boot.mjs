@@ -68,19 +68,3 @@ console.log('boot quality ok');
     assert.equal(boot().level, low.guess, 'never above the guess');
   } finally { delete globalThis.localStorage; }
 }
-
-// A capped two-step trial may shed people temporarily; its rollback restores them without reviving older losses.
-{ const c = boot().context, run = s => vm.runInContext(s, c);
-  run("peopleLevel = 1; stepPeople(0, false, 'overload'); stepPeople(-1, false, 'overload')");
-  assert.equal(run('peopleLevel'), 0);
-  assert.equal(run("stepPeople(1, false, 'throttled')"), 1, 'failed probe restores its crowd');
-  run("stepPeople(0, true); stepPeople(-1, false, 'overload')");
-  assert.equal(run("stepPeople(0, false, 'throttled')"), 0, 'earlier real losses remain');
-}
-
-{ const c = boot().context, run = s => vm.runInContext(s, c);
-  run("stepPeople(2, true); stepPeople(1, false, 'overload'); stepPeople(0, false, 'overload')");
-  assert.equal(run("stepPeople(2, false, 'throttled')"), 2, 'high baseline also restores its original people');
-  run("stepPeople(1, false, 'overload'); stepPeople(0, false, 'overload'); stepPeople(-1, false, 'overload')");
-  assert.equal(run("stepPeople(0, false, 'throttled')"), 1, 'a useful earlier step keeps its own lower people baseline');
-}

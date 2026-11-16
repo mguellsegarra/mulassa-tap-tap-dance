@@ -45,7 +45,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
   // medium at 60. No profile is to blame there either: out of a song the level is restored and the menu keeps that
   // share as its own floor (menuFloor), which a song never inherits.
   let drops = null, tolerated = 0, futile = false, menuFloor = 0; // drops: the level and slow share the current run of drops started from
-  let probe = null, throttled = false, probeWindow = null; // probe: the level and slow share a capped step down started from; throttled: it bought nothing
+  let probe = null, throttled = false; // probe: the level and slow share a capped step down started from; throttled: it bought nothing
   const down = frameMonitor((steps, evidence) => {
     const share = evidence.slowShare, spiky = evidence.spiky;
     if (!spiky && share <= (playing ? tolerated : Math.max(tolerated, menuFloor))) return;
@@ -60,17 +60,13 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     // switching between 30 and 24 Hz with frames of 50-79 ms in between, 14% of them «slow», 9 ms of JavaScript, at medium,
     // low and minimal alike, and lost its crowd for nothing; tests/render/fixtures/low-power-bou.json, 14/11/2026) or a GPU
     // that cannot keep up (a 60 Hz phone drawing 33 and 50 ms frames in turns). Only a step tells them apart: one level
-    // down is a probe. If it buys nothing, try one more level against the same baseline: adjacent GPU profiles can
-    // share a bottleneck. If neither helps, restore the baseline and treat the cap as the browser's until the pace is fast again
+    // down is a probe (the near people lag a level, stage.js stepPeople: nobody leaves), and when the late share does not
+    // fall by the overload threshold it is put back and the cap is the browser's until the pace is fast again
     // (`throttled`). A step that helped stays, and the next one is probed the same way. Way too slow or hitching steps as ever.
     // (not at the game's own 30, `halved`: its overload is real)
     if ((evidence.capped || currentPace.fps < 45) && steps < 2 && !spiky && !halved && costAvg < 1000 / currentPace.fps * 0.45) {
       if (throttled) { report({ time, reason: 'throttled', level: level(), cost: costAvg, ...context(), ...evidence }); return; }
-      if (probe && level() < probe.from && probe.share - share < SLOW_SHARE) {
-        if (level() > -1 && level() === probe.from - 1) {
-          switchTo(level() - 1, 'overload', evidence);
-          probe.second = true; return;
-        }
+      if (probe && level() === probe.from - 1 && probe.share - share < SLOW_SHARE) {
         throttled = true; const to = probe.from; probe = drops = null;
         switchTo(to, 'throttled', evidence); return;
       }
@@ -84,7 +80,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
     }
     drops ??= { from: level(), share };
     switchTo(Math.max(-1, level() - steps), 'overload', evidence);
-  }, evidence => { probeWindow = evidence; });
+  });
   const reset = (reason = 'reset') => {
     down.reset(); clear(); cooldown = 2000; cadence = 0; lastHold = lastPlay = lastHalf = lastLowPower = null;
     report({ time, reason, level: level() });
@@ -113,15 +109,7 @@ export function adaptiveQuality({ ceiling, level, change, report = () => {}, can
       clear(); cooldown = 2000; lastHold = hold; lastPlay = play; lastHalf = pacedHalf; lastLowPower = lowPower; cadence = fps;
       report({ time, reason: 'cadence', level: level(), ...context() });
     }
-    probeWindow = null;
     down(ms, play);
-    // Quiet capped windows must finish the second probe too, using the same late-share evidence as its baseline.
-    // A decision inside down() resets sinceChange: that window belonged to the preceding profile.
-    if (probe?.second && sinceChange > 2000 && probeWindow) {
-      const helped = probe.share - probeWindow.slowShare >= SLOW_SHARE;
-      const to = probe.from; probe = null;
-      if (!helped) { throttled = true; drops = null; switchTo(to, 'throttled', probeWindow); return; }
-    }
     // Two seconds after a profile change: its 0.4 s presence fade, shadow-map/shader work and fresh cadence.
     // Perf telemetry still records these frames; they earn no recovery credit.
     if (cooldown > 0) { cooldown -= ms; return; }

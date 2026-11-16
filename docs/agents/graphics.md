@@ -165,6 +165,8 @@ What not to do:
   program's first use at once, or lands on the selector.
 - Do not answer a Low Power complaint with one more frame pattern in `frameMonitor`, nor call it fixed after one good
   session: replay the owner's recorded sessions (`tests/render/fixtures/low-power-bou.json`) and add the one that fails.
+- Do not probe a second level under a cap: a step mid-song compiles programs, and the owner's iPhone in Low Power Mode
+  froze 1.5 s stepping from low to minimal for nothing (2026-11-16, reverted; its session is the fixture's third).
 - Do not let one odd frame decide a cadence: a cap, a group or a hitch is read from a run of frames, never from the last one.
 - Do not start judging frames while the page is still warming up (compiling its JavaScript, first draws): keep it under
   the cover, and give the monitor frames at the device's own pace.

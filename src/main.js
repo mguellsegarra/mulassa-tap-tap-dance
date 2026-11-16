@@ -61,7 +61,7 @@ window.__mulassaSetBootPhase?.('init');
 initFigureObjects(); // both rigs exist before shader warmup and the first frame
 
 const monitorFrames = adaptiveQuality({ ceiling: qualityLevel, level: () => qualityLevel, report: qualitySample, canvas: glc, halve: on => { pace.cap = on; },
-  change: (level, reason) => { setQualityLevel(level); stepPeople(level, G.state === 'splash', reason); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
+  change: (level, reason) => { setQualityLevel(level); stepPeople(level, G.state === 'splash', reason === 'scope-end'); applyRenderQuality({ transition: !loader.covering }); resize(); precompile(); },
 });
 let glName; // crash reports' context, read only when one is sent
 errors.context(() => ({ state: G.state, diff: G.diff, practice: !!G.practice, paused: G.paused, quality: renderProfile.name, softwareGl,

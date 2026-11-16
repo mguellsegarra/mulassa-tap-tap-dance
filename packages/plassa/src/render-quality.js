@@ -122,7 +122,7 @@ const EARLY = { until: 15000, window: 2000, share: 0.3 };
 // shortcut: a 120/144 Hz screen whose GPU steadily manages only ~24 fps reads the same and keeps its level; tell them apart
 // (e.g. by the screen's refresh) if such a device shows up in reports.
 const CAP = { lo: 29, hi: 44, run: 12 };
-export function frameMonitor(onSlow, onWindow) {
+export function frameMonitor(onSlow) {
   let elapsed = 0, samples = 0, slow = 0, late = 0, warmup = 2000, clock = 0, n = 0, spiky = false; // late: capped frames a refresh past their slot
   let run = 0, runSlow = 0, capped = false, capMs = 0, earlyHit = false, quick = 0; // quick: which of the last 12 frames were under 24 ms (bits) // runSlow: this window's slow frames of the current run; capMs: the cap's interval
   const spikes = new Float64Array(SPIKE.count); // when the last few spikes happened (monitor time, ring buffer)
@@ -178,11 +178,7 @@ export function frameMonitor(onSlow, onWindow) {
     if (elapsed >= 4000 || early) {
       const share = samples >= 8 ? (slow + (late / samples > 0.3 ? late : 0)) / samples : 0; // (41.7/50 ms alternating: a busy 120 Hz GPU)
       const wait = early && !earlyHit && elapsed / samples < 100; earlyHit = early; // (the first early window only marks it, the next one confirms; under 10 fps no wait)
-      if (!wait) {
-        const evidence = { slowShare: share, spiky, window: elapsed, samples, capped };
-        onWindow?.(evidence); // a quality probe also needs the verdict when this window is no longer overloaded
-        if (share > SLOW_SHARE || spiky) { onSlow(share > 0.8 ? 2 : 1, evidence); warmup = 2000; n = 0; } // way too slow: two steps
-      }
+      if (!wait && (share > SLOW_SHARE || spiky)) { onSlow(share > 0.8 ? 2 : 1, { slowShare: share, spiky, window: elapsed, samples, capped }); warmup = 2000; n = 0; } // way too slow: two steps
       elapsed = samples = slow = late = runSlow = 0; spiky = false;
     }
   };
@@ -205,7 +201,7 @@ export function hudScale(width, height, dpr, budget) {
 // A try is a 2 s window of missed refreshes when it fails, and every switch changes the notes' step on screen: tried
 // mid-song, a device that reads a steady 60 broke the lane's motion a few times a song.
 // pace(now, hold) -> draw this frame?; pace.hz (refresh rate), pace.fps (target rate), pace.half, pace.lowPower (~30 Hz).
-// pace.cap (set by main.js's `halve` callback for adaptive-quality.js): a 60 Hz screen draws every other refresh too, an even 30, for a song
+// pace.cap (set by its owner, adaptive-quality.js): a 60 Hz screen draws every other refresh too, an even 30, for a song
 // whose JavaScript does not fit a 60 Hz frame (a 2015 MacBook Pro throttled by heat a minute into it: 14 ms a frame).
 const PACE = { window: 2000, slowShare: 0.15, recover: 5000, perMinute: 3, warmup: 1500 };
 export function framePacer(opts) {

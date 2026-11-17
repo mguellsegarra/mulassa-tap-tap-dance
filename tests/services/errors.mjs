@@ -44,6 +44,8 @@ assert.equal(scrubBreadcrumb({ category: 'console', level: 'error', message: 'x'
 const opts = sentryOptions({ dsn: DSN, environment: 'production', release: 'r', tags: () => { throw new Error('ctx'); } });
 assert.equal(opts.dataCollection.userInfo, false, 'Sentry is told never to infer the IP');
 assert.equal(opts.sendDefaultPii, false);
+const scanner = 'Non-Error promise rejection captured with value: Object Not Found Matching Id:1, MethodName:update, ParamCount:4';
+assert(opts.ignoreErrors.some(r => r.test(scanner)) && !opts.ignoreErrors.some(r => r.test('Object Not Found')), 'the mail link scanner is ignored, nothing else');
 assert(!('tracesSampleRate' in opts) && !('replaysSessionSampleRate' in opts), 'no tracing or replay');
 assert.equal(opts.beforeSend({ user: { ip_address: '1.2.3.4' }, request: { url: '/?repte=1-1' } }).user, undefined, 'a broken context getter keeps the report, scrubbed');
 for (let i = 0; i < 20; i++) opts.beforeSend({});

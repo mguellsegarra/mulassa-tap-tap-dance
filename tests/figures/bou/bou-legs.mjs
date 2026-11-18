@@ -9,7 +9,7 @@ import { createBouMotion } from '../../../src/figures/bou/bou-motion.js';
 import { BOU_TIMING as T } from '../../../src/figures/bou/bou-dance.js';
 
 const rig = buildBou(), motion = createBouMotion(rig), H = 120;
-const toShell = new THREE.Matrix4(), v = new THREE.Vector3(), SKIRT = { x: .60, front: 1.02, back: -1.33, hem: -.44, leg: .08 };
+const toShell = new THREE.Matrix4(), v = new THREE.Vector3(), SKIRT = { x: .60, front: .95, back: -1.33, hem: -.44, leg: .08 };
 let prev = null, prev2 = null, fastest = 0, frames = 0, through = 0; const footA = [], kneeA = [];
 for (let k = 0; k / H < T.duration; k++) {
   motion(k / H, 0);

@@ -58,7 +58,7 @@ export function tickGame(t, vt, beat, dt) {
     if (!G.collapseT) {
       advance(t);
       if (G.practice) practiceTick(t);
-      else if (t > song.tail + 1) finish('end');
+      else if (t > Math.min(song.tail + 1, song.duration)) finish('end'); // the Bou's tail already holds its whole fade: no extra silent second
     } else if (clock - G.collapseT > 3.5) finish('collapse');
   } else if (G.state === 'select' && !REEL.on && !REEL_STILL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu (not under the selector's held shot: each figure dances there on its own)
     G.lastBeat = Math.floor(beat);

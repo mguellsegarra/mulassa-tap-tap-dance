@@ -43,8 +43,7 @@ export const BOU_CLIP_CUTS = [
   [156, 'orbit'],
   [172, 'front'], // (the charge and the wide shot that followed filmed the run of bars 43-47, out since music revision 21)
   [180, 'eyes'],
-  [188, 'wide'],
-  [204, 'crane'],
+  [188, 'crane'], // (a wide shot till 204 cut into this crane from nearly the same place: a jump; the crane now rises through both)
   [216, 'vast'],
   [236, 'balcony'],
   [260, 'front', { tall: 1.8, wide: 1.3 }],

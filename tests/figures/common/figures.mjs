@@ -608,7 +608,7 @@ assert(!/showModal|aviat\.close|aviat-menu|aviat-close/.test(ui));
   for (const f of [...FIGURES, INVITE]) assert(STAND[f.id] > 0 && STAND[f.id] <= 1.2 && portraitStand(f) === STAND[f.id], `${f.id}: its own stand beside the gegants (?sizes output pastes over STAND)`);
   assert.deepEqual([clampStand(0), clampStand(0.734), clampStand(9)], [0.2, 0.73, 1.2], '?sizes keeps two decimals within its range');
   assert(portraitStand(FIGURES.find(f => f.id === 'gegants-ciutat-valls')) > portraitStand(MULASSA) && portraitStand(MULASSA) > portraitStand(FIGURES.find(f => f.id === 'cavallets-valls')), 'gegants > mulassa > cavallets');
-  assert.match(css, /\.sel-card\.aviat::after \{ box-shadow: none; border: 1\.5px dashed/, 'pending: a dashed edge, not only a tone');
+  assert(!/\.sel-card[^{}]*\{[^}]*\b(dashed|dotted)\b/.test(css), 'no dashed edge on a card: on a rounded box it switched the tile\'s raster mode, ~22 GPU programs when the first one scrolled in (docs/agents/reference/dom-costs.md)');
   assert(!/\.sel-card\[aria-selected="true"\] \{[^}]*transform/.test(css), 'the selected card is not lifted: every foot on one floor line');
   assert.match(css, /\.sel-card \.por \{[^}]*place-items: end center; padding: 5px 4px var\(--floor\);[^}]*at 50% calc\(100% - var\(--floor\)\)/, 'portraits stand on one tiled floor, their contact shadow under the soles');
 }

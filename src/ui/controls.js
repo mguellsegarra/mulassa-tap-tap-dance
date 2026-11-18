@@ -116,6 +116,7 @@ export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => 
 export const openGames = () => location.replace('/jocs/');
 freeEl.addEventListener('click', () => { if (G.state === 'select') openGames(); });
 document.getElementById('rotate-exit').addEventListener('click', () => curtain(() => setView(false)));
+let helpWas = null; // which help the ? last said it opens (null: not written yet)
 export function updateControls() {
   updateHudCursor();
   hide(viewBtn, !photoScreen() || !viewMode);
@@ -124,9 +125,12 @@ export function updateControls() {
   const photoHelp = photoHelpAvailable();
   howtoEl.inert = viewMode && !photoHelp;
   hide(howtoEl, !photoHelp); // the same ? opens and closes non-modal help, including on touch
-  howtoEl.classList.toggle('photo-help', photoHelp);
-  howtoEl.setAttribute('aria-label', photoHelp ? CTL.photoHelp : CTL.howto);
-  howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');
+  if (photoHelp !== helpWas) { // only on a change: an attribute written with its own value is still a DOM change, 48 a second here
+    helpWas = photoHelp;
+    howtoEl.classList.toggle('photo-help', photoHelp);
+    howtoEl.setAttribute('aria-label', photoHelp ? CTL.photoHelp : CTL.howto);
+    howtoEl.setAttribute('aria-haspopup', photoHelp ? 'false' : 'dialog');
+  }
   hide(settingsEl, G.state !== 'select');
   hide(freeEl, G.state !== 'select');
   hide(musicEl, G.state !== 'select');

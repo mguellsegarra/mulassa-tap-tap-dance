@@ -78,6 +78,7 @@ export function reelIdle(now) {
 // goes, the pending cards (content-visibility: auto) are not painted yet, and without their dashed edge (the strip's only
 // non-antialiased paint) Chrome rasters the card strip with MSAA, a mode it never uses otherwise: ~50 GPU programs built in
 // one flush, up to 0.4 s the first wake after a Chrome install or update. Still at opacity 0 for those frames, nothing is rastered.
+// (2026-11-18: the dashed edge is gone, select-cards.css; a cold wake still builds no program with this hold, not measured without it.)
 function reelWake() {
   const held = reelGone;
   reelGoneSet(false);

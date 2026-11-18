@@ -18,6 +18,25 @@ per-frame allocation (`docs/agents/graphics.md`): a change to a hot path states 
 `npm run check:gpu` fails on a budget overrun or a material re-evaluated every frame (`tests/render/alloc-budget.mjs`).
 After the fixes of that day: 7.3 MB/s on the splash, 5.6 in the idle reel (6.9 / 6.1 in the test's own run).
 
+## First figure change, 2026-11-18 (release/1.4.0, 848fe31)
+
+Galaxy S10, Chrome 157.0.8103.78 (updated the day before), native size, production build served by `vite preview`,
+Chrome stopped, the site's data cleared and the shader disk cache off (a first visit after a Chrome update), heart tips
+seen. A tap on the Mulassa's card 5 s after the selector shows, then on the Bou's 4.5 s later; Chrome traces, base and
+fix alternated.
+
+| Moment | Before | After | What changed |
+| --- | --- | --- | --- |
+| First figure change, longest frame | 506-667 ms (2 runs; 542-575 on beta, 3) | 105-125 ms (2) | no dashed edge on pending cards (`select-cards.css`) |
+| First figure change, GPU programs built | 23-29 (614-740 ms) | 3 (72-79 ms) | same |
+| Back to the first figure, longest frame | 98-150 ms (506 the run the big flush came here) | 52-68 ms | same |
+| Programs built under the page cover | 55 (615-633 ms) | 66 (1158-1211 ms) | same; the cover's time 5.2-6.2 s → 5.4 s |
+| Idle wake, programs built | 0 (1 run) | 0 (2) | same (`reelWakeHold` kept) |
+| The tap's own frame, every change | 51-68 ms | 53-68 ms | not touched: over the 50 ms budget |
+
+Still there: 3 programs at the first change (a stencil cover, a tessellated stroke, a text), 2 at the return, and the
+tap's own frame. With Chrome's cache as it stands after a normal session, none of them is built.
+
 ## Baseline, 2026-11-11 (release/1.4.0, d540e86)
 
 Galaxy S10, Chrome, native size, production build served by `vite preview`, cold (Chrome stopped, data cleared), a fresh

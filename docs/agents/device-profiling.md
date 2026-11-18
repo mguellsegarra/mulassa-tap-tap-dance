@@ -108,6 +108,15 @@ Android / Chrome:
   Android's «Clear cache» does not empty: the morning after a Chrome update the S10 compiled 52 programs (604 ms) under the
   page cover and 17 (413 ms) at the idle wake; hours later, the same builds hit the driver cache (0 compiles). Count the
   `VulkanCreateGraphicsPipelines` (builds), not only their ms, and note Chrome's version and update time.
+- A player's first visit after a Chrome update has that cache empty, and only one switch reproduces it at will:
+  `--disable-gpu-shader-disk-cache` in `/data/local/tmp/chrome-command-line` (`chrome <switches>`; read because the
+  S10's LineageOS is a debuggable build), written before Chrome starts and removed afterwards (`"cold": true` in an
+  `android-frames.mjs` plan; `SystemInfo.getInfo` on the browser target shows the command line). With it the first
+  figure change built 26 programs in a 542-575 ms frame; with the cache as it stood, 6 in 100-157 ms, or none. A
+  run that stops Chrome seconds after a program is built keeps Chrome from saving it, so the same miss repeats run
+  after run and looks permanent: left alive a minute and sent to the background (Home), Chrome saved them and the next
+  start built none. That also leaves the phone warm for every later run: use the switch, not the leftovers.
+  The compositor thread's own programs (6 a start, 5 of them at the selector's opening, ~65 ms) are never saved.
 - The S10 is shared by every agent on mac-studio. `android-cost.mjs` and `android-frames.mjs` stop Chrome at each run,
   which ends any other agent's session on it: ask the owner that the phone is free before starting, and say so when
   done. A phone another agent is using also measures wrong: with 100+ tabs left open and two pages at 60-110% CPU the

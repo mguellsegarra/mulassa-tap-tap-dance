@@ -2,7 +2,7 @@
 /* One surface, no divider: the town's accent (--town, below) tints its top and fades into the game's brown under the
    caption, so a town's row reads as a group. --t is that accent at one fixed lightness and capped chroma: every town's
    black silhouettes and the cream ring read alike, and no tint comes near the gold action or the cream choice. The name
-   stays cream and centred; pending figures (.aviat) wear a dashed edge, not a colour. */
+   stays cream and centred; pending figures (.aviat) wear every card's edge and show a silhouette, not a colour. */
 .sel-card { --t: #453322; --floor: 15px; position: relative; flex: 0 0 152px; width: 152px; display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; grid-template-rows: minmax(0, 1fr) var(--card-label-h); align-items: stretch; justify-items: stretch; gap: 0; min-height: 0; padding: 0; border: 0; border-radius: var(--sel-r); background: linear-gradient(var(--t), color-mix(in srgb, var(--t) 45%, #22160e) 42%, #1d130c 72%, #1a110b); box-shadow: 0 6px 16px #0006; text-align: center; transition: transform .15s; }
 /* Each town's accent: its banner's cloth and, toned down, every portrait of its figures (the cards and the photo mode's
    avatars). The game's own palette, not a colla's shirt or a heraldic tincture: the arms are on the pills. */
@@ -43,7 +43,9 @@
 @supports (color: oklch(from red l c h)) { :is(.sel-card, #photo-figs .pf)[data-town]:not([data-town="el-teu-poble"]) { --t: oklch(from var(--town) .42 min(c, .1) h); } }
 .sel-card { overflow: clip; } /* the panels' square corners stay inside the rounded card and its ring */
 .sel-card::after { content: ''; position: absolute; inset: 0; border-radius: inherit; box-shadow: inset 0 0 0 1px #fff3d624; pointer-events: none; }
-.sel-card.aviat::after { box-shadow: none; border: 1.5px dashed #e8d8b88c; }
+/* No dashed edge on a pending card: it was the one paint that switched its tile's raster mode, so the first one to
+   scroll into view (a phone's first figure change) built ~22 GPU programs in one frame of 374-667 ms on an S10 with no
+   shader cache (docs/agents/reference/dom-costs.md). Its silhouette says it is pending. */
 .sel-card.aviat:not([data-id="la-teva-colla"]) .por img { filter: saturate(.75) brightness(.92); }
 /* The portrait stands on the caption, on a floor shared by every card; the svg is exactly its columns × a whole-pixel
    cell, so no figure is resampled (each keeps square, equal pixels). */
@@ -102,7 +104,7 @@
 /* Selected: a cream ring over the whole card (drawn above the portrait) and a deeper shadow; never lifted, so every
    figure keeps the strip's one floor line. */
 .sel-card[aria-selected="true"] { box-shadow: 0 10px 22px #000a; }
-.sel-card[aria-selected="true"]::after { border: 0; box-shadow: inset 0 0 0 3px #fff3d6; }
+.sel-card[aria-selected="true"]::after { box-shadow: inset 0 0 0 3px #fff3d6; }
 .sel-card[aria-selected="true"] .sel-card-name { color: #fff3d6; }
 @media (hover: hover) { .sel-card:not([aria-selected="true"]):hover { transform: translateY(-2px); } }
 /* The new figure's card (.sel-new, until it is played): a band of gold light sweeps across it three times each time the

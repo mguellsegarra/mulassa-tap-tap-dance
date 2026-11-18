@@ -91,10 +91,13 @@ First paints and layer changes:
 - For anything left running, animate only `translate`, `scale` or `opacity`, without blend modes: a compositor-only sweep
   painted 2-4 times in 2 s. `mix-blend-mode` over moving content, an animated `background-position` and an animated
   gradient angle (`--sel-halo`) repaint every frame by construction: measure before leaving one running.
-- A layer's raster mode can flip to MSAA (≥ 6 slow paths and no non-antialiased paint) and build ~50 programs in one
-  flush (up to 0.4 s). The card strip's only non-AA paint is the pending cards' dashed edge, so anything that hides the
-  strip and shows it again, or a scroll that leaves no dashed card near the viewport, can flip it. The idle wake shows
-  the UI two frames after `data-reel-gone` drops (`reelWakeHold`, ui/reel-idle.js): 51-52 builds → 0-1.
+- A paint that only some scroll positions show can switch a tile's raster mode and build every program of that tile
+  again: the pending cards' dashed edge (a dashed border on a rounded box) did it. On a phone no pending card is in
+  view when the selector opens, so the first figure change, whose scroll brings one in, built 23-29 programs in one
+  frame of 506-667 ms (S10, no shader cache); the idle wake had the same owner (51-52 builds, `reelWakeHold`,
+  ui/reel-idle.js). The edge is gone (2026-11-18, `tests/figures/common/figures.mjs` forbids a dashed card): 3 programs,
+  105-125 ms. No dashed or dotted border on a rounded box; rehearsing the change or the scroll under the page cover
+  does not build these programs.
 - Measure at the small viewports too: a media query can hide a cost from the phone you hold.
 - Measured to nothing, so do not "fix" it without numbers: network requests (a `fetch` never blocks), the idle
   dissolve's WebGL→2D copy, steady-state CSS animations, any one camera shot, the heap collector (cutting the garbage

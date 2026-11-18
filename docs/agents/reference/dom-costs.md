@@ -31,6 +31,16 @@ the method and its tools: `docs/agents/device-profiling.md`.
   persisted cache. Fixed by showing the UI two frames after `data-reel-gone` drops (`reelWakeHold`, ui/reel-idle.js):
   51-52 builds → 0-1 (2026-11-13, S10 Chrome 157). Anything that hides the strip and shows it again, or a scroll that
   leaves no dashed card near the viewport, can flip it the same way. Found by Fable 5.2's traces (Skia op tracing).
+  It did, on every phone's first figure change (2026-11-18, S10, Chrome 157, the shader disk cache off): at 411 px wide
+  the first pending card is 97 px off screen when the selector opens; centring the tapped card scrolled it in, and that
+  flush built 23-29 programs (614-740 ms, one frame of 506-667 ms; 26 and 542-575 ms on beta). A/B with injected CSS:
+  no strip scroll 5 programs, pending cards invisible 4, no dashed edge 4, no silhouette 26, no CSS animation at all 7 but
+  0.15 s earlier, the standings hidden 26. A straight dashed line on every card, the pending cards always painted
+  (`content-visibility: visible`) and a change or a scroll rehearsed under the page cover did not move it. The owner
+  chose to drop the edge (a pending card's silhouette says enough): 3 programs (72-79 ms), frames of 105-125 ms, the
+  return to the first figure 52-68 ms; a cold idle wake still builds none. With the edge kept as an SVG image the
+  numbers were the same (84-139 ms). Under the page cover the load builds 11-12 programs more (~600 ms of GPU; the
+  cover's time unchanged, 5.2-6.2 s). Those 3 programs are still open (a stencil cover, a tessellated stroke, a text).
 - **What did not matter here**, so do not «fix» it without numbers: network requests (a guest's are two small RPCs; a
   `fetch` never blocks), the idle dissolve's WebGL→2D copy on Android, steady-state CSS animations (no repaint measured).
 - **The same, only on small phones.** Short phones (375×667, 320×568: iPhone SE/8) made each of the 84 cards a size

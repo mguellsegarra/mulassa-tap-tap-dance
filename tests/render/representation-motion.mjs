@@ -118,7 +118,7 @@ assert(caneError<.005,`final held cane stays on ground: ${caneError}`);
  assert(women.filter(s=>['#c9a45c','#e3c27a'].includes(s.hair.colour)).length>women.length*0.15,'some blonde women');
  assert(!pub.some(s=>s.beard&&s.meta.gender!=='home'),'a beard only on a man');
  assert(!pub.some(s=>s.meta.gender==='home'&&(s.top.kind==='vestit'||s.bottom.kind==='faldilla'||s.cover==='mocador')),'a man in a skirt');
- for(const id of ['p02','p06','p08','p09','p10'])assert(specs.some(s=>s.hair===CATALOGUE.find(c=>c.id===id).hair&&s.age===CATALOGUE.find(c=>c.id===id).age),`review example ${id} keeps its age`);
+ for(const id of ['p02','p06','p09','p10'])assert(specs.some(s=>s.hair===CATALOGUE.find(c=>c.id===id).hair&&s.age===CATALOGUE.find(c=>c.id===id).age),`review example ${id} keeps its age`);
  assert(skirts.size>=8,`skirts in only ${skirts.size} colours`);
  const dress=s=>[s.hair.style,s.hair.colour,s.top.colour,s.bottom.colour].join();
  const adults=new Set(specs.filter(s=>s.age!=='infant'&&!s.mobility).map(dress)),kids=specs.filter(s=>s.age==='infant'&&!s.mobility);

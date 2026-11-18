@@ -26,6 +26,14 @@ for (let b = 0; b < CLIP_END - 0.05; b += 1 / 30) { // 60 samples a second at th
   }
   prev = { i, u, y: p.y };
 }
+// no jump cut: a cut turns the view 25° or more, or frames half again more or less of the plaça (beat 204's wide shot cut
+// into a crane from nearly the same place, the owner 18/11/2026). 88 (front into wide) and 284 (orbit into the finale's
+// crane) are as close: they await the owner's call
+const look = b => { placeClip(cam, b, -2.2); const p = cam.position, d = [cam.at[0] - p.x, cam.at[1] - p.y, cam.at[2] - p.z], l = Math.hypot(...d); return { u: d.map(v => v / l), w: l * Math.tan(cam.fov * Math.PI / 360) }; };
+CUTS.slice(1).filter(([b]) => b !== 88 && b !== 284).forEach(([b]) => {
+  const a = look(b - 0.01), n = look(b), turn = Math.acos(Math.min(1, a.u[0] * n.u[0] + a.u[1] * n.u[1] + a.u[2] * n.u[2])) * 180 / Math.PI;
+  assert.ok(turn >= 25 || Math.max(a.w / n.w, n.w / a.w) >= 1.5, `the cut at ${b} changes the view (${turn.toFixed(1)}°, ${(n.w / a.w).toFixed(2)}× the width)`);
+});
 // «Mira el ball» on a phone never stands still: its opening comes in over the clock while the music's wait holds the beat at
 // 0, on without a jump when the beat starts, and a still shot keeps coming in although the lens stands at its widest
 const phone = { ...cam, aspect: 402 / 874, position: { set(x, y, z) { this.d = Math.hypot(x, z); } } };

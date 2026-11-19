@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ca">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Carta del bestiari · Mulassa</title
+  ><link rel="stylesheet" href="../shared/fonts.css" /><style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #17120e;
+      color: #fff3d6;
+      font: 16px system-ui;
+    }
+    main {
+      max-width: 1340px;
+      margin: auto;
+      padding: 28px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 32px;
+    }
+    canvas {
+      width: 100%;
+      max-width: 810px;
+      height: auto;
+      display: block;
+      margin: auto;
+      aspect-ratio: 3/4;
+    }
+    h1 {
+      font-size: 23px;
+      margin: 0 0 6px;
+    }
+    h2 {
+      font-size: 15px;
+      margin: 22px 0 0;
+      color: #f5c518;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    p {
+      color: #c6b59e;
+      line-height: 1.5;
+    }
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      font-size: 14px;
+    }
+    input,
+    textarea {
+      display: block;
+      width: 100%;
+      margin-top: 5px;
+      padding: 9px;
+      background: #34271d;
+      color: #fff3d6;
+      border: 1px solid #6c5439;
+      border-radius: 6px;
+      font: inherit;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 62px;
+    }
+    input[type="range"] {
+      padding: 0;
+      accent-color: #f5c518;
+    }
+    output {
+      float: right;
+      color: #f5c518;
+    }
+    button {
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      background: transparent;
+      border: 1px solid #f5c518;
+      border-radius: 25px;
+      font: 700 15px system-ui;
+      color: #fff3d6;
+      cursor: pointer;
+    }
+    #png {
+      background: #f5c518;
+      color: #2a1a10;
+    }
+    .views {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .views button {
+      margin: 0;
+      padding: 10px;
+    }
+    .views button[aria-pressed="true"] {
+      background: #f5c518;
+      color: #2a1a10;
+    }
+    details {
+      margin-top: 24px;
+    }
+    small {
+      color: #c6b59e;
+    }
+    input[type="file"] {
+      font-size: 12px;
+    }
+    :focus-visible {
+      outline: 3px solid #14b8a6;
+      outline-offset: 2px;
+    }
+    @media (max-width: 760px) {
+      main {
+        grid-template-columns: 1fr;
+        padding: 14px;
+      }
+    }
+  </style>
+  <header style="padding: 12px 28px">
+    <a style="color: #f5c518" href="../index.html">← Eines d’Instagram</a>
+  </header>
+  <main>
+    <section>
+      <canvas
+        id="card"
+        aria-label="Carta col·leccionable del personatge"
+      ></canvas>
+    </section>
+    <aside>
+      <h1>Carta del bestiari</h1>
+      <p>Vertical 3:4 · 1080 × 1440</p>
+      <div class="views" role="group" aria-label="Imatge">
+        <button data-view="card" aria-pressed="true">1 · Carta</button
+        ><button data-view="detail" aria-pressed="false">2 · Detall</button>
+      </div>
+      <div id="fields"></div>
+      <button id="png">Desa la imatge PNG</button
+      ><button id="save">Desa la configuració JSON</button
+      ><button id="reset">Torna als valors inicials</button>
+      <details>
+        <summary>Reutilitza la plantilla</summary>
+        <label
+          >Carrega una configuració<input
+            id="load"
+            type="file"
+            accept=".json,application/json" /></label
+        ><label
+          >Carrega un altre model 3D<input
+            id="model"
+            type="file"
+            accept=".json,application/json"
+        /></label>
+        <p>
+          Model Three.js en format Object3D.toJSON(). El model nou conserva els
+          seus materials i es col·loca dret al centre. Ajusta l’angle i la mida
+          després de carregar-lo.
+        </p>
+        <p>
+          L’editor funciona amb el servidor local de les eines d’Instagram. La
+          configuració desa els textos i la càmera, no el model.
+        </p>
+      </details>
+      <p id="status" role="status"></p>
+    </aside>
+  </main>
+  <script>
+    const groups = [
+      [
+        "Capçalera",
+        {
+          collection: ["Col·lecció", 30],
+          number: ["Número", 6],
+          name: ["Nom", 24],
+          type: ["Tipus", 22],
+        },
+      ],
+      [
+        "Habilitat",
+        {
+          ability: ["Nom de l’habilitat", 26],
+          abilityText: ["Descripció", 90, 1],
+        },
+      ],
+      [
+        "Moviment especial",
+        {
+          move: ["Nom del moviment", 20],
+          moveText: ["Descripció", 90, 1],
+          moveValue: ["Valor (opcional)", 4],
+        },
+      ],
+      ["Peu", { line: ["Frase", 60], place: ["Lloc", 20], url: ["Web", 30] }],
+      [
+        "Càmera",
+        {
+          angle: ["Angle", [-180, 180, 1]],
+          elevation: ["Alçada", [-5, 45, 1]],
+          zoom: ["Mida", [0.8, 1.07, 0.01]],
+        },
+      ],
+    ];
+    const box = document.querySelector("#fields");
+    for (const [title, items] of groups) {
+      const h = document.createElement("h2");
+      h.textContent = title;
+      box.append(h);
+      for (const [id, [label, max, area]] of Object.entries(items)) {
+        const l = document.createElement("label");
+        l.textContent = label;
+        let i;
+        if (Array.isArray(max)) {
+          i = document.createElement("input");
+          i.type = "range";
+          [i.min, i.max, i.step] = max;
+          const o = document.createElement("output");
+          o.id = "value-" + id;
+          l.append(o);
+        } else {
+          i = document.createElement(area ? "textarea" : "input");
+          i.maxLength = max;
+          if (area) i.rows = 2;
+        }
+        i.id = id;
+        l.append(i);
+        box.append(l);
+      }
+    }
+  </script>
+  <script type="module" src="./plantilla.js"></script>
+</html>

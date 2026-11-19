@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ca">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Mulassa · Retrats de perfil</title
+  ><link rel="stylesheet" href="../shared/fonts.css" /><style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: #171512;
+      color: #f7edda;
+      font: 16px system-ui;
+      padding: 32px;
+    }
+    main {
+      max-width: 1120px;
+      margin: auto;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 8px 0;
+    }
+    p {
+      color: #c5bcac;
+      line-height: 1.5;
+    }
+    #presets {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 24px 0;
+    }
+    button {
+      font: inherit;
+      border: 1px solid #c7a74d;
+      border-radius: 24px;
+      background: none;
+      color: inherit;
+      padding: 12px 20px;
+      cursor: pointer;
+    }
+    button[aria-pressed="true"],
+    #download {
+      background: #f4c542;
+      color: #241c10;
+    }
+    section {
+      display: grid;
+      grid-template-columns: minmax(0, 640px) 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .circle,
+    .mini {
+      border-radius: 50%;
+    }
+    .sizes {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin: 28px 0;
+    }
+    .mini {
+      object-fit: contain;
+    }
+    label {
+      display: block;
+      margin: 20px 0;
+    }
+    small {
+      color: #a99f90;
+    }
+    @media (max-width: 700px) {
+      body {
+        padding: 20px;
+      }
+      section {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+    }
+  </style>
+  <header style="padding: 12px 28px">
+    <a style="color: #f5c518" href="../index.html">← Eines d’Instagram</a>
+  </header>
+  <main>
+    <small>MULASSA · INSTAGRAM</small>
+    <h1>Retrats de la Mulassa</h1>
+    <p>
+      Renderitzades amb el model 3D del joc. Tria un retrat i desa'l a 1080 ×
+      1080.
+    </p>
+    <nav id="presets"></nav>
+    <section>
+      <canvas id="portrait" class="circle"></canvas>
+      <aside>
+        <h2>Com es veu en petit</h2>
+        <div class="sizes">
+          <img
+            class="mini"
+            width="96"
+            height="96"
+            alt="Perfil a 96 píxels"
+          /><img
+            class="mini"
+            width="48"
+            height="48"
+            alt="Perfil a 48 píxels"
+          /><img class="mini" width="32" height="32" alt="Perfil a 32 píxels" />
+        </div>
+        <p id="caption"></p>
+        <label
+          ><input type="checkbox" id="circle" checked /> Veure el retall
+          circular</label
+        ><button id="download">Desa el PNG</button>
+        <p>
+          <small
+            >El PNG es desa quadrat. El cercle només simula el retall del
+            perfil.</small
+          >
+        </p>
+      </aside>
+    </section>
+  </main>
+  <script type="module" src="./generator.js"></script>
+</html>

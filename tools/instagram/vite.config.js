@@ -36,7 +36,7 @@ function gameNotes() {
       const [sprites, primitives] = sources.map((path) =>
         readFileSync(path, "utf8"),
       );
-      const palette = between(sprites, "export const C =", "// Sprites:");
+      const palette = between(sprites, "export const C =", "// The note colours follow the figure"); // the Mulassa's colours: the theme switch after it needs the game
       const drawing = between(primitives, "function arrow(", "// MANTÉN:");
       for (const token of [
         "function arrow(",

@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "vite --host --port 5178",
+    "dev:instagram": "vite --config tools/instagram/vite.config.js --host",
+    "build:instagram": "vite build --config tools/instagram/vite.config.js",
     "build": "vite build",
     "build:escuts": "node tools/ui/build-escuts.mjs",
     "capture": "node tools/qa/capture.mjs",

@@ -11,7 +11,7 @@ npm ci
 npm run dev:instagram
 ```
 
-Open <http://127.0.0.1:5189/>. The server binds to localhost. Stop it with Ctrl+C.
+Open <http://127.0.0.1:5189/>, or the LAN address Vite prints to open it from a phone. Stop it with Ctrl+C.
 
 - **Perfil**: six portrait presets, including the selected turquoise close-up. The circular preview is a mask; the exported image stays square at 1080 × 1080.
 - **Els primers posts**: welcome, controls and rhythm challenge at 1080 × 1440 (3:4). Edit the copy and, on the last two posters, the Mulassa's angle, elevation, size and position. Camera adjustments persist separately in this browser's local storage. The reset button restores that poster's preset.

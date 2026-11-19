@@ -1,6 +1,6 @@
 import { drawGameNote } from "virtual:instagram-game-notes";
 import * as THREE from "three";
-import { buildMulassa } from "../../../src/scene/models/mulassa.js";
+import { buildMulassa } from "../../../src/figures/mulassa/mulassa.js";
 import { buildPlaza } from "../../../src/scene/models/plaza.js";
 import { buildPerson } from "../../../src/scene/models/people.js";
 const c = document.querySelector("canvas"),

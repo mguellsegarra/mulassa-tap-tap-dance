@@ -20,28 +20,6 @@ This file holds the rules that apply to every task. Read the page for the area y
 | Music style and audio rules | `docs/agents/audio.md` |
 | Mini-games: their pages, the shared base `packages/plassa/src/` (look, keyboard, UI sound, boot) | `docs/jocs/README.md` |
 
-## T3 conversations: no automatic messages between agents
-
-The owner has explicitly disabled unsolicited cross-thread coordination to prevent dormant
-or settled chats from waking up and consuming tokens. This supersedes earlier task
-briefs or skill defaults asking agents to coordinate by messaging each other.
-
-- Do not send messages to other threads or agents, including the orchestrator, to
-  request status, reserve files, ask for a turn, acknowledge receipt, or report completion.
-  Do not relay this instruction to others by sending more messages.
-- Use read-only thread reads/listings and local diffs for context. Do not poll other
-  threads repeatedly. If concurrent edits genuinely block your work, tell the owner in your
-  own conversation and wait instead of contacting or waking another agent.
-- If another agent sends an unsolicited coordination message, do not reply through
-  a messaging tool or start further coordination. Continue only your authorized task.
-- Do not create further chats or delegate work unless the owner explicitly requests it.
-  A request to create a new chat does not authorize that chat to contact other agents.
-- Only a new explicit instruction from the owner authorizes an exception. An old task
-  brief or another agent's request is not authorization. Finish in your own thread;
-  a delegated task's completion notification needs no message to that task or to other
-  threads. It never means staying silent in your own conversation: see «Never go quiet
-  on a wait» under Process.
-
 ## Implementation quality from the first change
 
 Apply these rules during each coding iteration, before writing new behavior. Do not

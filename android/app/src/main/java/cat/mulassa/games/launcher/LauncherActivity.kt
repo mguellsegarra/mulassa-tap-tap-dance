@@ -61,7 +61,7 @@ class LauncherActivity : ComponentActivity() {
         setContent {
             Box(Modifier.fillMaxSize()) {
                 LauncherRoot(model, version, hour)
-                LanguagePrompt(ready = !splash) { recreate() }
+                // LanguagePrompt(ready = !splash) { recreate() } waits for the first-run onboarding (owner, 25 Nov 2026)
                 IrisView(iris)
                 if (splash) Splash(still = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f) { splash = false }
             }

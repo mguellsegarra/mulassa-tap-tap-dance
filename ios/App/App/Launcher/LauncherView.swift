@@ -52,7 +52,7 @@ struct LauncherRoot: View {
         }
         .environment(\.locale, Locale(identifier: language.code))
         .id(language.code) // a new language redraws every string, the ones read outside Text included
-        .overlay { LanguagePrompt() }
+        // LanguagePrompt() waits for the first-run onboarding (owner, 25 Nov 2026)
         .preferredColorScheme(.dark)
     }
 

@@ -192,7 +192,7 @@ export function hudScale(width, height, dpr, budget) {
 // A try is a 2 s window of missed refreshes when it fails, and every switch changes the notes' step on screen: tried
 // mid-song, a device that reads a steady 60 broke the lane's motion a few times a song.
 // pace(now, hold) -> draw this frame?; pace.hz (refresh rate), pace.fps (target rate), pace.half, pace.lowPower (~30 Hz).
-// pace.cap (set by its owner, adaptive-quality.js): a 60 Hz screen draws every other refresh too, an even 30, for a song
+// pace.cap (set by main.js through adaptive-quality.js's `halve`): a 60 Hz screen draws every other refresh too, an even 30, for a song
 // whose JavaScript does not fit a 60 Hz frame (a 2015 MacBook Pro throttled by heat a minute into it: 14 ms a frame).
 const PACE = { window: 2000, slowShare: 0.15, recover: 5000, perMinute: 3, warmup: 1500 };
 export function framePacer(opts) {

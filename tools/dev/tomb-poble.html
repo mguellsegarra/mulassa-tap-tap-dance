@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Tomb del Poble · prova</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#bcd5e2;font-family:system-ui;overscroll-behavior:none;-webkit-user-select:none;user-select:none}canvas{display:block;width:100%;height:100%;touch-action:none}
+#perf{position:fixed;left:max(8px,env(safe-area-inset-left));top:8px;padding:6px 10px;border-radius:10px;background:#000a;color:#fff;font:12px ui-monospace,monospace;white-space:pre;pointer-events:none}</style></head>
+<body><canvas id="c"></canvas><div id="perf"></div>
+<script type="module">
+// The Tomb del Poble slice (dev only): the real Mulassa driven along the Blat and carrer de la Cort, built by world.js from slice.json.
+// WASD and Shift, drag to look, wheel to zoom; on touch, left half walks, right half looks. ?auto walks the slice, ?dpr=N, ?sky=0.
+import * as THREE from 'three';
+import { buildMulassa } from '/src/figures/mulassa/mulassa.js';
+import { createCarriers, CUFF } from '/src/figures/mulassa/mula-carriers.js';
+import { poseMulaBody } from '/src/figures/mulassa/mula-pose-rig.js';
+import { createStepper } from '/src/figures/mulassa/mula-supports.js';
+import { PHOTO, PHOTO_CAM, PHOTO_RUN, movePhoto, photoBody, photoKey, photoRelease, photoLook, photoZoom, setPhotoControl } from '/src/game/photo-control.js';
+import { buildCity } from './tomb-poble/world.js';
+import slice from './tomb-poble/slice.json';
+const q = new URLSearchParams(location.search);
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, +q.get('dpr') || 2)); renderer.info.autoReset = true;
+const SKY = '#bcd5e2', scene = new THREE.Scene(); scene.background = new THREE.Color(SKY); scene.fog = new THREE.Fog(SKY, 70, 340);
+scene.add(new THREE.HemisphereLight('#fff4df', '#8f8068', 2.2));
+const sun = new THREE.DirectionalLight('#fff0cf', 2.1); sun.position.set(-30, 60, 25); scene.add(sun);
+const city = buildCity(slice, new THREE.MeshLambertMaterial({ vertexColors: true })); scene.add(city.mesh);
+const camera = new THREE.PerspectiveCamera(54, 1, .15, 400);
+const rig = buildMulassa(), carriers = createCarriers(), stepper = createStepper(), feet = Array.from({ length: 8 }, () => ({ x: 0, y: 0, z: 0, yaw: 0, contact: true }));
+rig.root.add(carriers.group); scene.add(rig.root);
+const blob = new THREE.Mesh(new THREE.CircleGeometry(1.5, 20), new THREE.MeshBasicMaterial({ color: '#000', transparent: true, opacity: .22, depthWrite: false }));
+blob.rotation.x = -Math.PI / 2; blob.scale.set(.7, 1.45, 1); blob.position.y = .02; scene.add(blob);
+setPhotoControl(true, 'mulassa-valls'); PHOTO.pitch = .24; PHOTO.zoom = 8; // lower and closer than the plaça: under the balconies, along the street
+const body = photoBody(), [sx, sz] = slice.start; body.x = sx; body.z = sz;
+const aim = slice.path[14]; // she starts in the Blat, facing the Cort
+ body.yaw = Math.atan2(aim[0] - sx, aim[1] - sz); PHOTO.cameraYaw = body.yaw + Math.PI;
+// Her footprint (a little under the plaça's box: the street is what limits her): a sampled box, O(1) per point on the baked grid.
+const HW = .62, HL = 1.75, SAMPLES = [[-1, -1], [1, -1], [-1, 1], [1, 1], [-1, 0], [1, 0], [0, 1], [0, -1]];
+function safe(x, z, yaw) {
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  for (const [a, b] of SAMPLES) { const lx = a * HW, lz = b * HL; if (!city.walkable(x + lx * c + lz * s, z - lx * s + lz * c)) return -.1; }
+  return 1;
+}
+// The camera never ends inside a wall: march the walkable grid from her to where it wants to be, below the roofs' height.
+const focus = new THREE.Vector3(sx, 2.7, sz); let dist = 8;
+const CLEAR = .95; // keeps the lens off the façades and out from under the balconies
+function room(dx, dy, dz, want) {
+  const h = Math.hypot(dx, dz) || 1, sx = -dz / h * CLEAR, sz = dx / h * CLEAR;
+  for (let t = .5; t <= want; t += .25) {
+    const x = focus.x + dx * t, z = focus.z + dz * t;
+    if (focus.y + dy * t < 13 && !(city.walkable(x, z) && city.walkable(x + sx, z + sz) && city.walkable(x - sx, z - sz))) return Math.max(1.2, t - .4);
+  }
+  return want;
+}
+function frameCamera(dt) {
+  const b = photoBody(), k = 1 - Math.exp(-dt / .16);
+  focus.x += (b.x - focus.x) * k; focus.z += (b.z - focus.z) * k;
+  const cp = Math.cos(PHOTO.pitch), dx = Math.sin(PHOTO.cameraYaw) * cp, dy = Math.sin(PHOTO.pitch), dz = Math.cos(PHOTO.cameraYaw) * cp, r = room(dx, dy, dz, PHOTO.zoom);
+  dist += (r - dist) * (1 - Math.exp(-dt / (r > dist ? .45 : .1))); const d = Math.min(r, dist);
+  camera.position.set(focus.x + dx * d, focus.y + dy * d, focus.z + dz * d); camera.lookAt(focus);
+}
+addEventListener('keydown', e => photoKey(e, true)); addEventListener('keyup', e => photoRelease(e.code));
+const el = renderer.domElement, touches = new Map();
+el.addEventListener('pointerdown', e => { el.setPointerCapture(e.pointerId); touches.set(e.pointerId, { x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY, walk: e.pointerType === 'touch' && e.clientX < innerWidth / 2 }); });
+el.addEventListener('pointermove', e => { const t = touches.get(e.pointerId); if (!t) return;
+  if (t.walk) { const X = (e.clientX - t.ox) / 55, Y = (t.oy - e.clientY) / 55, n = Math.hypot(X, Y), m = Math.min(1, n); PHOTO.stickX = n > .12 ? X / n * m : 0; PHOTO.stickY = n > .12 ? Y / n * m : 0; }
+  else photoLook(e.clientX - t.x, e.clientY - t.y);
+  t.x = e.clientX; t.y = e.clientY; });
+const up = e => { const t = touches.get(e.pointerId); if (t?.walk) PHOTO.stickX = PHOTO.stickY = 0; touches.delete(e.pointerId); };
+el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
+el.addEventListener('wheel', e => { e.preventDefault(); photoZoom(Math.exp(e.deltaY * .001)); }, { passive: false });
+// ?auto: walk the slice at the trot and back, for comparable frame numbers.
+const auto = q.has('auto'); let along = 8, dir = 1;
+function drive(dt) {
+  const P = slice.path; let left = PHOTO_RUN.trot * dt;
+  while (left > 0) {
+    const to = P[Math.round(along) + dir]; if (!to) { dir = -dir; continue; }
+    const dx = to[0] - body.x, dz = to[1] - body.z, d = Math.hypot(dx, dz);
+    if (d < left) { body.x = to[0]; body.z = to[1]; left -= d; along = Math.round(along) + dir; continue; }
+    body.x += dx / d * left; body.z += dz / d * left; body.vx = dx / d * PHOTO_RUN.trot; body.vz = dz / d * PHOTO_RUN.trot;
+    body.yaw = Math.atan2(dx, dz); PHOTO.cameraYaw += Math.atan2(Math.sin(body.yaw + Math.PI - PHOTO.cameraYaw), Math.cos(body.yaw + Math.PI - PHOTO.cameraYaw)) * (1 - Math.exp(-dt / .8)); left = 0;
+  }
+}
+const SHELL = { x: 0, z: 0, yaw: 0, roll: 0, pitch: 0 }; let stride = 0, last = performance.now(), n = 0, sum = 0, worst = 0, shown = performance.now(); const hist = [];
+const perf = document.getElementById('perf');
+function frame(now) {
+  const raw = now - last, dt = Math.min(.05, raw / 1000); last = now;
+  if (el.width !== Math.round(innerWidth * renderer.getPixelRatio()) || el.height !== Math.round(innerHeight * renderer.getPixelRatio())) { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+  const t0 = performance.now();
+  if (auto) drive(dt); else movePhoto(dt, safe, (PHOTO.cameraYaw ?? body.yaw + Math.PI) - Math.PI);
+  const speed = Math.hypot(body.vx, body.vz), run = Math.min(1, speed / PHOTO_RUN.run), gait = Math.min(1, speed);
+  stride = (stride + dt * 2 * Math.PI * (1.4 + run * 3.2)) % (2 * Math.PI);
+  const gallop = Math.sin(stride);
+  poseMulaBody(rig, body.x, Math.abs(gallop) * .14 * run, body.z, body.yaw, gallop * (.025 + .01 * run) * gait, gallop * .08 * run);
+  rig.root.updateMatrixWorld(true);
+  SHELL.x = body.x; SHELL.z = body.z; SHELL.yaw = body.yaw; SHELL.roll = rig.body.rotation.z; SHELL.pitch = rig.body.rotation.x;
+  const step = stepper.update(dt, SHELL, 1); for (let i = 0; i < 8; i++) Object.assign(feet[i], step[i]);
+  carriers.pose(rig, feet, CUFF.max);
+  blob.position.x = body.x; blob.position.z = body.z; blob.rotation.z = body.yaw;
+  frameCamera(dt);
+  const cpu = performance.now() - t0;
+  renderer.render(scene, camera);
+  n++; sum += raw; worst = Math.max(worst, raw); hist.push(raw); if (hist.length > 1800) hist.shift();
+  if (now - shown > 500) { const i = renderer.info.render, m = renderer.info.memory;
+    perf.textContent = `${(1000 * n / (now - shown)).toFixed(0)} fps · pitjor ${worst.toFixed(0)} ms · lògica ${cpu.toFixed(1)} ms\n${i.calls} crides · ${(i.triangles / 1000).toFixed(1)}k triangles · ciutat ${(city.tris / 1000).toFixed(1)}k · ${m.geometries} geo`;
+    n = 0; sum = 0; worst = 0; shown = now; }
+  requestAnimationFrame(frame);
+}
+window.__tomb = { PHOTO, safe, body, slice, camera, hist, city, stats: () => { const s = [...hist].sort((a, b) => a - b), i = renderer.info.render; return { frames: s.length, p50: s[s.length >> 1], p95: s[s.length * .95 | 0], p99: s[s.length * .99 | 0], max: s.at(-1), calls: i.calls, tris: i.triangles, city: city.tris }; } };
+requestAnimationFrame(frame);
+</script></body></html>

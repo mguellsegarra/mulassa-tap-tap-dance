@@ -1,0 +1,37 @@
+:root{color-scheme:dark;font-family:system-ui,sans-serif;color:#f6f1f9;background:#151219}
+*{box-sizing:border-box}body{margin:0;padding:24px}main{max-width:1440px;margin:auto}
+nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+button{font:inherit;min-height:44px;padding:10px 16px;border:1px solid #514653;border-radius:8px;background:#2c2531;color:inherit;cursor:pointer}
+button:first-child{background:#f5b1dd;color:#281032;border-color:transparent;font-weight:700}
+button:focus-visible,input:focus-visible{outline:3px solid #ffaf51;outline-offset:3px}
+label{display:flex;align-items:center;gap:12px}#error:empty{display:none}#error{color:#ffb0a0}
+.slides{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+figure{margin:0;min-width:0}figcaption{font-size:13px;color:#c9bdcd;margin-bottom:12px}
+.story{position:relative;isolation:isolate;overflow:hidden;aspect-ratio:9/16;container-type:inline-size;background:#c12d9a}
+.sky,.clouds,.shade,.safe{position:absolute;inset:0;pointer-events:none}
+.sky{width:100%;height:100%;object-fit:cover}
+.clouds{inset:-5%;opacity:.15;background:radial-gradient(ellipse at 15% 65%,#ff976a,transparent 65%)}
+.tower{position:absolute;height:126cqw;width:auto;max-width:none;right:-25cqw;bottom:-3cqw;transform-origin:50% 100%}
+.shade{background:linear-gradient(0deg,#32123744,transparent 50%)}
+.copy{position:absolute;z-index:2;left:8cqw;right:8cqw;top:28cqw;bottom:28cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4cqw}
+.line{display:block;flex:none;height:auto;max-width:100%;transform-origin:center}
+.day{width:70cqw}.number{width:56cqw}.month{width:84cqw}
+.date .copy{justify-content:flex-start;padding-top:7cqw;gap:5cqw}
+.date .tower{opacity:.66;right:-31cqw;height:108cqw}
+.date .shade{background:linear-gradient(0deg,#4a1d6266,transparent 75%)}
+.anticipation .tower,.decade .tower{opacity:.44;right:-37cqw;height:142cqw}
+.game{width:76cqw}.awaited{width:84cqw}.of{width:57cqw}.decade-word{width:84cqw}
+.anticipation .copy,.decade .copy{padding-bottom:16cqw;gap:6cqw}
+.reveal .copy{justify-content:flex-start;top:25cqw;left:6cqw;right:6cqw;gap:5cqw}
+.logo{display:flex;flex-direction:column;align-items:center;width:88cqw;gap:0}
+.article{width:18cqw}.bou{width:50cqw}.traditional{width:88cqw}
+.city{width:88cqw}
+.reveal .tower{height:125cqw;right:-29cqw;bottom:-2cqw}
+.safe{z-index:4;display:none;border:1px solid #9aff9c;inset:25cqw 7.4cqw 35.5cqw}
+.guides .safe{display:block}.note{font-size:13px;color:#c9bdcd;margin-top:24px}
+.film .slides{display:block;max-width:390px;margin:auto}.film figure{display:none}.film figure.active{display:block}
+.export{padding:0;background:transparent}.export main,.export .slides{max-width:none;display:block}
+.export nav,.export figcaption,.export .note{display:none}.export figure{display:none}.export figure.active{display:block}
+.export .story{width:100vw;height:auto}
+@media(max-width:900px){.slides{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){body{padding:16px}.slides{gap:16px}figcaption{font-size:11px}nav{gap:8px}}

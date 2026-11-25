@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-20 -20 736 280" role="img" aria-label="VALLS">
+<defs><linearGradient id="sunset" x2="0" y2="1"><stop stop-color="#3952cf"/><stop offset=".35" stop-color="#a735ce"/><stop offset=".65" stop-color="#ff479d"/><stop offset="1" stop-color="#ffad4a"/></linearGradient></defs>
+<path d="M0 0H45L70 145 95 0H140L70 240Z M160 240 217 0H257L314 240H270L258 180H216L204 240Z M226 140H248L237 70Z M334 0H380V196H430V240H334Z M450 0H496V196H546V240H450Z M696 0H590L566 24V100L651 153V196H566V240H672L696 216V140L611 87V44H696Z" fill="#160c26" fill-rule="evenodd" stroke="#160c26" stroke-width="31" stroke-linejoin="miter" stroke-miterlimit="2"/>
+<path d="M0 0H45L70 145 95 0H140L70 240Z M160 240 217 0H257L314 240H270L258 180H216L204 240Z M226 140H248L237 70Z M334 0H380V196H430V240H334Z M450 0H496V196H546V240H450Z M696 0H590L566 24V100L651 153V196H566V240H672L696 216V140L611 87V44H696Z" fill="url(#sunset)" fill-rule="evenodd" stroke="#fff9ef" stroke-width="12.4" stroke-linejoin="miter" stroke-miterlimit="2" paint-order="stroke fill"/>
+</svg>

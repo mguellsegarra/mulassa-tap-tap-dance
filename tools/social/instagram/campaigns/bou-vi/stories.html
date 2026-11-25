@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ca">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bou VI · Stories del 19 de novembre</title>
+<link rel="stylesheet" href="story.css">
+<main>
+  <nav aria-label="Edició de les stories">
+    <button id="play">Reprodueix amb bombo</button><button id="pause">Pausa</button>
+    <button id="overview">Les quatre slides</button><button id="guides">Zones segures</button>
+    <label>Temps <input id="time" type="range" min="0" max="20" step=".01" value="0"></label>
+    <output id="clock">0,0 / 20 s</output><p id="error" role="alert"></p>
+  </nav>
+  <section class="slides" aria-label="Seqüència de quatre slides">
+    <figure><figcaption>S1 · La data · 0–4 s</figcaption><article class="story date" aria-label="Dijous 19 de novembre">
+      <img class="sky" src="assets/sky.png" alt=""><div class="clouds"></div><img class="tower" src="assets/campanar.png" alt="">
+      <div class="shade"></div><div class="copy">
+        <img class="line day" src="assets/dijous.svg" alt="Dijous">
+        <img class="line number" src="assets/19.svg" alt="19">
+        <img class="line month" src="assets/novembre.svg" alt="de novembre">
+      </div><div class="safe" aria-hidden="true"></div>
+    </article></figure>
+    <figure><figcaption>S2 · L'expectació · 4–8 s</figcaption><article class="story anticipation" aria-label="El joc més esperat">
+      <img class="sky" src="assets/sky.png" alt=""><div class="clouds"></div><img class="tower" src="assets/campanar.png" alt="">
+      <div class="shade"></div><div class="copy">
+        <img class="line game" src="assets/el-joc.svg" alt="El joc">
+        <img class="line awaited" src="assets/mes.svg" alt="més esperat">
+      </div><div class="safe" aria-hidden="true"></div>
+    </article></figure>
+    <figure><figcaption>S3 · El crescendo · 8–12 s</figcaption><article class="story decade" aria-label="de la dècada">
+      <img class="sky" src="assets/sky.png" alt=""><div class="clouds"></div><img class="tower" src="assets/campanar.png" alt="">
+      <div class="shade"></div><div class="copy">
+        <img class="line of" src="assets/de-la.svg" alt="de la">
+        <img class="line decade-word" src="assets/decada.svg" alt="dècada">
+      </div><div class="safe" aria-hidden="true"></div>
+    </article></figure>
+    <figure><figcaption>S4 · La revelació · 12–20 s</figcaption><article class="story reveal" aria-label="El Bou Tradicional · Valls">
+      <img class="sky" src="assets/sky.png" alt=""><div class="clouds"></div><img class="tower" src="assets/campanar.png" alt="Campanar de Sant Joan de Valls">
+      <div class="shade"></div><div class="copy">
+        <div class="logo"><img class="line article" src="assets/el.svg" alt="el">
+          <img class="line bou" src="assets/bou.svg" alt="bou">
+          <img class="line traditional" src="assets/tradicional.svg" alt="tradicional"></div>
+        <img class="line city" src="assets/valls-vi.svg" alt="VALLS">
+      </div><div class="safe" aria-hidden="true"></div>
+    </article></figure>
+  </section>
+  <p class="note">1080 × 1920 · 20 segons · Cel, campanar i retolació en capes. Activa el so per escoltar el bombo.</p>
+</main>
+<audio id="score" src="assets/bombo-final.wav" preload="auto"></audio>
+<script src="timeline.js"></script>
+</html>

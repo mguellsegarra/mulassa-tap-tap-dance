@@ -8,6 +8,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     private let iris = IrisState()
     private let bridgeVC = MulassaBridgeViewController()
     private var irisWindow: UIWindow?
+    private var splashWindow: UIWindow?
     private var busy = false
     private var loading: NSKeyValueObservation?
 
@@ -24,6 +25,24 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     }
 
     @MainActor required dynamic init?(coder: NSCoder) { fatalError("built in code") }
+
+    // Cold start: the walking Mulassa (Splash.swift), continuing the launch screen, then a fade. In its own window from
+    // the first frame (a subview of this hosting view ends up under SwiftUI's content).
+    override func viewIsAppearing(_ animated: Bool) {
+        super.viewIsAppearing(animated)
+        guard !Splash.shown, let scene = view.window?.windowScene else { return }
+        Splash.shown = true
+        let w = UIWindow(windowScene: scene)
+        w.windowLevel = .normal + 2 // over the iris's window too
+        w.rootViewController = SplashHost(still: UIAccessibility.isReduceMotionEnabled) { [weak self] in
+            UIView.animate(withDuration: Splash.fade, animations: { self?.splashWindow?.alpha = 0 }) { _ in
+                self?.splashWindow?.isHidden = true
+                self?.splashWindow = nil
+            }
+        }
+        w.isHidden = false // shown, never key: it swallows the taps until it has faded
+        splashWindow = w
+    }
 
     private var bundleRoot: URL {
         let path = bridgeVC.getServerBasePath()
@@ -99,6 +118,58 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         iris.origin = from
         irisWindow?.alpha = 1
         irisWindow?.isHidden = false // shown, never key: it takes the taps while it plays, so nothing opens twice
+    }
+}
+
+// Until SwiftUI's first draw (up to a second into a cold start) the window shows the launch screen's own picture, never empty.
+private final class SplashHost: UIViewController {
+    private let clock = SplashClock()
+    private let walk: UIHostingController<SplashView>
+    private let done: () -> Void
+    private var link: CADisplayLink?, start: CFTimeInterval = 0, faded = false
+
+    init(still: Bool, done: @escaping () -> Void) {
+        self.done = done
+        walk = UIHostingController(rootView: SplashView(still: still, clock: clock))
+        super.init(nibName: nil, bundle: nil)
+    }
+    required init?(coder: NSCoder) { fatalError("built in code") }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        link = CADisplayLink(target: self, selector: #selector(tick))
+        link?.add(to: .main, forMode: .common)
+    }
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        link?.invalidate()
+    }
+    @objc private func tick(_ l: CADisplayLink) {
+        // the system keeps its launch picture up until the scene is active, so the walk (and the blend from rest) starts then
+        if start == 0 { guard view.window?.windowScene?.activationState == .foregroundActive else { return }; start = l.timestamp }
+        clock.t = l.timestamp - start
+        if !faded, clock.t >= Splash.hold { faded = true; done() } // the catalogue was read before the first frame
+        if view.window?.isHidden ?? true { l.invalidate() }
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        let bg = SplashArt.background
+        view.backgroundColor = UIColor(red: CGFloat(bg >> 16) / 255, green: CGFloat(bg >> 8 & 255) / 255, blue: CGFloat(bg & 255) / 255, alpha: 1)
+        let rest = UIImageView(image: UIImage(named: "Splash"))
+        rest.contentMode = .center
+        walk.view.backgroundColor = .clear
+        for v in [rest, walk.view!] {
+            v.frame = view.bounds
+            v.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            view.addSubview(v)
+        }
+        addChild(walk)
+        walk.didMove(toParent: self)
+    }
+    override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        traitCollection.userInterfaceIdiom == .pad ? .all : .portrait
     }
 }
 

@@ -8,4 +8,19 @@
     <string name="html_settings_aria">Settings</string>
     <string name="html_profile_aria">Profile</string>
     <string name="html_attr_close">Close</string>
+    <string name="html_accountTitle">Profile</string>
+    <string name="html_settingsTitle">Settings</string>
+    <string name="pop_rank_cardRuns">Games</string>
+    <string name="pop_music">Music</string>
+    <string name="ui_lang_title">Language</string>
+    <string name="html_common_privacy">Privacy</string>
+    <string name="lang_endonym">English</string>
+    <string name="launcher_profile_runs">Runs</string>
+    <string name="launcher_profile_games">Games</string>
+    <string name="launcher_profile_days">Days played</string>
+    <string name="launcher_settings_sound">Sound</string>
+    <string name="launcher_settings_vibration">Vibration</string>
+    <string name="launcher_settings_help">Help</string>
+    <string name="launcher_play">Play %1$s</string>
+    <string name="launcher_opening_game">Opening game…</string>
 </resources>

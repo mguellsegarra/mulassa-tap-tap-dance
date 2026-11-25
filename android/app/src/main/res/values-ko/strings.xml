@@ -8,4 +8,19 @@
     <string name="html_settings_aria">설정</string>
     <string name="html_profile_aria">프로필</string>
     <string name="html_attr_close">닫기</string>
+    <string name="html_accountTitle">프로필</string>
+    <string name="html_settingsTitle">설정</string>
+    <string name="pop_rank_cardRuns">게임 수</string>
+    <string name="pop_music">음악</string>
+    <string name="ui_lang_title">언어</string>
+    <string name="html_common_privacy">개인정보</string>
+    <string name="lang_endonym">한국어</string>
+    <string name="launcher_profile_runs">플레이 횟수</string>
+    <string name="launcher_profile_games">플레이한 게임</string>
+    <string name="launcher_profile_days">플레이 일수</string>
+    <string name="launcher_settings_sound">효과음</string>
+    <string name="launcher_settings_vibration">진동</string>
+    <string name="launcher_settings_help">도움말</string>
+    <string name="launcher_play">%1$s 플레이</string>
+    <string name="launcher_opening_game">게임 여는 중…</string>
 </resources>

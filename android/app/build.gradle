@@ -41,9 +41,10 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
-    // the native launcher (docs/app/launcher-j1.md): Compose foundation only, no Material look
+    // the native launcher (docs/app/launcher-j1.md): Compose foundation; Material 3 only for the platform bottom sheet
     implementation platform("androidx.compose:compose-bom:$composeBomVersion")
     implementation "androidx.compose.foundation:foundation"
+    implementation "androidx.compose.material3:material3"
     implementation "androidx.compose.ui:ui"
     implementation "androidx.activity:activity-compose:$androidxActivityVersion"
     testImplementation "junit:junit:$junitVersion"

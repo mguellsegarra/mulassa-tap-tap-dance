@@ -23,8 +23,9 @@
 
 
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
-        <item name="android:background">@drawable/splash</item>
-        <item name="windowSplashScreenBackground">#2A1A10</item>
+        <!-- the web cover's brown and the Mulassa's rest pose, where the walking splash (launcher/Splash.kt) starts -->
+        <item name="windowSplashScreenBackground">#140C07</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_rest</item>
         <item name="postSplashScreenTheme">@style/AppTheme.Launcher</item>
     </style>
 </resources>

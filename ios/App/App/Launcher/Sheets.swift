@@ -1,9 +1,10 @@
 import SwiftUI
 import StoreKit
 
-// The two places the avatar opens (ronda-10): Profile, whose gear leads to Settings, whose arrow leads back. A plain
-// sheet from the bottom over a scrim, coloured from the sky; switching slides one down as the other comes up.
-enum LauncherSheet: Equatable {
+// The two places the avatar opens (ronda-10): Profile, whose gear pushes Settings. A bottom sheet drawn here, not the
+// system's: on iOS 26+ a partial-height system sheet floats inset from the screen edges; this one is flush with the bottom
+// edge and full width, like Android's. The navigation stack inside is the system's, so the push and back are the platform's.
+enum LauncherSheet: Hashable {
     case profile, settings
 
     static var atLaunch: LauncherSheet? {
@@ -17,97 +18,118 @@ enum LauncherSheet: Equatable {
 // TODO(app store): the App Store link (https://apps.apple.com/app/id…) once the app has its id; the site until then.
 private let shareURL = URL(string: "https://mulassa.cat")!
 
-struct SheetLayer: View {
+// The scrim and the sheet; the sheet's state (the pushed page, the drag) lives only while it is shown.
+struct ProfileSheet: View {
     @ObservedObject var model: Launcher
-    @Binding var sheet: LauncherSheet?
     let surface: Color
+    @Binding var shown: Bool
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            if sheet != nil {
-                Color(red: 10 / 255, green: 6 / 255, blue: 3 / 255).opacity(0.6).ignoresSafeArea()
-                    .onTapGesture { sheet = nil }
-                    .transition(.opacity)
+        GeometryReader { g in
+            ZStack(alignment: .bottom) {
+                if shown {
+                    Color.black.opacity(0.32).ignoresSafeArea()
+                        .onTapGesture { shown = false }.accessibilityHidden(true)
+                        .transition(.opacity)
+                        .zIndex(0) // pinned: while leaving, a ZStack may otherwise draw the scrim over the sheet
+                    SheetCard(model: model, surface: surface, bottom: g.safeAreaInsets.bottom, room: g.size.height - 40) { shown = false }
+                        .transition(.move(edge: .bottom))
+                        .zIndex(1)
+                }
             }
-            if sheet == .profile {
-                SheetCard(title: "html.accountTitle", surface: surface, close: { sheet = nil }) {
-                    RoundButton(symbol: "gearshape", label: "html.settings.aria") { sheet = .settings }
-                } content: { ProfileBody(model: model) }
-                .transition(.move(edge: .bottom))
-            }
-            if sheet == .settings {
-                SheetCard(title: "html.settingsTitle", surface: surface, close: { sheet = nil }) {
-                    RoundButton(symbol: "chevron.left", label: "launcher.settings.backToProfile") { sheet = .profile }
-                } content: { SettingsBody() }
-                .transition(.move(edge: .bottom))
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .ignoresSafeArea(edges: .bottom)
+            .animation(.spring(duration: 0.35, bounce: 0), value: shown)
         }
-        .animation(.timingCurve(0.2, 0.9, 0.3, 1, duration: 0.45), value: sheet)
     }
 }
 
-struct SheetCard<Leading: View, Content: View>: View {
-    let title: LocalizedStringKey
+private struct SheetCard: View {
+    @ObservedObject var model: Launcher
     let surface: Color
+    let bottom: CGFloat // the home indicator's inset, kept clear inside the sheet
+    let room: CGFloat // the most the pages may take: below it they scroll
     let close: () -> Void
-    @ViewBuilder let leading: Leading
-    @ViewBuilder let content: Content
+    @State private var path: [LauncherSheet] = LauncherSheet.atLaunch == .settings ? [.settings] : []
+    @State private var bar: CGFloat = 56 // the navigation bar, measured on first show
+    @State private var profileRows: CGFloat = 0 // each page's rows, laid out unseen, so the sheet fits the page shown
+    @State private var settingsRows: CGFloat = 0
+    @State private var drag: CGFloat = 0
 
     var body: some View {
-        let shape = UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
         VStack(spacing: 0) {
-            HStack {
-                leading
-                Spacer()
-                Text(title).font(.baloo(22)).foregroundStyle(Palette.cream)
-                Spacer()
-                RoundButton(symbol: "xmark", label: "html.attr.close", action: close)
+            Capsule().fill(Palette.cream.opacity(0.35)).frame(width: 36, height: 5).padding(.vertical, 6)
+            NavigationStack(path: $path) {
+                page("html.accountTitle") { ProfileBody(model: model) }
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            NavigationLink(value: LauncherSheet.settings) { Image(systemName: "gearshape") }.accessibilityLabel(Text("html.settings.aria"))
+                        }
+                    }
+                    .navigationDestination(for: LauncherSheet.self) { _ in page("html.settingsTitle") { SettingsBody() } }
             }
-            .padding(.horizontal, M).padding(.top, 12)
-            // as tall as its content, scrolling only when the screen is shorter
-            ViewThatFits(in: .vertical) {
-                padded(content)
-                ScrollView { padded(content) }.scrollIndicators(.hidden)
-            }
+            .tint(Palette.cream)
+            // the stack keeps the taller page's height and the sheet shows its top part: resizing the stack mid-push
+            // jumps the header and lays the pushed page out twice
+            .frame(height: min(bar + max(profileRows, settingsRows), room))
+            .frame(height: min(bar + (path.isEmpty ? profileRows : settingsRows), room), alignment: .top)
+            .clipped()
         }
-        .frame(maxWidth: .infinity)
+        .padding(.bottom, bottom)
         .background {
-            shape.fill(surface)
-                .overlay { TopLip(base: shape).fill(Palette.cream.opacity(0.5)) }
-                .shadow(color: .black.opacity(0.4), radius: 12, y: -8)
-                .ignoresSafeArea(edges: .bottom)
+            ZStack {
+                measure($profileRows) { ProfileBody(model: model) }
+                measure($settingsRows) { SettingsBody() }
+            }
         }
-        .padding(.top, 16)
+        .background(surface, in: UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28))
+        .overlay(alignment: .top) { TopLip(base: UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)).fill(Palette.cream.opacity(0.5)).allowsHitTesting(false) }
+        .animation(.smooth(duration: 0.35), value: path) // the sheet's edge and the page's clip grow together
+        .offset(y: drag)
+        .gesture(DragGesture()
+            .onChanged { drag = max(0, $0.translation.height) }
+            .onEnded { v in
+                if v.translation.height > 120 || v.predictedEndTranslation.height > 300 { close() }
+                else { withAnimation(.spring(duration: 0.3, bounce: 0)) { drag = 0 } }
+            })
         .accessibilityAddTraits(.isModal)
+        .accessibilityAction(.escape, close)
     }
 
-    private func padded(_ c: Content) -> some View {
-        VStack(spacing: M) { c }.padding(M).padding(.bottom, 24 - M)
+    private func measure(_ height: Binding<CGFloat>, @ViewBuilder rows: () -> some View) -> some View {
+        SheetContent { rows() }.fixedSize(horizontal: false, vertical: true).hidden().accessibilityHidden(true)
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height.wrappedValue = $0 }
     }
+
+    private func page(_ title: LocalizedStringKey, @ViewBuilder content: () -> some View) -> some View {
+        ScrollView { SheetContent { content() } }
+            .scrollBounceBehavior(.basedOnSize) // scrolls only when the screen is shorter than the page
+            .scrollIndicators(.hidden)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.top } action: { if $0 > 0 { bar = $0 } }
+            .background(surface.ignoresSafeArea()) // opaque, so the page pushed slides over the other, never through it
+            .navigationTitle(Text(title))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .principal) { Text(title).font(.baloo(22)).foregroundStyle(Palette.cream) }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: close) { Image(systemName: "xmark") }.accessibilityLabel(Text("html.attr.close"))
+                }
+            }
+    }
+}
+
+// A page's rows with the sheet's padding; also laid out unseen on the home to size the sheet.
+struct SheetContent<Content: View>: View {
+    @ViewBuilder let content: Content
+    var body: some View { VStack(spacing: M) { content }.padding(M).padding(.bottom, 24 - M) }
 }
 
 // The sheet's 2 pt highlight along its rounded top edge (the prototype's inset shadow).
 private struct TopLip<S: Shape>: Shape {
     let base: S
     func path(in r: CGRect) -> Path { base.path(in: r).subtracting(base.path(in: r.offsetBy(dx: 0, dy: 2))) }
-}
-
-// The header's round button: dark brown, a cream ring and a hard drop edge.
-struct RoundButton: View {
-    let symbol: String
-    let label: LocalizedStringKey
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 19, weight: .bold)).foregroundStyle(Palette.cream)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(Color(UIColor(hex: "#3a2414"))).shadow(color: .black.opacity(0.5), radius: 0, y: 3))
-                .overlay(Circle().strokeBorder(Palette.cream, lineWidth: 2))
-        }
-        .buttonStyle(Squash(depth: 2))
-        .accessibilityLabel(Text(label))
-    }
 }
 
 struct Card<Content: View>: View {
@@ -157,7 +179,7 @@ struct ProfileBody: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            ForEach(["Partides", "Jocs", "Dies jugats"], id: \.self) { label in
+            ForEach(["launcher.profile.runs", "Jocs", "Dies jugats"], id: \.self) { label in
                 Card {
                     VStack(spacing: 4) {
                         Text("—").font(.baloo(26)).foregroundStyle(Palette.yellowHi)
@@ -198,7 +220,7 @@ struct SettingsBody: View {
         Card {
             VStack(spacing: 0) {
                 toggle("So", "#f0a51a", "speaker.wave.1.fill", $sound, separated: false)
-                toggle("Música", "#e45aa8", "music.note", $music)
+                toggle("music", "#e45aa8", "music.note", $music)
                 toggle("Vibració", "#3aa5e8", "iphone.radiowaves.left.and.right", $haptics)
                 // the app's language is the system's per-app setting
                 Button { if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) } } label: {
@@ -227,7 +249,7 @@ struct SettingsBody: View {
                 SheetRow(label: Text("html.common.privacy"), separated: true) { EmptyView() } trailing: { Chevron() }
             }
         }
-        Text("Mulassa Games \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")")
+        Text(verbatim: "Mulassa Games \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")")
             .font(.balooBold(13)).foregroundStyle(Palette.cream.opacity(0.55))
     }
 

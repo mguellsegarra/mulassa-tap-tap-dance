@@ -5,6 +5,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.graphics.Color as AndroidColor
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -15,6 +16,9 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.AndroidUiDispatcher
@@ -32,11 +36,16 @@ class LauncherActivity : ComponentActivity() {
     private lateinit var model: Launcher
     private val iris = IrisState()
     private var busy = false
+    private var splash by mutableStateOf(false)
     // also delivered to a launcher rebuilt after process death, with the game's id and origin in the result
     private val game = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { comeBack(it.data) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val system = installSplashScreen()
+        // A fresh launcher (not one rebuilt after process death, which comes back from a game): the system splash's rest pose
+        // goes on walking in Splash.kt. Its first frame draws the same picture, so the system's is removed with no animation.
+        splash = savedInstanceState == null
+        if (splash) system.setOnExitAnimationListener { it.remove() }
         enableEdgeToEdge(SystemBarStyle.dark(AndroidColor.TRANSPARENT), SystemBarStyle.dark(AndroidColor.TRANSPARENT))
         super.onCreate(savedInstanceState)
         if (resources.configuration.smallestScreenWidthDp < 600) requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -50,6 +59,7 @@ class LauncherActivity : ComponentActivity() {
             Box(Modifier.fillMaxSize()) {
                 LauncherRoot(model, version, hour)
                 IrisView(iris)
+                if (splash) Splash(still = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f) { splash = false }
             }
         }
     }

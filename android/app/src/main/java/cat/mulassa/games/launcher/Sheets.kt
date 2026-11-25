@@ -4,105 +4,102 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.translate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Outline
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cat.mulassa.games.R
+import kotlinx.coroutines.launch
 
 enum class Sheet { Profile, Settings }
 
 // TODO(store): the Play listing is derived from the package; confirm it once the app is published.
 private const val STORE_URL = "https://play.google.com/store/apps/details?id=cat.mulassa.games"
 
-// The two places the header opens (ronda-10's sheets): a bottom sheet over a scrim. Perfil's gear opens Ajustos and
-// Ajustos' arrow goes back to Perfil; the system back does the same, then closes.
+// The two places the header opens (ronda-10's sheets) live in one platform bottom sheet: Material's drag handle, scrim,
+// swipe and back dismiss it. Perfil's gear pushes Ajustos in from the right, like a navigation push; the arrow and the
+// system back pop it. The sheet's height follows the page, so it grows and shrinks with the push.
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Sheets(model: Launcher, version: String, sky: Sky, open: Sheet?, go: (Sheet?) -> Unit) {
-    BackHandler(open != null) { go(if (open == Sheet.Settings) Sheet.Profile else null) }
-    val scrim by animateFloatAsState(if (open != null) 1f else 0f, tween(250), label = "scrim")
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        if (scrim > 0f) Box(Modifier.fillMaxSize().graphicsLayer { alpha = scrim }.drawBehind { drawRect(hex("#0a0603").copy(alpha = 0.6f)) }
-            .then(if (open != null) Modifier.clickable(remember { MutableInteractionSource() }, null) { go(null) } else Modifier))
-        val maxH = maxHeight - WindowInsets.statusBars.asPaddingValues().calculateTopPadding() - 16.dp
-        for (s in Sheet.entries) {
-            val p by animateFloatAsState(if (open == s) 1f else 0f, tween(450, easing = Slide), label = "sheet")
-            if (p > 0f) SheetBox(sky.sheet, maxH, Modifier.align(Alignment.BottomCenter).graphicsLayer { translationY = (1 - p) * size.height * 1.05f }) {
+    if (open == null) return
+    val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val scope = rememberCoroutineScope()
+    // the close button slides the sheet away first; dropping it at once would cut the animation
+    val nav: (Sheet?) -> Unit = { s -> if (s != null) go(s) else scope.launch { state.hide() }.invokeOnCompletion { go(null) } }
+    // no MaterialTheme here: without a ripple, the handle and the rows press as Compose's grey debug box
+    CompositionLocalProvider(LocalIndication provides ripple()) { ModalBottomSheet({ go(null) }, sheetState = state, shape = sheetShape,
+        containerColor = sky.sheet, contentColor = Palette.cream, scrimColor = hex("#0a0603").copy(alpha = 0.6f),
+        dragHandle = { BottomSheetDefaults.DragHandle(color = Palette.cream.copy(alpha = 0.35f)) }) {
+        // a predictive handler, so the gesture's start is ours too: a plain BackHandler let the sheet's own callback shrink
+        // it for a dismiss that never came. A cancelled gesture throws out of collect and stays on Ajustos.
+        PredictiveBackHandler(open == Sheet.Settings) { events -> events.collect {}; go(Sheet.Profile) }
+        AnimatedContent(open, transitionSpec = {
+            val push = targetState == Sheet.Settings
+            val t = tween<IntOffset>(PUSH_MS, easing = FastOutSlowInEasing)
+            slideInHorizontally(t) { if (push) it else -it } togetherWith slideOutHorizontally(t) { if (push) -it else it } using
+                SizeTransform(clip = true) { _, _ -> tween(PUSH_MS, easing = FastOutSlowInEasing) }
+        }, contentAlignment = Alignment.TopCenter, label = "page") { s ->
+            Column {
                 when (s) {
-                    Sheet.Profile -> Profile(go)
-                    Sheet.Settings -> Settings(model, version, go)
+                    Sheet.Profile -> Profile(nav)
+                    Sheet.Settings -> Settings(model, version, nav)
                 }
             }
         }
-    }
+    } }
 }
 
-private val Slide = CubicBezierEasing(0.2f, 0.9f, 0.3f, 1f)
+private const val PUSH_MS = 350
 private val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
 @Composable
-private fun SheetBox(bg: Color, maxH: Dp, modifier: Modifier, content: @Composable () -> Unit) {
-    Column(modifier.fillMaxWidth().heightIn(max = maxH)
-        .clickable(remember { MutableInteractionSource() }, null) {} // taps on the sheet stay on it
-        .drawBehind {
-            val shape = (sheetShape.createOutline(size, layoutDirection, this) as Outline.Rounded).roundRect
-            val path = Path().apply { addRoundRect(shape) }
-            softShadow(path, Color.Black.copy(alpha = 0.4f), 12 * density, -8 * density)
-            drawPath(path, bg)
-            // the inset top light: the shape minus itself 2 dp lower
-            val lower = Path().apply { addRoundRect(shape.translate(Offset(0f, 2 * density))) }
-            drawPath(Path.combine(PathOperation.Difference, path, lower), Palette.cream.copy(alpha = 0.5f))
-        }) { content() }
-}
-
-@Composable
 private fun SheetHeader(title: String, left: @Composable () -> Unit, go: (Sheet?) -> Unit) {
-    Box(Modifier.fillMaxWidth().padding(start = M, end = M, top = 12.dp).height(44.dp)) {
+    Box(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp)) {
         Box(Modifier.align(Alignment.CenterStart)) { left() }
         Box(Modifier.align(Alignment.Center)) { Label(title, Fonts.baloo, 22.dp, Palette.cream) }
         RoundButton(CLOSE, stringResource(R.string.html_attr_close), Modifier.align(Alignment.CenterEnd)) { go(null) }
@@ -111,18 +108,17 @@ private fun SheetHeader(title: String, left: @Composable () -> Unit, go: (Sheet?
 
 @Composable
 private fun SheetBody(content: @Composable () -> Unit) {
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
-    Column(Modifier.verticalScroll(rememberScrollState()).padding(start = M, end = M, top = M, bottom = bottom),
+    Column(Modifier.verticalScroll(rememberScrollState()).padding(start = M, end = M, top = M, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(M)) { content() }
 }
 
 // ---- Perfil. Counters wait for the native session and records (native-shell.md, phases 3-4): a dash until then.
 @Composable
 private fun Profile(go: (Sheet?) -> Unit) {
-    SheetHeader("Perfil", { RoundButton(GEAR, stringResource(R.string.html_settings_aria)) { go(Sheet.Settings) } }, go)
+    SheetHeader(stringResource(R.string.html_accountTitle), { RoundButton(GEAR, stringResource(R.string.html_settings_aria)) { go(Sheet.Settings) } }, go)
     SheetBody {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            listOf("Partides", "Jocs", "Dies jugats").forEach { label ->
+            listOf(R.string.launcher_profile_runs, R.string.launcher_profile_games, R.string.launcher_profile_days).map { stringResource(it) }.forEach { label ->
                 Column(Modifier.weight(1f).card().padding(vertical = 12.dp, horizontal = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Label("—", Fonts.baloo, 26.dp, Palette.yellowHi)
@@ -137,14 +133,14 @@ private fun Profile(go: (Sheet?) -> Unit) {
 @Composable
 private fun Settings(model: Launcher, version: String, go: (Sheet?) -> Unit) {
     val ctx = LocalContext.current
-    SheetHeader("Ajustos", { RoundButton(BACK, stringResource(R.string.launcher_settings_backToProfile)) { go(Sheet.Profile) } }, go)
+    SheetHeader(stringResource(R.string.html_settingsTitle), { RoundButton(BACK, stringResource(R.string.launcher_settings_backToProfile)) { go(Sheet.Profile) } }, go)
     SheetBody {
         Column(Modifier.card()) {
-            ToggleRow(SOUND, hex("#f0a51a"), "So", model.sound, first = true) { model.sound = it }
-            ToggleRow(MUSIC, hex("#e45aa8"), "Música", model.music) { model.music = it }
-            ToggleRow(PHONE, hex("#3aa5e8"), "Vibració", model.vibration) { model.vibration = it }
-            // shortcut: the launcher is in Catalan until it follows the app's language (native settings, phase 4); no picker yet
-            SettingsRow(GLOBE, hex("#3fae5a"), "Idioma") { Label("Català", Fonts.balooBold, 17.dp, Palette.cream.copy(alpha = 0.6f)); Chevron() }
+            ToggleRow(SOUND, hex("#f0a51a"), stringResource(R.string.launcher_settings_sound), model.sound, first = true) { model.sound = it }
+            ToggleRow(MUSIC, hex("#e45aa8"), stringResource(R.string.pop_music), model.music) { model.music = it }
+            ToggleRow(PHONE, hex("#3aa5e8"), stringResource(R.string.launcher_settings_vibration), model.vibration) { model.vibration = it }
+            // shortcut: shows the app's language (the resources' endonym); no picker until the native settings (phase 4)
+            SettingsRow(GLOBE, hex("#3fae5a"), stringResource(R.string.ui_lang_title)) { Label(stringResource(R.string.lang_endonym), Fonts.balooBold, 17.dp, Palette.cream.copy(alpha = 0.6f)); Chevron() }
         }
         Column(Modifier.card()) {
             SettingsRow(STAR, Palette.yellow, stringResource(R.string.launcher_settings_rateApp), first = true, onClick = { rate(ctx) }) { Chevron() }
@@ -152,8 +148,8 @@ private fun Settings(model: Launcher, version: String, go: (Sheet?) -> Unit) {
         }
         // shortcut: Ajuda and Privadesa have no native page yet; they open nothing until phase 4 brings them
         Column(Modifier.card()) {
-            SettingsRow(null, null, "Ajuda", first = true) { Chevron() }
-            SettingsRow(null, null, "Privadesa") { Chevron() }
+            SettingsRow(null, null, stringResource(R.string.launcher_settings_help), first = true) { Chevron() }
+            SettingsRow(null, null, stringResource(R.string.html_common_privacy)) { Chevron() }
         }
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Label("Mulassa Games $version", Fonts.balooBold, 13.dp, Palette.cream.copy(alpha = 0.55f))

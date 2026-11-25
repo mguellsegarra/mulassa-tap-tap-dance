@@ -46,8 +46,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import cat.mulassa.games.R
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -159,7 +161,7 @@ fun IrisView(state: IrisState, windowOffset: Offset = Offset.Zero) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Label(game.title, Fonts.baloo, 28.dp, Palette.cream, center = true)
-                Label("S’obre el joc…", Fonts.balooBold, 15.dp, color)
+                Label(stringResource(R.string.launcher_opening_game), Fonts.balooBold, 15.dp, color)
             }
         }
     }

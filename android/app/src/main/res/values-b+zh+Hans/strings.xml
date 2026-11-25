@@ -8,4 +8,19 @@
     <string name="html_settings_aria">设置</string>
     <string name="html_profile_aria">档案</string>
     <string name="html_attr_close">关闭</string>
+    <string name="html_accountTitle">档案</string>
+    <string name="html_settingsTitle">设置</string>
+    <string name="pop_rank_cardRuns">局数</string>
+    <string name="pop_music">音乐</string>
+    <string name="ui_lang_title">语言</string>
+    <string name="html_common_privacy">隐私</string>
+    <string name="lang_endonym">简体中文</string>
+    <string name="launcher_profile_runs">游玩局数</string>
+    <string name="launcher_profile_games">玩过的游戏</string>
+    <string name="launcher_profile_days">游玩天数</string>
+    <string name="launcher_settings_sound">音效</string>
+    <string name="launcher_settings_vibration">振动</string>
+    <string name="launcher_settings_help">帮助</string>
+    <string name="launcher_play">玩%1$s</string>
+    <string name="launcher_opening_game">正在打开游戏…</string>
 </resources>

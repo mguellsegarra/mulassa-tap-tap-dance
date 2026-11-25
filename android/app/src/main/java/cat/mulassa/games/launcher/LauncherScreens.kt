@@ -118,6 +118,7 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
     val sky = rememberSky(hour)
     var sheet by remember { mutableStateOf<Sheet?>(null) }
     Box(Modifier.fillMaxSize().sky { sky }) {
+        SkyLife(sky)
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.windowInsetsPadding(WindowInsets.statusBars).fillMaxWidth().height(64.dp).padding(horizontal = M),
                 verticalAlignment = Alignment.CenterVertically) {
@@ -164,9 +165,10 @@ private fun Cell(model: Launcher, game: Game, u: Dp) {
     val buzz = haptic(model)
     var at by remember { mutableStateOf(Offset.Zero) }
     val aviat = stringResource(R.string.ui_select_aviat)
+    val playIt = stringResource(R.string.launcher_play, game.title)
     Box(Modifier.offset { IntOffset((shake.value * 6.dp.toPx()).roundToInt(), 0) }
         .onGloballyPositioned { at = it.centre() }
-        .semantics { contentDescription = if (game.soon) aviat else "Juga a ${game.title}" }
+        .semantics { contentDescription = if (game.soon) aviat else playIt }
         .squash(u * 0.3f) {
             if (game.soon) {
                 buzz(REJECT)

@@ -8,4 +8,19 @@
     <string name="html_settings_aria">Configuración</string>
     <string name="html_profile_aria">Perfil</string>
     <string name="html_attr_close">Pecha</string>
+    <string name="html_accountTitle">Perfil</string>
+    <string name="html_settingsTitle">Configuración</string>
+    <string name="pop_rank_cardRuns">Partidas</string>
+    <string name="pop_music">Música</string>
+    <string name="ui_lang_title">Idioma</string>
+    <string name="html_common_privacy">Privacidade</string>
+    <string name="lang_endonym">Galego</string>
+    <string name="launcher_profile_runs">Partidas</string>
+    <string name="launcher_profile_games">Xogos</string>
+    <string name="launcher_profile_days">Días de xogo</string>
+    <string name="launcher_settings_sound">Son</string>
+    <string name="launcher_settings_vibration">Vibración</string>
+    <string name="launcher_settings_help">Axuda</string>
+    <string name="launcher_play">Xoga a %1$s</string>
+    <string name="launcher_opening_game">Abrindo o xogo…</string>
 </resources>

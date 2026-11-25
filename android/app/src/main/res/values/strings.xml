@@ -12,4 +12,19 @@
     <string name="html_settings_aria">Configuració</string>
     <string name="html_profile_aria">Perfil</string>
     <string name="html_attr_close">Tanca</string>
+    <string name="html_accountTitle">Perfil</string>
+    <string name="html_settingsTitle">Configuració</string>
+    <string name="pop_rank_cardRuns">Partides</string>
+    <string name="pop_music">Música</string>
+    <string name="ui_lang_title">Idioma</string>
+    <string name="html_common_privacy">Privadesa</string>
+    <string name="lang_endonym">Català</string>
+    <string name="launcher_profile_games">Jocs</string>
+    <string name="launcher_profile_days">Dies jugats</string>
+    <string name="launcher_settings_sound">So</string>
+    <string name="launcher_settings_vibration">Vibració</string>
+    <string name="launcher_settings_help">Ajuda</string>
+    <string name="launcher_play">Juga a %1$s</string>
+    <string name="launcher_profile_runs">Partides</string>
+    <string name="launcher_opening_game">S’obre el joc…</string>
 </resources>

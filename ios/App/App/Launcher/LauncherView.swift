@@ -24,7 +24,7 @@ let M: CGFloat = 16 // one spacing unit: side margin = column gap = row gap = he
 // ronda-10: one screen. A header (the logo and the avatar) over the sky, then every game as a cartridge, two a row.
 struct LauncherRoot: View {
     @ObservedObject var model: Launcher
-    @State private var sheet = LauncherSheet.atLaunch
+    @State private var profile = LauncherSheet.atLaunch != nil
     @State private var scrolled = false
 
     var body: some View {
@@ -47,7 +47,7 @@ struct LauncherRoot: View {
                 }
             }
             .background(SkyBackground(sky: sky))
-            .overlay { SheetLayer(model: model, sheet: $sheet, surface: sky.sheet) }
+            .overlay { ProfileSheet(model: model, surface: sky.sheet, shown: $profile) }
         }
         .preferredColorScheme(.dark)
     }
@@ -56,13 +56,14 @@ struct LauncherRoot: View {
         HStack {
             Logo()
             Spacer()
-            Button { sheet = .profile } label: {
+            Button { profile = true } label: {
                 Group { if let icon = model.icon { Image(uiImage: icon).resizable().scaledToFill() } else { Color.clear } }
                     .frame(width: 44, height: 44)
                     .background(Color(UIColor(hex: "#3ec6ff")))
                     .clipShape(Circle())
                     .overlay(Circle().strokeBorder(Palette.cream, lineWidth: 2))
-                    .shadow(color: .black.opacity(0.5), radius: 0, y: 3)
+                    // the prototype's hard 3 pt drop edge; a .shadow here would also shade the ring onto the picture
+                    .background(Circle().fill(.black.opacity(0.5)).offset(y: 3))
             }
             .buttonStyle(Squash(depth: 2))
             .accessibilityLabel(Text("html.profile.aria"))

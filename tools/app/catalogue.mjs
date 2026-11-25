@@ -9,7 +9,7 @@ export const CATALOGUE_SCHEMA = 1;
 export const MIN_BRIDGE = 1;
 // what the web menu does not know: the app's entry path, the cartridge's short name and colours, the category
 const LAUNCHER = {
-  tap: { path: '/index.html', short: 'Tap Tap', color: '#f5c518', ink: '#3a2208', category: 'ritme' },
+  tap: { path: '/index.html', short: 'Tap Tap Dance', color: '#f5c518', ink: '#3a2208', category: 'ritme', art: '/jocs/menu/cards/tap-app.jpg' },
   pop: { path: '/pop/index.html', short: 'Pop', color: '#ff7ac8', ink: '#3d0f2a', category: 'accio' },
 };
 const SOON = { short: null, color: '#ff9d3b', ink: '#4a2400', category: null };
@@ -36,9 +36,10 @@ export function buildCatalogue() {
       id, soon, path: soon ? null : own.path, isNew: /class="ribbon"/.test(card),
       name: nameKey ? tr(nameKey) : Object.fromEntries(Object.keys(locales).map(l => [l, PROPER[id]])), short: own.short, desc: descKey ? tr(descKey) : null,
       color: own.color, ink: own.ink, category: own.category,
-      art: card.match(/<img src="([^"]+)"/)[1],
+      art: own.art ?? card.match(/<img src="([^"]+)"/)[1], // the app's cartridge may wear its own art
     };
   });
+  games.sort((a, b) => (b.id === 'tap') - (a.id === 'tap')); // the app opens on its flagship; the web menu keeps its own order
   return { schema: CATALOGUE_SCHEMA, minBridge: MIN_BRIDGE, games };
 }
 

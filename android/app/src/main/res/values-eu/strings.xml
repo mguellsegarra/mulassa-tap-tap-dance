@@ -8,4 +8,19 @@
     <string name="html_settings_aria">Ezarpenak</string>
     <string name="html_profile_aria">Profila</string>
     <string name="html_attr_close">Itxi</string>
+    <string name="html_accountTitle">Profila</string>
+    <string name="html_settingsTitle">Ezarpenak</string>
+    <string name="pop_rank_cardRuns">Partidak</string>
+    <string name="pop_music">Musika</string>
+    <string name="ui_lang_title">Hizkuntza</string>
+    <string name="html_common_privacy">Pribatutasuna</string>
+    <string name="lang_endonym">Euskara</string>
+    <string name="launcher_profile_runs">Partidak</string>
+    <string name="launcher_profile_games">Jokoak</string>
+    <string name="launcher_profile_days">Joko-egunak</string>
+    <string name="launcher_settings_sound">Soinua</string>
+    <string name="launcher_settings_vibration">Bibrazioa</string>
+    <string name="launcher_settings_help">Laguntza</string>
+    <string name="launcher_play">Jokatu %1$s jokoan</string>
+    <string name="launcher_opening_game">Jokoa irekitzen…</string>
 </resources>

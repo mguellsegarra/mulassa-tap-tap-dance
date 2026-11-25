@@ -8,4 +8,19 @@
     <string name="html_settings_aria">Setări</string>
     <string name="html_profile_aria">Profil</string>
     <string name="html_attr_close">Închide</string>
+    <string name="html_accountTitle">Profil</string>
+    <string name="html_settingsTitle">Setări</string>
+    <string name="pop_rank_cardRuns">Jocuri</string>
+    <string name="pop_music">Muzică</string>
+    <string name="ui_lang_title">Limbă</string>
+    <string name="html_common_privacy">Confidențialitate</string>
+    <string name="lang_endonym">Română</string>
+    <string name="launcher_profile_runs">Partide</string>
+    <string name="launcher_profile_games">Jocuri</string>
+    <string name="launcher_profile_days">Zile de joc</string>
+    <string name="launcher_settings_sound">Sunet</string>
+    <string name="launcher_settings_vibration">Vibrații</string>
+    <string name="launcher_settings_help">Ajutor</string>
+    <string name="launcher_play">Joacă %1$s</string>
+    <string name="launcher_opening_game">Se deschide jocul…</string>
 </resources>

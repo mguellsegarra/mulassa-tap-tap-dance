@@ -8,4 +8,19 @@
     <string name="html_settings_aria">設定</string>
     <string name="html_profile_aria">プロフィール</string>
     <string name="html_attr_close">閉じる</string>
+    <string name="html_accountTitle">プロフィール</string>
+    <string name="html_settingsTitle">設定</string>
+    <string name="pop_rank_cardRuns">プレイ数</string>
+    <string name="pop_music">音楽</string>
+    <string name="ui_lang_title">言語</string>
+    <string name="html_common_privacy">プライバシー</string>
+    <string name="lang_endonym">日本語</string>
+    <string name="launcher_profile_runs">プレイ回数</string>
+    <string name="launcher_profile_games">遊んだゲーム</string>
+    <string name="launcher_profile_days">プレイ日数</string>
+    <string name="launcher_settings_sound">効果音</string>
+    <string name="launcher_settings_vibration">振動</string>
+    <string name="launcher_settings_help">ヘルプ</string>
+    <string name="launcher_play">%1$sをプレイ</string>
+    <string name="launcher_opening_game">ゲームを起動中…</string>
 </resources>

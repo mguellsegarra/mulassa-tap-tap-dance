@@ -17,7 +17,7 @@ struct Game: Decodable, Identifiable, Equatable {
 
     // shortcut: Catalan only, until the launcher follows the app's language (native settings, phase 4)
     var title: String { (name["ca"] ?? nil) ?? id }
-    var label: String { soon ? String(localized: "ui.select.aviat") : short ?? title } // one word for every game to come, as Android
+    var label: String { soon ? Bundle.main.localizedString(forKey: "ui.select.aviat", value: nil, table: nil) : short ?? title } // one word for every game to come, as Android
     var tint: UIColor { UIColor(hex: color) }
 }
 

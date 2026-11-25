@@ -1,6 +1,8 @@
 package cat.mulassa.games.launcher
 
 import android.provider.Settings
+import androidx.annotation.DrawableRes
+import cat.mulassa.games.R
 import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.InfiniteTransition
@@ -13,6 +15,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -34,12 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import java.util.Calendar
@@ -50,7 +53,7 @@ import kotlinx.coroutines.delay
 
 // The sky by the device's hour (ronda-10's SKY and sky()): dawn, morning, midday, afternoon and sunset, night. Keyframes
 // blended in RGB into a 3-stop gradient with static stars, recomputed every 5 minutes. Over it, ronda-14's B1 «Cel en
-// calma» (SkyLife): drifting clouds and twinkling stars, on layer translation and alpha only (no sun or moon: the owner wants the header clear).
+// calma» (SkyLife): drifting clouds (ronda-15: five soft shapes) and twinkling stars, on layer translation and alpha only (no sun or moon: the owner wants the header clear).
 @Immutable
 data class Sky(val top: Color, val mid: Color, val bottom: Color, val stars: Float, val clouds: Float, val hour: Float = 12f) {
     val header get() = top.mix(mid, 0.22f) // the colour behind the sticky header, for its fade
@@ -124,13 +127,16 @@ private fun DrawScope.dots(f: Stars, alpha: Float = 1f) {
 
 private val CSS_EASE = CubicBezierEasing(0.42f, 0f, 0.58f, 1f) // CSS ease-in-out
 
-// y (from the status bar's foot, a share of the height, or from the bottom), width, seconds per crossing, start (0..1), opacity
-private class Lane(val fromTop: Float = -1f, val share: Float = -1f, val fromBottom: Float = -1f, val w: Float, val s: Int, val p: Float, val o: Float)
+// y (from the status bar's foot, a share of the height, or from the bottom), cloud, width (at most 160), seconds per crossing, start (0..1), opacity
+private class Lane(val fromTop: Float = -1f, val share: Float = -1f, val fromBottom: Float = -1f, @DrawableRes val c: Int, val w: Float, val s: Int, val p: Float, val o: Float)
+// ronda-15: soft pre-rendered clouds (design/…/ronda-15/clouds/make_clouds.py, style S1), the same bitmaps as iOS
 private val LANES = listOf(
-    Lane(fromTop = 3f, w = 70f, s = 160, p = 0.3f, o = 0.5f), Lane(share = 0.4f, w = 70f, s = 150, p = 0.75f, o = 0.45f), // far: small, slow
-    Lane(fromBottom = 58f, w = 80f, s = 170, p = 0.62f, o = 0.5f),
-    Lane(fromTop = 27f, w = 130f, s = 80, p = 0.55f, o = 0.9f), Lane(share = 0.62f, w = 130f, s = 95, p = 0.4f, o = 0.8f), // near: big, quicker
-    Lane(fromBottom = 44f, w = 150f, s = 75, p = 0.12f, o = 0.9f),
+    Lane(fromTop = 3f, c = R.drawable.cloud_long, w = 80f, s = 160, p = 0.3f, o = 0.5f), // far: small, slow
+    Lane(share = 0.4f, c = R.drawable.cloud_round, w = 64f, s = 150, p = 0.75f, o = 0.45f),
+    Lane(fromBottom = 58f, c = R.drawable.cloud_wisp, w = 96f, s = 170, p = 0.62f, o = 0.5f),
+    Lane(fromTop = 27f, c = R.drawable.cloud_tall, w = 140f, s = 80, p = 0.55f, o = 0.9f), // near: big, quicker
+    Lane(share = 0.62f, c = R.drawable.cloud_twin, w = 140f, s = 95, p = 0.4f, o = 0.8f),
+    Lane(fromBottom = 44f, c = R.drawable.cloud_long, w = 160f, s = 75, p = 0.12f, o = 0.9f),
 )
 
 // a 0..1 loop starting `at` of the way in, or null when motion is off
@@ -152,9 +158,10 @@ fun BoxScope.SkyLife(sky: Sky) {
                 val y = when { l.fromTop >= 0 -> top + l.fromTop.dp; l.share >= 0 -> h * l.share; else -> h - l.fromBottom.dp }
                 val q = t.loop(still, l.s * 1000, l.p)
                 // enters fully hidden on the left, leaves fully hidden on the right
-                Canvas(Modifier.offset(y = y).size(l.w.dp, (l.w * 5 / 12).dp).graphicsLayer {
+                val img = painterResource(l.c)
+                Image(img, null, Modifier.offset(y = y).size(l.w.dp, l.w.dp * img.intrinsicSize.height / img.intrinsicSize.width).graphicsLayer {
                     alpha = l.o; translationX = ((q?.value ?: l.p) * (w + 160.dp).toPx()) - l.w.dp.toPx()
-                }) { cloud() }
+                })
             }
         }
         if (sky.stars > 0.01f) Box(Modifier.fillMaxSize().graphicsLayer { alpha = sky.stars }) {
@@ -177,9 +184,3 @@ fun BoxScope.SkyLife(sky: Sky) {
 
 private fun cl(v: Float) = v.coerceIn(0f, 1f)
 
-// the prototype's cloud: viewBox 120 × 50, one flat ellipse and three puffs, opaque (the layer carries its opacity)
-private fun DrawScope.cloud() {
-    val s = size.width / 120
-    drawOval(Color.White, Offset(6 * s, 25 * s), Size(108 * s, 24 * s))
-    for ((x, y, r) in listOf(Triple(40f, 29f, 15f), Triple(66f, 22f, 20f), Triple(90f, 31f, 12f))) drawCircle(Color.White, r * s, Offset(x * s, y * s))
-}

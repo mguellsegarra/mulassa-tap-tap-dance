@@ -30,6 +30,8 @@ import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.snapshotFlow
 import java.io.File
 import org.json.JSONObject
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 
 // The game's side of the bridge activity (MainActivity.java delegates to it): which page it opens, the iris kept over the
 // page while it loads, and the way back to the launcher.
@@ -61,10 +63,22 @@ class GameSession(private val activity: BridgeActivity) {
     }
 
     fun attach() {
+        tellLanguage()
         activity.bridge?.addWebViewListener(object : WebViewListener() {
             override fun onPageLoaded(webView: WebView?) { loaded++ }
         })
         showCover()
+    }
+
+    // The launcher's language is the game's too (native-shell.md, contract 4): saved where the web reads it (ui-language-v1)
+    // before any of the page's scripts run, on the bridge's own origin. The page is only requested so far: this lands first.
+    // shortcut: a WebView without document-start scripts (before Chrome 89-ish) keeps the web's own choice, Catalan by default.
+    private fun tellLanguage() {
+        val web = activity.bridge?.webView ?: return
+        if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return
+        AppLanguage.load(activity)
+        val url = android.net.Uri.parse(activity.bridge.appUrl)
+        WebViewCompat.addDocumentStartJavaScript(web, AppLanguage.script(), setOf("${url.scheme}://${url.authority}"))
     }
 
     fun save(out: Bundle) {

@@ -89,11 +89,11 @@ private struct SkyLife: UIViewRepresentable {
 }
 
 private final class SkyLifeView: UIView {
-    // y (from the status bar's foot, a share of the height, or from the bottom), width, seconds per crossing, start (0..1), opacity
+    // y (from the status bar's foot, a share of the height, or from the bottom), cloud, width, seconds per crossing, start (0..1), opacity
     private enum Y { case header(CGFloat), share(CGFloat), bottom(CGFloat) }
-    private static let lanes: [(Y, CGFloat, Double, Double, Float)] = [
-        (.header(3), 70, 160, 0.3, 0.5), (.share(0.4), 70, 150, 0.75, 0.45), (.bottom(58), 80, 170, 0.62, 0.5), // far: small, slow
-        (.header(27), 130, 80, 0.55, 0.9), (.share(0.62), 130, 95, 0.4, 0.8), (.bottom(44), 150, 75, 0.12, 0.9)] // near: big, quicker
+    private static let lanes: [(Y, String, CGFloat, Double, Double, Float)] = [
+        (.header(3), "long", 80, 160, 0.3, 0.5), (.share(0.4), "round", 64, 150, 0.75, 0.45), (.bottom(58), "wisp", 96, 170, 0.62, 0.5), // far: small, slow
+        (.header(27), "tall", 140, 80, 0.55, 0.9), (.share(0.62), "twin", 140, 95, 0.4, 0.8), (.bottom(44), "long", 160, 75, 0.12, 0.9)] // near: big, quicker
 
     private let clouds = CALayer(), night = CALayer(), shootAt = CALayer(), shoot = CAGradientLayer()
     private var laneLayers: [CALayer] = [], twinkles: [CALayer] = []
@@ -102,10 +102,11 @@ private final class SkyLifeView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         isUserInteractionEnabled = false
-        for (_, w, _, _, o) in Self.lanes {
-            let lane = CALayer(), c = CAShapeLayer()
-            c.path = Self.cloud(w); c.fillColor = UIColor.white.cgColor; c.opacity = o
-            c.frame = CGRect(x: -w, y: 0, width: w, height: w * 5 / 12) // starts just off the left edge
+        for (_, name, w, _, _, o) in Self.lanes {
+            // ronda-15: soft pre-rendered clouds (design/…/ronda-15/clouds/make_clouds.py, style S1); one bitmap, only moved
+            let lane = CALayer(), c = CALayer(), img = UIImage(named: "cloud_\(name)")
+            c.contents = img?.cgImage; c.opacity = o
+            c.frame = CGRect(x: -w, y: 0, width: w, height: w * (img.map { $0.size.height / $0.size.width } ?? 0.4)) // starts just off the left edge
             lane.addSublayer(c); clouds.addSublayer(lane); laneLayers.append(lane)
         }
         layer.addSublayer(clouds)
@@ -136,14 +137,6 @@ private final class SkyLifeView: UIView {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    // the prototype's cloud: viewBox 120 × 50, one flat ellipse and three puffs, scaled to `w`
-    private static func cloud(_ w: CGFloat) -> CGPath {
-        let p = CGMutablePath(), s = w / 120
-        p.addEllipse(in: CGRect(x: 6 * s, y: 25 * s, width: 108 * s, height: 24 * s))
-        for (x, y, r) in [(40.0, 29.0, 15.0), (66, 22, 20), (90, 31, 12)] { p.addEllipse(in: CGRect(x: (x - r) * s, y: (y - r) * s, width: 2 * r * s, height: 2 * r * s)) }
-        return p
-    }
-
     func update(_ sky: Sky, top: CGFloat, still: Bool) {
         let rebuild = top != self.top || still != self.still
         self.sky = sky; self.top = top; self.still = still
@@ -161,8 +154,8 @@ private final class SkyLifeView: UIView {
         let W = bounds.width, H = bounds.height
         CATransaction.begin(); CATransaction.setDisableActions(true)
         for l in [clouds, night] + twinkles + twinkles.flatMap({ $0.sublayers ?? [] }) { l.frame = bounds }
-        for (lane, (y, _, d, p, _)) in zip(laneLayers, Self.lanes) {
-            let span = W + 160 // the cloud enters fully hidden on the left and leaves fully hidden on the right
+        for (lane, (y, _, _, d, p, _)) in zip(laneLayers, Self.lanes) {
+            let span = W + 160 // (lanes are at most 160 wide) the cloud enters fully hidden on the left and leaves fully hidden on the right
             switch y { case .header(let v): lane.frame = CGRect(x: 0, y: top + v, width: W, height: 0)
                        case .share(let v): lane.frame = CGRect(x: 0, y: H * v, width: W, height: 0)
                        case .bottom(let v): lane.frame = CGRect(x: 0, y: H - v, width: W, height: 0) }

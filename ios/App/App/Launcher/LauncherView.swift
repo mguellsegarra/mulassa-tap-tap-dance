@@ -26,6 +26,7 @@ struct LauncherRoot: View {
     @ObservedObject var model: Launcher
     @State private var profile = LauncherSheet.atLaunch != nil
     @State private var scrolled = false
+    @ObservedObject private var language = AppLanguage.shared
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 300)) { t in // the sky moves on every 5 minutes, nothing in between
@@ -49,6 +50,9 @@ struct LauncherRoot: View {
             .background(SkyBackground(sky: sky))
             .overlay { ProfileSheet(model: model, surface: sky.sheet, shown: $profile) }
         }
+        .environment(\.locale, Locale(identifier: language.code))
+        .id(language.code) // a new language redraws every string, the ones read outside Text included
+        .overlay { LanguagePrompt() }
         .preferredColorScheme(.dark)
     }
 

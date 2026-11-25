@@ -6,11 +6,15 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.keyframes
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
@@ -19,6 +23,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -50,7 +55,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cat.mulassa.games.R
 import kotlinx.coroutines.launch
@@ -61,8 +65,8 @@ enum class Sheet { Profile, Settings }
 private const val STORE_URL = "https://play.google.com/store/apps/details?id=cat.mulassa.games"
 
 // The two places the header opens (ronda-10's sheets) live in one platform bottom sheet: Material's drag handle, scrim,
-// swipe and back dismiss it. Perfil's gear pushes Ajustos in from the right, like a navigation push; the arrow and the
-// system back pop it. The sheet's height follows the page, so it grows and shrinks with the push.
+// swipe and back dismiss it. The owner's «creix i després canvia»: Perfil's gear first grows the sheet to Ajustos' height
+// with Perfil still, then swaps the pages with a short fade; the arrow and the system back swap first, then shrink it.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Sheets(model: Launcher, version: String, sky: Sky, open: Sheet?, go: (Sheet?) -> Unit) {
@@ -78,32 +82,44 @@ fun Sheets(model: Launcher, version: String, sky: Sky, open: Sheet?, go: (Sheet?
         // a predictive handler, so the gesture's start is ours too: a plain BackHandler let the sheet's own callback shrink
         // it for a dismiss that never came. A cancelled gesture throws out of collect and stays on Ajustos.
         PredictiveBackHandler(open == Sheet.Settings) { events -> events.collect {}; go(Sheet.Profile) }
-        AnimatedContent(open, transitionSpec = {
-            val push = targetState == Sheet.Settings
-            val t = tween<IntOffset>(PUSH_MS, easing = FastOutSlowInEasing)
-            slideInHorizontally(t) { if (push) it else -it } togetherWith slideOutHorizontally(t) { if (push) -it else it } using
-                SizeTransform(clip = true) { _, _ -> tween(PUSH_MS, easing = FastOutSlowInEasing) }
-        }, contentAlignment = Alignment.TopCenter, label = "page") { s ->
-            Column {
-                when (s) {
-                    Sheet.Profile -> Profile(nav)
-                    Sheet.Settings -> Settings(model, version, nav)
+        // one transition for the header and the body, so their swaps land on the same frames; the X sits outside it, still
+        val page = updateTransition(open, label = "page")
+        Box(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp)) {
+            page.AnimatedContent(Modifier.fillMaxSize(), transitionSpec = { swap() using null }) { s ->
+                Box(Modifier.fillMaxSize()) {
+                    Box(Modifier.align(Alignment.CenterStart)) {
+                        if (s == Sheet.Profile) RoundButton(GEAR, stringResource(R.string.html_settings_aria)) { nav(Sheet.Settings) }
+                        else RoundButton(BACK, stringResource(R.string.launcher_settings_backToProfile)) { nav(Sheet.Profile) }
+                    }
+                    Box(Modifier.align(Alignment.Center)) {
+                        Label(stringResource(if (s == Sheet.Profile) R.string.html_accountTitle else R.string.html_settingsTitle), Fonts.baloo, 22.dp, Palette.cream)
+                    }
                 }
+            }
+            RoundButton(CLOSE, stringResource(R.string.html_attr_close), Modifier.align(Alignment.CenterEnd)) { nav(null) }
+        }
+        page.AnimatedContent(transitionSpec = { swap() using resize() }, contentAlignment = Alignment.TopCenter) { s ->
+            when (s) {
+                Sheet.Profile -> Profile()
+                Sheet.Settings -> Settings(model, version)
             }
         }
     } }
 }
 
-private const val PUSH_MS = 350
+private const val GROW_MS = 280
+private const val FADE_MS = 90 // per half: out, then in, so the two pages' text never show together
 private val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
-@Composable
-private fun SheetHeader(title: String, left: @Composable () -> Unit, go: (Sheet?) -> Unit) {
-    Box(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp)) {
-        Box(Modifier.align(Alignment.CenterStart)) { left() }
-        Box(Modifier.align(Alignment.Center)) { Label(title, Fonts.baloo, 22.dp, Palette.cream) }
-        RoundButton(CLOSE, stringResource(R.string.html_attr_close), Modifier.align(Alignment.CenterEnd)) { go(null) }
-    }
+// Going to Ajustos the swap waits for the grow; coming back it goes first.
+private fun AnimatedContentTransitionScope<Sheet>.swap(): ContentTransform {
+    val wait = if (targetState == Sheet.Settings) GROW_MS else 0
+    return fadeIn(tween(FADE_MS, wait + FADE_MS)) togetherWith fadeOut(tween(FADE_MS, wait))
+}
+
+private fun AnimatedContentTransitionScope<Sheet>.resize() = SizeTransform(clip = true) { from, _ ->
+    if (targetState == Sheet.Settings) tween(GROW_MS, easing = FastOutSlowInEasing)
+    else keyframes { durationMillis = 2 * FADE_MS + GROW_MS; from at 2 * FADE_MS using FastOutSlowInEasing }
 }
 
 @Composable
@@ -114,8 +130,7 @@ private fun SheetBody(content: @Composable () -> Unit) {
 
 // ---- Perfil. Counters wait for the native session and records (native-shell.md, phases 3-4): a dash until then.
 @Composable
-private fun Profile(go: (Sheet?) -> Unit) {
-    SheetHeader(stringResource(R.string.html_accountTitle), { RoundButton(GEAR, stringResource(R.string.html_settings_aria)) { go(Sheet.Settings) } }, go)
+private fun Profile() {
     SheetBody {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             listOf(R.string.launcher_profile_runs, R.string.launcher_profile_games, R.string.launcher_profile_days).map { stringResource(it) }.forEach { label ->
@@ -131,9 +146,8 @@ private fun Profile(go: (Sheet?) -> Unit) {
 
 // ---- Ajustos
 @Composable
-private fun Settings(model: Launcher, version: String, go: (Sheet?) -> Unit) {
+private fun Settings(model: Launcher, version: String) {
     val ctx = LocalContext.current
-    SheetHeader(stringResource(R.string.html_settingsTitle), { RoundButton(BACK, stringResource(R.string.launcher_settings_backToProfile)) { go(Sheet.Profile) } }, go)
     SheetBody {
         Column(Modifier.card()) {
             ToggleRow(SOUND, hex("#f0a51a"), stringResource(R.string.launcher_settings_sound), model.sound, first = true) { model.sound = it }

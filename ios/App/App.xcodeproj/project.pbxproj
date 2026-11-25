@@ -27,6 +27,7 @@
 		A1C0DE5A0200000000000002 /* SplashArt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE5A0200000000000001 /* SplashArt.swift */; };
 		A1C0DE5A0100000000000002 /* Splash.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE5A0100000000000001 /* Splash.swift */; };
 		A1C0DE020700000000000002 /* Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020700000000000001 /* Sheets.swift */; };
+		A1C0DE020900000000000002 /* LanguagePrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020900000000000001 /* LanguagePrompt.swift */; };
 		A1C0DE020800000000000002 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A1C0DE020800000000000001 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +54,7 @@
 		A1C0DE5A0200000000000001 /* SplashArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashArt.swift; sourceTree = "<group>"; };
 		A1C0DE5A0100000000000001 /* Splash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Splash.swift; sourceTree = "<group>"; };
 		A1C0DE020700000000000001 /* Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sheets.swift; sourceTree = "<group>"; };
+		A1C0DE020900000000000001 /* LanguagePrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LanguagePrompt.swift; sourceTree = "<group>"; };
 		A1C0DE020800000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -117,6 +119,7 @@
 				A1C0DE5A0200000000000001 /* SplashArt.swift */,
 				A1C0DE5A0100000000000001 /* Splash.swift */,
 				A1C0DE020700000000000001 /* Sheets.swift */,
+				A1C0DE020900000000000001 /* LanguagePrompt.swift */,
 			);
 			path = Launcher;
 			sourceTree = "<group>";
@@ -231,6 +234,7 @@
 				A1C0DE5A0200000000000002 /* SplashArt.swift in Sources */,
 				A1C0DE5A0100000000000002 /* Splash.swift in Sources */,
 				A1C0DE020700000000000002 /* Sheets.swift in Sources */,
+				A1C0DE020900000000000002 /* LanguagePrompt.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

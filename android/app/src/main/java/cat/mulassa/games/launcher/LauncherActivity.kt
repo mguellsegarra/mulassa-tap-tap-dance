@@ -1,5 +1,6 @@
 package cat.mulassa.games.launcher
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
@@ -40,6 +41,8 @@ class LauncherActivity : ComponentActivity() {
     // also delivered to a launcher rebuilt after process death, with the game's id and origin in the result
     private val game = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { comeBack(it.data) }
 
+    override fun attachBaseContext(base: Context) = super.attachBaseContext(AppLanguage.wrap(base)) // Catalan unless chosen
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val system = installSplashScreen()
         // A fresh launcher (not one rebuilt after process death, which comes back from a game): the system splash's rest pose
@@ -58,6 +61,7 @@ class LauncherActivity : ComponentActivity() {
         setContent {
             Box(Modifier.fillMaxSize()) {
                 LauncherRoot(model, version, hour)
+                LanguagePrompt(ready = !splash) { recreate() }
                 IrisView(iris)
                 if (splash) Splash(still = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f) { splash = false }
             }

@@ -41,6 +41,7 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
     implementation project(':capacitor-android')
+    implementation "androidx.webkit:webkit:$androidxWebkitVersion" // already in through Capacitor; GameSession's document-start script
     // the native launcher (docs/app/launcher-j1.md): Compose foundation; Material 3 only for the platform bottom sheet
     implementation platform("androidx.compose:compose-bom:$composeBomVersion")
     implementation "androidx.compose.foundation:foundation"

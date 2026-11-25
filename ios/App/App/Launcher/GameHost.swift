@@ -1,5 +1,6 @@
 import SwiftUI
 import Capacitor
+import WebKit
 
 // The app's root (docs/app/native-shell.md, «Navigation»): the SwiftUI launcher, with the one game bridge kept warm behind it.
 // A game opens in that bridge, presented full screen under the iris; Mulassa.exitToLauncher() brings the launcher back.
@@ -11,6 +12,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     private var splashWindow: UIWindow?
     private var busy = false
     private var loading: NSKeyValueObservation?
+    private var webLanguage: String?
 
     init() {
         model = Launcher()
@@ -58,6 +60,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         guard !busy, !game.soon, let path = game.path, WebBundle.isEntryPath(path),
               let server = bridgeVC.bridge?.config.serverURL, let url = URL(string: path, relativeTo: server) else { return }
         busy = true
+        tellLanguage()
         showIris(game, from: from)
         iris.forward { [weak self] in
             guard let self else { return }
@@ -101,6 +104,15 @@ final class LauncherController: UIHostingController<LauncherRoot> {
             }
             model.load(root: bundleRoot) // a live update applied in the game switched the bundle
         }
+    }
+
+    // The launcher's language is the games' too (native-shell.md, contract 4): saved where the web reads it (ui-language-v1)
+    // before any of the page's scripts run. A later script runs after the earlier ones, so a change adds one more.
+    private func tellLanguage() {
+        let code = AppLanguage.shared.code
+        guard code != webLanguage, let scripts = bridgeVC.webView?.configuration.userContentController else { return }
+        webLanguage = code
+        scripts.addUserScript(WKUserScript(source: "try{localStorage.setItem('ui-language-v1','\(code)')}catch(e){}", injectionTime: .atDocumentStart, forMainFrameOnly: true))
     }
 
     private func showIris(_ game: Game, from: CGPoint) {

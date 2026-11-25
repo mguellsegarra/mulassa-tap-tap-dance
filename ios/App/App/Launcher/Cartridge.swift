@@ -17,7 +17,7 @@ struct Cartridge: View, Equatable {
     }
     // fills the lone last slot of an odd count: not a game, nothing to tap
     static func filler(u: CGFloat) -> Cartridge {
-        var c = Cartridge(color: UIColor(hex: "#7a5a44"), name: String(localized: "ui.select.aviat"), image: nil, locked: false, u: u)
+        var c = Cartridge(color: UIColor(hex: "#7a5a44"), name: Bundle.main.localizedString(forKey: "ui.select.aviat", value: nil, table: nil), image: nil, locked: false, u: u)
         c.plus = true
         return c
     }

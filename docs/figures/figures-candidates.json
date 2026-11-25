@@ -1,0 +1,3527 @@
+{
+ "towns": {
+  "l'Arboç": {
+   "color": "#a8951f",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20l%27Arbo%C3%A7%20THV-ES.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Arenys de Mar": {
+   "color": "#951841",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20d%27Arenys%20de%20Mar.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20d%27Arenys%20de%20Mar.png?width=128",
+   "existing": false
+  },
+  "Arenys de Munt": {
+   "color": "#a8a81c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20d%27Arenys%20de%20Munt.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Badalona": {
+   "color": "#374dbb",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20badalona.PNG?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20Badalona.svg?width=128",
+   "existing": false
+  },
+  "Barcelona": {
+   "color": "#b659a2",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Coat%20of%20Arms%20of%20Barcelona.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Barcelona.svg?width=128",
+   "existing": true
+  },
+  "Calafell": {
+   "color": "#adac1c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Calafell.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Caldes de Montbui": {
+   "color": "#c9a71b",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Caldes%20de%20Montbui.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Caldes%20de%20Montbui.svg?width=128",
+   "existing": false
+  },
+  "Calella": {
+   "color": "#b1a43b",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20Calella.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Cambrils": {
+   "color": "#1c31ac",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Cambrils.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20Cambrils.png?width=128",
+   "existing": false
+  },
+  "Canovelles": {
+   "color": "#8d9a1e",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Canovelles.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Canovelles.svg?width=128",
+   "existing": false
+  },
+  "Cassà de la Selva": {
+   "color": "#a1881a",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Cass%C3%A0%20de%20la%20Selva.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Castellbisbal": {
+   "color": "#761895",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Castellbisbal.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20castellbisbal.svg?width=128",
+   "existing": false
+  },
+  "Cervera": {
+   "color": "#c9321f",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Cervera%20%282018%29.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Cervera.svg?width=128",
+   "existing": false
+  },
+  "Cunit": {
+   "color": "#da8224",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Cunit.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Cunit.svg?width=128",
+   "existing": false
+  },
+  "Falset": {
+   "color": "#a3731b",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Falset.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Girona": {
+   "color": "#3f86b5",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Girona.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Girona.svg?width=128",
+   "existing": true
+  },
+  "Granollers": {
+   "color": "#c79416",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Granollers.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Granollers.gif?width=128",
+   "existing": false
+  },
+  "Lleida": {
+   "color": "#6d1a2d",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20her%C3%A0ldic%20de%20Lleida.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Lleida.svg?width=128",
+   "existing": true
+  },
+  "Llinars del Vallès": {
+   "color": "#32b5cd",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Llinars%20del%20Vall%C3%A8s.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Llinars%20del%20Vall%C3%A8s.svg?width=128",
+   "existing": false
+  },
+  "Manresa": {
+   "color": "#2a63b5",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Manresa.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Manresa%20fosca.svg?width=128",
+   "existing": true
+  },
+  "Martorell": {
+   "color": "#1b62a3",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Martorell.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Martorell.svg?width=128",
+   "existing": false
+  },
+  "Mataró": {
+   "color": "#227702",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Matar%C3%B3.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Matar%C3%B3.svg?width=128",
+   "existing": true
+  },
+  "Molins de Rei": {
+   "color": "#c55f12",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20oficial%20de%20Molins%20de%20Rei.svg?width=128",
+   "flag": null,
+   "existing": true
+  },
+  "Montblanc": {
+   "color": "#5f9205",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Montblanc%20THV-ES.svg?width=128",
+   "flag": null,
+   "existing": true
+  },
+  "Navàs": {
+   "color": "#19699d",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Nav%C3%A0s.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Olot": {
+   "color": "#8e2a5c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20d%27Olot.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20d%27Olot.svg?width=128",
+   "existing": true
+  },
+  "el Prat de Llobregat": {
+   "color": "#1a9ba0",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20del%20Prat%20de%20Llobregat.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Reus": {
+   "color": "#8b5e3c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escutcolor.gif?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Reus%20%28Tarragona%29.svg?width=128",
+   "existing": true
+  },
+  "Riudoms": {
+   "color": "#d0601f",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Riudoms.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Riudoms.svg?width=128",
+   "existing": false
+  },
+  "Sallent": {
+   "color": "#8fa91c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Sallent.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Sant Celoni": {
+   "color": "#1b1aa3",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Sant%20Celoni.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Sant%20Celoni.svg?width=128",
+   "existing": false
+  },
+  "Sant Cugat del Vallès": {
+   "color": "#a8861a",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Sant%20Cugat%20del%20Vall%C3%A8s.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20Sant%20Cugat%20del%20Vall%C3%A8s.png?width=128",
+   "existing": false
+  },
+  "Sant Feliu de Llobregat": {
+   "color": "#c62a4e",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Sant%20Feliu%20de%20Llobregat.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20Sant%20Feliu%20de%20Llobregat.png?width=128",
+   "existing": false
+  },
+  "Sant Pere de Ribes": {
+   "color": "#ab5d1c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Sant%20Pere%20de%20Ribes.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Santa Coloma de Cervelló": {
+   "color": "#6f8a1c",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Santa%20Coloma%20de%20Cervell%C3%B3.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Santa%20Coloma%20de%20Cervell%C3%B3.svg?width=128",
+   "existing": false
+  },
+  "Santa Coloma de Gramenet": {
+   "color": "#359f6e",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Santa%20Coloma%20de%20Gramenet.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20Santa%20Coloma%20de%20Gramenet.png?width=128",
+   "existing": false
+  },
+  "Santa Margarida i els Monjos": {
+   "color": "#822b6f",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Santa%20Margarida%20i%20els%20Monjos.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Santa%20Margarida%20i%20els%20Monjos.svg?width=128",
+   "existing": false
+  },
+  "Santpedor": {
+   "color": "#189540",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Santpedor.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Santpedor.svg?width=128",
+   "existing": false
+  },
+  "Sitges": {
+   "color": "#c92a6a",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Sitges.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Sitges%2C%20Barcelona.svg?width=128",
+   "existing": false
+  },
+  "Solsona": {
+   "color": "#0b8fa8",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/EscutSolsonaOficial.jpg?width=128",
+   "flag": null,
+   "existing": true
+  },
+  "Tarragona": {
+   "color": "#8a3d9a",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Tarragona.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Tarragona.svg?width=128",
+   "existing": true
+  },
+  "Terrassa": {
+   "color": "#8d68c0",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Terrassa.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20de%20Terrassa%20%282019-%29.svg?width=128",
+   "existing": true
+  },
+  "Torà": {
+   "color": "#5b6e3a",
+   "coat": null,
+   "flag": null,
+   "existing": false
+  },
+  "Valls": {
+   "color": "#c8202f",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escudo%20de%20Valls.svg?width=128",
+   "flag": null,
+   "existing": true
+  },
+  "el Vendrell": {
+   "color": "#2e7d4f",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Coat%20of%20Arms%20of%20El%20Vendrell.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Bandera%20El%20Vendrell.png?width=128",
+   "existing": false
+  },
+  "Vic": {
+   "color": "#b8432a",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Vic.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Vic.svg?width=128",
+   "existing": false
+  },
+  "Vila-seca": {
+   "color": "#7d6a12",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Vilaseca.svg?width=128",
+   "flag": null,
+   "existing": false
+  },
+  "Vilafranca del Penedès": {
+   "color": "#00b09a",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Vilafranca%20del%20Pened%C3%A8s.svg?width=128",
+   "flag": null,
+   "existing": true
+  },
+  "Vilanova i la Geltrú": {
+   "color": "#10ade3",
+   "coat": "https://commons.wikimedia.org/wiki/Special:FilePath/Escut%20de%20Vilanova%20i%20la%20Geltr%C3%BA.svg?width=128",
+   "flag": "https://commons.wikimedia.org/wiki/Special:FilePath/Flag%20of%20Vilanova%20i%20la%20Geltr%C3%BA.svg?width=128",
+   "existing": true
+  }
+ },
+ "figures": [
+  {
+   "town": "l'Arboç",
+   "name": "Gegants Chabran i Llúcia",
+   "colla": "Colla de Gegants i Nans de l'Arboç",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-de-larboc-1649623016.png",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-de-larboc"
+    },
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-larboc-1769370260.jpeg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-larboc"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/figura-goma-geganta-arboc-01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-llucia-de-larboc/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29627-home_default/figura-de-goma-geganta-llucia-de-l-arboc.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14666-figura-de-goma-geganta-llucia-de-l-arboc.html"
+    }
+   ],
+   "note": "Hi ha parella nova i vella: cal triar quina és"
+  },
+  {
+   "town": "Arenys de Mar",
+   "name": "Gegants Reis (Tallaferro i Flor d'Alba)",
+   "colla": "Colla Gegantera d'Arenys de Mar",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-reis-darenys-de-mar-1609698028.png",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-reis-darenys-de-mar"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Capgrossos_antics_d%27Arenys.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Capgrossos_antics_d%27Arenys.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Drac_antic_d%27Arenys.jpg/330px-Drac_antic_d%27Arenys.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Drac_antic_d%27Arenys.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/153-Gegant-dArenys-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-darenys-de-mar/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/154-Geganta-dArenys-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-darenys-de-mar/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Arenys de Munt",
+   "name": "Gegants Vells (Martí i Remei)",
+   "colla": "Colla de Geganters i Grallers d'Arenys de Munt",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-darenys-de-munt-1776173760.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-darenys-de-munt"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/06/Arenys-de-Munt_WEB01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-marti-darenys-de-munt/"
+    },
+    {
+     "u": "https://botigadelafestamajor.cat/341-home_default/geganta-remei-d-arenys-de-munt.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/234-geganta-remei-d-arenys-de-munt.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Arenys de Munt",
+   "name": "Gegantó Tonet",
+   "colla": "Colla de Geganters i Grallers d'Arenys de Munt",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/372-home_default/geganto-tonet-d-arenys-de-munt.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/247-geganto-tonet-d-arenys-de-munt.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Badalona",
+   "name": "Gegants Vells (Anastasi i Maria)",
+   "colla": "Colla de Geganters de Badalona",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-badalona-1684275816.jpeg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-badalona"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/314-Gegant-Anastasi-de-Badalona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-anastasi-de-badalona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/316-Geganta-Maria-de-Badalona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-maria-de-badalona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Gegants de Sant Jaume",
+   "colla": "Associació Gegantera de Gegants de Sant Jaume",
+   "conf": "prob",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/029_Trobada_dels_Gegants_de_Sant_Jaume%2C_c._Jaume_I_%28Barcelona%29%2C_els_gegants_de_la_Barceloneta.jpg/330px-029_Trobada_dels_Gegants_de_Sant_Jaume%2C_c._Jaume_I_%28Barcelona%29%2C_els_gegants_de_la_Barceloneta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:029_Trobada_dels_Gegants_de_Sant_Jaume,_c._Jaume_I_(Barcelona),_els_gegants_de_la_Barceloneta.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/030_Trobada_dels_Gegants_de_Sant_Jaume%2C_c._Jaume_I_%28Barcelona%29%2C_els_gegants_del_Casc_Antic.jpg/330px-030_Trobada_dels_Gegants_de_Sant_Jaume%2C_c._Jaume_I_%28Barcelona%29%2C_els_gegants_del_Casc_Antic.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:030_Trobada_dels_Gegants_de_Sant_Jaume,_c._Jaume_I_(Barcelona),_els_gegants_del_Casc_Antic.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/294-Gegant-de-Sant-Jaume-de-Barcelona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-sant-jaume-de-barcelona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/397-Geganta-de-Sant-Jaume-de-Barcelona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-sant-jaume-de-barcelona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Gegants de la Ciutat (Jaume I i Violant)",
+   "colla": "Coordinadora de Colles Geganteres de Barcelona",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/52/214_Gegants_de_la_Ciutat_%28Palau_de_la_Virreina%2C_Barcelona%29.jpg/330px-214_Gegants_de_la_Ciutat_%28Palau_de_la_Virreina%2C_Barcelona%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:214_Gegants_de_la_Ciutat_(Palau_de_la_Virreina,_Barcelona).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/381_L%27%C3%80liga_i_els_gegants_de_la_Ciutat%2C_al_palau_de_la_Virreina_%28Barcelona%29.JPG/330px-381_L%27%C3%80liga_i_els_gegants_de_la_Ciutat%2C_al_palau_de_la_Virreina_%28Barcelona%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:381_L%27%C3%80liga_i_els_gegants_de_la_Ciutat,_al_palau_de_la_Virreina_(Barcelona).JPG"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Gegants_de_la_Ciutat_-_Festes_de_Santa_Eul%C3%A0lia_%28Barcelona%29_2014.jpg/330px-Gegants_de_la_Ciutat_-_Festes_de_Santa_Eul%C3%A0lia_%28Barcelona%29_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_de_la_Ciutat_-_Festes_de_Santa_Eul%C3%A0lia_(Barcelona)_2014.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28432-home_default/figura-de-goma-de-la-geganta-de-la-ciutat-de-barcelona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14136-figura-de-goma-de-la-geganta-de-la-ciutat-de-barcelona.html"
+    },
+    {
+     "u": "https://productesdelaterra.cat/28431-home_default/figura-de-goma-del-gegant-de-la-ciutat-de-barcelona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14137-figura-de-goma-del-gegant-de-la-ciutat-de-barcelona.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Gegants de la Plaça Nova (Sant Roc i Laieta)",
+   "colla": "Associació de Festes de la Plaça Nova",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/097_En_Roc_i_l%27Eul%C3%A0lia%2C_els_Gegants_Nous_de_la_Pla%C3%A7a_Nova_%28Ajuntament_de_Barcelona%29.jpg/330px-097_En_Roc_i_l%27Eul%C3%A0lia%2C_els_Gegants_Nous_de_la_Pla%C3%A7a_Nova_%28Ajuntament_de_Barcelona%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:097_En_Roc_i_l%27Eul%C3%A0lia,_els_Gegants_Nous_de_la_Pla%C3%A7a_Nova_(Ajuntament_de_Barcelona).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9b/Gegants_al_Museu_Mar%C3%ADtim_-_41_-_Gegants_de_la_pla%C3%A7a_Nova.JPG/330px-Gegants_al_Museu_Mar%C3%ADtim_-_41_-_Gegants_de_la_pla%C3%A7a_Nova.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_al_Museu_Mar%C3%ADtim_-_41_-_Gegants_de_la_pla%C3%A7a_Nova.JPG"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Gegants_al_Museu_Mar%C3%ADtim_-_42_-_Gegants_de_la_pla%C3%A7a_Nova.JPG/330px-Gegants_al_Museu_Mar%C3%ADtim_-_42_-_Gegants_de_la_pla%C3%A7a_Nova.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_al_Museu_Mar%C3%ADtim_-_42_-_Gegants_de_la_pla%C3%A7a_Nova.JPG"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/121-Gegant-de-la-Placa-Nova-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-la-placa-nova-de-barcelona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/122-Geganta-de-la-Placa-Nova-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-la-placa-nova-de-barcelona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Mulassa de Barcelona",
+   "colla": "Associació d'Amics dels Gegants del Pi",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Mulassa-de-Barcelona.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/mulassa-de-barcelona/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Mulassa-de-Barcelona-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/mulassa-de-barcelona/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/124-Mulassa-de-Barcelona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-mulassa-de-barcelona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27734-home_default/figura-de-goma-mulassa-de-barcelona.jpg",
+     "page": "https://productesdelaterra.cat/festiari/13753-figura-de-goma-mulassa-de-barcelona-5063803009.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Nan Cu-cut",
+   "colla": "Associació de Festes de la Plaça Nova",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/022_Fabra_i_Coats%2C_mostra_Som_Cultura_Popular%2C_el_nan_Cu-cut_de_la_pla%C3%A7a_Nova.jpg/330px-022_Fabra_i_Coats%2C_mostra_Som_Cultura_Popular%2C_el_nan_Cu-cut_de_la_pla%C3%A7a_Nova.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:022_Fabra_i_Coats,_mostra_Som_Cultura_Popular,_el_nan_Cu-cut_de_la_pla%C3%A7a_Nova.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/039_La_Casa_dels_Entremesos_%28Barcelona%29%2C_el_nan_Cu-cut.jpg/330px-039_La_Casa_dels_Entremesos_%28Barcelona%29%2C_el_nan_Cu-cut.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:039_La_Casa_dels_Entremesos_(Barcelona),_el_nan_Cu-cut.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3d/Gegants_al_Museu_Mar%C3%ADtim_-_45_-_Nan_Cu-Cut_de_la_pla%C3%A7a_Nova.JPG/330px-Gegants_al_Museu_Mar%C3%ADtim_-_45_-_Nan_Cu-Cut_de_la_pla%C3%A7a_Nova.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_al_Museu_Mar%C3%ADtim_-_45_-_Nan_Cu-Cut_de_la_pla%C3%A7a_Nova.JPG"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/123-Nan-Cu-cut-de-Barcelona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-nan-cu-cut-de-barcelona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Tarasca de Barcelona",
+   "colla": "Associació de Geganters, Grallers i Bestiari de la Barceloneta",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Tarasca-de-Barcelona.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/tarasca-de-barcelona/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/599tarasca_0.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/tarasca-de-barcelona/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Mercè_2012_-_Tarasca.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/tarasca-de-barcelona/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/127-Tarasca-de-Barcelona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-tarasca-de-barcelona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/28066-home_default/figura-de-goma-tarasca-de-barcelona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13909-figura-de-goma-tarasca-de-barcelona-9153598554.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Barcelona",
+   "name": "Víbria de Barcelona",
+   "colla": "Associació de Festes de la Plaça Nova",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Víbria-de-Barcelona-PN-1_1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/vibria-de-barcelona/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Víbria-650.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/vibria-de-barcelona/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Víbria-de-Barcelona.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/vibria-de-barcelona/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/126-Vibria-de-Barcelona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-vibria-de-barcelona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27576-home_default/figura-de-goma-de-la-vibria-de-barcelona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13712-figura-de-goma-de-la-vibria-de-barcelona-3810955270.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Calafell",
+   "name": "Drac Espurna",
+   "colla": "Associació Espurna, El Drac del Castell",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/08/Drac-Espurna-de-Calafell.-Dolors-Sans-6.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/espurna-el-drac-del-castell/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/08/Drac-Espurna-de-Calafell.-Dolors-Sans-4.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/espurna-el-drac-del-castell/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/08/Drac-Espurna-de-Calafell.-Dolors-Sans-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/espurna-el-drac-del-castell/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/09/Drac-Calafell_WEB-01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-espurna-de-calafell/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Caldes de Montbui",
+   "name": "Gegants Farellàs i Guisla",
+   "colla": "Colla de Geganters de Caldes de Montbui",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-caldes-de-montbui-1613518525.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-caldes-de-montbui"
+    },
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-caldes-de-montbui-1613655657.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-caldes-de-montbui"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/352-home_default/gegant-farellas-de-caldes-de-montbui.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/239-gegant-farellas-de-caldes-de-montbui.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Calella",
+   "name": "Gegants Quirze i Minerva",
+   "colla": "Colla de Gegants i Grallers de Calella",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-de-calella_1607299831.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-de-calella"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/350-home_default/geganta-minerva-de-calella.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/238-geganta-minerva-de-calella.html"
+    },
+    {
+     "u": "https://botigadelafestamajor.cat/348-home_default/gegant-quirze-de-calella.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/237-gegant-quirze-de-calella.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Cambrils",
+   "name": "Farnaca",
+   "colla": "Colla Gegantera Tota l'Endenga de Cambrils",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/424_Farnaca.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-farnaca/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/JLL10.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-farnaca/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/SAM_6701.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-farnaca/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/Farnaca_web-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-farnaca-de-cambrils/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Cambrils",
+   "name": "Marquès de los Vélez",
+   "colla": "Colla Gegantera Tota l'Endenga de Cambrils",
+   "conf": "ok",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/02/MarquesdelosVelez_01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-marques-de-los-velez/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Canovelles",
+   "name": "Gegants Carles i Cisqueta",
+   "colla": "Ajuntament de Canovelles / Colla Gegantera",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-canovelles-1713832975.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-canovelles"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/395-home_default/geganta-cisqueta-de-canovelles.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/253-geganta-cisqueta-de-canovelles.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Cassà de la Selva",
+   "name": "Gegants Aldric i Isaura",
+   "colla": "Colla Gegantera de Cassà de la Selva",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-cassa-de-la-selva-1609156663.JPG",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-cassa-de-la-selva"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/389-home_default/gegantessa-isaura-de-cassa-de-la-selva.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/251-gegantessa-isaura-de-cassa-de-la-selva.html"
+    },
+    {
+     "u": "https://botigadelafestamajor.cat/383-home_default/gegant-aldric-de-cassa-de-la-selva.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/250-gegant-aldric-de-cassa-de-la-selva.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Castellbisbal",
+   "name": "Gegantona Rita",
+   "colla": "Colla Gegantera de Castellbisbal",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Rita_%281%29.jpg/330px-Rita_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Rita_(1).jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/363-home_default/gegantona-rita-de-castellbisbal.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/244-gegantona-rita-de-castellbisbal.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Castellbisbal",
+   "name": "Gegantó Galí",
+   "colla": "Colla Gegantera de Castellbisbal",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/365-home_default/geganto-gali-de-castellbisbal.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/245-geganto-gali-de-castellbisbal.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Castellbisbal",
+   "name": "Mulassa de Castellbisbal",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/346-home_default/mulassa-de-castellbisbal.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/236-mulassa-de-castellbisbal.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Castellbisbal",
+   "name": "Sr. Aigua",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/274-home_default/sr-aigua-de-castellbisbal.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/191-sr-aigua-de-castellbisbal.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Cervera",
+   "name": "Lo Carranco Bilandó",
+   "colla": "Ball de Diables de Cervera - Carranquers",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Lo-Carranco-Bilandó.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/lo-carranco-bilando/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/06/Drac-Cervera_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-carranco-bilando-de-cervera/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Cunit",
+   "name": "Drac de Cunit",
+   "colla": "Joves Diables de Cunit",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2019/06/Drac-de-Cunit.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-cunit/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2019/06/Drac-de-Cunit-2.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-cunit/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/drac_cunit_web-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-de-cunit/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Falset",
+   "name": "Mulassa de Falset",
+   "colla": "Associació La Mulassa de Falset",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/IMG_3394.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-mulassa-de-falset/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/Mulassa-2.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-mulassa-de-falset/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/484_Mulassa_de_Falset.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-mulassa-de-falset/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/165-Mulassa-de-Falset-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-mulassa-de-falset/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/16896-home_default/figura-de-goma-reproduccio-de-la-mulassa-de-falset.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/10398-figura-de-goma-reproduccio-de-la-mulassa-de-falset-1562100017702.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Girona",
+   "name": "Esquivamosques",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Esquivamosques.jpg/330px-Esquivamosques.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Esquivamosques.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/L%27esquivamosques.jpg/330px-L%27esquivamosques.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:L%27esquivamosques.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/308-Esquivamosques-de-Girona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-lesquivamosques-de-girona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Girona",
+   "name": "Gegants Rei i Reina",
+   "colla": "Colla Gegantera Fal·lera Gironina",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-de-girona-1635186630.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-de-girona"
+    },
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-girona-1635186738.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-girona"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/357-Gegant-Rei-de-Girona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-rei-de-girona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/356-Geganta-Reina-de-Girona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-reina-de-girona/"
+    }
+   ],
+   "note": "Hi ha diverses parelles: cal triar quina és"
+  },
+  {
+   "town": "Girona",
+   "name": "Àliga de Girona",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e5/%C3%80liga_de_Girona%2C_a_l%27Ajuntament_de_Girona_durant_les_Festes_de_Sant_Narc%C3%ADs_2025.jpg/330px-%C3%80liga_de_Girona%2C_a_l%27Ajuntament_de_Girona_durant_les_Festes_de_Sant_Narc%C3%ADs_2025.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:%C3%80liga_de_Girona,_a_l%27Ajuntament_de_Girona_durant_les_Festes_de_Sant_Narc%C3%ADs_2025.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/67-Aliga-de-Girona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-laliga-de-girona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29575-home_default/figura-de-goma-reproduccio-aliga-de-girona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14645-figura-de-goma-reproduccio-aliga-de-girona.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Granollers",
+   "name": "Gegants Grossos (Plàcida i Esteve)",
+   "colla": "Amics dels Gegants i Capgrossos de Granollers",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-grossos-de-granollers-1621495299.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-grossos-de-granollers"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Ajuntament_i_Gegants_de_Granollers.jpeg/330px-Ajuntament_i_Gegants_de_Granollers.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Ajuntament_i_Gegants_de_Granollers.jpeg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/175-Gegant-de-Granollers-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-granollers/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/174-Geganta-de-Granollers-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-granollers/"
+    }
+   ],
+   "note": "Hi ha diverses parelles: cal triar quina és"
+  },
+  {
+   "town": "Lleida",
+   "name": "Gegants Cleòpatra i Marc Antoni",
+   "colla": "Colla Gegantera dels Gegants de la Paeria",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/226-Gegant-Marc-Antoni-de-Lleida-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-marc-antoni-de-lleida/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/225-Geganta-Cleopatra-de-Lleida-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-cleopatra-de-lleida/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Lleida",
+   "name": "Gegants Egipcis",
+   "colla": "Colla Gegantera dels Gegants de la Paeria",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-faraons-de-la-paeria-de-lleida-1728812914.png",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-faraons-de-la-paeria-de-lleida"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/09/Geganta-Egipcia-Lleida_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-geganta-egipcia-de-lleida/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/09/Gegant-Egipci-Lleida_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-egipci-de-lleida/"
+    }
+   ],
+   "note": "Pot ser la mateixa parella que Cleòpatra i Marc Antoni"
+  },
+  {
+   "town": "Lleida",
+   "name": "Gegants Jaume I i Elionor",
+   "colla": "Colla Gegantera dels Gegants de la Paeria",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/310-Gegant-Rei-Jaume-I-de-Lleida-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-rei-jaume-i-de-lleida/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/312-Geganta-Reina-Elionor-de-Lleida-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-reina-elionor-de-lleida/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Lleida",
+   "name": "Gegants Xinos",
+   "colla": "Colla Gegantera dels Gegants de la Paeria",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/gegant-xino-lleida_web01-scaled-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-xino-de-lleida/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/geganta-xina-lleida_web01-scaled-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-xina-de-lleida/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Lleida",
+   "name": "Mulassa de Cappont",
+   "colla": "Col·lectiu Cultural Cappont",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/03/mulassa-de-cappont.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-mulassa-de-cappont/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/03/mulassa-de-cappont-5.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-mulassa-de-cappont/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/03/mulassa-de-cappont-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-mulassa-de-cappont/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/05/Mulassa-Cappont_01-2026-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-mulassa-de-cappont-de-lleida/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Llinars del Vallès",
+   "name": "La Patufa",
+   "colla": "Associació Juvenil Colla Gegantera la Patufa",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/07/IMG-20190421-WA0041.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-patufa/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/07/patu.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-patufa/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/07/IMG-20190421-WA0066.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-patufa/"
+    }
+   ],
+   "commons": [],
+   "ninot": [],
+   "note": "Ninot venut per la colla"
+  },
+  {
+   "town": "Manresa",
+   "name": "Nans de Manresa",
+   "colla": "Geganters de Manresa",
+   "conf": "prob",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/50/144_Museu_Comarcal_de_Manresa%2C_els_nans_vells.jpg/330px-144_Museu_Comarcal_de_Manresa%2C_els_nans_vells.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:144_Museu_Comarcal_de_Manresa,_els_nans_vells.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/145_Museu_Comarcal_de_Manresa%2C_els_nans_vells.jpg/330px-145_Museu_Comarcal_de_Manresa%2C_els_nans_vells.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:145_Museu_Comarcal_de_Manresa,_els_nans_vells.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/146_Museu_Comarcal_de_Manresa%2C_els_nans_vells.jpg/330px-146_Museu_Comarcal_de_Manresa%2C_els_nans_vells.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:146_Museu_Comarcal_de_Manresa,_els_nans_vells.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/268-Nan-de-Manresa-amb-quatre-berrugues-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-nan-de-manresa-amb-quatre-berrugues/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/269-Nan-de-Manresa-amb-tres-berrugues-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-nan-de-manresa-amb-tres-berrugues/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Martorell",
+   "name": "Gegants Diable i Velleta",
+   "colla": "Colla de Geganters de Martorell",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-de-martorell-1777321439.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-de-martorell"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28265-home_default/figura-de-goma-de-la-geganta-velleta-de-martorell.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14046-figura-de-goma-de-la-geganta-velleta-de-martorell-10695923843.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Diablessa",
+   "colla": "Diablesses de Mataró",
+   "conf": "ok",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29388-home_default/figura-de-goma-reproduccio-diablessa-de-mataro.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14554-figura-de-goma-reproduccio-diablessa-de-mataro.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Drac de Mataró",
+   "colla": "Colla del Drac de Mataró",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/090_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Drac_de_Matar%C3%B3.jpg/330px-090_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Drac_de_Matar%C3%B3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:090_Palau_de_la_Virreina_(Barcelona),_el_Drac_de_Matar%C3%B3.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/095_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Drac_de_Matar%C3%B3%2C_detall.jpg/330px-095_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Drac_de_Matar%C3%B3%2C_detall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:095_Palau_de_la_Virreina_(Barcelona),_el_Drac_de_Matar%C3%B3,_detall.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/El_Drac_de_Matar%C3%B3_a_la_Riera_al_ball_de_dracs_de_les_Santes_2026.jpg/330px-El_Drac_de_Matar%C3%B3_a_la_Riera_al_ball_de_dracs_de_les_Santes_2026.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:El_Drac_de_Matar%C3%B3_a_la_Riera_al_ball_de_dracs_de_les_Santes_2026.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/149-Drac-de-Mataro-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-de-mataro/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27121-home_default/figura-de-goma-reproduccio-del-drac-de-mataro.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13518-figura-de-goma-reproduccio-del-drac-de-mataro-1484839506.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Dragalió",
+   "colla": "Colla del Drac de Mataró",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/093_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Dragali%C3%B3_de_Matar%C3%B3.jpg/330px-093_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Dragali%C3%B3_de_Matar%C3%B3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:093_Palau_de_la_Virreina_(Barcelona),_el_Dragali%C3%B3_de_Matar%C3%B3.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/094_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Dragali%C3%B3_de_Matar%C3%B3%2C_detall.jpg/330px-094_Palau_de_la_Virreina_%28Barcelona%29%2C_el_Dragali%C3%B3_de_Matar%C3%B3%2C_detall.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:094_Palau_de_la_Virreina_(Barcelona),_el_Dragali%C3%B3_de_Matar%C3%B3,_detall.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Dragali%C3%B3_de_Matar%C3%B3_davant_l%27esgl%C3%A9sia_de_Sant_Joan_i_Sant_Josep_al_ball_de_dracs_de_les_Santes_2026.jpg/330px-Dragali%C3%B3_de_Matar%C3%B3_davant_l%27esgl%C3%A9sia_de_Sant_Joan_i_Sant_Josep_al_ball_de_dracs_de_les_Santes_2026.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Dragali%C3%B3_de_Matar%C3%B3_davant_l%27esgl%C3%A9sia_de_Sant_Joan_i_Sant_Josep_al_ball_de_dracs_de_les_Santes_2026.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/Dragalio-Mataro_01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-dragalio-de-mataro/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29648-home_default/figura-de-goma-del-dragalio-de-mataro.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14678-figura-de-goma-del-dragalio-de-mataro.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Família Robafaves (Robafaves i Geganta)",
+   "colla": "Colla Gegantera de Mataró",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026.jpg/330px-La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026_%2810479%29.jpg/330px-La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026_%2810479%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026_(10479).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7c/La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026_%2816060%29.jpg/330px-La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026_%2816060%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:La_fam%C3%ADlia_Robafaves_a_la_pla%C3%A7a_de_Santa_Maria_durant_la_postal_de_Gegants_2026_(16060).jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/145-Gegant-de-Mataro-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-mataro/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/05/Geganta-Mataro-2026-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-mataro/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Maneló i Toneta",
+   "colla": "Colla Gegantera de Mataró",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/mataro_manelo_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-manelo-de-mataro/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/mataro_toneta_web-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-toneta-de-mataro/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Momeroteta",
+   "colla": "Colla de la Momerota",
+   "conf": "ok",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/096_Palau_de_la_Virreina_%28Barcelona%29%2C_la_Momeroteta_de_Matar%C3%B3.jpg/330px-096_Palau_de_la_Virreina_%28Barcelona%29%2C_la_Momeroteta_de_Matar%C3%B3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:096_Palau_de_la_Virreina_(Barcelona),_la_Momeroteta_de_Matar%C3%B3.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6e/097_Palau_de_la_Virreina_%28Barcelona%29%2C_escut_de_Matar%C3%B3_als_guarniments_de_la_Momeroteta.jpg/330px-097_Palau_de_la_Virreina_%28Barcelona%29%2C_escut_de_Matar%C3%B3_als_guarniments_de_la_Momeroteta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:097_Palau_de_la_Virreina_(Barcelona),_escut_de_Matar%C3%B3_als_guarniments_de_la_Momeroteta.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/Momeroteta_de_Matar%C3%B3_als_baixos_de_la_Casa_de_la_Ciutat_a_les_Santes_2026.jpg/330px-Momeroteta_de_Matar%C3%B3_als_baixos_de_la_Casa_de_la_Ciutat_a_les_Santes_2026.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Momeroteta_de_Matar%C3%B3_als_baixos_de_la_Casa_de_la_Ciutat_a_les_Santes_2026.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/Momeroteta_WEB-1-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-momeroteta-de-mataro/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29646-home_default/figura-de-goma-momeroteta-de-mataro.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14677-figura-de-goma-momeroteta-de-mataro.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Mataró",
+   "name": "Àliga de Mataró",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/%C3%80liga_de_Matar%C3%B3.jpg/330px-%C3%80liga_de_Matar%C3%B3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:%C3%80liga_de_Matar%C3%B3.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/148-Aliga-de-Mataro-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-laliga-de-mataro/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27799-home_default/figura-de-goma-reproduccio-aliga-de-mataro.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13754-figura-de-goma-reproduccio-aliga-de-mataro-5063803018.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Molins de Rei",
+   "name": "Gegants Nous (Bernat i Candelera)",
+   "colla": "Colla Gegantera de Molins de Rei",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-de-molins-de-rei-1647123425.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-de-molins-de-rei"
+    }
+   ],
+   "commons": [],
+   "ninot": [],
+   "note": ""
+  },
+  {
+   "town": "Montblanc",
+   "name": "Cucafera de Montblanc",
+   "colla": "Associació Cultural Cucafera de Montblanc",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2017/09/IMG_3709.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cucafera-de-montblanc/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2017/09/CucaferaMontblanc-Foc.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cucafera-de-montblanc/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2017/09/IMG_0949.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cucafera-de-montblanc/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/187-Cucafera-de-Montblanc-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-cucafera-de-montblanc/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29305-home_default/figura-de-goma-cucafera-de-montblanc.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14514-figura-de-goma-cucafera-de-montblanc.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Montblanc",
+   "name": "Nana de Montblanc",
+   "colla": "Amics dels Gegants Montblanc",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/08/montblanc_nanaBlau_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-nana-de-montblanc-amb-mocador-blau/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/08/montblanc_nanaGroc_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-nana-de-montblanc-amb-mocador-groc/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Navàs",
+   "name": "Òliba",
+   "colla": "L'Òliba de Navàs",
+   "conf": "ok",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/359-home_default/oliba-de-navas.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/243-oliba-de-navas.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Olot",
+   "name": "Cabreta del Cornamusam",
+   "colla": "Festival Cornamusam",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/343-Cabreta-del-Cornamusam-dOlot-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-cabreta-del-cornamusam-dolot/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29621-home_default/figura-de-goma-de-la-cabreta-del-cornamusam-olot.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14663-figura-de-goma-de-la-cabreta-del-cornamusam-olot.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Olot",
+   "name": "Cap de Lligamosques",
+   "colla": "Faràndula d'Olot (Ajuntament)",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/182-Cap-de-Lligamosques-dOlot-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-cap-de-lligamosques-dolot/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/28065-home_default/figura-de-goma-lligamosques-d-olot.jpg",
+     "page": "https://productesdelaterra.cat/festiari/13908-figura-de-goma-lligamosques-d-olot-9153598545.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Olot",
+   "name": "Cavallets d'Olot",
+   "colla": "Faràndula d'Olot (Ajuntament)",
+   "conf": "prob",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Olot_-_1911_-_Cavallets.jpg/330px-Olot_-_1911_-_Cavallets.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Olot_-_1911_-_Cavallets.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28642-home_default/figura-de-goma-del-cavallet-olot.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14248-figura-de-goma-del-cavallet-olot.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "el Prat de Llobregat",
+   "name": "Mulassa del Prat",
+   "colla": "Associació Cultural dels Sants Metges del Prat de Llobregat",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/03/DSC00815-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/mulassa-del-prat/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/03/image.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/mulassa-del-prat/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/03/image-1.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/mulassa-del-prat/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/326-home_default/mulassa-del-prat.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/228-mulassa-del-prat.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "el Prat de Llobregat",
+   "name": "Pollo del Prat",
+   "colla": "Colla de Diables del Prat",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/pollo-del-prat-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/el-pollo-del-prat/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Pollo_del_Prat-2.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/el-pollo-del-prat/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Pollo-del-prat-3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/el-pollo-del-prat/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/354-home_default/pollo-del-prat-de-llobregat.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/240-pollo-del-prat-de-llobregat.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Bou de Reus",
+   "colla": "Associació Cultural i Cívica El Bou de Reus",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/06/unnamed-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/el-bou-de-reus/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/06/Bou2.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/el-bou-de-reus/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2024/06/bou-3.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/el-bou-de-reus/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/104-Bou-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-bou-de-reus/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/21521-home_default/figura-de-goma-bou-de-reus.jpg",
+     "page": "https://productesdelaterra.cat/festiari/11927-figura-de-goma-bou-de-reus-1562554516752.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Cavallets de Reus",
+   "colla": "Col·lectiu Reusenc d'Activitats Culturals (CRAC)",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Cavallets-de-Reus.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cavallets-de-reus/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/10/cavallet_cristia_marro-clar-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-cavallet-cristia-de-reus-marro-clar/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/04/cavallet_moro_marro_clar-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-cavallet-moro-de-reus-marro-clar/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Cercolets de Reus",
+   "colla": "Colla del Ball de Cercolets de Reus",
+   "conf": "ok",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/258-Cercolet-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-cercoleta-amb-faldilla-vermella-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/256-Cercolet-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-cercoleta-amb-faldilla-verda-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Cucafera de Reus",
+   "colla": "AMPA Escola Els Ganxets",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2017/05/1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cucafera/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2017/05/2-002.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cucafera/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2017/05/3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cucafera/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/107-Cucafera-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-cucafera-de-reus/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27119-home_default/figura-de-goma-de-la-cucafera-de-reus.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13517-figura-de-goma-de-la-cucafera-de-reus-1484378254.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Gegant Carrasclet",
+   "colla": "Colla Gegantera del Carrasclet de Reus",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegant-carrasclet-de-reus_1607299872.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegant-carrasclet-de-reus"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7a/GegantCarrascletO7.jpg/330px-GegantCarrascletO7.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:GegantCarrascletO7.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/103-Gegant-Carrasclet-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-carrasclet-de-reus/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/25410-home_default/figura-de-goma-reproduccio-del-gegant-carrasclet-de-reus.jpg",
+     "page": "https://productesdelaterra.cat/jocs-en-catala/13098-figura-de-goma-reproduccio-del-gegant-carrasclet-de-reus-1566094545272.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Gegants Indis",
+   "colla": "Colla Gegantera de Reus",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/101-Geganta-India-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-india-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/102-Gegant-Indi-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-indi-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Gegants Japonesos",
+   "colla": "Colla Gegantera de Reus",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/09/reus_japones_ultimesUnitats-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-japones-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/98-Geganta-Japonesa-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-japonesa-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Gegants Moros",
+   "colla": "Colla Gegantera de Reus",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-moros-de-reus-1636763883.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-moros-de-reus"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/99-Gegant-Moro-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-moro-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/100-Geganta-Mora-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-mora-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Gegants Negres",
+   "colla": "Colla Gegantera de Reus",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/95-Gegant-Negre-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-negre-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/96-Geganta-Negra-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-negra-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Gegants Vitxets",
+   "colla": "Colla Gegantera de Reus",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/08/reus_gegantaVitxeta_2026_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-vitxeta-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/08/reus_gegantVitxet_2026_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-vitxet-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Lleó de Reus",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/El_Lle%C3%B3_de_Reus.jpg/330px-El_Lle%C3%B3_de_Reus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:El_Lle%C3%B3_de_Reus.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/El_Lle%C3%B3_de_Reus_2026.jpg/330px-El_Lle%C3%B3_de_Reus_2026.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:El_Lle%C3%B3_de_Reus_2026.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Lle%C3%B3_de_Reus.jpg/330px-Lle%C3%B3_de_Reus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Lle%C3%B3_de_Reus.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/106-Lleo-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-lleo-de-reus/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/25118-home_default/figura-de-goma-reproduccio-del-lleo-de-reus.jpg",
+     "page": "https://productesdelaterra.cat/festiari/13022-figura-de-goma-reproduccio-del-lleo-de-reus-1565522161619.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Nans de Reus",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/283-Xiquet-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-xiquet-de-reus/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/284-Xiqueta-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-xiqueta-de-reus/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Víbria de Reus",
+   "colla": "Colla de la Víbria de Reus",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/WhatsApp-Image-2021-02-19-at-08.27.49-2.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-vibria-de-reus/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/WhatsApp-Image-2021-02-19-at-08.27.47.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-vibria-de-reus/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/WhatsApp-Image-2021-02-19-at-08.30.45.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/la-vibria-de-reus/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/108-Vibria-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-vibria-de-reus/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27973-home_default/figura-de-goma-de-la-vibria-de-reus.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13857-figura-de-goma-de-la-vibria-de-reus-8443936137.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Reus",
+   "name": "Àliga de Reus",
+   "colla": "Col·lectiu Reusenc d'Activitats Culturals (CRAC)",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/IMG-WA0054.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/aliga-de-reus/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/IMG-WA0010.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/aliga-de-reus/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/IMG-WA0046.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/aliga-de-reus/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/105-Aliga-de-Reus-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-laliga-de-reus/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/21938-home_default/figura-de-goma-reproduccio-aliga-de-reus.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/12204-figura-de-goma-reproduccio-aliga-de-reus-1562677367774.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Riudoms",
+   "name": "Gegant Gaudí",
+   "colla": "Colla de Geganters de Riudoms",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-gaudi-de-riudoms-1776036826.JPG",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegant-gaudi-de-riudoms"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Biblioteca_Antoni_Gaud%C3%AD_de_Riudoms_03.jpg/330px-Biblioteca_Antoni_Gaud%C3%AD_de_Riudoms_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Biblioteca_Antoni_Gaud%C3%AD_de_Riudoms_03.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/05/Gaudi-Riiudoms-2026-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-gaudi-de-riudoms/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Riudoms",
+   "name": "Gegants de Riudoms (Ton i Cisca)",
+   "colla": "Colla de Geganters de Riudoms",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-riudoms-1651610979.png",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-riudoms"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/171-Gegant-de-Riudoms-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-riudoms/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/172-Geganta-de-Riudoms-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-riudoms/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Sallent",
+   "name": "Gegant Antonyito",
+   "colla": "Gegants i Nans de Sallent",
+   "conf": "prob",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/369-home_default/gegant-antonyito-de-sallent-.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/246-gegant-antonyito-de-sallent-.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Sant Celoni",
+   "name": "Gegants Martí i Maria del Puig",
+   "colla": "Grallers i Geganters de Sant Celoni",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-sant-celoni-1656972894.JPG",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-sant-celoni"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/155-Gegant-de-Sant-Celoni-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-sant-celoni/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/156-Geganta-de-Sant-Celoni-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-sant-celoni/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Sant Cugat del Vallès",
+   "name": "Gegants Joan i Marieta",
+   "colla": "Colla de Geganters de Sant Cugat del Vallès",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-sant-cugat-del-valles-1609297941.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-sant-cugat-del-valles"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/05_La_Marieta_i_en_Joan%2C_gegants_de_Sant_Cugat_del_Vall%C3%A8s%2C_al_p%C3%B2rtic_del_claustre_del_monestir.jpg/330px-05_La_Marieta_i_en_Joan%2C_gegants_de_Sant_Cugat_del_Vall%C3%A8s%2C_al_p%C3%B2rtic_del_claustre_del_monestir.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:05_La_Marieta_i_en_Joan,_gegants_de_Sant_Cugat_del_Vall%C3%A8s,_al_p%C3%B2rtic_del_claustre_del_monestir.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9d/Joan_i_Marieta_-_Gegants_de_Sant_Cugat_del_Vall%C3%A8s.JPG/330px-Joan_i_Marieta_-_Gegants_de_Sant_Cugat_del_Vall%C3%A8s.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Joan_i_Marieta_-_Gegants_de_Sant_Cugat_del_Vall%C3%A8s.JPG"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/06/Gegant-St-CugatWEB_01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-gegant-joan-de-sant-cugat/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/geganta-st-cugat_01-scaled-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-marieta-de-sant-cugat/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Sant Feliu de Llobregat",
+   "name": "Gegantons Llorenç i Mercè",
+   "colla": "Colla de Geganters de Sant Feliu de Llobregat",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegantons-de-la-ciutat-de-sant-feliu-de-llobregat-1748646066.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegantons-de-la-ciutat-de-sant-feliu-de-llobregat"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/393-home_default/geganta-merce-de-sant-feliu-de-llobregat.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/252-geganta-merce-de-sant-feliu-de-llobregat.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Sant Pere de Ribes",
+   "name": "Drac de Tres Caps",
+   "colla": "Drac de Tres Caps de Sant Pere de Ribes",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2020/02/DRAC-DE-RIBES-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-ribes/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2020/02/DRAC-DE-RIBES-2.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-ribes/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2020/02/DRAC-DE-RIBES-3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-ribes/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/163-Drac-de-Sant-Pere-de-Ribes-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-de-sant-pere-de-ribes/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/19624-home_default/figura-de-goma-drac-de-tres-caps-de-sant-pere-de-ribes.jpg",
+     "page": "https://productesdelaterra.cat/festiari/11258-figura-de-goma-drac-de-tres-caps-de-sant-pere-de-ribes-1562231031097.html"
+    }
+   ],
+   "note": "Ajunta dos ninots: Drac de Ribes i Drac de Tres Caps"
+  },
+  {
+   "town": "Sant Pere de Ribes",
+   "name": "Gegants Vells (Pere i Paula)",
+   "colla": "Colla Gegantera de Sant Pere de Ribes",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-sant-pere-de-ribes-1674718295.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-sant-pere-de-ribes"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28484-home_default/figura-de-goma-del-gegant-vell-de-sant-pere-de-ribes.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14158-figura-de-goma-del-gegant-vell-de-sant-pere-de-ribes.html"
+    },
+    {
+     "u": "https://productesdelaterra.cat/28486-home_default/figura-de-goma-de-la-geganta-vella-de-sant-pere-de-ribes.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14159-figura-de-goma-de-la-geganta-vella-de-sant-pere-de-ribes.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Santa Coloma de Cervelló",
+   "name": "Murri",
+   "colla": "Geganters i Grallers de Santa Coloma de Cervelló",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/03/WhatsApp-Image-2023-03-20-at-12.24.57-1.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/murri/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/03/WhatsApp-Image-2023-03-20-at-12.29.02-2.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/murri/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/03/WhatsApp-Image-2023-03-20-at-12.29.02.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/murri/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/374-home_default/murri-de-santa-coloma-de-cervello.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/248-murri-de-santa-coloma-de-cervello.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Santa Coloma de Gramenet",
+   "name": "Gegants Genís i Margarida",
+   "colla": "Colla de Gegants i Capgrossos de Santa Coloma",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-de-santa-coloma-de-gramenet-1718578217.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-de-santa-coloma-de-gramenet"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/08/staColoma_gegantGenis_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-genis-de-santa-coloma-de-gramenet/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Santa Margarida i els Monjos",
+   "name": "Drac dels Monjos",
+   "colla": "Associació Drac dels Monjos",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/242_Drac_MonjosWev.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-dels-monjos/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/drac-3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-dels-monjos/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/drac-6.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-dels-monjos/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/161-Drac-dels-Monjos-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-dels-monjos/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/15503-home_default/figura-de-goma-reproduccio-del-drac-de-monjos.jpg",
+     "page": "https://productesdelaterra.cat/festiari/9911-figura-de-goma-reproduccio-del-drac-de-monjos-1562100196599.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Santa Margarida i els Monjos",
+   "name": "Gegants Raimon i Margarida",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/06/Gegant-els-Monjos_WEB-01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-raimon-dels-monjos/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/geganta_elsMonjos_01-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-margarida-dels-monjos/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Santpedor",
+   "name": "Bou Brufat",
+   "colla": "Associació Bous de Foc de Santpedor",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/07/FOTO.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/bou-brufat-de-santpedor/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/379-home_default/bou-brufat-de-santpedor.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/249-bou-brufat-de-santpedor.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Sitges",
+   "name": "Drac de Sitges (la Fera Foguera)",
+   "colla": "",
+   "conf": "no",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/drac_de_sitges.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-la-fera-foguera/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/716amp_santateclasitges5g.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-la-fera-foguera/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/IMG_2799.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-la-fera-foguera/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/152-Drac-de-Sitges-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-de-sitges/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/19621-home_default/figura-de-goma-la-fera-foguera-de-sitges.jpg",
+     "page": "https://productesdelaterra.cat/festiari/11257-figura-de-goma-la-fera-foguera-de-sitges-1562230975194.html"
+    }
+   ],
+   "note": "Ajunta dos ninots: Drac i Fera Foguera"
+  },
+  {
+   "town": "Sitges",
+   "name": "Gegants Moros (Fal-huc i La-hia)",
+   "colla": "Agrupació de Balls Populars de Sitges",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-moros-de-sitges-1661464850.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-moros-de-sitges"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Sitges_-_Gegants_Moros_2008.jpg/330px-Sitges_-_Gegants_Moros_2008.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Sitges_-_Gegants_Moros_2008.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28529-home_default/figura-de-goma-del-gegant-moro-de-sitges.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14188-figura-de-goma-del-gegant-moro-de-sitges.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Solsona",
+   "name": "Bou de Solsona",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/Festa_Major_de_Solsona_-_Bou.JPG/330px-Festa_Major_de_Solsona_-_Bou.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Festa_Major_de_Solsona_-_Bou.JPG"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Festa_Major_de_Solsona_-_Bou_-_Portrait.JPG/330px-Festa_Major_de_Solsona_-_Bou_-_Portrait.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Festa_Major_de_Solsona_-_Bou_-_Portrait.JPG"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/296-Bou-de-Solsona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-bou-de-solsona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29038-home_default/figura-de-goma-del-bou-de-solsona.jpg",
+     "page": "https://productesdelaterra.cat/jocs-en-catala/14405-figura-de-goma-del-bou-de-solsona.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Bou de Tarragona",
+   "colla": "Portadors del Bou",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/02/bou-de-tarragona.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/bou-de-tarragona/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/02/bou-de-tarragona-2.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/bou-de-tarragona/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/302-Bou-de-Tarragona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-bou-de-tarragona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29308-home_default/figura-de-goma-del-bou-de-tarragona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14517-figura-de-goma-del-bou-de-tarragona.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Drac de Sant Roc",
+   "colla": "Drac de Sant Roc de Tarragona",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/photo_2017-05-17_20-20-30-002.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-sant-roc/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/20934988_1237689096340509_4927960016696198402_o.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-sant-roc/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/DSC02252.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-sant-roc/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28883-home_default/figura-de-goma-del-drac-de-sant-roc-de-tarragona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14336-figura-de-goma-del-drac-de-sant-roc-de-tarragona.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Gegants Moros",
+   "colla": "Portants dels Gegants Moros (Seguici)",
+   "conf": "ok",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/138-Gegant-Moro-de-Tarragona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-moro-de-tarragona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/139-Geganta-Mora-de-Tarragona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-mora-de-tarragona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Gegants Negritos",
+   "colla": "Portants dels Negritos (Seguici)",
+   "conf": "ok",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/261-Gegant-Negrito-de-Tarragona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-negrito-de-tarragona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/260-Geganta-Negrita-Tarragona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-negrita-de-tarragona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Gegants Vells (del Cós del Bou)",
+   "colla": "Portants dels Gegants Vells (Seguici)",
+   "conf": "prob",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1e/437_Cercavila_de_Sant_Josep_Oriol_%28Barcelona%29%2C_gegants_vells_del_c._Merceria_de_Tarragona.jpg/330px-437_Cercavila_de_Sant_Josep_Oriol_%28Barcelona%29%2C_gegants_vells_del_c._Merceria_de_Tarragona.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:437_Cercavila_de_Sant_Josep_Oriol_(Barcelona),_gegants_vells_del_c._Merceria_de_Tarragona.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/12/Gegant-Cos-del-Bou_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-vell-de-tarragona/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/12/Geganta-Cos-del-Bou_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-vella-de-tarragona/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Lleó de Tarragona",
+   "colla": "Associació de Portants del Lleó de Tarragona",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2025/04/25d3d879-2889-41b5-a46b-9ee35ef540c3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/lleo-de-tarragona/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/lleo-tarragona_01-scaled-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-lleo-de-tarragona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29596-home_default/figura-de-goma-reproduccio-del-lleo-de-tarragona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14650-figura-de-goma-reproduccio-del-lleo-de-tarragona.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Mulassa de Tarragona",
+   "colla": "Mulassa de Tarragona Col·lectiu Cultural",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/221_MulassaTarragona.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/mulassa-de-tarragona/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2026/05/Mulassa-Tarragona-2026-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-mulassa-de-tarragona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/19628-home_default/figura-de-goma-mulassa-de-tarragona-.jpg",
+     "page": "https://productesdelaterra.cat/festiari/11259-figura-de-goma-mulassa-de-tarragona--1562231112031.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Tarragona",
+   "name": "Víbria de Tarragona (la Serrallenca)",
+   "colla": "Colla de Diables Voramar del Serrallo",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Víbria-de-Tarragona-3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/vibria-de-tarragona-la-serrallenca/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Víbria-de-Tarragona-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/vibria-de-tarragona-la-serrallenca/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Víbria-de-Tarragona-4.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/vibria-de-tarragona-la-serrallenca/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/144-Vibria-de-Tarragona-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-vibria-de-tarragona/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/27976-home_default/figura-de-goma-de-la-vibria-de-tarragona.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13858-figura-de-goma-de-la-vibria-de-tarragona-8444851985.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Terrassa",
+   "name": "Drac de Terrassa",
+   "colla": "Grup del Drac de Terrassa",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/03/Fotos-Portada-Drac-Nou-6.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-terrassa-replica/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/03/Fotos-Drac-Nou-3.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-terrassa-replica/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2023/03/Fotos-Drac-Nou-5.jpeg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-terrassa-replica/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/245-Drac-de-Terrassa-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-de-terrassa/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29307-home_default/figura-de-goma-del-drac-de-terrassa.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14516-figura-de-goma-del-drac-de-terrassa.html"
+    }
+   ],
+   "note": "No és el Baluk Astharot que ja tenim"
+  },
+  {
+   "town": "Terrassa",
+   "name": "Gegants Vells (Robesa i Pepona)",
+   "colla": "Geganters de Terrassa",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-terrassa-1757968971.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-terrassa"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/002_Els_gegants_vells_de_Terrassa%2C_la_Pepona_i_en_Robesa%2C_entrant_a_l%27Ajuntament.jpg/330px-002_Els_gegants_vells_de_Terrassa%2C_la_Pepona_i_en_Robesa%2C_entrant_a_l%27Ajuntament.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:002_Els_gegants_vells_de_Terrassa,_la_Pepona_i_en_Robesa,_entrant_a_l%27Ajuntament.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/009_Els_gegants_vells_de_Terrassa%2C_en_Robesa_i_la_Pepona%2C_a_l%27atri_de_l%27Ajuntament.jpg/330px-009_Els_gegants_vells_de_Terrassa%2C_en_Robesa_i_la_Pepona%2C_a_l%27atri_de_l%27Ajuntament.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:009_Els_gegants_vells_de_Terrassa,_en_Robesa_i_la_Pepona,_a_l%27atri_de_l%27Ajuntament.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/066_En_Robesa%2C_el_gegant_vell_de_Terrassa%2C_al_vest%C3%ADbul_de_l%27Ajuntament.jpg/330px-066_En_Robesa%2C_el_gegant_vell_de_Terrassa%2C_al_vest%C3%ADbul_de_l%27Ajuntament.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:066_En_Robesa,_el_gegant_vell_de_Terrassa,_al_vest%C3%ADbul_de_l%27Ajuntament.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/28601-home_default/figura-de-goma-del-gegant-robesa-de-terrassa.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14160-figura-de-goma-del-gegant-robesa-de-terrassa.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Torà",
+   "name": "Gegant Constantí",
+   "colla": "Associació Cultural el Brut i la Bruta",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegant-constanti-de-tora-1727874715.JPG",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegant-constanti-de-tora"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://botigadelafestamajor.cat/330-home_default/bruta-de-tora.jpg",
+     "page": "https://botigadelafestamajor.cat/figures-de-goma/229-bruta-de-tora.html"
+    }
+   ],
+   "note": "La botiga el venia com a Constantí"
+  },
+  {
+   "town": "Torà",
+   "name": "Gegants Brut i Bruta",
+   "colla": "Associació Cultural el Brut i la Bruta",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-el-brut-i-la-bruta-de-tora-1672704796.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-el-brut-i-la-bruta-de-tora"
+    }
+   ],
+   "commons": [],
+   "ninot": [],
+   "note": "Són de Torà"
+  },
+  {
+   "town": "Valls",
+   "name": "Lleó de Valls",
+   "colla": "Fundació Privada Unió Anelles de la Flama",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/10/460_Lleo_de_Valls.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/lleo-de-valls/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29009-home_default/figura-de-goma-lleo-de-valls.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14398-figura-de-goma-lleo-de-valls.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "el Vendrell",
+   "name": "Drac de Foc el Cabrot",
+   "colla": "Drac de Foc El Cabrot",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/El-Cabrot-2.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-foc-el-cabrot/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/El-Cabrot-3.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-foc-el-cabrot/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/09/El-Cabrot-1.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-foc-el-cabrot/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2025/12/cabrot-el-vendrell_WEB1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-cabrot-del-vendrell/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "el Vendrell",
+   "name": "Gegants Nous (Jaume i Montserrat)",
+   "colla": "Grup de Gegants i Nans del Vendrell",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-nous-del-vendrell-1620281874.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-nous-del-vendrell"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/222-Gegant-del-Vendrell-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-del-vendrell/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/221-Geganta-del-Vendrell-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-del-vendrell/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vic",
+   "name": "Gegants de Vic",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040274.jpg/330px-Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040274.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040274.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040281.jpg/330px-Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040281.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040281.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6c/Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040282.jpg/330px-Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040282.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Gegants_Comtes_d%27Osona_i_gegants_petits_de_Vic_-_P1040282.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/169-Gegant-de-Vic-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-vic/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/170-Geganta-de-Vic-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-vic/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vila-seca",
+   "name": "Gegants Ton i Pineda",
+   "colla": "Colla Gegantera i Grallers de Vila-seca",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-vells-de-vila-seca-1728649005.png",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-vells-de-vila-seca"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Ton_i_Pineda_de_Vila-seca.jpg/330px-Ton_i_Pineda_de_Vila-seca.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Ton_i_Pineda_de_Vila-seca.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/figura-goma-geganta-vilaseca-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-pineda-de-vila-seca/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/figura-goma-gegant-vilaseca-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-ton-de-vila-seca/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Ball de Diables",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/27125-home_default/figura-de-goma-reproduccio-del-diables-de-vilafranca.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13520-figura-de-goma-reproduccio-del-diables-de-vilafranca-1493434321.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Ball de Gitanes",
+   "colla": "Ball de Gitanes de Vilafranca",
+   "conf": "prob",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/001_Ball_de_gitanes%2C_de_Mireia_Andrade%2C_c._Parellada_17_%28Vilafranca_del_Pened%C3%A8s%29.jpg/330px-001_Ball_de_gitanes%2C_de_Mireia_Andrade%2C_c._Parellada_17_%28Vilafranca_del_Pened%C3%A8s%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:001_Ball_de_gitanes,_de_Mireia_Andrade,_c._Parellada_17_(Vilafranca_del_Pened%C3%A8s).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Ball_de_les_Gitanes_de_Vialfranca.jpg/330px-Ball_de_les_Gitanes_de_Vialfranca.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Ball_de_les_Gitanes_de_Vialfranca.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Ball_de_les_Gitanes_de_Vilafranca.jpg/330px-Ball_de_les_Gitanes_de_Vilafranca.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Ball_de_les_Gitanes_de_Vilafranca.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29655-home_default/figura-de-goma-galerona-del-ball-de-gitanes-de-vilafranca.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14684-figura-de-goma-galerona-del-ball-de-gitanes-de-vilafranca.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Ball de Panderetes",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/009_Ball_de_panderetes%2C_de_M%C3%ADriam_D%C3%ADaz%2C_c._Ferrers_43_%28Vilafranca_del_Pened%C3%A8s%29.jpg/330px-009_Ball_de_panderetes%2C_de_M%C3%ADriam_D%C3%ADaz%2C_c._Ferrers_43_%28Vilafranca_del_Pened%C3%A8s%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:009_Ball_de_panderetes,_de_M%C3%ADriam_D%C3%ADaz,_c._Ferrers_43_(Vilafranca_del_Pened%C3%A8s).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d2/1907_-_Festa_major_de_Vilafranca_del_Pened%C3%A8s_-_Ball_de_panderetes.jpg/330px-1907_-_Festa_major_de_Vilafranca_del_Pened%C3%A8s_-_Ball_de_panderetes.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:1907_-_Festa_major_de_Vilafranca_del_Pened%C3%A8s_-_Ball_de_panderetes.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d5/Panderetes_de_Vilafranca.JPG/330px-Panderetes_de_Vilafranca.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Panderetes_de_Vilafranca.JPG"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29659-home_default/figura-de-goma-del-ball-de-panderetes-de-vilafranca.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14687-figura-de-goma-del-ball-de-panderetes-de-vilafranca.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Ball de Serrallonga",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Ball_d%27en_Serrallonga_de_Vilafranca_del_Pened%C3%A8s.jpg/330px-Ball_d%27en_Serrallonga_de_Vilafranca_del_Pened%C3%A8s.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Ball_d%27en_Serrallonga_de_Vilafranca_del_Pened%C3%A8s.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29045-home_default/figura-goma-bandoler-ball-serrallonga-vilafranca.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14408-figura-goma-bandoler-ball-serrallonga-vilafranca.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Bastoners",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/004_Ball_de_bastoners%2C_d%27Eva_Sans%2C_c._Font_45_%28Vilafranca_del_Pened%C3%A8s%29.jpg/330px-004_Ball_de_bastoners%2C_d%27Eva_Sans%2C_c._Font_45_%28Vilafranca_del_Pened%C3%A8s%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:004_Ball_de_bastoners,_d%27Eva_Sans,_c._Font_45_(Vilafranca_del_Pened%C3%A8s).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Bastoners.jpg/330px-Bastoners.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Bastoners.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Bastoners_03.jpg/330px-Bastoners_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Bastoners_03.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29657-home_default/figura-de-goma-bastoner-de-vilafranca-amb-la-faixa-vermella.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14686-figura-de-goma-bastoner-de-vilafranca-amb-la-faixa-vermella.html"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29656-home_default/figura-de-goma-bastoner-de-vilafranca-amb-la-faixa-blava.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/14685-figura-de-goma-bastoner-de-vilafranca-amb-la-faixa-blava.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Capgrossos de Vilafranca",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/012_Els_capgrossos%2C_de_Marc_Sadurn%C3%AD%2C_c._Ferrers_28_%28Vilafranca_del_Pened%C3%A8s%29.jpg/330px-012_Els_capgrossos%2C_de_Marc_Sadurn%C3%AD%2C_c._Ferrers_28_%28Vilafranca_del_Pened%C3%A8s%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:012_Els_capgrossos,_de_Marc_Sadurn%C3%AD,_c._Ferrers_28_(Vilafranca_del_Pened%C3%A8s).jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Capgrossos.jpg/330px-Capgrossos.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Capgrossos.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/29/Capgrossos_de_Matar%C3%B3_3d9_2005.jpg/330px-Capgrossos_de_Matar%C3%B3_3d9_2005.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Capgrossos_de_Matar%C3%B3_3d9_2005.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/132-Capgros-Canyamas-de-Vilafranca-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-capgros-canyamas-de-vilafranca/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/282-Capgros-Humbert-de-Vilafranca-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-capgros-humbert-de-vilafranca/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Cotonines",
+   "colla": "Balls de la Festa Major de Vilafranca (Ball de Cotonines)",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/Cotonines-Vilafranca.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/cotonines-de-vilafranca-del-penedes/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/29654-home_default/figura-de-goma-cotonina-de-vilafranca.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14683-figura-de-goma-cotonina-de-vilafranca.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Gegants Ferragut i Elisenda",
+   "colla": "Geganters de Vilafranca",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-vilafranca-del-penedes-1649682558.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-vilafranca-del-penedes"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/24397-home_default/figura-de-goma-geganta-elisenda-de-vilafranca-del-penedes.jpg",
+     "page": "https://productesdelaterra.cat/festiari/12766-figura-de-goma-geganta-elisenda-de-vilafranca-del-penedes-1564172202956.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilafranca del Penedès",
+   "name": "Àliga de Vilafranca",
+   "colla": "Balls de la Festa Major de Vilafranca (Ball de l'Àliga)",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/IMG_2529.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/aliga-de-vilafranca-del-penedes/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/08/14184361_1770531316569911_1872355460627930055_n.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/aliga-de-vilafranca-del-penedes/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/135-Aliga-de-Vilafranca-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-laliga-de-vilafranca/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/16894-home_default/figura-de-goma-reproduccio-de-aguila-de-vilafranca.jpg",
+     "page": "https://productesdelaterra.cat/festiari/10397-figura-de-goma-reproduccio-de-aguila-de-vilafranca-1562100017696.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Carpa Juanita",
+   "colla": "Associació Carpa Juanita i el Porró",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/02/20210616_182517.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/carpa-juanita/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/02/20210805_201446.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/carpa-juanita/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2022/02/20190805_212109.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/carpa-juanita/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/27882-home_default/figura-de-goma-de-la-carpa-juanita-de-vilanova-i-la-geltru.jpg",
+     "page": "https://productesdelaterra.cat/figures-de-goma-festa-major/13815-figura-de-goma-de-la-carpa-juanita-de-vilanova-i-la-geltru-10520356976.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Drac Barrina",
+   "colla": "Associació d'Amics del Drac de la Geltrú",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Drac-Petit-Barrina-de-la-Geltrú.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/barrina-drac-petit-de-la-geltru/"
+    }
+   ],
+   "commons": [],
+   "ninot": [],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Drac Vell",
+   "colla": "La Unió Vilanovina (Drac de Vilanova)",
+   "conf": "prob",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1948-CapAntic.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-vilanova-i-la-geltru-1948/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1948-CapNou.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-vilanova-i-la-geltru-1948/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/DracVilanova-1948-Cos.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-vilanova-i-la-geltru-1948/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/drac-vell-vilanova_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-vell-de-vilanova/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29676-home_default/figura-de-goma-del-drac-vell-de-vilanova.jpg",
+     "page": "https://productesdelaterra.cat/festiari/14698-figura-de-goma-del-drac-vell-de-vilanova.html"
+    }
+   ],
+   "note": "Variant del Drac de Vilanova que ja tenim"
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Drac de la Geltrú (Tigre)",
+   "colla": "Associació d'Amics del Drac de la Geltrú",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/MG_7015.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-la-geltru/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/FM17-11.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-la-geltru/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/FM17-103.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/drac-de-la-geltru/"
+    },
+    {
+     "u": "https://www.bestiari.cat/wp-content/uploads/2016/07/Drac-Tigre-de-la-Geltrú.jpg",
+     "src": "bestiari.cat",
+     "page": "https://www.bestiari.cat/figura/tigre-drac-de-la-geltru/"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/118-Drac-de-la-Geltru-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-drac-de-la-geltru/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/28435-home_default/figura-de-goma-reproduccio-del-drac-de-la-geltru.jpg",
+     "page": "https://productesdelaterra.cat/jocs-en-catala/12841-figura-de-goma-reproduccio-del-drac-de-la-geltru-1564391671625.html"
+    }
+   ],
+   "note": "Ajunta dos ninots: Drac de la Geltrú i Drac Tigre"
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Gegants Grossos",
+   "colla": "Colla Gegantera de Vilanova i la Geltrú",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-grossos-de-vilanova-i-la-geltru-1716160378.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-grossos-de-vilanova-i-la-geltru"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_01.jpg/330px-Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_01.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_03.jpg/330px-Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_03.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_04.jpg/330px-Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:Entrant_El_Gegant_de_la_Porra_de_Vilanova_a_la_Baixada_del_20%C3%A8_aniversari_dels_Gegants_de_Vilanova_i_la_Geltr%C3%BA_04.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://productesdelaterra.cat/27094-home_default/figura-de-goma-reproduccio-del-gegant-de-vilanova-i-la-geltru.jpg",
+     "page": "https://productesdelaterra.cat/festiari/9909-figura-de-goma-reproduccio-del-gegant-de-vilanova-i-la-geltru-1562100196575.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Gegants Moros",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/109-Gegant-Moro-de-Vilanova-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-moro-de-vilanova/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/110-Geganta-Mora-de-Vilanova-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-mora-de-vilanova/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Gegants de la Geltrú (Guisla i Ulderich)",
+   "colla": "Colla Gegantera de Vilanova i la Geltrú",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-de-la-geltru-1659483901.jpg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-de-la-geltru"
+    }
+   ],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/057_Les_gegantes_davant_l%27esgl%C3%A9sia_de_Sant_Antoni_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg/330px-057_Les_gegantes_davant_l%27esgl%C3%A9sia_de_Sant_Antoni_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:057_Les_gegantes_davant_l%27esgl%C3%A9sia_de_Sant_Antoni_(Vilanova_i_la_Geltr%C3%BA),_pl._de_les_Neus.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/059_Mulassa_mitjana%2C_la_Presumida%2C_i_les_gegantes_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg/330px-059_Mulassa_mitjana%2C_la_Presumida%2C_i_les_gegantes_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:059_Mulassa_mitjana,_la_Presumida,_i_les_gegantes_(Vilanova_i_la_Geltr%C3%BA),_pl._de_les_Neus.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/062_Les_gegantes_davant_l%27esgl%C3%A9sia_de_Sant_Antoni_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg/330px-062_Les_gegantes_davant_l%27esgl%C3%A9sia_de_Sant_Antoni_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:062_Les_gegantes_davant_l%27esgl%C3%A9sia_de_Sant_Antoni_(Vilanova_i_la_Geltr%C3%BA),_pl._de_les_Neus.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/116-Gegant-de-la-Geltru-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-de-la-geltru/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/117-Geganta-de-la-Geltru-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-de-la-geltru/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Hereu i Pubilla",
+   "colla": "Colla de Geganters de Vilanova i la Geltrú",
+   "conf": "ok",
+   "real": [
+    {
+     "u": "https://gegantcat.com/storage/img/elements/gegants-petits-de-vilanova-i-la-geltru-1784665888.jpeg",
+     "src": "gegantcat",
+     "page": "https://gegantcat.com/fitxa/gegants-petits-de-vilanova-i-la-geltru"
+    }
+   ],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/399-Gegant-Hereu-de-Vilanova-amb-vestit-nou-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-gegant-hereu-de-vilanova/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/401-Geganta-Pubilla-de-Vilanova-amb-vestit-nou-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-geganta-pubilla-de-vilanova/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Mulassa Cabreta",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/290-Mulassa-Cabreta-de-Vilanova-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-mulassa-cabreta-de-vilanova/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29634-home_default/figura-de-goma-mulassa-cabreta-de-vilanova.jpg",
+     "page": "https://productesdelaterra.cat/jocs-en-catala/14670-figura-de-goma-mulassa-cabreta-de-vilanova.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Mulassa Presumida",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/059_Mulassa_mitjana%2C_la_Presumida%2C_i_les_gegantes_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg/330px-059_Mulassa_mitjana%2C_la_Presumida%2C_i_les_gegantes_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:059_Mulassa_mitjana,_la_Presumida,_i_les_gegantes_(Vilanova_i_la_Geltr%C3%BA),_pl._de_les_Neus.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/060_Mulassa_mitjana%2C_la_Presumida%2C_i_les_gegantes_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg/330px-060_Mulassa_mitjana%2C_la_Presumida%2C_i_les_gegantes_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:060_Mulassa_mitjana,_la_Presumida,_i_les_gegantes_(Vilanova_i_la_Geltr%C3%BA),_pl._de_les_Neus.jpg"
+    },
+    {
+     "u": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/061_Mulassa_mitjana%2C_la_Presumida_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg/330px-061_Mulassa_mitjana%2C_la_Presumida_%28Vilanova_i_la_Geltr%C3%BA%29%2C_pl._de_les_Neus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+     "src": "Commons",
+     "page": "https://commons.wikimedia.org/wiki/File:061_Mulassa_mitjana,_la_Presumida_(Vilanova_i_la_Geltr%C3%BA),_pl._de_les_Neus.jpg"
+    }
+   ],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/289-Mulassa-Presumida-de-Vilanova-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-mulassa-presumida-de-vilanova/"
+    },
+    {
+     "u": "https://productesdelaterra.cat/29633-home_default/figura-de-goma-mulassa-presumida-de-vilanova.jpg",
+     "page": "https://productesdelaterra.cat/jocs-en-catala/14669-figura-de-goma-mulassa-presumida-de-vilanova.html"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Nan Macer",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/06/Nan-Macer-Jove_WEB-1-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-nan-macer-jove-de-vilanova/"
+    },
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/Nan-Macer-Vell_WEB-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-del-nan-macer-vell-de-vilanova/"
+    }
+   ],
+   "note": ""
+  },
+  {
+   "town": "Vilanova i la Geltrú",
+   "name": "Nena Tothosap",
+   "colla": "",
+   "conf": "no",
+   "real": [],
+   "commons": [],
+   "ninot": [
+    {
+     "u": "https://festiari.cat/wp-content/uploads/2024/05/Nena-Tothosap_WEB-ok-300x300.jpg",
+     "page": "https://festiari.cat/figura-de-goma-de-la-nena-tothosap-de-vilanova/"
+    }
+   ],
+   "note": ""
+  }
+ ]
+}

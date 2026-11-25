@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- The launcher's copy (ronda-10/strings.md, written by Codex; html.attr.close from src/i18n/locales). -->
+<resources>
+    <string name="ui_select_aviat">Laster</string>
+    <string name="launcher_settings_rateApp">Baloratu aplikazioa</string>
+    <string name="launcher_settings_shareApp">Partekatu aplikazioa</string>
+    <string name="launcher_settings_backToProfile">Itzuli profilera</string>
+    <string name="html_settings_aria">Ezarpenak</string>
+    <string name="html_profile_aria">Profila</string>
+    <string name="html_attr_close">Itxi</string>
+</resources>

@@ -30,7 +30,6 @@ data class Game(
 ) {
     // shortcut: Catalan only, until the launcher follows the app's language (native settings, phase 4)
     val title: String get() = name["ca"] ?: id
-    val label: String get() = short ?: "Aviat"
     val tint: Color get() = hex(color)
 }
 
@@ -103,15 +102,10 @@ fun hex(s: String): Color = Color(0xFF000000 or (s.drop(1).toLongOrNull(16) ?: 0
 fun Color.mix(other: Color, t: Float) = Color(red + (other.red - red) * t, green + (other.green - green) * t, blue + (other.blue - blue) * t)
 
 object Palette {
-    val bg = hex("#1c110a")
     val cream = hex("#fff3d6")
     val ink = hex("#2a1608")
-    val brown = hex("#3a2208")
     val yellow = hex("#f5c518")
     val yellowHi = hex("#ffe26a")
-    val yellowLo = hex("#b47d07")
-    val smoke = Color(38, 20, 9).copy(alpha = 0.74f)
-    val red = hex("#e0364c")
     val pink = hex("#ff7ac8")
 }
 

@@ -1,28 +1,29 @@
 import SwiftUI
 import CoreText
 
-// The Mulassa Games lockup at 128 pt, as jocs/index.html's: MULASSA in Baloo stretched to its width, red on a cream
-// stroke over a darker cream copy, a thin dark line round both, GAMES in Baloo under it. Glyph outlines, so the strokes
+// The Mulassa Games lockup, ronda-10's #logo (2.0.0's, deaadc4b): MULASSA in Baloo 2 800 at 77, letter-spacing -5.5,
+// stretched to 300; a thin dark #2a1a10 line, the #d8bf8f extrusion 4 below, red #e8382f on a cream outline; GAMES in
+// yellow at 40 with a dark stroke. The SVG's viewBox is 0 2 308.6 110, shown 48 pt high. Glyph outlines, so the strokes
 // are real strokes.
 struct Logo: View {
     var body: some View {
-        let s = 128 / 320.6 // the mock's viewBox (-6 -8 320.6 112) at 128 pt
-        let mulassa = GlyphLine(text: "MULASSA", font: "Baloo2-ExtraBold", size: 77 * s, kern: -5.5 * s, width: 300 * s, centreX: 160.3 * s)
-        let games = GlyphLine(text: "GAMES", font: "Baloo2-ExtraBold", size: 34 * s, kern: 7 * s, width: nil, centreX: 160.3 * s)
+        let s = 48 / 110.0, y = { (v: CGFloat) in (v - 2) * s } // the viewBox starts at y 2
+        let mulassa = GlyphLine(text: "MULASSA", font: "Baloo2-ExtraBold", size: 77 * s, kern: -5.5 * s, width: 300 * s, centreX: 154.3 * s)
+        let games = GlyphLine(text: "GAMES", font: "Baloo2-ExtraBold", size: 40 * s, kern: 3 * s, width: nil, centreX: 154.3 * s)
         ZStack(alignment: .topLeading) {
-            let line = Color(UIColor(hex: "#2a1a10")), ext = Color(UIColor(hex: "#d8bf8f"))
-            ForEach([72.0, 68.0], id: \.self) { y in
-                mulassa.baseline(y * s).stroke(line, style: StrokeStyle(lineWidth: 15 * s, lineJoin: .round))
-                mulassa.baseline(y * s).fill(line)
+            let ink = Color(UIColor(hex: "#2a1a10")), ext = Color(UIColor(hex: "#d8bf8f"))
+            ForEach([64.0, 60.0], id: \.self) { v in
+                mulassa.baseline(y(v)).stroke(ink, style: StrokeStyle(lineWidth: 15 * s, lineJoin: .round))
+                mulassa.baseline(y(v)).fill(ink)
             }
-            mulassa.baseline(72 * s).stroke(ext, style: StrokeStyle(lineWidth: 11 * s, lineJoin: .round))
-            mulassa.baseline(72 * s).fill(ext)
-            mulassa.baseline(68 * s).stroke(Palette.cream, style: StrokeStyle(lineWidth: 11 * s, lineJoin: .round))
-            mulassa.baseline(68 * s).fill(Color(UIColor(hex: "#e8382f")))
-            games.baseline(108 * s).stroke(Color(UIColor(hex: "#3a1608")), style: StrokeStyle(lineWidth: 7 * s, lineJoin: .round))
-            games.baseline(108 * s).fill(Color(Palette.yellow))
+            mulassa.baseline(y(64)).stroke(ext, style: StrokeStyle(lineWidth: 11 * s, lineJoin: .round))
+            mulassa.baseline(y(64)).fill(ext)
+            mulassa.baseline(y(60)).stroke(Palette.cream, style: StrokeStyle(lineWidth: 11 * s, lineJoin: .round))
+            mulassa.baseline(y(60)).fill(Color(UIColor(hex: "#e8382f")))
+            games.baseline(y(104)).stroke(ink, style: StrokeStyle(lineWidth: 7 * s, lineJoin: .round))
+            games.baseline(y(104)).fill(Color(Palette.yellow))
         }
-        .shadow(color: .black.opacity(0.45), radius: 3, y: 3)
+        .frame(width: 308.6 * s, height: 48, alignment: .topLeading)
         .drawingGroup()
         .accessibilityElement().accessibilityLabel("Mulassa Games")
     }

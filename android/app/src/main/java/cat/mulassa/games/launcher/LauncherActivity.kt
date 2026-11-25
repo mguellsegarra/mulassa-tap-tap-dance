@@ -2,6 +2,7 @@ package cat.mulassa.games.launcher
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.ApplicationInfo
 import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -43,9 +44,11 @@ class LauncherActivity : ComponentActivity() {
         model.load()
         model.play = ::play
         val version = packageManager.getPackageInfo(packageName, 0).versionName ?: ""
+        // debug builds only: `--ef hour 21.5` fixes the sky to preview an hour
+        val hour = intent.getFloatExtra("hour", -1f).takeIf { it >= 0 && applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 }
         setContent {
             Box(Modifier.fillMaxSize()) {
-                LauncherRoot(model, version)
+                LauncherRoot(model, version, hour)
                 IrisView(iris)
             }
         }

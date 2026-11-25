@@ -39,7 +39,6 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         guard !busy, !game.soon, let path = game.path, WebBundle.isEntryPath(path),
               let server = bridgeVC.bridge?.config.serverURL, let url = URL(string: path, relativeTo: server) else { return }
         busy = true
-        model.played(game.id)
         showIris(game, from: from)
         iris.forward { [weak self] in
             guard let self else { return }

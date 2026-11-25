@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- The launcher's copy (ronda-10/strings.md, written by Codex; html.attr.close from src/i18n/locales). -->
+<resources>
+    <string name="ui_select_aviat">곧 만나요</string>
+    <string name="launcher_settings_rateApp">앱 평가하기</string>
+    <string name="launcher_settings_shareApp">앱 공유하기</string>
+    <string name="launcher_settings_backToProfile">프로필로 돌아가기</string>
+    <string name="html_settings_aria">설정</string>
+    <string name="html_profile_aria">프로필</string>
+    <string name="html_attr_close">닫기</string>
+</resources>

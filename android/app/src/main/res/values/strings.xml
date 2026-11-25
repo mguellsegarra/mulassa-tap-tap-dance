@@ -4,4 +4,12 @@
     <string name="title_activity_main">Mulassa Games</string>
     <string name="package_name">cat.mulassa.games</string>
     <string name="custom_url_scheme">cat.mulassa.games</string>
+    <!-- The launcher's copy in Catalan, the default (ronda-10/strings.md, written by Codex); values-<lang> hold the rest. -->
+    <string name="ui_select_aviat">Aviat</string>
+    <string name="launcher_settings_rateApp">Valora l’app</string>
+    <string name="launcher_settings_shareApp">Comparteix l’app</string>
+    <string name="launcher_settings_backToProfile">Torna al perfil</string>
+    <string name="html_settings_aria">Configuració</string>
+    <string name="html_profile_aria">Perfil</string>
+    <string name="html_attr_close">Tanca</string>
 </resources>

@@ -1,136 +1,110 @@
 import SwiftUI
 
-// The cartridge (round 8's J1): a chamfered top-right corner, a notch, grip ridges, a cream label with the game's art and
-// short name, gold contacts and a darker copy behind for thickness. Sized by u, a tenth of its width (10u × 12u).
-struct CartridgeShape: Shape {
-    func path(in r: CGRect) -> Path {
-        let u = r.width / 10, w = r.width, h = r.height
-        var p = Path()
-        p.addLines([(0, 0.6 * u), (0.6 * u, 0), (3.3 * u, 0), (3.3 * u, 0.42 * u), (6.2 * u, 0.42 * u), (6.2 * u, 0),
-                    (w - 1.7 * u, 0), (w, 1.7 * u), (w, h - 0.7 * u), (w - 0.7 * u, h), (0.7 * u, h), (0, h - 0.7 * u)]
-            .map { CGPoint(x: r.minX + $0.0, y: r.minY + $0.1) })
-        p.closeSubpath()
-        return p
-    }
-}
-
-// The body, art and name in one drawing, flattened into a single bitmap (drawingGroup): a ring move or a scroll only moves it.
-// Equatable, so nothing around it (selection, favourites) redraws it.
+// The cartridge (ronda-10's C4, `cart()`): an even-bevelled body over a darker copy for its side, two grip lines, a cream
+// label with the art and the short name, and a socket whose ten pins run out to the bottom edge. Everything is centred on
+// x = 5.16u (the face's middle). Sized by u: the drawing is 10.32u × 12.42u.
 struct Cartridge: View, Equatable {
-    let game: Game
+    static let size = CGSize(width: 10.32, height: 12.42)
+    let color: UIColor
+    let name: String
     let image: UIImage?
+    let locked: Bool
+    var plus = false // the odd count's filler: a + on a brown window instead of art
     let u: CGFloat
 
-    static func == (a: Cartridge, b: Cartridge) -> Bool { a.game == b.game && a.image === b.image && a.u == b.u }
+    init(game: Game, image: UIImage?, u: CGFloat) {
+        color = game.tint; name = game.label; self.image = image; locked = game.soon; self.u = u
+    }
+    // fills the lone last slot of an odd count: not a game, nothing to tap
+    static func filler(u: CGFloat) -> Cartridge {
+        var c = Cartridge(color: UIColor(hex: "#7a5a44"), name: String(localized: "ui.select.aviat"), image: nil, locked: false, u: u)
+        c.plus = true
+        return c
+    }
+    private init(color: UIColor, name: String, image: UIImage?, locked: Bool, u: CGFloat) {
+        self.color = color; self.name = name; self.image = image; self.locked = locked; self.u = u
+    }
+
+    static func == (a: Cartridge, b: Cartridge) -> Bool {
+        a.color == b.color && a.name == b.name && a.image === b.image && a.locked == b.locked && a.plus == b.plus && a.u == b.u
+    }
 
     var body: some View {
-        let c = game.tint, pad = u
+        let c = color, u = u, art = CGRect(x: 1.21 * u, y: 2.35 * u, width: 7.9 * u, height: 5.35 * u)
         ZStack(alignment: .topLeading) {
-            Canvas { ctx, _ in
-                let box = CGRect(x: 0, y: 0, width: 10 * u, height: 12 * u)
-                ctx.fill(CartridgeShape().path(in: box.offsetBy(dx: 0.32 * u, dy: 0.42 * u)), with: .color(Color(c.mix(.black, 0.58))))
-                ctx.fill(CartridgeShape().path(in: box), with: .linearGradient(Gradient(stops: [
-                    .init(color: Color(c.mix(.white, 0.3)), location: 0), .init(color: Color(c), location: 0.1),
-                    .init(color: Color(c), location: 0.72), .init(color: Color(c.mix(.black, 0.18)), location: 1)]),
-                    startPoint: .zero, endPoint: CGPoint(x: 0, y: 12 * u)))
-                for k in 0..<3 { // grip ridges under the notch
-                    let y = 0.85 * u + CGFloat(k) * 0.28 * u
-                    ctx.fill(Path(CGRect(x: 1.1 * u, y: y, width: 6.6 * u, height: 0.14 * u)), with: .color(Color(c.mix(.black, 0.45))))
-                    ctx.fill(Path(CGRect(x: 1.1 * u, y: y + 0.14 * u, width: 6.6 * u, height: 0.14 * u)), with: .color(Color(c.mix(.white, 0.4))))
-                }
-                // the label's dark rim
-                ctx.fill(Path(roundedRect: CGRect(x: 0.59 * u, y: 1.89 * u, width: 8.82 * u, height: 8.22 * u), cornerRadius: 0.66 * u),
-                         with: .color(Color(c.mix(.black, 0.5))))
-                // gold contacts along the bottom edge
-                ctx.fill(Path(roundedRect: CGRect(x: 1.6 * u, y: 10.5 * u, width: 6.8 * u, height: u), cornerRadius: 0.25 * u), with: .color(Palette.ink))
-                var x = 1.82 * u
-                while x + 0.34 * u <= 8.3 * u {
-                    ctx.fill(Path(CGRect(x: x, y: 10.7 * u, width: 0.34 * u, height: 0.8 * u)), with: .color(Color(UIColor(hex: "#f2c75a"))))
-                    ctx.fill(Path(CGRect(x: x + 0.34 * u, y: 10.7 * u, width: 0.08 * u, height: 0.8 * u)), with: .color(Color(UIColor(hex: "#a8761e"))))
-                    x += 0.62 * u
-                }
-            }
-            .frame(width: 10.4 * u, height: 12.5 * u)
-
-            VStack(spacing: 0.22 * u) {
-                Color(c)
-                    .overlay {
-                        if let image { Image(uiImage: image).resizable().scaledToFill().saturation(game.soon ? 0.4 : 1) }
+            Canvas { ctx, _ in Self.draw(ctx, color: c, u: u) }
+            Group {
+                if plus {
+                    Color(UIColor(hex: "#59402e")).overlay {
+                        Image(systemName: "plus").font(.system(size: 2.1 * u, weight: .bold)).foregroundStyle(Palette.cream.opacity(0.8))
                     }
-                    .clipShape(RoundedRectangle(cornerRadius: 0.3 * u))
-                Text(game.label)
-                    .font(.pixel(1.55 * u))
-                    .foregroundStyle(Palette.ink)
-                    .lineLimit(1)
-                    .frame(height: 1.12 * u)
+                } else {
+                    Color(c).overlay {
+                        if let image { Cover(image: image, size: art.size) }
+                    }
+                    .overlay { if locked { Color(red: 28 / 255, green: 17 / 255, blue: 10 / 255).opacity(0.55).overlay(Lock().frame(width: 2.4 * u, height: 2.4 * u)) } }
+                }
             }
-            .padding(0.3 * u)
-            .frame(width: 8.5 * u, height: 7.9 * u)
-            .background(RoundedRectangle(cornerRadius: 0.5 * u).fill(Palette.cream))
-            .offset(x: 0.75 * u, y: 2.05 * u)
+            .frame(width: art.width, height: art.height)
+            .clipShape(RoundedRectangle(cornerRadius: 0.3 * u))
+            .offset(x: art.minX, y: art.minY)
+            Text(name)
+                .font(.pixel(1.55 * u)).kerning(0.02 * 1.55 * u)
+                .foregroundStyle(Palette.ink)
+                .lineLimit(1).minimumScaleFactor(0.5) // a long name shrinks rather than being cut
+                .frame(width: 7.9 * u - 4, height: 1.73 * u)
+                .offset(x: 1.21 * u + 2, y: 7.92 * u)
         }
-        .frame(width: 10.4 * u, height: 12.5 * u, alignment: .topLeading)
-        .shadow(color: .black.opacity(0.4), radius: 0.3 * u, y: 0.45 * u)
-        .saturation(game.soon ? 0.6 : 1)
-        .padding(pad)
-        .drawingGroup()
-        .padding(-pad)
-        .frame(width: 10 * u, height: 12 * u, alignment: .topLeading)
+        .frame(width: Self.size.width * u, height: Self.size.height * u, alignment: .topLeading)
+        .drawingGroup() // one bitmap: a scroll only moves it
     }
-}
 
-// The favourite heart on the chamfered corner, 44 pt to touch.
-struct FavHeart: View {
-    let on: Bool
-    let size: CGFloat
-    let toggle: () -> Void
-
-    var body: some View {
-        Button(action: toggle) {
-            Circle().fill(Palette.cream)
-                .overlay(Circle().stroke(Palette.ink.opacity(0.55), lineWidth: 2))
-                .shadow(color: .black.opacity(0.4), radius: 0, y: 3)
-                .overlay(HeartShape().fill(on ? Palette.red : .clear).overlay(HeartShape().stroke(on ? Color(UIColor(hex: "#7a1020")) : Color(UIColor(hex: "#8a6a52")), style: StrokeStyle(lineWidth: 2.2, lineJoin: .round))).frame(width: size * 0.6, height: size * 0.6).offset(y: 1))
-                .frame(width: size, height: size)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
+    private static func draw(_ ctx: GraphicsContext, color c: UIColor, u: CGFloat) {
+        func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ rad: CGFloat, _ fill: UIColor) {
+            ctx.fill(Path(roundedRect: CGRect(x: x * u, y: y * u, width: w * u, height: h * u), cornerRadius: rad * u), with: .color(Color(fill)))
         }
-        .buttonStyle(Squash(depth: 0))
-        .sensoryFeedback(.impact(weight: .light), trigger: on)
-        .accessibilityLabel("Favorit")
-        .accessibilityAddTraits(on ? .isSelected : [])
+        let ink = UIColor(hex: "#1d100a"), dark = c.mix(ink, 0.62), shadow = c.mix(ink, 0.34), light = c.mix(UIColor(hex: "#fff3d6"), 0.55)
+        let shape = Path { p in // SHAPE: M.16 .72 .88 0H9.44L10.16 .72V11.35L9.46 12.05H.86L.16 11.35Z
+            p.addLines([(0.16, 0.72), (0.88, 0), (9.44, 0), (10.16, 0.72), (10.16, 11.35), (9.46, 12.05), (0.86, 12.05), (0.16, 11.35)].map { CGPoint(x: $0.0 * u, y: $0.1 * u) })
+            p.closeSubpath()
+        }
+        ctx.fill(shape.offsetBy(dx: 0, dy: 0.34 * u), with: .color(Color(dark)))
+        ctx.fill(shape, with: .linearGradient(Gradient(stops: [.init(color: Color(c.mix(.white, 0.18)), location: 0), .init(color: Color(c), location: 0.52),
+                                                               .init(color: Color(c.mix(UIColor(hex: "#251008"), 0.12)), location: 1)]),
+                                              startPoint: .zero, endPoint: CGPoint(x: 0, y: 12.05 * u)))
+        for y in [1.02, 1.36] { r(2.46, y, 5.4, 0.14, 0.07, shadow); r(2.46, y + 0.14, 5.4, 0.07, 0.035, light) }
+        r(0.78, 1.93, 8.76, 8.12, 0.42, dark)
+        r(0.89, 2.04, 8.54, 7.9, 0.33, UIColor(hex: "#fff3d6"))
+        let socket = UIColor(hex: "#38271b")
+        r(1.96, 10.78, 6.4, 1.27, 0.2, socket); r(1.96, 11.6, 6.4, 0.45, 0, socket)
+        for k in 0..<10 { r(5.16 - (9 * 0.61 + 0.33) / 2 + CGFloat(k) * 0.61, 10.98, 0.33, 1.07, 0, UIColor(hex: "#efbf59")) }
     }
 }
 
-struct HeartShape: Shape {
-    func path(in r: CGRect) -> Path {
-        // the mock's heart, M12 20.5s-8-4.9-8-11A4.5 4.5 0 0 1 12 6.4a4.5 4.5 0 0 1 8 3.1c0 6.1-8 11-8 11z on 24×24
-        let s = min(r.width, r.height) / 24, o = CGPoint(x: r.midX - 12 * s, y: r.midY - 12 * s)
-        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: o.x + x * s, y: o.y + y * s) }
-        var p = Path()
-        p.move(to: pt(12, 20.5))
-        p.addCurve(to: pt(4, 9.5), control1: pt(12, 20.5), control2: pt(4, 15.6))
-        p.addArc(center: pt(8.5, 9.5), radius: 4.5 * s, startAngle: .degrees(180), endAngle: .degrees(-30), clockwise: false)
-        p.addArc(center: pt(15.5, 9.5), radius: 4.5 * s, startAngle: .degrees(210), endAngle: .degrees(0), clockwise: false)
-        p.addCurve(to: pt(12, 20.5), control1: pt(20, 15.6), control2: pt(12, 20.5))
-        p.closeSubpath()
-        return p
-    }
-}
-
-// ÚLTIM (cream) or NOU (pink), tilted on the cartridge's left edge.
-struct Tag: View {
-    let text: String
-    let isNew: Bool
-
+// object-fit: cover at object-position 50% 22%: the art's top part shows, where the figures' heads are.
+private struct Cover: View {
+    let image: UIImage
+    let size: CGSize
     var body: some View {
-        Text(text)
-            .font(.baloo(10)).kerning(0.6)
-            .foregroundStyle(isNew ? Color(UIColor(hex: "#3d0f2a")) : Palette.brown)
-            .padding(.horizontal, 7).frame(height: 20)
-            .background(RoundedRectangle(cornerRadius: 6).fill(isNew ? Palette.pink : Palette.cream).shadow(color: .black.opacity(0.4), radius: 0, y: 2))
-            .rotationEffect(.degrees(-6))
-            .allowsHitTesting(false)
+        let k = max(size.width / image.size.width, size.height / image.size.height), w = image.size.width * k, h = image.size.height * k
+        Image(uiImage: image).resizable().frame(width: w, height: h)
+            .offset(x: (size.width - w) * 0.5, y: (size.height - h) * 0.22)
+            .frame(width: size.width, height: size.height, alignment: .topLeading)
+    }
+}
+
+// The prototype's padlock (24-unit box): a cream body and its shackle.
+private struct Lock: View {
+    var body: some View {
+        Canvas { ctx, size in
+            let s = size.width / 24
+            ctx.fill(Path(roundedRect: CGRect(x: 5 * s, y: 10.5 * s, width: 14 * s, height: 10 * s), cornerRadius: 2.5 * s), with: .color(Palette.cream))
+            var p = Path()
+            p.move(to: CGPoint(x: 8 * s, y: 10.5 * s)); p.addLine(to: CGPoint(x: 8 * s, y: 8 * s))
+            p.addArc(center: CGPoint(x: 12 * s, y: 8 * s), radius: 4 * s, startAngle: .degrees(180), endAngle: .degrees(0), clockwise: false)
+            p.addLine(to: CGPoint(x: 16 * s, y: 10.5 * s))
+            ctx.stroke(p, with: .color(Palette.cream), lineWidth: 2.4 * s)
+        }
     }
 }
 

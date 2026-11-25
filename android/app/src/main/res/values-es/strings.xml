@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- The launcher's copy (ronda-10/strings.md, written by Codex; html.attr.close from src/i18n/locales). -->
+<resources>
+    <string name="ui_select_aviat">Pronto</string>
+    <string name="launcher_settings_rateApp">Valora la app</string>
+    <string name="launcher_settings_shareApp">Comparte la app</string>
+    <string name="launcher_settings_backToProfile">Volver al perfil</string>
+    <string name="html_settings_aria">Configuración</string>
+    <string name="html_profile_aria">Perfil</string>
+    <string name="html_attr_close">Cierra</string>
+</resources>

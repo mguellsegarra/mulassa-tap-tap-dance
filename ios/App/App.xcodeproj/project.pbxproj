@@ -23,6 +23,9 @@
 		A1C0DE020300000000000002 /* Logo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020300000000000001 /* Logo.swift */; };
 		A1C0DE020400000000000002 /* Iris.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020400000000000001 /* Iris.swift */; };
 		A1C0DE020500000000000002 /* GameHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020500000000000001 /* GameHost.swift */; };
+		A1C0DE020600000000000002 /* Sky.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020600000000000001 /* Sky.swift */; };
+		A1C0DE020700000000000002 /* Sheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020700000000000001 /* Sheets.swift */; };
+		A1C0DE020800000000000002 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A1C0DE020800000000000001 /* Localizable.xcstrings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +47,9 @@
 		A1C0DE020300000000000001 /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
 		A1C0DE020400000000000001 /* Iris.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Iris.swift; sourceTree = "<group>"; };
 		A1C0DE020500000000000001 /* GameHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameHost.swift; sourceTree = "<group>"; };
+		A1C0DE020600000000000001 /* Sky.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sky.swift; sourceTree = "<group>"; };
+		A1C0DE020700000000000001 /* Sheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sheets.swift; sourceTree = "<group>"; };
+		A1C0DE020800000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +93,7 @@
 				A1C0DE012F00000000000002 /* AppIcon.icon */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
 				504EC3131FED79650016851F /* Info.plist */,
+				A1C0DE020800000000000001 /* Localizable.xcstrings */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
 			);
@@ -102,6 +109,8 @@
 				A1C0DE020300000000000001 /* Logo.swift */,
 				A1C0DE020400000000000001 /* Iris.swift */,
 				A1C0DE020500000000000001 /* GameHost.swift */,
+				A1C0DE020600000000000001 /* Sky.swift */,
+				A1C0DE020700000000000001 /* Sheets.swift */,
 			);
 			path = Launcher;
 			sourceTree = "<group>";
@@ -152,6 +161,21 @@
 			knownRegions = (
 				en,
 				Base,
+				ca,
+				de,
+				es,
+				eu,
+				fr,
+				gl,
+				it,
+				ja,
+				ko,
+				oc,
+				pt,
+				ro,
+				ru,
+				uk,
+				"zh-Hans",
 			);
 			mainGroup = 504EC2FB1FED79650016851F;
 			packageReferences = (
@@ -178,6 +202,7 @@
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
+				A1C0DE020800000000000002 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -196,6 +221,8 @@
 				A1C0DE020300000000000002 /* Logo.swift in Sources */,
 				A1C0DE020400000000000002 /* Iris.swift in Sources */,
 				A1C0DE020500000000000002 /* GameHost.swift in Sources */,
+				A1C0DE020600000000000002 /* Sky.swift in Sources */,
+				A1C0DE020700000000000002 /* Sheets.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

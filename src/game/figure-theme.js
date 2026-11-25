@@ -41,5 +41,8 @@ export function trf(key, figureId = figTheme.id) {
   return value;
 }
 const practiceMessageKeys = ['gua', 'pa', 'guapa', 'hold', 'balloon'].map(id => Object.fromEntries(['word', 'touch', 'keys'].map(device => [device, 'practice.' + id + (id === 'balloon' && device !== 'word' ? '.mash.' : '.') + device])));
-export const practiceText = (index, device) => trf(practiceMessageKeys[index][device]);
+// The drum's practice (practice.js DRUM_STEPS, in its order): the figure's own words, the drum's lines
+const drumPracticeKeys = [['gua.word', 'gua'], ['pa.word', 'pa'], ['drum.alt.word', 'alt'], ['guapa.word', 'guapa'], ['drum.roll.word', 'roll'], ['balloon.word', 'balloon']]
+  .map(([word, id]) => ({ drumWord: 'practice.' + word, drum: 'practice.drum.' + id + '.text' }));
+export const practiceText = (index, device) => trf((device.startsWith('drum') ? drumPracticeKeys : practiceMessageKeys)[index][device]); // device: word | touch | keys, or drumWord | drum
 export const FIGURE_CHATTER_KEYS = ["chatter.heat","chatter.giant","chatter.calcot","chatter.valls","chatter.amunt","chatter.rhythm","chatter.mula","chatter.coca","chatter.castells","chatter.party","chatter.vinga"];

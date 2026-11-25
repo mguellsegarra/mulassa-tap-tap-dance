@@ -31,11 +31,11 @@ function drawPractice() {
     H.strokeStyle = C.dark; H.lineWidth = 1; H.stroke();
   }
   if (P.doneT) return;
-  const s = practiceText(i, COARSE.matches ? 'touch' : 'keys'), ww = textWidth(practiceText(i, 'word'), 10) + 8, room = W - 20 - ww - 24;
+  const word = practiceText(i, step.drum ? 'drumWord' : 'word'), s = practiceText(i, step.drum ? 'drum' : COARSE.matches ? 'touch' : 'keys'), ww = textWidth(word, 10) + 8, room = W - 20 - ww - 24;
   const size = Math.min(10, 10 * room / textWidth(s, 10)), w = ww + textWidth(s, size) + 24, x = W / 2 - w / 2, cy = PRACTICE_Y();
   H.beginPath(); H.roundRect(x, cy - 11, w, 22, 3); // an instruction, not a button: flat, a gold strip, no outline
   H.fillStyle = 'rgba(42,26,16,0.9)'; H.fill(); H.fillStyle = C.gold; H.fillRect(x, cy - 11, 3, 22);
-  text(practiceText(i, 'word'), x + 12, cy, 10, { GUA: C.guaLt, PA: C.paLt }[step.word] ?? C.gold, 'left');
+  text(word, x + 12, cy, 10, { GUA: C.guaLt, PA: C.paLt }[step.word] ?? C.gold, 'left');
   text(s, x + 12 + ww, cy, size, C.cream, 'left');
 }
 function drawCollapse() {

@@ -1,7 +1,7 @@
 // Catalog metadata lives in JSON; only the two integrated songs are playable.
 import { tr } from '../i18n/messages.js';
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
-import { bestRecord, recordPointsKey, saveRecord } from './records.js';
+import { bestRecord, recordPointsKey, drumRecordKey, saveRecord } from './records.js';
 import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
@@ -47,18 +47,19 @@ export function rememberedLevel(store, id) {
 }
 export const rememberLevel = (store, id, level) => store.set(levelKey(id), String(level));
 // A figure's record at a level on this device: the mulassa's per version (records.js), the others' per figure
-export const recordKey = (figure, level) => figure.id === MULASSA.id ? recordPointsKey(level) : `record-${figure.id}-${level}`;
+// drum: a drum run's own record (records.js drumRecordKey), kept apart from the figure's
+export const recordKey = (figure, level, drum = false) => drum ? drumRecordKey(figure.id, level) : figure.id === MULASSA.id ? recordPointsKey(level) : `record-${figure.id}-${level}`;
 
 // The Mulassa's record is the current dance's only (the previous dance's: readPreviousDanceRecord); other figures keep their raw score.
-export function readFigureRecord(store, figure, level) {
-  if (figure.id === MULASSA.id) return bestRecord(store, level);
-  try { return JSON.parse(store.get(recordKey(figure, level))) || null; } catch { return null; }
+export function readFigureRecord(store, figure, level, drum = false) {
+  if (figure.id === MULASSA.id && !drum) return bestRecord(store, level);
+  try { return JSON.parse(store.get(recordKey(figure, level, drum))) || null; } catch { return null; }
 }
 // The newest figure (its trait) stays new until this device has a record of it at any level.
 export const isNovelty = (store, figure) => !!FIGURE_TRAITS[figure.id]?.novelty && [0, 1, 2].every(level => !readFigureRecord(store, figure, level));
-export function saveFigureRecord(store, figure, level, quality, rawScore, combo) {
-  if (figure.id === MULASSA.id) saveRecord(store, level, quality, rawScore, combo);
-  else store.set(recordKey(figure, level), JSON.stringify({ quality, score: rawScore, combo }));
+export function saveFigureRecord(store, figure, level, quality, rawScore, combo, drum = false) {
+  if (figure.id === MULASSA.id && !drum) saveRecord(store, level, quality, rawScore, combo);
+  else store.set(recordKey(figure, level, drum), JSON.stringify({ quality, score: rawScore, combo }));
 }
 
 // The heart's call, one per grammatical number: the catalogue's `plural` flag picks it (gegants, guites), anything else is singular.

@@ -414,5 +414,6 @@
   "ui.code.open": "打开GitHub",
   "ui.news.title": "迷你游戏来啦！",
   "ui.games.tip": "更多游戏！",
-  "ui.news.text": "第一个迷你游戏：点击红色Mulassa，拆除炸弹！"
+  "ui.news.text": "第一个迷你游戏：点击红色Mulassa，拆除炸弹！",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

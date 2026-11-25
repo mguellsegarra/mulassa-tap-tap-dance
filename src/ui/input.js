@@ -11,9 +11,10 @@ import { privacyMenu, pauseMenu } from './handles.js';
 import { togglePause } from './pause-actions.js';
 import { sheetUp, viewMode, setView, steers, menuState, photoScreen } from './controls.js';
 import { curtain } from './curtain.js';
-import { unlock, toTitle } from '../game/flow.js';
+import { unlock, toTitle, toDrumRun } from '../game/flow.js';
 import { press, settleHold, eventAt, releaseAll } from '../game/judge.js';
 import { padButtons, padFeedback, syncPad } from './pad.js';
+import { onDrum } from '../platform/drum.js';
 import { haptic } from '../platform/haptics.js';
 import { hud, W, K } from '../hud/canvas.js';
 import { orbit, look, pnow } from '../scene/cameras.js';
@@ -65,6 +66,15 @@ padButtons.forEach(b => b.addEventListener('pointerdown', e => padDown(b, e)));
 const letGo = e => { if (G.state === 'play' && !G.paused) settleHold(songTime(eventAt(e))); }; // let go when it happened, like press()
 addEventListener('keyup', e => { photoRelease(e.code); if (down.keys.delete(e.code)) letGo(e); });
 for (const ev of ['pointerup', 'pointercancel']) addEventListener(ev, e => { if (down.ptr.delete(e.pointerId)) { syncPad(); letGo(e); } });
+// The drum (drum.js polls it and dates each hit): each hit is its zone's side, and the judge gets the zone to tell a face
+// (GUA, PA) from a rim (a GUAPA is both rims). Nothing is held: drum runs have no MANTÉN. The splash stays: a gamepad is no user
+// activation, the audio could not start.
+onDrum((zone, e) => {
+  if (sheets.sync.open) return sheets.sync.drumTap(e); // the sync sheet's metronome: a drum hit is a tap, as a key is
+  if (G.state === 'results') { if (clock - G.resT > 1 && !sheetUp()) toTitle(); return; }
+  if (G.state !== 'play' || sheetUp() || bouTap() || toDrumRun()) return; // a run begun before the drum was seen restarts as a drum run
+  press(zone[1], e, zone); // the zone's side: GUA left, PA right; the judge reads the rim from the zone
+}, () => G.state === 'play' || sheets.sync.open); // a song or the metronome: read every 4 ms
 addEventListener('blur', releaseAll);
 stopDoubleTapZoom();
 addEventListener('blur', clearPhotoKeys);

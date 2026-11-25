@@ -24,6 +24,7 @@ const context = vm.createContext({
   photoKey: () => false, pageActive: () => true, sheetUp: () => false, menuState: () => ['splash', 'select'].includes(G.state), photoScreen: () => G.state === 'select',
   press: (dir, e) => calls.push({ dir, type: e.type }), bouTap: () => false, // (no Bou close-up waiting)
   settleHold: () => releases.push(true), songTime() {}, eventAt() {},
+  onDrum() {}, // (the drum's wiring: tests/ui/drum.mjs)
   haptic() {}, padFeedback() {}, syncPad() {}, releaseAll() {}, clearPhotoKeys() {}, photoRelease() {},
   orbit: { ptrs: new Map() }, look: { ptrs: new Map() }, orbitUp() {}, pnow() {},
   addEventListener(type, handler) {

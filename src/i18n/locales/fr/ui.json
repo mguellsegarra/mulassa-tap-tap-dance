@@ -425,5 +425,6 @@
   "ui.code.open": "Ouvrir GitHub",
   "ui.news.title": "Place aux mini-jeux !",
   "ui.games.tip": "Autres jeux !",
-  "ui.news.text": "Le premier mini-jeu : touche les Mulassas rouges et désamorce les bombes !"
+  "ui.news.text": "Le premier mini-jeu : touche les Mulassas rouges et désamorce les bombes !",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

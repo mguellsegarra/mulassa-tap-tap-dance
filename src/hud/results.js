@@ -117,7 +117,7 @@ export function drawResults() {
   text(SITE_LABEL, W / 2, y0 + ph - 9, 7, '#e8d8b8'); // small, inside the card: a screenshot still says where to play
   // the tip, outside the card
   const e = G.errors, others = e.silent + e.early + e.late + e.move;
-  const hint = G.reason === 'collapse' ? RES.hintCollapse : e.both > others ? trf(COARSE.matches ? 'results.hintBothTouch' : 'results.hintBothKeys') : e.hold > others ? RES.hintHold : G.errors.silent > G.errors.early + G.errors.late + G.errors.move ? RES.hintSilent : G.errors.move > G.errors.early + G.errors.late ? RES.hintMove : G.errors.early > G.errors.late ? RES.hintEarly : G.errors.late ? RES.hintLate : RES.hintClean;
+  const hint = G.reason === 'collapse' ? RES.hintCollapse : e.both > others ? trf(G.drum ? 'results.hintBothDrum' : COARSE.matches ? 'results.hintBothTouch' : 'results.hintBothKeys') : e.hold > others ? RES.hintHold : G.errors.silent > G.errors.early + G.errors.late + G.errors.move ? RES.hintSilent : G.errors.move > G.errors.early + G.errors.late ? RES.hintMove : G.errors.early > G.errors.late ? RES.hintEarly : G.errors.late ? RES.hintLate : RES.hintClean;
   H.restore(); H.save(); // the tip and the button: under the row, scaled about the row's bottom
   if (fit < 1) { H.translate(W / 2, rowBottom); H.scale(fit, fit); H.translate(-W / 2, -rowBottom); }
   const win = G.reason !== 'collapse' && !others && !e.both && !e.hold, ty = rowBottom + extra + gap;

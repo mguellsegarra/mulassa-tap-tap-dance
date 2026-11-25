@@ -22,6 +22,7 @@ import { setupFreeGate } from './free-gate.js';
 import { setupNews } from './news-sheet.js';
 import { hasPlayed } from '../game/records.js';
 import { setupInstall } from './install-app.js';
+import { setupDrumConnect } from './drum-connect.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
 import { song, FINALE_T } from '../game/figure-song.js';
@@ -39,6 +40,7 @@ import { sheets } from './sheets.js';
 import './keyboard-room.js';
 import { tr } from '../i18n/messages.js';
 import { pauseMenu, howtoMenu, settingsMenu, privacyMenu, retryEl } from './handles.js';
+import { drumOn } from '../platform/drum.js';
 import { G, chip, menuMusic, clock, setMenuSound, setSelectedFigure, CHALLENGE, offsetMs, setOffsetMs } from '../game/state.js';
 import { showPauseOptions } from './pause.js';
 import { togglePause, requestPauseAction } from './pause-actions.js';
@@ -84,7 +86,8 @@ document.getElementById('confirm-action').addEventListener('click', () => {
   document.activeElement?.blur();
 });
 document.getElementById('pause').addEventListener('click', togglePause);
-document.getElementById('howto').addEventListener('click', () => { if (viewMode) { showPhotoHelp(); return; } if ((G.state === 'select')) { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); } });
+const openHowto = () => { howtoMenu.classList.toggle('by-drum', drumOn()); howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); }; // by-drum: the legend names the drum's two centres and its rims (base.css)
+document.getElementById('howto').addEventListener('click', () => { if (viewMode) { showPhotoHelp(); return; } if ((G.state === 'select')) openHowto(); });
 // The dance demo has nothing to lose: its restart and exit need no confirmation
 const pauseAction = a => { if (!G.watch) requestPauseAction(a); else if (a === 'restart') { chip.resume(); startWatch(); } else toTitle(); };
 document.getElementById('restart').addEventListener('click', () => pauseAction('restart'));
@@ -110,6 +113,7 @@ function openSettings() {
   settingsMenu.showModal();
   focusIn(settingsMenu, 'settings-sync');
   board.refreshSettings(); // the «Proposta de publicar» row
+  drumConnect(); // «Connecta el timbal»: plugged in or not, now
   document.getElementById('settings-profile').hidden = !board.configured; // Perfil (decision 6): only with a board
 }
 const versionEl = document.getElementById('settings-version');
@@ -117,6 +121,7 @@ versionEl.textContent = `v${APP_BUILD.replace('+', ' · ')}`; // v1.0.54 · d405
 document.getElementById('settings').addEventListener('click', openSettings);
 document.getElementById('settings-sync').addEventListener('click', () => { settingsMenu.close(); syncBack = openSettings; sync.show(); });
 document.getElementById('settings-feedback').addEventListener('click', () => { settingsMenu.close(); writeToBox({ kind: 'general' }, openSettings); }); // the selector's Bústia (its corner slot went to free play); closing it comes back here
+const drumConnect = setupDrumConnect();
 sheets.install = setupInstall({ focusIn, back: openSettings }); // «Instal·la l’app»: Chromium's prompt, or the browser's own steps; closing them comes back here
 // Classificacions (optional, online): from the selector or the results screen.
 // After an eligible run its publish sheet opens by itself, only over a bare, visible, upright results screen.
@@ -237,7 +242,7 @@ const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => she
   demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },
   onPlay: (level, figure) => { setSelectedFigure(figure); choose(level); },
-  onHowto: () => { howtoMenu.showModal(); focusIn(howtoMenu, 'howto-ok'); },
+  onHowto: openHowto,
   onWrite: request => writeToBox(request, () => select.refocus()), hearts, onPanel: () => requestAnimationFrame(() => setTimeout(() => { heartTip.update(); gamesTip.update(); })) }); // (after the change's frame is drawn: their visibility and rect reads then find a laid-out page, not a figure change's dirty one: ~15 ms of forced style on a Galaxy S10)
 hearts.load();
 sheets.select = select;

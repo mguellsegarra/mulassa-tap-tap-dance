@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<!-- Dev only (npm run dev → /tools/dev/timbal.html): what the real Taiko drum sends and when, to fix src/platform/drum.js's table and the sync. Never a build input (vite build reads index.html). -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Timbal: mesura</title>
+<style>
+  html { background: #1b1d25; color: #fff3d6; font: 15px/1.45 system-ui, sans-serif; }
+  body { margin: 0 auto; padding: 24px 16px 48px; max-width: 880px; }
+  h1 { font-size: 22px; margin: 0 0 4px; } h2 { font-size: 16px; margin: 32px 0 8px; } p { margin: 0 0 8px; opacity: 0.85; }
+  .card { background: #262a36; border-radius: 12px; padding: 16px; }
+  .mono, td, th, textarea { font: 13px/1.5 ui-monospace, Menlo, monospace; }
+  #buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+  #buttons span { width: 48px; padding: 8px 0; border-radius: 8px; background: #1b1d25; text-align: center; }
+  #buttons span.on { background: #ff9f43; color: #1b1d25; } #buttons span.on.rim { background: #3fd0c9; }
+  #buttons b { display: block; font-size: 11px; opacity: 0.7; }
+  button { font: inherit; font-weight: 700; color: #1b1d25; background: #fff3d6; border: 0; border-radius: 12px; padding: 12px 20px; cursor: pointer; }
+  button.big { display: block; width: 100%; padding: 20px; font-size: 20px; background: #ff9f43; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 12px; }
+  #clicks { display: flex; gap: 4px; flex: 1; min-width: 200px; } #clicks i { flex: 1; height: 12px; border-radius: 4px; background: #1b1d25; } #clicks i.on { background: #fff3d6; }
+  .scroll { overflow-x: auto; } table { border-collapse: collapse; width: 100%; } td, th { text-align: right; padding: 4px 8px; white-space: nowrap; } th { opacity: 0.6; font-weight: 400; }
+  tr.face td:nth-child(3) { color: #ff9f43; } tr.rim td:nth-child(3) { color: #3fd0c9; }
+  .warn { color: #ff8a80; }
+  textarea { box-sizing: border-box; width: 100%; height: 160px; margin-top: 12px; background: #1b1d25; color: inherit; border: 0; border-radius: 8px; padding: 12px; }
+</style>
+</head>
+<body>
+<h1>Timbal: mesura</h1>
+<p>Endolla el timbal i pica'l un cop: el navegador no el veu fins al primer cop. Paràmetre: <span class="mono">?drummap=FL:10,FR:11,RL:6,RR:7</span> (F cara, R vora; L esquerra, R dreta).</p>
+
+<h2>Aprèn el timbal</h2>
+<div class="card">
+  <p>Et demanarà les quatre zones, una per una: pica cada zona 3 cops. Es desa en aquest navegador i el joc la fa servir de seguida (recarrega el joc si el tens obert).</p>
+  <div class="row"><button class="big" id="learn">Aprèn el timbal</button><button id="forget">Oblida el mapa</button></div>
+  <p class="mono" id="learn-say" style="font-size: 1.3em"></p>
+</div>
+
+<h2>Comandament</h2>
+<div class="card mono" id="pad">Cap comandament encara.</div>
+
+<h2>Botons en viu</h2>
+<div class="card"><div id="buttons"></div><p class="mono" id="axes" style="margin: 12px 0 0"></p></div>
+
+<h2>Prova del metrònom</h2>
+<div class="card">
+  <p>Quatre clics greus d'entrada i després 16 clics, un cada 500 ms: pica el timbal a cada clic. Fes-la un cop amb la cara i un altre amb la vora. Sense auriculars Bluetooth.</p>
+  <div class="row"><button id="start">Comença la prova</button><div id="clicks"></div></div>
+  <div class="scroll"><table id="stats"></table></div>
+</div>
+
+<h2>Cops</h2>
+<div class="card">
+  <p>«Edat» és <span class="mono">performance.now() - gamepad.timestamp</span> quan el sondeig veu el cop: si és gran, el segell del comandament és vell. «Durada» és de quan baixa a quan puja: un cop més curt que el sondeig (4 ms) es perd.</p>
+  <div class="scroll"><table id="hits"></table></div>
+</div>
+
+<h2>Resultats</h2>
+<div class="card">
+  <button class="big" id="copy">Copia els resultats</button>
+  <div class="row" style="margin: 12px 0 0"><button id="reset">Esborra-ho tot</button><span id="copied"></span></div>
+  <textarea id="out" readonly></textarea>
+</div>
+<script type="module" src="/tools/dev/timbal.js"></script>
+</body>
+</html>

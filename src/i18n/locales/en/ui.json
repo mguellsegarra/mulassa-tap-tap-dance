@@ -425,5 +425,6 @@
   "ui.code.open": "Open GitHub",
   "ui.news.title": "Mini-games are here!",
   "ui.games.tip": "More games!",
-  "ui.news.text": "The first mini-game: tap red Mulasses and defuse bombs!"
+  "ui.news.text": "The first mini-game: tap red Mulasses and defuse bombs!",
+  "ui.drumConnected": "Connectat: les cançons comencen amb el timbal"
 }

@@ -20,11 +20,13 @@ export const setOffsetMs = v => (offsetMs = v);
 //     (misses in a row), guapo (the ENCERTS %), energy (l'ànim), energyWarn, hold, activePhrase / phraseCounts, doublePoints,
 //     sec ('A' | 'B'), go (the first note's time), finale / eeeh / collapseT (the coda, its shout, the fall), previous / newRecord /
 //     recordKey / stars / reason / challenge / shareRun / resT (the result), practice, resuming, watch (the dance demo: the song
-//     plays itself, nothing is judged for the player, saved or shared)
+//     plays itself, nothing is judged for the player, saved or shared), drum (a drum run, docs/agents/drum-mode.md: flow.js sets it as the
+//     run or the practice starts; judge.js, hud/* and the practice read it; its own chart and record, no board, no statistics)
 //   what the screens show (eased or stamped with `clock`, read by hud/* and the crowd; the rules never read them; the
 //     beat counters clapBeat, finBeat and lastBeat are game/tick.js's)
 //     shown, shownE (the smoothed guapo and energy), judge, praise, ring, pop, popT, pumpT, tapT, flash, holdDone, energyT,
-//     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat
+//     energyWarnT, doubleT, finaleT, chantT, offsetT, uiT, clapBeat, finBeat, lastBeat, rollEnd ({ t0, count }: a drum roll just
+//     ended with that many hits; judge.js)
 //   the app (which screen, what is open)
 //     state ('splash' | 'select' | 'play' | 'results'), sel (the level picked on «QUI BALLA?»), paused, pendingAction, audioError
 export const G = { activityEpoch: 0, chart: [], balloons: [], state: 'splash', figureId: selectedFigure.id, figureVersion: selectedFigure.version, sel: 0, diff: 0, paused: false, guapo: 20, shown: 20, combo: 0, chantT: -99, collapseT: 0, sec: 'A', energy: 1, shownE: 1, energyWarn: [true, true], energyT: -9 };

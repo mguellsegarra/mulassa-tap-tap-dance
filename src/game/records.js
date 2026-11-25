@@ -4,6 +4,8 @@ import { comparableScore, CURRENT_SCORE_VERSION, LEGACY_SCORE_VERSION, SHORT_SCO
 // The keys before it belong to the previous dance (mulassa-v1 / v2-short): old cached tabs keep rewriting them, so
 // v3 code only reads them (readPreviousDanceRecord) and never compares them with a v3 record or writes them.
 export const recordPointsKey = difficulty => `record-points-mulassa-v3-${difficulty}`;
+// A drum run's record (docs/agents/drum-mode.md): another chart, so its own key, any figure; raw points, never on a board.
+export const drumRecordKey = (figureId, difficulty) => `record-drum-${figureId}-${difficulty}`;
 const previousKeys = difficulty => [`record-v2-duet-${difficulty}`, `record-family-mulassa-${difficulty}`, `record-points-mulassa-${difficulty}`];
 const recordScale = 'mulassa-family-v1';
 // Most points wins, like the board (get_leaderboard_all) and submit_result; the % only breaks a tie.

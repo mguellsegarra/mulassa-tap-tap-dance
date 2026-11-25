@@ -6,7 +6,7 @@ export function pressTarget(chart, from, t, win, skip) {
   for (let i = from; i < chart.length; i++) {
     const n = chart[i];
     if (n.t - t > win.miss) break;
-    if (n.hit || n.balloon || n === skip) continue;
+    if (n.hit || n.balloon || n.roll || n === skip) continue;
     const dt = Math.abs(t - n.t);
     if (dt <= win.miss) return { n, kind: gradeOf(dt, win), early: t < n.t };
   }
@@ -20,6 +20,21 @@ export function noteOnTime(chart, from, t, win, skip, dir) {
 }
 export const pairWindow = diff => (diff === 0 ? 0.15 : 0.08); // GUAPA: the second button within this of the first
 export const isPartnerPress = (pending, dir) => !!pending && dir !== pending.dir && (dir === 'L' || dir === 'R'); // swallowed: it never reaches the next note
+// A drum run (docs/agents/drum-mode.md): a GUAPA is both rims, so a GUAPA's partner from the drum must be a rim too
+// (isPartnerPress on the zone's side); a face, or a rim on a small note, is a wrong move.
+const DRUM_OTHER = { FL: 'FR', FR: 'FL', RL: 'RR', RR: 'RL' };
+export const isRim = zone => zone?.[0] === 'R';
+// Does a drum hit (side + zone) fit this note? The face's side plays GUA / PA, the rims a GUAPA.
+export const drumFits = (n, dir, zone) => (n.big ? isRim(zone) : !isRim(zone) && n.input === dir);
+// One hard hit can fire both sides' sensors (measured: both faces, or both rims, in the same 4 ms poll): outside a big
+// note's pair, the other side's same zone this soon after is that echo, not a hit, as Taiko takes both faces as one don.
+export const DRUM_ECHO = 0.03;
+export const isDrumEcho = (last, zone, t) => !!last && !!zone && DRUM_OTHER[zone] === last.zone && t >= last.t && t - last.t < DRUM_ECHO; // forward only: a new run restarts the clock
+// The roll a drum hit at `t` falls in: from `lead` before its start (a balloon's early tap) to `handoff` before its end.
+export function rollAt(chart, from, t, lead, handoff) {
+  for (let i = from; i < chart.length && chart[i].t - lead <= t; i++) if (chart[i].roll && t < chart[i].end - handoff) return chart[i];
+  return null;
+}
 export const pairClosed = (pending, t, diff) => !!pending && t - pending.t > pairWindow(diff);
 export const HOLD_GRACE = 0.12; // letting go this close to the end counts as holding to the end
 // A hold's tail, judged once: got = how far it was held. `more` names the detail line (see DETAIL in judge-words.js).

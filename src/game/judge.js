@@ -1,7 +1,7 @@
 // Judging: hits, GUAPA pairs, holds, balloons and the collapse, plus the autoplay and advance ticks.
 import { tr } from '../i18n/messages.js';
 import { quality, eventAge } from './progress.js';
-import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, balloonTapCap, isOverdue } from './judge-core.js';
+import { gradeOf, pressTarget, noteOnTime, pairWindow, isPartnerPress, isDrumEcho, isRim, drumFits, rollAt, pairClosed, HOLD_GRACE, holdVerdict, balloonVerdict, balloonTapCap, isOverdue } from './judge-core.js';
 import { pick } from '../scene/models.js';
 import { CELEBRATE } from './bubble-rules.js';
 import { drain, warnings } from './energy.js';
@@ -149,6 +149,13 @@ function bellRing(t0, k, big) {
   const f = 400 + 60 * k, len = big ? 1 : 0.32, amp = big ? 0.12 : 0.07;
   chip.blip(t0, f, f * 0.98, len, amp); chip.blip(t0, f * 1.48, f * 1.46, len * 0.7, amp * 0.6); chip.noiseHit(t0, 0.02, big ? 0.25 : 0.12, 'bandpass', 1900, 1.4);
 }
+function rollHit(n, dir) { // a drum run's roll: every hit, any zone, counts and scores a little; never judged, never a miss
+  n.count++;
+  G.score += 50 * (G.doublePoints ? 2 : 1);
+  ringSparks(3, dir === 'R' ? C.pa : C.gua, 30);
+  act(dir === 'R' ? 'R' : 'L');
+  grooveHit(GROOVE.pump);
+}
 function endBalloon(n) { // time's up: any pop is perfect, half-inflated still good
   if (dracEndTraca(n)) haptic('big'); // the TRO lands on the song clock, not on a tap: Android's sticky activation still lets it vibrate
   n.detail = n.count >= n.need ? tr('game.detail.taps', { count: n.count }) : n.count ? DETAIL.faster : DETAIL.silent;
@@ -205,17 +212,24 @@ export function releaseAll() { down.keys.clear(); down.ptr.clear(); syncPad(); i
 // e: the input event. A tap is judged at its timeStamp on the de-stepped song clock: one that waited behind a long
 // frame counts when it happened, not when its handler ran (eventAge, progress.js: capped at 0.5 s, foreign stamps = now).
 export const eventAt = e => { const now = performance.now(); return now - eventAge(e?.timeStamp, now) * 1000; };
-export function press(dir, e) {
+// zone: the drum's ('FL' 'FR' 'RL' 'RR', platform/drum.js), dir its side; keys and touch send none and play as always.
+// In a drum run the faces play GUA and PA and the rims a GUAPA (both together; one alone closes on ELS DOS ALHORA).
+let lastDrum = null; // the last drum hit { zone, t }: its echo on the other side is no hit (isDrumEcho)
+export function press(dir, e, zone) {
   if (G.state !== 'play' || G.collapseT || G.paused || G.watch) return; // the dance demo plays itself
   const t = songTime(eventAt(e)), bl = balloonAt(t);
   G.tapT = clock;
   settleBig(t);
-  const bp = bigPending;
-  if (bl && !isPartnerPress(bp, dir) && !noteOnTime(G.chart, G.next, t, WIN, bp?.n, dir)) { // never a wrong move
-    if (bl.count < balloonTapCap(bl, WIN.good, HANDOFF)) pump(bl); // past the cap a tap counts for nothing
+  const drum = G.drum && !!zone, bp = bigPending, partner = isPartnerPress(bp, dir) && (!drum || isRim(zone));
+  const echo = drum && !partner && isDrumEcho(lastDrum, zone, t);
+  if (zone) lastDrum = { zone, t };
+  if (echo) return;
+  const span = bl ?? (G.drum ? rollAt(G.chart, G.next, t, WIN.good, HANDOFF) : null);
+  if (span && !partner && !noteOnTime(G.chart, G.next, t, WIN, bp?.n, dir)) { // never a wrong move
+    if (span.count < balloonTapCap(span, WIN.good, HANDOFF)) (span.roll ? rollHit : pump)(span, dir); // past the cap a tap counts for nothing
     return;
   }
-  if (isPartnerPress(bp, dir)) { // the partner press of a GUAPA pair
+  if (partner) { // the partner press of a GUAPA pair
     setBigPending(null);
     if (!bp.done) { bp.n.detail = bp.detail; judge(bp.n, bp.kind); guapaHit(bp.n); }
     return;
@@ -223,7 +237,8 @@ export function press(dir, e) {
   const hitNote = pressTarget(G.chart, G.next, t, WIN, bp?.n);
   if (hitNote) {
     const { n, kind } = hitNote, detail = kind === 'perfect' ? '' : hitNote.early ? DETAIL.early : DETAIL.late;
-    if (n.big) {
+    const wrong = drum ? !drumFits(n, dir, zone) : !n.big && n.input !== dir;
+    if (n.big && !wrong) {
       if (kind === 'miss' || dir === 'P') { // a timing miss or Space: judged right away
         n.detail = detail;
         judge(n, kind);
@@ -232,7 +247,7 @@ export function press(dir, e) {
       } else setBigPending({ n, dir, t, kind, detail }); // waits for the other button
       return;
     }
-    if (n.input !== dir) { // wrong move: the portadors trip over each other and the mulassa stumbles
+    if (wrong) { // wrong move: the portadors trip over each other and the mulassa stumbles
       chip.sfx('bonk');
       stumble(dir);
       if (G.practice) headline(tr('game.pop.patapam'), 'bonk', 2, 1);
@@ -253,7 +268,7 @@ export function autoplay(t) {
   for (let i = G.next; i < G.chart.length && G.chart[i].t <= t; i++) {
     const n = G.chart[i];
     if (n.hit) continue;
-    if (!n.balloon) { // both buttons on a GUAPA, and holds kept down to the end
+    if (!n.balloon && !n.roll) { // both buttons on a GUAPA, and holds kept down to the end
       const e = autoplayError(i, JITTER), kind = gradeOf(Math.abs(e), WIN); // ?jitter: a press that far off the beat
       if (kind !== 'miss' && !n.big) act(n.input); // a GUAPA's accent comes from guapaHit
       if (e) n.detail = Math.abs(e) > WIN.miss ? DETAIL.silent : kind === 'perfect' ? '' : e < 0 ? DETAIL.early : DETAIL.late;
@@ -262,7 +277,7 @@ export function autoplay(t) {
       if (n.end && kind !== 'miss') G.hold = { n, got: n.t, pts: 0, auto: true };
       continue;
     }
-    while (n.count < (Math.min(t, n.end - HANDOFF) - n.t) * 12) pump(n); // mashes at a human 12 taps/s
+    while (n.count < (Math.min(t, n.end - HANDOFF) - n.t) * 12) (n.roll ? rollHit : pump)(n); // mashes at a human 12 taps/s
   }
 }
 export function advance(t) { // time moves on: close GUAPA pairs and holds, judge what went by untouched
@@ -272,6 +287,7 @@ export function advance(t) { // time moves on: close GUAPA pairs and holds, judg
     const n = G.chart[G.next];
     if (n === bigPending?.n) break; // still waiting for its second button
     if (!n.hit && n.balloon && t >= n.end) endBalloon(n);
+    else if (n.roll) { if (t >= n.end) { n.hit = 'roll'; G.rollEnd = { t0: clock, count: n.count }; } } // no verdict: its result is its count
     else if (!n.hit && !n.balloon && isOverdue(n, t, WIN)) { n.detail = DETAIL.silent; judge(n, 'miss'); }
     if (n.hit) G.next++; else break;
   }

@@ -130,7 +130,7 @@ for (const name of ['toTitle', 'startGame', 'startPractice', 'endPractice', 'fin
 assert.match(body('finish'), /leaveRun\(reason\)[\s\S]*chip\.stop\(\)/, 'before the song clock stops');
 assert.match(body('leaveRun'), /\}, !debugUsed\)\)/, 'debug use during a run invalidates it when it ends');
 assert.match(body('leaveRun'), /practice \? Math\.max\(0, clock - G\.practice\.t0\)/, 'the practice is timed on its own, not capped by the song');
-assert.match(body('beginRun'), /armRun\(!AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed\)/);
+assert.match(body('beginRun'), /armRun\(!drum && !AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed\)/);
 assert.match(body('startWatch'), /armRun\(false\)/);
 assert.match(readFileSync(new URL('../../src/game/judge.js', import.meta.url), 'utf8'), /G\.playedSec = songTime\(\);[^\n]*\n\s*chip\.stop\(\)/, 'a collapse keeps its seconds before stopping');
 console.log('device statistics: counting rules, owners, days, once-only closing and the flow wiring hold');

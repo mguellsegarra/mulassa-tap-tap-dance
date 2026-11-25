@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>El Drac · teaser de Castanyada</title>
+  <link rel="stylesheet" href="./teaser.css">
+</head>
+<body>
+  <main>
+    <section class="preview" aria-label="Story del Drac">
+      <canvas id="story" width="1080" height="1920"></canvas>
+      <div class="guides" aria-hidden="true"><span>Espai per al text</span><span>Espai per a l'adhesiu</span></div>
+    </section>
+    <aside>
+      <h1>Algú vol encendre el foc…</h1>
+      <p>El Drac del joc, a les fosques. Story de 12 segons, sense text ni so.</p>
+      <label>Enquadrament<select id="preset"><option value="tail">A1 · La cua té vida</option><option value="wing">A2 · Una ala a les fosques</option><option value="half">A3 · Mig secret</option></select></label>
+      <label>Gir <output id="az-value"></output><input id="az" type="range" min="-180" max="180" step="1"></label>
+      <label>Altura de la mirada <output id="height-value"></output><input id="height" type="range" min="0.2" max="2.2" step="0.01"></label>
+      <label>Amplitud del pla <output id="size-value"></output><input id="size" type="range" min="1" max="3.5" step="0.01"></label>
+      <label>Posició horitzontal <output id="shift-value"></output><input id="shift" type="range" min="-1.5" max="1.5" step="0.01"></label>
+      <div class="actions"><button id="play" type="button">Pausa</button><button id="reset" type="button">Restableix el pla</button></div>
+      <label class="check"><input id="guides" type="checkbox" checked> Mostra les zones per al text</label>
+      <a id="record" href="?record&mute">Obre només la story</a>
+      <p class="note">Les línies i els controls no apareixen al vídeo. Pots posar el text després a Instagram. Els caps queden fora del pla en els tres enquadraments inicials; si mous la càmera, comprova el loop sencer.</p>
+    </aside>
+  </main>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

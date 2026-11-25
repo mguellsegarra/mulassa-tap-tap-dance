@@ -27,214 +27,120 @@
 - A new material, hidden mesh or shader variant must be reachable by `precompile`; check a first-use capture for a compile hitch.
 - Whatever is created at runtime and removed (render targets, canvas textures, geometries) has a named owner that calls `dispose()`; leak checks read `renderer.info.memory` after repeated use. Scene objects are built once and toggled (`docs/architecture.md`, Lifetime).
 - No synchronous GL reads (`readPixels`, queries) in the frame loop, except under `?perf=sync` and the one-off GLOBUS stills.
+- No drawing-buffer resize while a song plays: `setPixelRatio`/`setSize` reallocates the framebuffer (S10, 3.4 Mpx with MSAA: 58-81 ms task, 84-117 ms frame). Growing it in two steps was worse, and keeping the big buffer for the whole song cost ~114 MiB of GPU memory and more long frames; a new shot fits the canvas play already has. (The Bou's banknote close-up was the one exception, removed on 2026-11-16.) Outside play too, a WebGL canvas whose box changes size gets a new buffer (Pop's splash tap: `renderer.setSize` stalled a frame 75-146 ms); stretch the buffer instead (hero.js `fit`, same aspect). `tests/render/prod-play.mjs` guards it.
+- No SVG→canvas→`toBlob` rasterising at boot: the selector's town arms cost ~1 s of the S10's longest boot task until they became build-time PNGs (`npm run build:escuts`, 2.0 → 1.1 s). Rasterise at build time and load images.
 - Real-device checks play a full song, not a short burst, and report device, thermal state, refresh rate and the `?perf` summary.
 - No WebGPU, `BatchedMesh` or KTX2 without a measured need; list the `onBeforeCompile` / `ShaderMaterial` patches that would have to be rewritten first.
 
-## DOM blocking costs (measured lessons)
+## DOM blocking costs
 
-The page's own DOM, not the 3D, made the selector «choke» on phones (2026-11-03, Galaxy S10 Chrome 156, DPR 3.5,
-medium quality). Chrome rasterizes the DOM on the same GPU thread as WebGL, so a slow DOM frame or raster stalls the
-dance behind it. Each was found by A/B on the device (hide or drop one thing, measure again), not by reading code;
-the method and its tools: `docs/agents/device-profiling.md`.
-
-- **Size containers on repeated items.** `container-type: size` (for `cqw`/`cqh`) on the 50 card portraits made every
-  document-wide restyle lay each container out on its own: `showModal()` of any sheet took ~300 ms (the stats notice at
-  entry: 440 ms, 357 ms of layout), and a figure change and the UI hiding into the idle dance paid it too. Fixed by measuring
-  the box once (`ResizeObserver` → `--por-w`/`--por-h`, select-layout.js) and plain `contain`: sheets ~45 ms (all these: the
-  synchronous `showModal()` plus its forced layout, `tools/qa/device/android-cost.mjs`). A container
-  query only on single elements, never on a list.
-- **`:has()` over toggled state.** `#feedback-menu:has(.x:not([hidden]))` (18 rules) re-ran on every `[hidden]` toggle
-  anywhere in the page, the sheet shut: ~55 ms of style on each figure change. The owner sets an attribute instead
-  (`data-choose`, `data-choices`, `data-entity`); figure change 122 → 65 ms (→ 36 ms with the containers gone).
-- **Inline SVG on a screen's first paint.** The 33 town arms (832 SVG nodes) cost ~300 ms of GPU raster when the
-  selector first showed; drawn once to bitmaps (`escutBitmaps`, escuts.js): 750 → 475 ms. The same arms as an SVG `<img>`
-  saved nothing, and the card portraits as PNGs did not change the sheet cost: the format is not the cause until measured.
-- **A layer's raster mode flips (MSAA).** Chrome rasters a layer with MSAA when it has ≥ 6 slow paths and no
-  non-antialiased paint; the card strip's only non-AA paint is the pending cards' dashed edge (`.sel-card.aviat::after`).
-  Those cards are `content-visibility: auto`, so on the frame the idle screen's `content-visibility: hidden` went they were
-  not painted yet, the strip flipped to MSAA and Skia built ~50 GPU programs in one flush: up to 0.4 s (52 builds, 17 real
-  compiles, 413 ms) the first wake after a Chrome install or update; later wakes and later sessions hit the driver's
-  persisted cache. Fixed by showing the UI two frames after `data-reel-gone` drops (`reelWakeHold`, ui/reel-idle.js):
-  51-52 builds → 0-1 (2026-11-13, S10 Chrome 157). Anything that hides the strip and shows it again, or a scroll that
-  leaves no dashed card near the viewport, can flip it the same way. Found by Fable 5.2's traces (Skia op tracing).
-- **What did not matter here**, so do not «fix» it without numbers: network requests (a guest's are two small RPCs; a
-  `fetch` never blocks), the idle dissolve's WebGL→2D copy on Android, steady-state CSS animations (no repaint measured).
-- **The same, only on small phones.** Short phones (375×667, 320×568: iPhone SE/8) made each of the 84 cards a size
-  container for the squat layout: every sheet opening ~500 ms there (S10 emulating 375×667: notice 537, board 538,
-  profile 497 ms). A `ResizeObserver` on one card sets `data-squat` on the strip instead: 28 / 53 / 46 ms. Measure at
-  the small viewports too: a media query can hide a cost from the phone you hold.
-- Audited and left (S10, 2026-11-03): the remaining 62 `:has()` together cost ~10-15 ms a sheet opening; the board opens
-  in ~50 ms (757 SVG nodes, no raster cost found); the seasons sheet's first raster varied 0-258 ms with or without its
-  SVGs (noise, no owner found).
-- **Invisible UI is not free.** The idle reel faded the selector and its corner buttons to `opacity: 0`; on an iPhone in
-  Low Power Mode Safari kept compositing those layers (and the CSS animations inside them) under the dance: 96/42 ms frames
-  for seconds, 12-32% of the frames over 80 ms, with the JavaScript at 8-10 ms. A/B on the phone, 30 s each: the UI left
-  visible 0%, `display: none` 0-0.5%, `visibility: hidden` 17-27% (no help), `content-visibility: hidden` 0%. Fixed with
-  `data-reel-gone` once the fade is over (`ui/reel-idle.js`, `select-sizes.css`: `content-visibility: hidden`, and
-  `contain-intrinsic-size: auto none` so the boxes keep their size and the selector's observers see no change).
-- **A WebGL canvas that changes size makes a new buffer.** Mulassa Pop's splash tap shrank the home's live figures
-  (`--k` and another box): `renderer.setSize` stalled that frame 75-146 ms on the S10 (the GPU making the buffer, WebGL
-  waiting on it), just as the title glided (2026-11-10). The splash now stretches the home's buffer (hero.js `fit`, same
-  aspect); the tap takes no task over 50 ms. A box that only scales keeps its buffer; `tests/render/prod-play.mjs` guards it.
-- **Low Power Mode is a cadence, not overload.** An iPhone's Safari alternated 30 and 24 Hz (41.7 ms frames, five
-  refreshes of its 120 Hz screen) with the CPU at ~10 ms; the quality monitor read 24 Hz as overload and fell from medium
-  to minimal mid-song. `render-quality.js` CAP now covers 24 Hz, a frame one refresh late keeps the run, and a capped frame
-  is slow only past 1.4× the cap's own interval; frames a refresh late count as slow once they are over 30% of a window
-  (a busy 120 Hz GPU alternating 41.7/50 ms is overload, not a cap: found by review; `tests/render/low-power.mjs`).
-- Ruled out on the way, by measurement: the idle reel's dissolve (frames after a cut were no slower), any one camera shot,
-  the WebGL→2D copy, the heap collector (cutting the garbage 25-43% left the bursts as they were; the cut stays, guarded).
-- Still open: ~475 ms of GPU raster on the selector's first show (text, gradients and shadows at DPR 3.5), and on the
-  iPhone a 1.5-3.6 s freeze after the first frame with no JavaScript running. Keeping the loader up until frames settle was tried
-  and did not help (the warm-up outlasts any reasonable cover).
+Chrome rasterizes the page's DOM on the same GPU thread as WebGL, so a slow DOM frame or raster stalls the dance behind
+it: on phones the DOM, not the 3D, made the selector choke. Every cost below was found by A/B on the device, not by
+reading code. The cases, their dates and the reverted experiments: [reference/dom-costs.md](reference/dom-costs.md).
+How to measure: [device-profiling.md](device-profiling.md).
 
 **Never again** (`tests/build/css-costs.mjs` enforces the first two):
 
 - No `container-type` on a list's items (cards, rows, cells): a query container is laid out on its own on every
   restyle. Single elements only, listed in the test; a list's sizes come from one `ResizeObserver` as CSS variables or
-  an attribute (select-layout.js).
+  an attribute (select-layout.js). Measured: 50 portrait containers made every `showModal()` ~300 ms (440 ms for the
+  stats notice) against ~45 ms after; on short phones the 84 squat-layout containers cost ~500 ms a sheet, 28-53 after.
 - No new `:has()` without its cost measured on the device: the count is a ratchet. Never `:has()` over toggled state
-  (`[hidden]`, a class, `:checked`) on a broad subject (`body`, a sheet): the owner that toggles it sets an attribute.
+  (`[hidden]`, a class, `:checked`) on a broad subject (`body`, a sheet): the owner that toggles it sets an attribute
+  (`data-choose`, `data-choices`, `data-entity`; a figure change went 122 → 65 ms).
 - No repeated or detailed inline SVG on a screen's first paint (arms, icons in lists, big pixel art): measure its GPU
-  raster; draw it once to a bitmap when it costs. A vector in an `<img>` is not a fix by itself.
+  raster; draw it once to a bitmap when it costs, at build time (see "No SVG→canvas→`toBlob`" above). A vector in an
+  `<img>` is not a fix by itself. The 33 town arms (832 nodes) cost ~300 ms of raster on the selector's first show.
 - No garbage per frame (`tests/render/alloc-budget.mjs`, in `npm run check:gpu`, holds the splash and the idle reel to a
-  MB/s budget and fails on any material re-evaluated every frame). Found on 2026-11-03, 12.8 → 7.3 MB/s on the splash:
-  `Math.hypot(a, b, c)` in a per-vertex loop boxes its numbers every call (use `Math.sqrt(a * a + …)`); an array reused
-  every frame and emptied with `length = 0` is freed and grown again (keep a count beside it, `crowd-grid.js`); three.js's
-  one shadow depth material shared by plain, instanced and skinned casters re-evaluates its program at every switch
-  (give each kind its `customDepthMaterial`: `models/people.js`, `mula-carriers.js`). Measure with `tools/qa/alloc-profile.mjs`.
+  MB/s budget and fails on any material re-evaluated every frame; 12.8 → 7.3 MB/s on the splash). Measure with
+  `tools/qa/alloc-profile.mjs`. The three causes found:
+  - `Math.hypot(a, b, c)` in a per-vertex loop boxes its numbers every call: use `Math.sqrt(a * a + …)`.
+  - An array reused every frame and emptied with `length = 0` is freed and grown again: keep a count beside it (`crowd-grid.js`).
+  - three.js's one shadow depth material, shared by plain, instanced and skinned casters, re-evaluates its program at
+    every switch: give each kind its `customDepthMaterial` (`models/people.js`, `mula-carriers.js`).
 - No UI hidden only by `opacity: 0` or `visibility: hidden` over the 3D for longer than its fade: once faded, stop rendering
   it (`content-visibility: hidden` with `contain-intrinsic-size: auto none`, or `display: none` when nothing measures it).
-  Safari composites invisible layers every frame.
-- No heavy generation on the main thread while the page loads or the splash runs: the applause synthesised a few people
-  per timer slice was 15% of an iPhone's splash JavaScript. Build it once into a file (`tools/music/build_applause.mjs`,
-  decoded by the browser off the main thread) or move it to a Worker.
-- No fix without the before/after numbers on the device (AGENTS.md, Process): two measured «obvious» causes here
-  (the portraits as PNGs, the dissolve) changed nothing.
-- A sheet's first paint compiles Skia's Vulkan pipelines (`VulkanCreateGraphicsPipelines`, 17–39 ms each, in
-  `RendererRasterWorker` GPU tasks) for every kind of paint the page has not drawn yet: no single rule owns it, each new
-  look (a full-screen `::backdrop` dim over WebGL, a gradient fill, a blurred shadow, an animated gradient) adds some.
-  Painting a copy at 1% opacity does not warm them (another blend); painting it as it will look, not modal (`show()`,
-  so under the boot screen, not in the top layer), does. mulassa.cat does not pay it at its first ⚙ because the selector
-  already drew those paints (its own ~475 ms first raster, below). S10, 2026-11-10, Pop's first ⚙ (mulassa.cat's sheets):
-  frame 435–469 ms, GPU 188–196; without the dim (`packages/plassa/src/sheets.css`) 352 ms, GPU 123–129; painted once
-  under the boot screen, with the 3D's first frame (`settings.js` `warm`, Pop's `main.js`) 34–67 ms, GPU 9–33. The cost
-  moves to the boot screen (one more ~350 ms frame there, the boot as long as before, 3.2–3.3 s). Every later sheet: 34–67 ms.
-- A full-screen dim that is not a layer of its own is merged with what lies under it and repainted, at DPR 3.5, the first
-  time it shows: Pop's dim behind a sheet (mulassa.cat's look) cost the first ⚙ 168–201 ms whether it was the dialog's
-  `::backdrop`, a plain element, opaque or not, warmed under the boot screen or not (a colour covered by an opaque layer is
-  not drawn at all). `will-change: transform` on the dim element (`sheets.css` `.sheet-dim`) made it a solid-colour layer:
-  the first ⚙ 34–67 ms. The Bústia's confirm notice copies the publish sheet's seal and perks: that sheet is warmed too
-  (first notice 100–117 → 34–67 ms).
-- What the page cover already pays, and what it does not. Under `#loader` the game compiles the 3D's shaders (`precompile`),
-  paints the HUD canvas's big words once (`warmups`, `hud/warm.js`), waits for the fonts and for the plaça to run smooth
-  (`COVER_SMOOTH`, `main.js`), and shows the selector once (`ui/select-warm.js`, below). That covers WebGL, the 2D canvas
-  and the selector's DOM. It does not cover anything else in HTML and CSS that first paints later: a sheet, a tip, a
-  notice, a new panel. Each of those still compiles its GPU programs at its first show, right when the player is looking.
-- The selector's first show paid the same compiles (~125 programs, two ~300 ms frames right under the splash's tap): it is
-  rehearsed once under the page cover instead (`ui/select-warm.js`, `select-ui.js` `visible(on, rehearsal)`: shown inert,
-  the host told nothing, the challenge's level kept, then hidden; only when the cover lifts on the splash). S10, 2026-11-11,
-  production build, cold, three alternated runs: time lost in frames over 50 ms around the opening 637-821 ms -> 251-302,
-  its longest frame 268-385 -> 101; the cover stays ~0.6 s longer on average (0.9 s at least while it rehearses, 2.5 s at
-  most on a device that never runs smooth). Anything new the selector shows at its opening is warmed with it for free;
-  anything it shows later (a tip after 2 s, a card arriving from the network) is not.
-- A change in which elements have a layer of their own costs like a first paint. When an element gains or loses its layer
-  (an animation of `scale`, `translate` or `opacity` starting or ending, a transition's end, `visibility: hidden` on a
-  neighbour, an element appended over the panel), Chrome re-rasters the tiles around it, and the new split compiles GPU
-  programs again (13-23 at a time, 85-140 ms on the S10) although nothing new is drawn. Found on the heart's ribbon
-  («Un cor per a tu!», `ui/heart-tip.js`): 134-168 ms as it came and 134-151 ms at the end of the heart's pulse, 3.6 s
-  later. The owner was not the ribbon's drawing (flat, without its shadow or tail: the same; hidden with `display: none`:
-  the same, as a `:has()` rule on it still matched) but the rule hiding the song's row under it with
-  `visibility: hidden`. Faded with `opacity: 0` and `pointer-events: none` instead (`select-pending.css`): 17-34 ms at
-  both moments, the animations untouched. So: to take something out of sight for a moment on a screen that is on show,
-  fade it with `opacity` (and `pointer-events: none`) rather than `visibility` or `display`, and measure.
-- `will-change` is not a fix for that; measured, it moved the cost or multiplied it. `#select-heart { will-change: scale }`
-  made the ribbon's two moments cheap (50-84 ms) and brought a new 184-218 ms frame ~1 s after the opening, when the
-  standings card's skeleton-to-real crossfade ended (23 programs): 1234 ms lost in all against 1155 without it, reverted.
-  The same plus `will-change: opacity` on `#select-standings-sk` and `.sel-standings-real`: ~200 frames over 50 ms in
-  17 s (two phone-wide layers at DPR 3.5 composited every frame). A permanent layer is a per-frame cost: add one only
-  with the device's numbers, as for the full-screen dim above.
-- A compositor-only animation is free; the same look done another way is not. The new figure's card sweep
-  (`.sel-card.sel-new::before`, a band of light moved with `translate`, no blend mode, three runs and then still): the
-  S10 painted 2-4 times in 2 s while it ran (a repaint every frame would be ~120) and its frames matched the runs
-  without it. Not measured here, but they repaint every frame by construction, so measure before leaving one running:
-  `mix-blend-mode` over moving content, an animated `background-position`, an animated gradient angle (the difficulty
-  buttons' turning ring, `--sel-halo`).
-- Measured to nothing, so nobody repeats it: the «Més jocs!» tip at the selector's opening (788-921 ms lost without it,
-  770-820 with it); the ribbon's shadow, tail and gradient; the ribbon's own pop and bob animations. And opening the
-  selector on the Bou instead of the Mulassa costs the same at the opening (the Bou's later hitches were the ribbon's,
-  which only a figure with no heart from this player shows).
+  Safari composites invisible layers every frame: in Low Power Mode the faded selector left 12-32% of the idle reel's
+  frames over 80 ms; with `data-reel-gone` (`ui/reel-idle.js`, `select-sizes.css`) 0%.
+- No heavy generation on the main thread while the page loads or the splash runs: the applause synthesised per timer
+  slice was 15% of an iPhone's splash JavaScript. Build it once into a file (`tools/music/build_applause.mjs`, decoded by
+  the browser off the main thread) or move it to a Worker.
+- No fix without the before/after numbers on the device (AGENTS.md, Process): two measured "obvious" causes here (the
+  portraits as PNGs, the dissolve) changed nothing.
 
-## iPhones before iOS 18, and first draws (measured lessons)
+First paints and layer changes:
 
-Found on rented iPhones (2026-11-14, AWS Device Farm: iPhone 8 iOS 16.7.11, iPhone 13 iOS 17.6.1 and 18.5, iPhone 15 Pro
-iOS 18.1; Safari under Appium, 60 Hz, QA build) and an S10 over adb for contrast. How to run one, its plans, phases and
-traps: `docs/agents/device-profiling.md` («A rented phone»). Every number below is from those sessions.
+- A first paint compiles GPU programs (Skia's `VulkanCreateGraphicsPipelines`, 17-39 ms each, in `RendererRasterWorker`)
+  for every kind of paint the page has not drawn yet; no single rule owns it, each new look (a full-screen `::backdrop`
+  dim over WebGL, a gradient fill, a blurred shadow, an animated gradient) adds some. On the S10 these are 100-400 ms
+  frames with no long JavaScript.
+- The page cover already pays it for WebGL (`precompile`), the HUD canvas's big words (`warmups`, `hud/warm.js`), the
+  fonts, the plaça running smooth (`COVER_SMOOTH`, `main.js`) and the selector's DOM (`ui/select-warm.js`, a rehearsal
+  shown inert under the cover: opening's lost time 637-821 → 251-302 ms). Anything else in HTML and CSS that first shows
+  later (a sheet, a tip, a notice, a new panel, a selector tip after 2 s, a card from the network) pays it under the
+  player's eyes unless it is warmed.
+- To warm a sheet, paint it once as it will look, not modal (`show()`, under the boot screen, not in the top layer). A copy
+  at 1% opacity does not warm it (another blend). Pop's first ⚙: frame 435-469 → 34-67 ms (`settings.js` `warm`).
+- A full-screen dim needs a layer of its own, or it is merged with what lies under it and repainted the first time it
+  shows: `will-change: transform` on `.sheet-dim` (`packages/plassa/src/sheets.css`), 168-201 → 34-67 ms.
+- A change in which elements have a layer of their own costs like a first paint (13-23 programs, 85-140 ms on the S10),
+  although nothing new is drawn. To take something out of sight for a moment on a screen that is on show, fade it with
+  `opacity: 0` and `pointer-events: none`, not `visibility` or `display`, and measure (the heart's ribbon: 134-168 → 17-34 ms).
+- `will-change` is not a fix for that: measured, it moved the cost or multiplied it (1234 ms lost against 1155 without
+  it). A permanent layer is a per-frame cost: add one only with the device's numbers, as for the full-screen dim.
+- For anything left running, animate only `translate`, `scale` or `opacity`, without blend modes: a compositor-only sweep
+  painted 2-4 times in 2 s. `mix-blend-mode` over moving content, an animated `background-position` and an animated
+  gradient angle (`--sel-halo`) repaint every frame by construction: measure before leaving one running.
+- A paint that only some scroll positions show can switch a tile's raster mode and build every program of that tile
+  again: the pending cards' dashed edge (a dashed border on a rounded box) did it. On a phone no pending card is in
+  view when the selector opens, so the first figure change, whose scroll brings one in, built 23-29 programs in one
+  frame of 506-667 ms (S10, no shader cache); the idle wake had the same owner (51-52 builds, `reelWakeHold`,
+  ui/reel-idle.js). The edge is gone (2026-11-18, `tests/figures/common/figures.mjs` forbids a dashed card): 3 programs,
+  105-125 ms. No dashed or dotted border on a rounded box; rehearsing the change or the scroll under the page cover
+  does not build these programs.
+- Measure at the small viewports too: a media query can hide a cost from the phone you hold.
+- Measured to nothing, so do not "fix" it without numbers: network requests (a `fetch` never blocks), the idle
+  dissolve's WebGL→2D copy, steady-state CSS animations, any one camera shot, the heap collector (cutting the garbage
+  25-43% left the bursts as they were; the cut stays), the card portraits as PNGs, an SVG `<img>` for the arms, the
+  "Més jocs!" tip, the heart ribbon's own shadow, tail, gradient and animations, the Bou against the Mulassa at the
+  selector's opening, and the remaining 62 `:has()` (~10-15 ms a sheet).
+- Still open: ~475 ms of GPU raster on the selector's first show (text, gradients and shadows at DPR 3.5), and on the
+  iPhone a 1.5-3.6 s freeze after the first frame with no JavaScript running (keeping the loader up did not help).
 
-- **Safari before 18 composites HTML over the 3D badly; it is the browser, not the chip.** The same iPhone 13 held the
-  selector at 30 fps on iOS 17.6 and at 60 on iOS 18.5; an iPhone 8 (iOS 16.7) at 12; an iPhone 15 Pro (iOS 18.1) and
-  the S10 (Chrome 157, 58 fps) are fine. The 3D alone does 60 on all of them (`#select { display: none }`: 59), with
-  3-4 ms of main thread a frame: nothing shows in a JavaScript profile.
-- **Two owners on the selector.** Its endless CSS animations (iPhone 8: 12 → 44 fps without them) and the figures'
-  carousel as a whole (44 → 60 without it: illustrations +4, labels +8, the scroller +10; no single part). The first is
-  fixed: `@supports not (content-visibility: hidden)` in `styles/select-sizes.css` stops the «play» button's invite and
-  glint, the new card's sweep, the entity badge's holo fade and the free-play button's glows (41-43 fps on the iPhone 8,
-  50-52 on the iPhone 13 with iOS 17). The carousel is left as it is (the owner's call): a menu, and the song does 56.
-- **`@supports not (content-visibility: hidden)` is the test for «Safari before 18»** (the one browser family in use
-  without it). The idle screen relies on the same gap: `[data-reel-gone] { content-visibility: hidden }` did nothing
-  there and the idle dance stayed at 12 fps under the faded selector; its `display: none` fallback gives 60.
-- **One early frame put the 30 Hz cap off: the owner's iPhone 18 Pro lost quality and its crowd in Low Power Mode.**
-  The frame monitor knows the cap from 12 frames in a row at ~33 ms; any frame under 24 ms ended it, and Safari under the
-  cap gives an early frame now and then (a tap on the notes, its own jitter). One every 10 frames was enough: every 33 ms
-  frame then read as slow, two steps down at once, and in Low Power Mode there is no way back up. Now a lone early frame
-  (none in the 4 before it) neither ends the cap nor its run; closer ones do (a 60 Hz screen missing every second or third
-  refresh). The same played Bou: 30 fps at `medium`, no step (2026-11-14, `tests/render/low-power.mjs`).
-- **That rule held for one session and failed the next: a throttled browser is told by a step that buys nothing, not
-  by one more frame pattern.** The same phone, the day after, ran the Bou at 25 fps (30 and 24 Hz in turns, frames of 50-79 ms
-  between them, JavaScript 9 ms a frame) and lost two levels in 40 s; with the cap rule patched it still lost one at
-  the song's 125th second, when a late pair's catch-up (96, 71, 16, 21 ms) took the cap off. Two changes: the cap now
-  lifts only when 4 of the last 12 frames are under 24 ms (a screen back at 60 Hz), and under a cap with light JavaScript `adaptive-quality.js` takes its
-  first step down as a probe: if the late share does not fall by the overload threshold the level is put back
-  (`throttled`) and nothing more steps until the pace is fast again; the near people lag a level, so nobody leaves. A
-  first version skipped the step outright on «capped and light JavaScript»: two reviews showed a 60 Hz phone whose
-  GPU cannot keep up (33 and 50 ms frames in turns) reads exactly the same and never stepped down again. JavaScript
-  time says nothing about the GPU; only the step does. The owner's two sessions and that phone are the test
-  (`tests/render/fixtures/low-power-bou.json`, `tests/render/adaptive-quality.mjs`). On the owner's phone the probe
-  cost 6 s at `low` once (the song's 15th second), then `medium` to the end. The first try thinned the far crowd on
-  that one step and the owner saw it: the armless backdrop and mid band now lag a level with the near people
-  (`sessionProfile`), so a first step takes sharpness, shadows and effects only.
-- **In Low Power Mode it is the finger, not the HUD.** The same phone, song and server: on `?autoplay&mute` Safari
-  sat at 24 Hz (86-89% of frames at 42 ms, 1-2% late, no verdict at all); played by hand with sound it jumped between 30
-  and 24 Hz (48% at 33 ms, 36% at 42) with 12% late, the game's work the same 9-10 ms. The late frames are those
-  switches. Held notes looked worse in an earlier table (5.9% of frames over 70 ms against 2.9%) because a finger is
-  down, not for what they draw. Touch and sound were not told apart.
-- **The page cover stays up until the splash runs at the device's pace** (20 frames in a row under 45 ms, at most 6 s
-  after the first): it lifted on frames of 41-55 ms, Safari still compiling the splash's dances (the Mulassa and Drac pair:
-  30 ms of JavaScript a frame in Low Power Mode, 15 a few seconds later; the Bou alone, 9), and the monitor judged that.
-  A boot step also needs two slow 2 s windows in a row now (`render-quality.js` EARLY).
-- **A slow menu is not a slow phone.** The selector's 12 fps walked the iPhone 8 down to `minimal`, and its song (60 fps
-  at `medium`) was then played at `minimal`. Out of a song, a step down that changes nothing is undone and that menu's
-  share of late frames becomes its floor (`adaptive-quality.js`, `menuFloor`). An even 30 on iOS 17 reads as Low Power
-  (`lowPower` in `?perf`): no step down, by luck.
-- **A first draw is the GPU's work even with its program linked.** `precompile()` links every program, yet on a phone
-  that never drew them (a clean Safari; it keeps them afterwards, so a second load shows nothing) the Bou's rave was a
-  121-181 ms frame where it starts and its banknotes 199-365 ms at the bombo. Fixed by really drawing them once, unseen,
-  in the page's first frames: `bouFrame`'s warm-up (`bouRave(…, warm)` at zero light, `bouBillsWarm`: one note of no
-  size) and `renderer.initTexture` when the banknote's image arrives. After (four clean sessions): no frame over 50 ms
-  at the rave; the bombo still varies, 63 to 266 ms (not only a first draw, then: its owner is open). A new effect that first shows mid-song needs the same: hidden-but-compiled is
-  not drawn.
-- **The whole scene is drawn once at boot, under the page's cover** (`scene/precompile.js` `warmDraw`: hidden objects
-  shown, empty instanced meshes given one instance, nothing culled, then all put back). Four clean iPhone 8 sessions, two
-  with it and two without: the bombo's frame 87 and 89 ms without, none over 50 with; the frame as the splash gives way
-  487 and 494 ms without, 306 and 287 with; the cover gone by 12.4-12.6 s without, 11.7-12.7 with (no longer). A new
-  effect needs nothing more than being in the scene at boot. The Bou's own warm-up (below) is older and was in both.
-- **Where a warm-up runs matters as much as having one.** As each run's first frame it only moved the hitch to the
-  count-in (a 200 ms frame). Now in the page's first frames, once a page: on the iPhone 8 it falls with the banknote's
-  upload as the splash gives way (515 + 214 ms, where 463 + 220 already were).
-- **The selector still steps quality on an iPhone 8** (35-42 fps with the animations stopped): a 287-320 ms frame some
-  6 s in and one of 1.4 s later are those switches, not a first draw, and the song then started at `low`.
-- **JavaScript per frame still counts on a 120 Hz iPhone.** The lasers' hit test walked every triangle of the Bou per
-  beam per frame (the owner's iPhone 15 Pro hitched at the final); a grid per mesh, built one mesh a frame beforehand,
-  fixed it, and the CO2's 800 points are drawn only while a burst shows.
+## iPhones before iOS 18, and first draws
+
+Found on rented iPhones (AWS Device Farm, 2026-11-14: iPhone 8 iOS 16.7, iPhone 13 iOS 17.6 and 18.5, iPhone 15 Pro
+iOS 18.1) and on the owner's iPhone in Low Power Mode. The sessions, numbers and the frame monitor's history:
+[reference/ios-safari.md](reference/ios-safari.md). How to run a rented phone: [device-profiling.md, "A rented phone"](device-profiling.md#a-rented-phone-aws-device-farm).
+
+What holds:
+
+- Safari before 18 composites HTML over the 3D badly; it is the browser, not the chip (the same iPhone 13: 30 fps at the
+  selector on iOS 17.6, 60 on iOS 18.5). The 3D alone does 60, so nothing shows in a JavaScript profile.
+- `@supports not (content-visibility: hidden)` is the test for "Safari before 18". In that block `styles/select-sizes.css`
+  stops the selector's endless CSS animations (iPhone 8: 12 → 41-43 fps), and the idle screen falls back to
+  `display: none` (with `content-visibility` alone it stayed at 12 fps). The carousel's own cost is left as it is (the
+  owner's call).
+- Low Power Mode is a cadence, not overload: Safari alternates 30 and 24 Hz with the CPU at ~10 ms. `render-quality.js`
+  CAP covers 24 Hz, a frame one refresh late keeps the run, a capped frame is slow only past 1.4× the cap's interval,
+  frames a refresh late count as slow once over 30% of a window, a lone early frame does not end the cap, and the cap
+  lifts only when 4 of the last 12 frames are under 24 ms (`tests/render/low-power.mjs`).
+- A throttled browser is told by a step that buys nothing, not by a frame pattern: under a cap with light JavaScript,
+  `adaptive-quality.js` takes its first step down as a probe and puts the level back (`throttled`) if the late share
+  does not fall. The owner's recorded sessions are the test (`tests/render/fixtures/low-power-bou.json`,
+  `tests/render/adaptive-quality.mjs`).
+- A first step down takes sharpness, shadows and effects only: the near people, the far crowd and the mid band lag a
+  level (`sessionProfile`); people are the second step's (`PROFILE_PEOPLE`).
+- A slow menu is not a slow phone: out of a song, a step that changes nothing is undone and that menu's late share
+  becomes its floor (`menuFloor`). An even 30 fps reads as Low Power (`lowPower` in `?perf`).
+- The page cover stays up until the splash runs at the device's pace (20 frames in a row under 45 ms, at most 6 s after
+  the first), and a boot step needs two slow 2 s windows in a row (`render-quality.js` EARLY).
+- A first draw is the GPU's work even with its program linked: `precompile()` links, but a clean Safari still paid
+  121-365 ms at the Bou's rave and (then) banknotes. The whole scene is drawn once at boot under the cover (`scene/precompile.js`
+  `warmDraw`: the iPhone 8's bombo frame 87-89 ms → none over 50); the Bou also warms its rave
+  (`bouFrame`). A new effect needs nothing more than being in the scene at boot.
+- JavaScript per frame still counts on a 120 Hz iPhone: the lasers' hit test walked every triangle of the Bou per beam
+  per frame; a grid per mesh, built one mesh a frame beforehand, fixed it.
 
 What not to do:
 
@@ -262,27 +168,16 @@ What not to do:
   program's first use at once, or lands on the selector.
 - Do not answer a Low Power complaint with one more frame pattern in `frameMonitor`, nor call it fixed after one good
   session: replay the owner's recorded sessions (`tests/render/fixtures/low-power-bou.json`) and add the one that fails.
+- Do not probe a second level under a cap: a step mid-song compiles programs, and the owner's iPhone in Low Power Mode
+  froze 1.5 s stepping from low to minimal for nothing (2026-11-16, reverted; its session is the fixture's third).
 - Do not let one odd frame decide a cadence: a cap, a group or a hitch is read from a run of frames, never from the last one.
 - Do not start judging frames while the page is still warming up (compiling its JavaScript, first draws): keep it under
   the cover, and give the monitor frames at the device's own pace.
 - Do not take Device Farm for the owner's phone: no 120 Hz, no Low Power Mode, no thermal state, no finger, no audio.
 
-A whole Bou song after all this (autoplay, muted): iPhone 15 Pro (iOS 18.1) 59.6 fps at `medium`, one frame over 50 ms
-(55, at 53.3 s); iPhone 8 (iOS 16.7) 59.5 fps at `low`, 70 ms at 53.3 s, 266 at the bombo, 102 at the end. An iPhone 7 on
-iOS 15.8.4 boots and reaches the selector.
-
-The first frames of every song (left as they are, the owner's call, 2026-11-14): 2-3 frames of 50-84 ms in a song's first
-quarter second on the S10 (three starts in one session, twice: not a first-time cost; 87-144 ms on the iPhones), 3 s
-before its first note and inside the change of screen. The first is one main-thread task (65 ms on the S10): the
-selector's ~450 elements restyled as it hides (24-31 ms: `hidden` and `inert` each walk its subtree), the run's start
-(17 ms), paint and layout; the others are its 0.2 s fade and its `display: none` landing. Not the game's JavaScript, not
-a first draw (the boot's warm-up does nothing for it). Measured to nothing: reading the strips' scroll before the
-writes; the corner row's custom properties moved off `body` (587 -> 451 elements restyled, 2 ms); the `:has()` rules
-deleted (only the three corner buttons' 6 ms at 4x). The cost is the selector's size, not one rule: a smaller selector
-DOM is the lever. On the S10 the day's boot changes cost nothing: the cover gone by 5.3 s before and 5.7 after (4 cold
-starts each, 4.3-6.4 s), the opening's lost time 218-385 ms before, 151-285 after.
-
-Still open: why iOS 17 enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; quality steps taken on a slow selector (their hitches, and the level the song then starts at).
+Left as they are (the owner's call, 2026-11-14): the 2-3 frames of 50-84 ms in every song's first quarter second on the
+S10 (the selector's ~450 elements restyled as it hides; a smaller selector DOM is the lever). Still open: why iOS 17
+enters the selector at an even 30 fps; the carousel's cost on iOS 16-17; quality steps taken on a slow selector.
 
 ## GPU context loss (mobile GPUs)
 
@@ -311,7 +206,6 @@ comes back blank, with its default state (identity transform, default font), and
   three times: 40-53 fps with 30-50 late frames every 3 s before, a steady 29.9 with 0-1 after, the profile kept. Mind a
   laptop's frequency scaling when reading JS ms: a 2015 MacBook Pro holding 60 fps read 7.6 ms at `high` and 13.5 at
   `medium`, the CPU clocked down to what the frame needs; only missed frames and profile changes say it is struggling.
-- A held close-up keeps the profile's pixels on a device that stepped quality down this session (`hud/canvas.js`).
 - A lost context that never comes back shows the reload card after 5 s on screen (`src/ui/pause-actions.js`). Its text
   asks to close the browser and reopen it, since Chrome can block WebGL for the site until it restarts; its retry
   button stays, as a reload may still work elsewhere; a

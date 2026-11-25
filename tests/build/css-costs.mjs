@@ -25,6 +25,6 @@ const has = (css.match(/:has\(/g) ?? []).length;
 assert(has <= HAS, `${has} :has() selectors (was ${HAS}): measure the new one's cost on the device first (docs/agents/graphics.md), or set the owner's own attribute instead`);
 assert(!/:has\([^)]*:not\(\[hidden\]\)\)[^{]*\{/.test(read('src/styles/feedback.css').replace(/\/\*[^]*?\*\//g, '')), 'the feedback sheet reads its own flags, not :has() over [hidden]');
 
-// The selector's town arms are drawn once to bitmaps (escutBitmaps): 33 inline vectors cost ~300 ms of first GPU raster.
-assert.match(read('src/ui/select-ui.js'), /escutBitmaps\(towns, win\)/, 'the pills\' arms become bitmaps before the selector first shows');
+// The selector's town arms are PNGs made at build time (escutImg): 33 inline vectors cost ~300 ms of first GPU raster, and drawing them at boot ~0.8 s of readback.
+assert.match(read('src/ui/select-strip.js'), /escutImg\(t\.id\)/, 'the pills\' arms are images from the start, never rastered at boot');
 console.log(`css costs: query containers on single elements only, ${has} :has() (ratchet ${HAS}), arms as bitmaps ok`);

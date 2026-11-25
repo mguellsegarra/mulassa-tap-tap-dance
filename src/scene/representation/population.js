@@ -20,7 +20,8 @@ function hairFor(age, gender, beard, random) {
   const grey = age === 'gran' ? random() < 0.75 : age === 'adult' && random() < 0.08;
   return { style, colour: pick(grey ? GREY : [...DARK, ...DARK, '#a0522d', ...BLOND, ...(woman ? BLOND : [])]) };
 }
-export const REVIEW_LOOKS =['p04', 'p05', 'p08', 'p02', 'p09', 'p12', 'p06', 'p10'];
+// p08 (red dress, long white hair) out: placed by the play shot, she ran in the Bou's conga across the middle (the owner, 18/11/2026)
+export const REVIEW_LOOKS = ['p04', 'p05', 'p02', 'p09', 'p12', 'p06', 'p10'];
 export function populationRandom(seed) {
   let s = seed >>> 0;
   return () => { s = (s + 0x6d2b79f5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };

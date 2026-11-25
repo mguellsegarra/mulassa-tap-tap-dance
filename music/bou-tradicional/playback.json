@@ -22,7 +22,7 @@
   "kickBandGainDb": 10.521685542879037,
   "decodedPeak": 0.788970947265625,
   "agentListeningVerified": false,
-  "physicalPhoneVerified": false,
-  "userListeningAccepted": false,
-  "activation": "Requested by the owner; physical-phone listening pending"
+  "physicalPhoneVerified": true,
+  "userListeningAccepted": true,
+  "activation": "Requested by the owner; accepted by the owner after listening on a phone (2026-11-15, release/1.4.0 production build)"
 }

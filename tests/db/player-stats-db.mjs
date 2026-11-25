@@ -7,7 +7,7 @@ import { VERSION_RULES } from '../../src/services/leaderboard-rules.js';
 globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
 const { newStats, endRun, payload } = await import('../../src/game/stats.js');
 const { makeDanceChart } = await import('../../src/game/chart.js');
-const songs = { 'mulassa-valls': JSON.parse(readFileSync(new URL('../../src/song-mulassa.json', import.meta.url))), 'drac-valls': JSON.parse(readFileSync(new URL('../../src/song-drac.json', import.meta.url))) };
+const songs = { 'bou-tradicional-valls': JSON.parse(readFileSync(new URL('../../src/song-bou.json', import.meta.url))), 'mulassa-valls': JSON.parse(readFileSync(new URL('../../src/song-mulassa.json', import.meta.url))), 'drac-valls': JSON.parse(readFileSync(new URL('../../src/song-drac.json', import.meta.url))) };
 const {db,q,as,player,migrate,uid,unlock} = await fixture();
 const bucket='mulassa-valls/mulassa-v3/2', other='drac-valls/drac-v1/0';
 const complete={runs:1,completed:1,collapsed:0,seconds:88,perfect:232,good:0,miss:8,
@@ -24,7 +24,7 @@ try {
   await migrate();
   // The game has been out a month: a first import's time budget starts at the first season's day (merge_stats).
   await db.exec("update leaderboard_private.seasons set starts_at='2026-09-21 00:00 Europe/Madrid' where id=1");
-  // The REAL client payload (stats.js) of full completed runs of both actual songs, at their real length (flow.js caps a run at
+  // The REAL client payload (stats.js) of full completed runs of all actual songs, at their real length (flow.js caps a run at
   // song.end), on every level, must be accepted: 109.889 s once rounded to 110 and the server refused every upload after it.
   {
     const rules=await q("select figure_id,version,difficulty,judgments,max_score,guapa_count,balloon_count,hold_count from leaderboard_private.versions where duration_seconds is not null order by 1,2,3");

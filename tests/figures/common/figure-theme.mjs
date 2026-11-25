@@ -89,7 +89,7 @@ const mulassa = () => {
   assert.equal(T.figTheme.drac, false);
   assert.deepEqual(T.figTheme.chant, [['GUAPA,', 0, 0.8], ['GUAPA…', 0.8, 0.8], ['I GUAPA!', 1.8, 1.6]]);
   assert.equal(T.figTheme.colors.gua, '#ff7a1a'); assert.equal(T.figTheme.colors.pa, '#14b8a6');
-  assert(!classes.has('fig-drac') && props.size === 0, 'no overrides on the page');
+  assert(classes.size === 0 && props.size === 0, 'no overrides on the page');
 };
 mulassa();
 
@@ -108,6 +108,9 @@ const lum = hex => { const [r, g, b] = hex.match(/\w\w/g).map(n => { const c = p
 assert(lum(T.figTheme.colors.gua) > 2.5 * lum(T.figTheme.colors.pa), 'CRE and MA differ in lightness, not only hue');
 
 assert(setFigureSong(BOU));
+assert.deepEqual([...classes], ['fig-bou'], 'switching removes the previous scoped class');
+assert.equal(props.get('--gua'), '#f0d58a');
+assert.equal(props.get('--pa'), '#7a1f3d');
 assert(face.innerHTML.includes('#8f4124') && !face.innerHTML.includes('#c0283c'), 'the help shows the Bou’s portrait, not the Mulassa’s');
 assert(/^<g transform="scale\(0\.66/.test(face.innerHTML), 'its 18×13 pixels shrink into the 12×10 box, as the HUD draws it');
 assert(setFigureSong(MULASSA));
@@ -115,8 +118,8 @@ mulassa();
 assert.equal(face.innerHTML, '<path fill="#c0283c"/>', 'and back to the Mulassa’s');
 assert.equal(word.textContent, 'GUA'); assert.equal(padWord.dataset.w, 'PA'); assert.equal(legend.textContent, 'GUAPA!');
 assert.equal(aria.attrs['aria-label'], 'GUA, esquerra'); assert.equal(anim.textContent, 'Cada error desanima la plaça: si es buida, la Mulassa cau!');
-// the Bou: BRA | MA | BRAMA!, and a chant on the others' rhythm, rising to its rhyme
-assert.deepEqual(T.figThemes.bou.chant, [['BOU!', 0, 0.8], ['QUE TOT…', 0.8, 0.8], ['HO MOU!', 1.8, 1.6]]);
+// the Bou: BRA | MA | BRAMA!, and its colla's one long BOOOUUUUU!, a letter every 0.12 s
+assert.deepEqual(T.figThemes.bou.chant, [['BOOOUUUUU!', 0, 3.4, 0.12]]);
 assert.deepEqual(['input.left', 'input.right', 'hit.both'].map(k => trf(k, 'bou')), ['BRA', 'MA', 'BRAMA!']);
 assert(lum(T.figThemes.bou.colors.gua) > 2.5 * lum(T.figThemes.bou.colors.pa), 'BRA and MA differ in lightness, not only hue');
 console.log('figure-theme ok');

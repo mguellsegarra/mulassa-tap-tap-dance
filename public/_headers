@@ -17,6 +17,9 @@ https://beta.mulassa.cat/*
   Cache-Control: public, max-age=31536000, immutable
 /music/*
   Cache-Control: public, max-age=31536000, immutable
+# the town arms' hash is in the name (tools/ui/build-escuts.mjs): a new drawing is a new file
+/escuts/*
+  Cache-Control: public, max-age=31536000, immutable
 
 # The page itself always revalidates, so a deploy reaches everyone at once.
 /

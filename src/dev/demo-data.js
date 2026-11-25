@@ -14,8 +14,10 @@ export { DEMO_SELF } from './mock-leaderboard.js'; // the signed-in demo account
 export const PREVIOUS_VERSION = 'mulassa-v2b'; // the dance mulassa-v3 replaced mid-Tardor, world 'later' only
 const DAY = 864e5;
 // song length and GUAPA count per version (202610200003_player_stats.sql); the statistics checks need them
-export const STAT_RULES = Object.freeze({ 'mulassa-v3': { seconds: 90.1, guapa: [11, 11, 11] }, [DRAC_SCORE_VERSION]: { seconds: 109.889, guapa: [12, 12, 16] },
-  [BOU_SCORE_VERSION]: { seconds: 149.9347, guapa: [9, 9, 9] } }); // the Bou: no server version yet, song-bou.json's end and its charts' GUAPAs
+export const STAT_RULES = Object.freeze({
+  'mulassa-v3': { seconds: 90.1, guapa: [11, 11, 11], balloons: 2, holds: [0, 5, 5] },
+  [DRAC_SCORE_VERSION]: { seconds: 109.889, guapa: [12, 12, 16], balloons: 2, holds: [0, 1, 1] },
+  [BOU_SCORE_VERSION]: { seconds: 140.8759, guapa: [12, 12, 12], balloons: 1, holds: [16, 27, 27] } });
 export const family = version => (version === 'mulassa-v1' || version === SHORT_SCORE_VERSION ? SHORT_SCORE_VERSION : version);
 export const figureOf = version => VERSION_RULES[version]?.figureId ?? 'mulassa-valls'; // v2-short and PREVIOUS_VERSION: the Mulassa
 export const aliasKey = a => fold(a).replace(/[^a-z0-9]/g, '');
@@ -74,7 +76,7 @@ export function makeBucket(version, best, skill, r) {
   const errors = { early: Math.floor(hardMiss * 0.2) + Math.floor(good * 0.5), late: Math.floor(good * 0.5), silent: Math.floor(hardMiss * 0.5), both: Math.floor(hardMiss * 0.1), hold: Math.floor(hardMiss * 0.1), move: Math.floor(hardMiss * 0.1) };
   const guapaTotal = Math.floor((completed + collapsed) * stat.guapa[best.difficulty] * (0.7 + 0.3 * r())); // a GUAPA missed is an ERROR (below)
   return { runs, completed, collapsed, seconds: Math.floor(runs * stat.seconds * (0.55 + 0.4 * r())), perfect: judged - hardMiss - good, good, miss: hardMiss, errors,
-    guapa: Math.max(guapaTotal - hardMiss, Math.floor(guapaTotal * (0.3 + 0.6 * skill))), guapaTotal, balloons: Math.floor(completed * (1 + 3 * r())), holds: best.difficulty === 0 ? 0 : Math.floor(completed * (2 + 5 * r())),
+    guapa: Math.max(guapaTotal - hardMiss, Math.floor(guapaTotal * (0.3 + 0.6 * skill))), guapaTotal, balloons: Math.floor(completed * stat.balloons * r()), holds: Math.floor(completed * stat.holds[best.difficulty] * r()),
     bestCombo: Math.min(J, Math.max(best.max_combo, Math.round(best.max_combo * (1 + 0.15 * r())))), bestStars: best.quality >= 90 ? 3 : best.quality >= 75 ? 2 : best.quality >= 50 ? 1 : 0,
     best: { score: best.score, perfect: best.perfect, good: best.good, miss: best.miss, maxCombo: best.max_combo } };
 }
@@ -93,6 +95,7 @@ export function bucketProblem(key, c) {
   }
   const judged = (n.perfect ?? 0) + (n.good ?? 0) + (n.miss ?? 0), done = (n.completed ?? 0) + (n.collapsed ?? 0);
   return done > (n.runs ?? 0) || judged < (n.completed ?? 0) * J || judged > done * J || (n.guapa ?? 0) > (n.guapaTotal ?? 0) || (n.guapaTotal ?? 0) > done * stat.guapa[d]
+    || (n.balloons ?? 0) > done * stat.balloons || (n.holds ?? 0) > done * stat.holds[d]
     || (n.bestCombo ?? 0) > J || (n.bestStars ?? 0) > 3 || (n.seconds ?? 0) > (n.runs ?? 0) * stat.seconds ? 'invalid_stats' : null;
 }
 const better = (a, b) => !b || (a && (a.score > b.score || (a.score === b.score && 5 * a.perfect + 4 * a.good > 5 * b.perfect + 4 * b.good)));

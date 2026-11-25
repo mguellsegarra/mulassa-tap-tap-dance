@@ -40,7 +40,7 @@ export function danceBou(beat, dt, acc, pos) {
   if (BOU_LIVE.parked && !dancing && G.state === 'select') return driveBou(dt, BOU_LIVE.at, 0, 0, pos); // free play, just looking: it stays where it was driven
   if (BOU_LIVE.parked) { BOU_LIVE.parked = false; bouSteps = null; bouShown = -9; BOU_JUMP.air = BOU_JUMP.airV = 0; } // back to its dance: fresh steps next time, the tail hangs still
   bou.frame.position.y = 0; bou.frame.rotation.y = BOU_COLLA_YAW; // (the dance frame, its colla's compass, which free play turned to the plaça's)
-  if (G.state === 'splash') BOU_DANCE.t = SPLASH_LOOP[0] + clock % (SPLASH_LOOP[1] - SPLASH_LOOP[0]); // alone on the splash (scene/stage-motion.js): its lively bars on a loop, past the solemn steps and before the banknotes
+  if (G.state === 'splash') BOU_DANCE.t = SPLASH_LOOP[0] + clock % (SPLASH_LOOP[1] - SPLASH_LOOP[0]); // alone on the splash (scene/stage-motion.js): its lively bars on a loop, past the solemn steps and before the end
   else if (REEL_STILL.on) BOU_DANCE.t = STILL_LOOP[0] + clock % (STILL_LOOP[1] - STILL_LOOP[0]); // under the selector's held shot: its changes of facing, on its spot
   else if (G.practice || !dancing && G.state !== 'results') BOU_DANCE.t = 0; // the practice and the menus: its opening stance
   else if (reel || dancing && !G.collapseT && !G.paused) BOU_DANCE.t = Math.max(0, songTimeAtBeat(beat));

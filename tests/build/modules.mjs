@@ -1,7 +1,7 @@
 // The shape of src/ and of Plassa (packages/plassa/src, imported as #plassa/*): every import resolves, no module imports its way back to itself, and no file grows into a monolith again.
 // (A cycle would also change what evaluates first, and the vm-based tests would not notice.)
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync, statSync, existsSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -48,13 +48,26 @@ for (const f of files.filter(f => rel(f).startsWith('core/') && !CORE_OUT.has(re
 const reaches = (f, dir) => (deps.get(f) ?? []).map(d => rel(d)).filter(d => d.startsWith(dir));
 for (const f of files.filter(f => rel(f).startsWith('game/') && !/\/(flow|judge|tick)\.js$/.test(f)))
   assert.deepEqual(['hud/', 'scene/', 'ui/'].flatMap(dir => reaches(f, dir)), [], `${rel(f)}: game rules and state import no hud/, scene/ or ui/`);
+// the src/ files that are only `export * from '#plassa/<same name>.js'`: the one way mulassa.cat reaches Plassa so far (one copy to fix, not two)
+const THIN = new Set([
+  'platform/render-quality.js', 'ui/badge-tip.js', 'platform/boot.js', 'platform/double-tap.js',
+  'ui/focus.js', 'platform/haptics.js', 'platform/storage.js', 'services/update-rules.js',
+  'services/errors.js', 'services/sentry-load.js', 'services/update-watch.js', 'i18n/locale.js', 'platform/native.js',
+]);
+for (const n of THIN) assert.equal(
+  readFileSync(join(root, n), 'utf8').split('\n').filter(l => l && !l.startsWith('//')).join(),
+  `export * from '#plassa/${n.split('/')[1]}';`, `${n} must stay a one-line re-export of the Plassa module`,
+);
 // Plassa, the games' shared base (packages/plassa/README.md): it reaches outside itself only for src/core/;
-// mulassa.cat does not import it yet (it moves onto it later); a game never imports another game
+// mulassa.cat uses thin re-exports and the shared audio-wake contract; a game never imports another game
 for (const f of files) {
   const from = rel(f), game = from.match(/^jocs\/games\/([^/]+)\//)?.[1];
   for (const to of deps.get(f).map(d => rel(d))) {
     if (from.startsWith('plassa/')) assert(/^(plassa|core)\//.test(to), `${from} imports ${to}: Plassa imports only itself and src/core/`);
-    else if (!from.startsWith('jocs/')) assert(!/^(jocs|plassa)\//.test(to), `${from} imports ${to}: mulassa.cat does not use Plassa or the games' code yet`);
+    else if (!from.startsWith('jocs/') && !THIN.has(from)) {
+      const sharedWake = to === 'plassa/audio-wake.js' && ['platform/audio.js', 'ui/audio-resume.js'].includes(from);
+      assert(sharedWake || !/^(jocs|plassa)\//.test(to), `${from} imports ${to}: use a declared shared contract`);
+    }
     const other = to.match(/^jocs\/games\/([^/]+)\//)?.[1];
     if (game && other) assert.equal(other, game, `${from} imports ${to}: a game never imports another game`);
   }
@@ -85,4 +98,15 @@ for (const f of files) {
   const lines = readFileSync(f, 'utf8').split('\n').length, name = rel(f);
   assert(lines <= (name === 'main.js' ? MAIN_MAX : MODULE_MAX), `${name} has ${lines} lines (max ${name === 'main.js' ? MAIN_MAX : MODULE_MAX}): split it by responsibility`);
 }
+// Line length: the line cap above is met by structure, not by joining statements, so a ratchet on long lines. LONG = 200 characters
+// leaves the 427 worst lines (160 would flag 1250 and drown the signal; src/scene/cameras.js has one of 894).
+// long-lines.json is the baseline {file: count of lines over LONG}: a file may not gain long lines, a new file starts at 0; fixing
+// lines is always allowed. After fixing some, tighten it with: UPDATE_LONG_LINES=1 node tests/build/modules.mjs
+const LONG = 200, BASE_FILE = join(dirname(fileURLToPath(import.meta.url)), 'long-lines.json');
+const long = {};
+for (const f of files) { const n = readFileSync(f, 'utf8').split('\n').filter(l => l.length > LONG).length; if (n) long[rel(f)] = n; }
+const sorted = o => Object.fromEntries(Object.entries(o).sort(([a], [b]) => (a < b ? -1 : 1)));
+if (process.env.UPDATE_LONG_LINES) writeFileSync(BASE_FILE, JSON.stringify(sorted(long), null, 1) + '\n');
+const base = JSON.parse(readFileSync(BASE_FILE, 'utf8'));
+for (const [name, n] of Object.entries(long)) assert(n <= (base[name] ?? 0), `${name} has ${n} lines over ${LONG} characters (baseline ${base[name] ?? 0}): split the statement, do not join lines`);
 console.log(`module graph ok: ${files.length} files, no import cycles, main.js ${readFileSync(join(root, 'main.js'), 'utf8').split('\n').length} lines`);

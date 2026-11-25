@@ -1,5 +1,5 @@
 // The play camera (framePlayCamera): a fixed view of a slice of the world round the figure, a slow drift, the Bou's
-// festa hold (a figure's festa: crowd-effects.js); its end crane is bou-end-shot.js's. The menu camera, the orbit and the shared helpers are in cameras.js.
+// festa hold (a figure's festa: crowd-effects.js). The menu camera, the orbit and the shared helpers are in cameras.js.
 import { lookStep, resetLook } from './orbit.js';
 import { smoothDamp } from './framing.js';
 import { plaza, camFocus, FRONT, camShift, camera, CAM_AZ, CAM_EL, cameraTarget } from './stage.js';

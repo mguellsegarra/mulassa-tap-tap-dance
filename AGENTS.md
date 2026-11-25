@@ -20,28 +20,6 @@ This file holds the rules that apply to every task. Read the page for the area y
 | Music style and audio rules | `docs/agents/audio.md` |
 | Mini-games: their pages, the shared base `packages/plassa/src/` (look, keyboard, UI sound, boot) | `docs/jocs/README.md` |
 
-## T3 conversations: no automatic messages between agents
-
-The owner has explicitly disabled unsolicited cross-thread coordination to prevent dormant
-or settled chats from waking up and consuming tokens. This supersedes earlier task
-briefs or skill defaults asking agents to coordinate by messaging each other.
-
-- Do not send messages to other threads or agents, including the orchestrator, to
-  request status, reserve files, ask for a turn, acknowledge receipt, or report completion.
-  Do not relay this instruction to others by sending more messages.
-- Use read-only thread reads/listings and local diffs for context. Do not poll other
-  threads repeatedly. If concurrent edits genuinely block your work, tell the owner in your
-  own conversation and wait instead of contacting or waking another agent.
-- If another agent sends an unsolicited coordination message, do not reply through
-  a messaging tool or start further coordination. Continue only your authorized task.
-- Do not create further chats or delegate work unless the owner explicitly requests it.
-  A request to create a new chat does not authorize that chat to contact other agents.
-- Only a new explicit instruction from the owner authorizes an exception. An old task
-  brief or another agent's request is not authorization. Finish in your own thread;
-  a delegated task's completion notification needs no message to that task or to other
-  threads. It never means staying silent in your own conversation: see «Never go quiet
-  on a wait» under Process.
-
 ## Implementation quality from the first change
 
 Apply these rules during each coding iteration, before writing new behavior. Do not
@@ -71,7 +49,7 @@ plan to grow a monolith now and modularize it in a later cleanup pass.
 
 Use these Mulassa-only skills selectively. Read the entrypoint when its task applies;
 do not load or execute every audit on every edit. Paths are relative to this checkout.
-The canonical copies live in `.agents/skills/`; `.claude/skills/mulassa-*` contains
+The canonical copies live in `.agents/skills/`; `.claude/skills/` (`mulassacat-*`, `bestiari-reference-analysis`, `uipolish`) contains
 relative links to those same folders. `CLAUDE.md` is a link to this file. Codex and the
 Codex desktop app use the repository skill location; T3 agents can load these exact
 paths from this table even when a host skill picker has not refreshed. Prefer the
@@ -115,7 +93,7 @@ benchmarks and device sessions are unnecessary unless the task also changes runt
 - `npm run check` must be green before a change is finished or committed, but after the owner's visual OK when the change has a visible result (see Process); for documentation-only work, validate the affected documents and references. Once approved, run the matching tests, and the whole check once at the end.
 - Regenerate music + chart (only when the task is about music/chart):
   `uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido tools/music/build_taiko.py`
-- Never hardcode the BPM (it has changed before): the Drac changes tempo phrase by phrase (the Mulassa keeps 152 since but may not stay so), so read the local grid (`song.beats`, `beatAtTime`/`timeAtBeat`); `song.bpm` is only the opening tempo.
+- Never hardcode the BPM (it has changed before): the Drac changes tempo phrase by phrase (the Mulassa has run at 152 so far but may change), so read the local grid (`song.beats`, `beatAtTime`/`timeAtBeat`); `song.bpm` is only the opening tempo.
 - Release channels (one branch, channels by deploy): `main` is the only long-lived branch. A repository ruleset blocks
   direct pushes, force pushes and deletion on it: changes reach it only through a merged PR (from the `release/X.Y.Z`
   branch; no review required), so a `git push origin main` fails. Every merge into it deploys beta.mulassa.cat on the
@@ -139,25 +117,18 @@ Read-only issue inspection (organization `ondori`, project `mulassa-tap-tap-danc
   Chrome DevTools Protocol) before and after: the longest main-thread task and frame of the interaction, and the GPU raster
   when a screen first shows. Budget: no task or frame over 50 ms for an interaction (a tap, a sheet opening, a figure change,
   the UI hiding); a screen's first show says its total. Report the numbers with the device and state; over budget, find the
-  owner (`docs/agents/graphics.md`, «DOM blocking costs») or ask the owner before shipping it. A sheet opening once cost
-  440 ms of layout because of an unrelated CSS rule: nothing is assumed cheap. How, with the tools and the traps met:
-  `docs/agents/device-profiling.md`.
-- **First paints and layer changes cost on a phone.** Chrome compiles a GPU program for every kind of paint a page has not
-  drawn yet, and again when the set of composited layers changes: 100-400 ms frames on the S10 with no long JavaScript.
-  The page cover pays it for the 3D, the HUD's words and the selector (`ui/select-warm.js`); anything in HTML and CSS that
-  first shows later (a sheet, a tip, a notice) pays it under the player's eyes unless it is warmed. To take something out
-  of sight on a screen that is on show, fade it (`opacity: 0`, `pointer-events: none`), not `visibility` or `display`;
-  no permanent `will-change` without the device's numbers; animate only `translate`, `scale` or `opacity`, without blend
-  modes, for anything left running. Read `docs/agents/graphics.md` («DOM blocking costs») before adding one, and measure
-  it with `tools/qa/device/android-frames.mjs`. The S10 is shared: ask the owner that it is free before a run.
+  owner or ask the owner before shipping it. Nothing is assumed cheap. How, with the tools and the traps met:
+  `docs/agents/device-profiling.md`; the owners found so far: `docs/agents/graphics.md` ("DOM blocking costs").
+- **First paints and layer changes cost on a phone** (100-400 ms frames on the S10 with no long JavaScript): anything in
+  HTML and CSS that first shows after the page cover, or that gains or loses a layer, follows the rules in
+  `docs/agents/graphics.md` ("DOM blocking costs") and is measured with `tools/qa/device/android-frames.mjs`. The S10 is
+  shared: ask the owner that it is free before a run.
 - **A performance complaint: ask where, read the verdict, then measure.** First the exact flow (which screen, playing or
   watching, which phone, Low Power Mode), then the game's own `[quality]` lines with `?perf`, then the device the owner
-  holds, not a stand-in that cannot reproduce it. The traps of the last hunt (wrong owners named from one comparison, a
-  frame-monitor rule patched pattern by pattern, a rented phone that has no Low Power Mode nor finger) are in
-  `docs/agents/device-profiling.md` («A performance hunt») and what they found in `docs/agents/graphics.md` («iPhones
-  before iOS 18, and first draws»): read both before starting one.
-- Every UI change is validated with a real screenshot (at least 375×667 and 320×568, plus desktop when it applies) before it is shown to the owner; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout.
-- Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape. Viewport set for menus and sheets: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).
+  holds, not a stand-in that cannot reproduce it. Read `docs/agents/device-profiling.md` ("A performance hunt") and
+  `docs/agents/graphics.md` ("iPhones before iOS 18, and first draws") before starting one.
+- Every UI change is validated with real screenshots before it is shown to the owner; apply `.agents/skills/uipolish/SKILL.md` (a must, not optional) inside that evaluation loop (measure, look at the capture, fix, repeat). Unit tests alone never prove a layout. Viewports: at least 375×667 and 320×568, plus desktop when it applies; menus and sheets use the whole set: phones 320×568, 375×667, 393×852, 430×932; tablet 1024×768; desktop 1280×800, a wide-short window (1440×700) and a large one (1920×1080). This set overrides the matrix of any generic skill (e.g. a global `uipolish` listing 667×375, 852×393 or 768×1024).
+- Orientation (`src/ui/fullscreen.js`): phones are portrait only and tablets landscape only; the other orientation shows the rotate cover («Gira el mòbil…»), so it is never a layout to capture, measure or put in a review or PDF. The one exception is phone free play, which is landscape.
 - **Player-facing text is written by Codex.** Other agents do not write final UI copy in any language: use clearly provisional text only in proposals, and hand the owner the list of strings needed (key, screen, context, length limit) so a Codex agent writes them and their translations.
 - Small, targeted edits; keep the existing style and comment voice (short "why" comments).
 - Add a test for new logic (a new file in the right `tests/<area>/` folder, which `tests/run.mjs` finds, or `check.mjs`), after the owner's OK when the change is visible; keep `npm run check` green.

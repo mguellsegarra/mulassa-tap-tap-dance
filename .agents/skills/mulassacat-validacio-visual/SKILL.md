@@ -63,6 +63,8 @@ The owner sends screen recordings (CleanShot `.mp4`, `.gif`, phone `.MOV`, usual
 
 Give the link first: once the edit is in and before your own captures, write the LAN URL in the chat, then carry on without waiting. The owner may try it on their own while you check. Later reports repeat it.
 
+A change at one moment of a song goes with a URL that starts there: `?figura=<key>&autoplay&from=<s>` a few seconds before it (the owner, 16/11/2026: a link to the start of a song makes them play it all to reach the bit). Give the seconds and what to look at, e.g. «from=104: the colla lifts the Bou, then the laps».
+
 Before giving a URL, check that the server is running from the intended worktree and serves the change (a distinctive value in the loaded page, not only HTTP 200). Give only the LAN address (`http://<lan-ip>:<port>/?mute…`, IP from `ipconfig getifaddr en0`), never `localhost`, as a clickable link with the state parameters that reach the change, and leave that server running. If the change is in another worktree or port, say which.
 
 ## UI states and transitions

@@ -93,7 +93,7 @@ export function forgetOwner(stats, userId) {
 export function markSent(stats, owner, signature) { const o = ownerOf(stats, owner); o.sent = signature; o.imported = true; return stats; }
 
 // What the server's merge_stats receives: cumulative counters per bucket (never a single run) and the days, in a fixed order.
-// A figure with no online board (the Bou, pending or not) stays on the device: merge_stats refuses a bucket it has no
+// A figure with no online board stays on the device: merge_stats refuses a bucket it has no
 // version for, and one refused bucket would stop every other figure's statistics from being sent.
 const DEVICE_ONLY = new Set(FIGURES.filter(f => !hasBoard(f)).map(f => f.id));
 export function payload(stats, owner) {

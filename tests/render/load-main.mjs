@@ -18,7 +18,7 @@ const PROVIDED = new Set(`song-mulassa.json song-drac.json platform/polyfills.js
   figures/bou/bou-dance.js figures/bou/bou-feet.js figures/bou/bou-rig.js figures/bou/bou-motion.js figures/bou/bou.js
   figures/drac/drac-path.js figures/drac/drac-steps.js figures/drac/drac-pose.js figures/drac/drac-time.js figures/drac/drac-layout.js figures/drac/drac-rig.js figures/drac/drac-groove.js figures/drac/drac-legs.js figures/drac/drac-colla.js figures/common/colla.js figures/mulassa/mula-colla.js figures/bou/bou-colla.js
   core/mock-board.js dev/cam-edit.js dev/final-test.js i18n/load-locale.js i18n/preload.js`.split(/\s+/));
-const IMPORT = /^import .*;\n/gm, LOCAL = /^(?:import|export) (?:.* from )?'(\.[^']+)';/gm;
+const IMPORT = /^import .*;\n/gm, LOCAL = /^(?:import|export) (?:.* from )?'(\.[^']+|#plassa\/[^']+)';/gm;
 const REEXPORT = /^export (?:\*|\{([^}]*)\}) from '[^']+';.*\n/gm;
 const DECL = /^(?:async )?(?:function\*? |class |const |let |var )(\w+)/gm; // a top-level declaration starts in column 0 (the first name of a `let a, b`)
 const renames = names => (names || '').split(',').map(n => n.trim().split(/\s+as\s+/)).filter(n => n.length === 2).map(([a, b]) => `const ${b} = ${a};\n`).join('');
@@ -30,10 +30,11 @@ export function loadMainSource(entry = resolve(root, 'main.js')) {
     seen.add(file);
     const src = readFileSync(file, 'utf8');
     for (const [, spec] of src.matchAll(LOCAL)) {
-      const dep = resolve(dirname(file), spec);
+      const dep = spec.startsWith('#plassa/') ? resolve(root, '../packages/plassa/src', spec.slice(8)) : resolve(dirname(file), spec); // a thin src/ re-export of a Plassa module
       if (!PROVIDED.has(relative(root, dep))) visit(dep);
     }
-    const code = src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(REEXPORT, (_, names) => renames(names)).replace(/^export (default )?/gm, '');
+    const code = src.replace(/^import (\w+) from '(\.[^']+\.json)'(?: with \{ type: 'json' \})?;$/gm, (_, name, spec) => name === 'song' ? '' : `const ${name} = ${readFileSync(resolve(dirname(file), spec), 'utf8')};`).replace(IMPORT, '').replace(REEXPORT, (_, names) => renames(names)).replace(/^export (default )?/gm, '')
+      .replace(/import\.meta\.env/g, '({})'); // a vm script has no import.meta: a build-time env reads as empty (no DEV, no app URLs)
     for (const [, name] of code.matchAll(DECL)) { // two inlined modules sharing a name is a vm SyntaxError (or a silent overwrite) far from the cause
       if (owner.has(name) && owner.get(name) !== file) throw new Error(`top-level name "${name}" is declared by both ${relative(root, owner.get(name))} and ${relative(root, file)}: names must be unique across inlined modules`);
       owner.set(name, file);

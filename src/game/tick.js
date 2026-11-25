@@ -12,7 +12,6 @@ import { REEL, REEL_STILL } from './showreel.js';
 import { figTheme } from './figure-theme.js';
 import { autoplay, advance } from './judge.js';
 import { practiceTick, finish } from './flow.js';
-import { BOU_FINALE, bouHolds } from '../figures/bou/bou-bills.js';
 import { spawnConfetti, burst, setConfettiSettled } from '../scene/confetti.js';
 import { firework } from '../scene/fx.js';
 import { rnd } from '../scene/models.js';
@@ -46,9 +45,10 @@ export function tickGame(t, vt, beat, dt) {
     if (t >= song.end && G.next >= G.chart.length && !G.hold && !bigPending && !G.eeeh && !G.collapseT) { // the "eeeeh!": grand finale volley, for everyone
       G.eeeh = true;
       for (let i = 0; i < 6; i++) afterActive(i * 180, () => { if (G.state === 'play') firework(rnd(-10, 10), rnd(10, 15), rnd(-10, 3), 90); });
-      burst(M.pos.x, M.pos.y, 'end'); // (the Bou: its banknotes, bou-show.js)
+      burst(M.pos.x, M.pos.y, 'end');
       // the crowd's chant, in its own rhythm: "guapa, guapa... i guapa!"
-      figTheme.chant.forEach(([w, at, dur]) => afterActive(at * 1000, () => { if (G.state === 'play') headline(w, 'rainbow', 4, dur, 0.5); }));
+      // step: one letter every `step` s (the Bou's BOOOUUUUU!, hud/praise.js drawLetters)
+      figTheme.chant.forEach(([w, at, dur, step]) => afterActive(at * 1000, () => { if (G.state === 'play' && headline(w, 'rainbow', 4, dur, 0.5) && step) G.praise.step = step; }));
       setTrauma(1);
     }
     if (judgedCount(G.counts) > 1) G.shown += (G.guapo - G.shown) * Math.min(1, dt * 4); // the meter eases, it never jumps
@@ -58,7 +58,7 @@ export function tickGame(t, vt, beat, dt) {
     if (!G.collapseT) {
       advance(t);
       if (G.practice) practiceTick(t);
-      else if (BOU_FINALE.go && t >= song.end || t > song.tail + 1 && !bouHolds()) finish('end'); // (the Bou: its banknotes' close-up waits for a tap, and a tap goes on at once; the last run's tap still set on a retry's first frame, before bou-show.js clears it, ended the new run)
+      else if (t > Math.min(song.tail + 1, song.duration)) finish('end'); // the Bou's tail already holds its whole fade: no extra silent second
     } else if (clock - G.collapseT > 3.5) finish('collapse');
   } else if (G.state === 'select' && !REEL.on && !REEL_STILL.on && Math.floor(beat) !== G.lastBeat) { // demo dance on the menu (not under the selector's held shot: each figure dances there on its own)
     G.lastBeat = Math.floor(beat);

@@ -4,7 +4,6 @@ import dracSong from '../song-drac.json' with { type: 'json' };
 import bouSong from '../song-bou.json' with { type: 'json' };
 import { beatAtTime, timeAtBeat } from '../core/beat-grid.js';
 import { FIGURES, MULASSA, DRAC, BOU } from './figures.js';
-import { DRAC_SIZE, DRAC_SCALE } from '../figures/drac/drac.js';
 import { setFigureTheme } from './figure-theme.js';
 import { traitsOf } from '../figures/index.js';
 
@@ -16,13 +15,9 @@ export let song = mulassaSong;
 export let BEATS = song.beats;
 export let BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
 export let FINALE_T = song.finale;
-// Scene dimensions are independent of choreography's travel envelope.
-// cameras and the crowd's clearance were tuned around the Mulassa (4.03 m): the Drac's height over hers
-// the Bou stands ~2.2 m to the horns, but travels and turns with its two carriers: a little more room than its height
-const BOU_SCALE = 0.8;
-export const figureScale = () => selectedFigure.id === DRAC.id ? DRAC_SIZE.h * DRAC_SCALE / 4.03 : selectedFigure.id === BOU.id ? BOU_SCALE : 1;
-// the crowd's clearance to its body box (crowd.js): the Bou is low but as long as the Mulassa (3.8 m, horns to tail)
-export const figureReach = () => selectedFigure.id === BOU.id ? 0.9 : figureScale();
+// Stage framing and body clearance are figure traits, independent of choreography's travel envelope.
+export const figureScale = () => traitsOf(selectedFigure.id).sceneScale;
+export const figureReach = () => traitsOf(selectedFigure.id).sceneReach;
 export function setFigureSong(value) {
   const figure = FIGURES.find(f => f.id === (typeof value === 'string' ? value : value?.id));
   if (!figure || !FIGURE_SONGS[figure.id]) return false;

@@ -1,4 +1,2 @@
-// When the woken app may reload for a new deploy (services/update.js). Pure: tests/services/update.mjs.
-export const quietMoment = (state, doc) => ['splash', 'select'].includes(state) && !doc.querySelector('dialog[open], input:focus, textarea:focus');
-// A different build, and not one a reload was already tried for (a CDN still serving the old page must not loop).
-export const shouldReload = (deployed, own, tried) => Boolean(deployed) && deployed !== own && deployed !== tried;
+// Plassa's own module (packages/plassa/src/update-rules.js); this path stays for mulassa.cat's imports
+export * from '#plassa/update-rules.js';

@@ -24,10 +24,9 @@ import { sheets } from './ui/sheets.js';
 import { fontsReady, warmups } from './hud/sprites.js';
 import { rehearseSelect } from './ui/select-warm.js';
 import './hud/primitives.js';
-import { balloonView, balloonFx, setBalloonView } from './hud/balloon.js';
+import { balloonView, balloonFx } from './hud/balloon.js';
 import { M, act } from './scene/figure-springs.js';
 import { animStage, resetMotionImpact } from './scene/stage-motion.js';
-import { padEl } from './hud/layout.js';
 import { bubbles, bubble, at } from './hud/bubbles.js';
 import { animCrowd } from './scene/crowd.js';
 import { animFireworks, animFinaleLights } from './scene/fx.js';
@@ -39,7 +38,6 @@ import './hud/warm.js';
 import './hud/banner.js';
 import './hud/results.js';
 import { clearCameraImpact } from './scene/cameras.js';
-import { BOU_FINALE } from './figures/bou/bou-bills.js';
 import { PERF, perfSample, perfReset, qualitySample, showPerfLine } from './dev/perf.js';
 import { renderHero } from './scene/share-capture.js';
 import { precompile, warmDraw } from './scene/precompile.js';
@@ -48,17 +46,15 @@ import { finish, songWait, musicLine, startFinal, previewResults, startPractice,
 import './ui/pad.js';
 import './ui/focus.js';
 import './ui/fullscreen.js';
-import { updateControls, viewMode, viewT, hudBlank, setHudBlank, steers, setView, freeDance } from './ui/controls.js';
+import { viewMode, steers, setView, freeDance } from './ui/controls.js';
 import { debugAction } from './dev/debug.js';
-import { drawHud } from './hud/draw.js';
+import { frameHud } from './ui/frame-hud.js';
 import { watchAudio } from './ui/pause-actions.js';
-import { tickReel, REEL, setReelIdle, tickStill, REEL_STILL } from './game/showreel.js';
-import { reelIdle, REEL_IDLE_FADE_MS } from './ui/reel-idle.js';
-import { reelDissolve, reelFadeLive } from './ui/reel-fade.js';
+import { reelFadeLive } from './ui/reel-fade.js';
 import './ui/backdrop.js';
 import './ui/input.js';
 import './ui/sheets-setup.js';
-import { frameCamera, propsFor } from './ui/frame-camera.js';
+import { frameCamera, propsFor, frameShowreel } from './ui/frame-camera.js';
 import { tickGame } from './game/tick.js';
 
 window.__mulassaSetBootPhase?.('init');
@@ -85,6 +81,23 @@ if (Q.has('sizes')) import('./dev/sizes-edit.js').then(m => m.setupSizesEdit());
 if (Q.has('vp')) import('./dev/vp-label.js').then(m => m.setupVpLabel()); // ?vp: viewport, dpr, selector zoom and pointer in a corner label (src/dev/vp-label.js)
 if (Q.has('reel')) import('./dev/reel-proposal.js').then(m => m.setupReelProposal(Q.get('reel'))); // ?reel=A: a showreel proposal (tools/dev/reel-review/proposals.js)
 if (Q.has('escala')) import('./dev/escala.js').then(m => m.setupEscala(Q.get('escala'))); // ?escala=0.85: the selector's zoom set by hand (src/dev/escala.js)
+function animateFrameScene(dt, beat, vt, live, pendingSel) {
+  if (PHOTO.on && !steers()) setView(false);
+  animStage(dt, beat, live);
+  // a pending selection hides both models; photo mode shows the existing pair without changing selection
+  if (G.state === 'select' && !viewMode && pendingSel) { hideFigures(); } // (the collas with them)
+  const c0 = PERF && performance.now();
+  const menuHeard = G.state === 'play' ? null : sheets.music?.beat() ?? chip?.menuBeat?.(); // on the menus what sounds: the radio's song or the menu loop
+  animCrowd(dt, menuHeard ?? beat, vt, live); // the plaça claps on it
+  freeDance(menuHeard);
+  if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
+  animConfetti(dt);
+  animFireworks(dt);
+  dracFrame(dt, vt); // the Drac's fire, red smoke and traca; nothing for the Mulassa
+  bouFrame(dt, vt); // the Bou's disco night and carretilles
+  animFinaleLights(beat);
+
+}
 function frame(now) {
   if (window.__mulassaBootFailure) return; // an explicit retry owns recovery; no hidden game burning battery
   requestAnimationFrame(frame);
@@ -112,30 +125,16 @@ function frame(now) {
   let beat = heard > 0 ? beatAt(heard) : clock / BEAT, t = 0, vt = 0, live = 1;
 
   if (G.resuming != null && (G.state !== 'play' || songTime() >= G.resuming)) { G.resuming = null; G.paused = false; }
-  if (G.state === 'play') { t = songTime(); vt = setDrawT(chip?.t0 != null ? viewClock(heard - offsetMs / 1000, G.paused ? 0 : frameS) : t); live = Math.min(1, Math.max(0, (vt - G.go) / 0.12 + 1)); } // t: the song now (misses, autoplay); vt: at the frame's rAF time, what is drawn. Same clock, eased over the audio device's own jumps (viewClock). Still until the first note
+  if (G.state === 'play') {
+    t = songTime(); // judging reads the song; drawing eases the audio device's jumps
+    vt = setDrawT(chip?.t0 != null ? viewClock(heard - offsetMs / 1000, G.paused ? 0 : frameS) : t);
+    live = Math.min(1, Math.max(0, (vt - G.go) / 0.12 + 1));
+  }
   if (G.resuming != null) t = vt = setDrawT(G.resuming); // the 3, 2, 1 after a pause: the scene holds still at the pause point (the song clock is running back up to it)
   const pendingSel = sheets.select?.pending ?? sheets.select?.figure?.status === 'aviat';
-  const reelWide = reelIdle(now); setReelIdle(reelWide); // left untouched, its UI fades
-  const reelMay = G.state === 'select' && !viewMode && !PHOTO.on && !pendingSel && !Q.has('still'), wasReel = REEL.on, wasStill = REEL_STILL.on;
-  tickReel(reelMay && reelWide, selectedFigure.id, chip?.menuBeat?.(), dt, CALM.matches, G.state === 'play' && G.watch ? (heard > 0 ? beat : 0) : null); // her music video on the menu loop's beat, only on the idle screen; «Mira el ball» on the song's beat
-  tickStill(reelMay, selectedFigure.id); // under the selector's UI: one held shot, she dances on her spot
-  if (PERF?.mode !== 'no3d' && (wasStill && REEL.on || wasReel && REEL_STILL.on)) { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera, true, REEL_IDLE_FADE_MS); } // into the music video and back: a slow dissolve from a frozen copy
-  else if (REEL.cut && !REEL.fresh && PERF?.mode !== 'no3d') { renderScreen(); reelDissolve(renderer.domElement, W * K, HH * K, camera); } // a cut dissolves: the outgoing shot once more, still in its camera, copied to fade out over the new one; a figure change cuts (its old shot already shows the new figure: two changes)
+  const reelWide = frameShowreel(now, dt, heard, beat, pendingSel);
   beat = tickGame(t, vt, beat, dt);
-  if (PHOTO.on && !steers()) setView(false);
-  animStage(dt, beat, live);
-  // a pending selection hides both models; photo mode shows the existing pair without changing selection
-  if (G.state === 'select' && !viewMode && pendingSel) { hideFigures(); } // (the collas with them)
-  const c0 = PERF && performance.now();
-  const menuHeard = G.state === 'play' ? null : sheets.music?.beat() ?? chip?.menuBeat?.(); // on the menus what sounds: the radio's song or the menu loop
-  animCrowd(dt, menuHeard ?? beat, vt, live); // the plaça claps on it
-  freeDance(menuHeard);
-  if (PERF) PERF.crowd += performance.now() - c0; // ?perf: the crowd's own share of the js
-  animConfetti(dt);
-  animFireworks(dt);
-  dracFrame(dt, vt); // the Drac's fire, red smoke and traca; nothing for the Mulassa
-  bouFrame(dt, vt); // the Bou's disco night, carretilles and banknotes
-  animFinaleLights(beat);
+  animateFrameScene(dt, beat, vt, live, pendingSel);
 
   frameCamera(dt, now, reelWide);
   const p0 = PERF && performance.now();
@@ -144,21 +143,18 @@ function frame(now) {
   const p1 = PERF && performance.now();
   if (PERF) { const ri = renderer.info.render; PERF.calls = ri.calls; PERF.tris = ri.triangles; } // the plaza pass only: the balloon overlay's render() resets renderer.info
 
-  updateControls();
-  const padVis = G.state === 'play' && !G.paused && !G.collapseT && !G.watch && BOU_FINALE.endT < 0 ? 'visible' : 'hidden'; // (the Bou's close-up: a tap anywhere)
-  if (padEl.style.visibility !== padVis) padEl.style.visibility = padVis;
-  const hudOff = viewMode && now - viewT >= (CALM.matches ? 0 : 200); // «mode foto», faded out: cleared once, then no HUD work at all
-  setBalloonView(null);
-  if (!hudOff || !hudBlank) H.clearRect(0, 0, W, HH);
-  setHudBlank(hudOff);
-  if (!hudOff && !Q.has('view') && PERF?.mode !== 'nohud') try { drawHud(vt); } catch (err) { // a drawing bug must never leave the HUD clipped or transformed: log it, reset the canvas state
-    if (err.message !== hudError) { hudError = err.message; console.error(err); errors.capture(err, { where: 'hud' }); }
-    resize();
-  }
+  frameHud(now, vt);
   const o0 = PERF && performance.now();
-  if (balloonFx && balloonFx.update(dt, balloonView, W, HH, clock) && PERF?.mode !== 'no3d') try { balloonFx.render(renderer, K); } catch (err) { console.error(err); } // over the plaza, under the HUD canvas
+  // Over the plaza, under the HUD canvas.
+  if (balloonFx && balloonFx.update(dt, balloonView, W, HH, clock) && PERF?.mode !== 'no3d') try { balloonFx.render(renderer, K); } catch (err) { console.error(err); }
   if (PERF) PERF.ovNow = performance.now() - o0; // (perfSample adds it up)
   if (songWait) loader.status(musicLine());
+  advanceFrameCover(now, frameS);
+  qualityCost = performance.now() - f0;
+  if (PERF) perfSample(f0, p0, p1, now);
+  if (PERF?.line) showPerfLine(); // on screen too: a tablet has no console
+}
+function advanceFrameCover(now, frameS) {
   if (!drawn) { // the first frame is on screen: lift the page cover, then start on the audio (outside the first paint)
     drawn = true;
     window.__mulassaSetBootPhase?.('ready');
@@ -177,12 +173,14 @@ function frame(now) {
   // an iPhone 18 Pro in Low Power Mode lifted it on frames of 41-55 ms, with Safari still compiling the dances (30 ms of
   // JavaScript a frame, 15 a few seconds later), and its quality monitor took that for overload (14/11/2026)
   if (coverUp) coverSmooth = frameS < 0.045 ? coverSmooth + 1 : 0;
-  if (coverUp && fontsIn && rehearseSelect(now, coverSmooth >= COVER_SMOOTH, G.state === 'splash') && (!warmups.length || now - (coverAt ??= now) > COVER_WARM) && (coverSmooth >= COVER_SMOOTH || now - (coverAt ??= now) > COVER_SMOOTH_MAX)) { coverUp = false; loader.ready(); loadMark('cover'); if (STARS >= 0) previewResults(STARS); } // ?stars: only once the page cover is gone, or the animation plays unseen
-  qualityCost = performance.now() - f0;
-  if (PERF) perfSample(f0, p0, p1, now);
-  if (PERF?.line) showPerfLine(); // on screen too: a tablet has no console
+  if (coverUp && fontsIn && rehearseSelect(now, coverSmooth >= COVER_SMOOTH, G.state === 'splash') &&
+      (!warmups.length || now - (coverAt ??= now) > COVER_WARM) &&
+      (coverSmooth >= COVER_SMOOTH || now - (coverAt ??= now) > COVER_SMOOTH_MAX)) {
+    coverUp = false; loader.ready(); loadMark('cover');
+    if (STARS >= 0) previewResults(STARS); // only once the cover is gone
+  }
 }
-let hudError = '', drawn = false, fontsIn = false, coverUp = true, coverAt = null, COVER_WARM = 1500, coverSmooth = 0;
+let drawn = false, fontsIn = false, coverUp = true, coverAt = null, COVER_WARM = 1500, coverSmooth = 0;
 const COVER_SMOOTH = 20, COVER_SMOOTH_MAX = 6000;
 // ?perf also logs the load: [load] <stage> <ms since navigation>.
 function loadMark(stage) { if (PERF) console.log('[load]', stage, Math.round(performance.now())); }
@@ -192,7 +190,12 @@ requestAnimationFrame(() => setTimeout(() => { // one paint first: that line sho
   if (window.__mulassaBootFailure) return;
   startAudio(); // the song downloads and decodes (off the main thread) while the shaders compile, all under the cover
   window.__mulassaSetBootPhase?.('shaders');
-  Promise.all([prepareFigureScenes(), waitForWarmup(() => localPeopleReady.then(() => precompile(true)).then(() => linkPrograms(renderer.info.programs)).then(() => { if (loader.covering) warmDraw(); }))]).then(([, result]) => {
+  // (under the cover the wait goes on while programs keep compiling or linking, up to 8 s: boot.js waitForWarmup)
+  let warmSteps = 0;
+  const warmProgress = () => warmSteps + (renderer.info.programs ?? []).reduce((n, p) => n + (p.isReady() ? 1 : 0), 0);
+  const warmup = () => localPeopleReady.then(() => { warmSteps++; return precompile(true); })
+    .then(() => { warmSteps++; return linkPrograms(renderer.info.programs, { onSlice: () => warmSteps++ }); }).then(() => { if (loader.covering) warmDraw(); });
+  Promise.all([prepareFigureScenes(), waitForWarmup(warmup, { progress: warmProgress, cap: 8000 })]).then(([, result]) => {
     if (window.__mulassaBootFailure) return;
     window.__mulassaSetBootPhase?.('frame');
     loadMark(result === 'ready' ? 'shaders' : 'shaders fallback');

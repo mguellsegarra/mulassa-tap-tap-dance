@@ -29,20 +29,49 @@ jobs:
       - name: Check whether the public build changed
         id: scope
         env:
-          DEPLOY_EVENT_NAME: ${{ github.event_name }}
+          DEPLOY_EVENT_NAME: ${{ github.ref_type == 'tag' && 'workflow_dispatch' || github.event_name }}
           DEPLOY_BASE_SHA: ${{ github.event.before }}
         run: node tools/deploy/pages-deploy-needed.mjs
 
-  migrate:
-    uses: ./.github/workflows/supabase-migrations.yml
+  validate:
     needs: changes
     if: needs.changes.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
+    env:
+      CHANNEL: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      # Reject a wrong release tag or beta target before any backend mutation.
+      - name: Check the channel
+        run: |
+          if [ "$CHANNEL" = beta ]; then
+            case "$VITE_SUPABASE_URL" in ''|*oajlkitufibpfvhgtqwr*) echo "beta needs the test Supabase (environment beta)"; exit 1;; esac
+          else
+            test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")" || { echo "tag $GITHUB_REF_NAME does not match package.json"; exit 1; }
+          fi
+
+  migrate:
+    uses: ./.github/workflows/supabase-migrations.yml
+    needs: validate
     with:
       environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
     secrets:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-  deploy:
+  functions:
     needs: migrate
+    uses: ./.github/workflows/supabase-functions.yml
+    with:
+      environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
+    secrets:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+  deploy:
+    needs: functions
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: ${{ github.ref_type == 'tag' && 'production' || 'beta' }}
@@ -68,14 +97,6 @@ jobs:
           node-version-file: .node-version
           cache: npm
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3; npm run check's Python tests run through uv
-      # beta must never build against the real leaderboard, and a tag must name the version it ships
-      - name: Check the channel
-        run: |
-          if [ "$CHANNEL" = beta ]; then
-            case "$VITE_SUPABASE_URL" in ''|*oajlkitufibpfvhgtqwr*) echo "beta needs the test Supabase (environment beta)"; exit 1;; esac
-          else
-            test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")" || { echo "tag $GITHUB_REF_NAME does not match package.json"; exit 1; }
-          fi
       - run: npm ci
       # checks + vite build + the Pages allowlist artifact in dist/
       - run: npm run build:pages

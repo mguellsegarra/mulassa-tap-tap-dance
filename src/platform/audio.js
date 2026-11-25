@@ -6,6 +6,7 @@ import { latency, RAW, audioClock } from './audio-clock.js';
 import { AudioFailure, audioFailureTags, readAll } from './audio-load.js';
 import { VOICES } from './audio-voices.js';
 import { RADIO } from './audio-radio.js';
+import { resumeAudioContext, wakeAudioContext } from '#plassa/audio-wake.js';
 import { AUDIO_SESSION } from './audio-session.js';
 export const muted = () => Q.has('mute');
 
@@ -87,28 +88,16 @@ export class Chip {
     const g = this.master.gain, t = this.ctx.currentTime;
     g.cancelScheduledValues(t); g.setTargetAtTime(1, t, 0.01);
   }
-  resume() {
-    this.session(); // back from a hidden page's 'auto'
-    if (this.silentMenu()) return Promise.resolve(false);
-    this.unhush();
-    // refused without a tap is iOS's rule after another app, not a failure: only a refusal inside a tap is reported
-    const tapped = navigator.userActivation?.isActive;
-    const failed = e => { if (tapped) errors.report('audio-resume-failed', { ...audioFailureTags(e), audioState: this.ctx.state }); return false; };
-    try { return Promise.resolve(this.ctx.resume?.()).then(() => this.running, failed); } catch (e) { return Promise.resolve(failed(e)); }
-  } // a rejected wake stays paused; the next real gesture can resume the same transport
-
-  wake() { // iOS: resume + a silent sample inside a real gesture
-    this.session();
-    if (this.silentMenu()) return;
-    if (document.hidden || !document.hasFocus() || navigator.userActivation?.isActive === false) return; // a modifier key, Cmd+R…: no gesture, the browser would refuse (and warn)
-    if (this.ctx.state !== 'running') this.resume(); else this.unhush(); // a hidden page's timer may never have suspended it
-    if (!this.woke) {
-      const b = this.ctx.createBufferSource();
-      b.buffer = this.ctx.createBuffer(1, 1, this.ctx.sampleRate);
-      b.connect(this.ctx.destination); b.start();
-      this.woke = true;
-    }
+  get wakeHost() {
+    return this._wakeHost ||= {
+      session: () => this.session(), silent: () => this.silentMenu(), unhush: () => this.unhush(),
+      resume: () => this.resume(),
+      get woke() { return this.owner.woke; }, set woke(value) { this.owner.woke = value; }, owner: this,
+      failed: e => errors.report('audio-resume-failed', { ...audioFailureTags(e), audioState: this.ctx.state }),
+    };
   }
+  resume() { return resumeAudioContext(this.ctx, this.wakeHost); }
+  wake() { wakeAudioContext(this.ctx, this.wakeHost); }
 
   get running() { return this.ctx.state === 'running'; }
   // the splash, before any tap: the browser may let the context run (Chrome on a site played often). Allowed, it counts as

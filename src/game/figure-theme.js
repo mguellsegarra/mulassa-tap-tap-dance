@@ -11,9 +11,9 @@ const BOU_COLORS = { gua: '#f0d58a', guaLt: '#fff1c2', guaDk: '#a3832f', pa: '#7
 export const figThemes = {
   mulassa: { drac: false, colors: MULASSA_COLORS, chant: [[tr('figures.chant.first.mulassa'), 0, 0.8], [tr('figures.chant.second.mulassa'), 0.8, 0.8], [tr('figures.chant.last.mulassa'), 1.8, 1.6]] },
   drac: { drac: true, colors: DRAC_COLORS, chant: [[tr('figures.chant.first.drac'), 0, 0.8], [tr('figures.chant.second.drac'), 0.8, 0.8], [tr('figures.chant.last.drac'), 1.8, 1.6]] },
-  // the Bou's own words, BRA | MA | BRAMA!; its chant (BOU! / QUE TOT… / HO MOU!) rises to the rhyme,
-  // like the others: «BRAMA, BOU!» first then a long fall read as a letdown wherever it was placed
-  bou: { drac: false, colors: BOU_COLORS, chant: [[tr('figures.chant.first.bou'), 0, 0.8], [tr('figures.chant.second.bou'), 0.8, 0.8], [tr('figures.chant.last.bou'), 1.8, 1.6]] },
+  // the Bou's own words, BRA | MA | BRAMA!; its chant is what its colla shouts, one long BOOOUUUUU!, a letter every 0.12 s
+  // (the owner, 16/11/2026), as long as the others' three words
+  bou: { drac: false, colors: BOU_COLORS, chant: [[tr('figures.chant.last.bou'), 0, 3.4, 0.12]] },
 };
 for (const k in figThemes) figThemes[k].id = k;
 export let figTheme = figThemes.mulassa;

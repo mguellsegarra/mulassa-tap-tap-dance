@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ca">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Correfoc · prototip gris</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0a10; overflow: hidden; }
+  canvas { display: block; width: 100vw; height: 100dvh; touch-action: none; }
+</style>
+<canvas id="c"></canvas>
+<script>
+// Grey-box prototype: mechanics only, provisional words, no art, not on the games' shared base.
+// shortcut: routes are free-drawn and ignore the streets (decoration); constrain them once the loop is approved.
+const W = 360, H = 640, TAU = Math.PI * 2, TILT = 0.6, DEVILS = 7, RING = 15;
+const LEVELS = [
+  { t: 60, colles: 2, rate: 0.05, cart: [180, 560], places: [[90, 150], [270, 170], [180, 340]] },
+  { t: 75, colles: 3, rate: 0.06, cart: [60, 570], places: [[70, 120], [280, 110], [190, 280], [300, 400], [90, 400]] },
+  { t: 90, colles: 4, rate: 0.07, cart: [180, 330], places: [[60, 100], [300, 100], [60, 540], [300, 540], [180, 150], [180, 520]] },
+];
+const stars = (mean) => (mean >= 0.8 ? 3 : mean >= 0.6 ? 2 : 1);
+console.assert(stars(0.9) === 3 && stars(0.7) === 2 && stars(0.1) === 1, 'stars');
+
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+let scale = 1, ox = 0, oy = 0, level = 0, S, sparks = [], grabbed = null;
+
+function fit() {
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  scale = Math.min(cv.width / W, cv.height / H);
+  ox = (cv.width - W * scale) / 2; oy = (cv.height - H * scale) / 2;
+}
+addEventListener('resize', fit); fit();
+
+function start(n) {
+  level = n % LEVELS.length;
+  const L = LEVELS[level];
+  S = {
+    L, time: 0, happy: 0, done: false, joins: 0,
+    places: L.places.map(([x, y]) => ({ x, y, want: 0.3 })),
+    colles: Array.from({ length: L.colles }, (_, i) => ({
+      x: L.cart[0] + (i - (L.colles - 1) / 2) * 44, y: L.cart[1] - 50, path: [], fuel: 1, ang: i, cool: 0,
+    })),
+  };
+  sparks = [];
+}
+start(0);
+
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+function spark(x, y, vx, vy, life) { if (sparks.length < 700) sparks.push({ x, y, vx, vy, life, max: life }); }
+function burst(c, n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * TAU, v = 40 + Math.random() * 110;
+    spark(c.x, c.y, Math.cos(a) * v, Math.sin(a) * v * TILT, 0.5 + Math.random() * 0.7);
+  }
+}
+
+function update(dt) {
+  for (const s of sparks) { s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= 0.97; s.vy *= 0.97; s.life -= dt; }
+  sparks = sparks.filter((s) => s.life > 0);
+  if (S.done) return;
+  const cart = { x: S.L.cart[0], y: S.L.cart[1] };
+  for (const p of S.places) p.want = Math.min(1, p.want + S.L.rate * dt);
+  for (const c of S.colles) {
+    c.cool -= dt;
+    let step = 70 * dt;
+    while (c.path.length && step > 0) {
+      const d = dist(c, c.path[0]);
+      if (d <= step) { c.x = c.path[0].x; c.y = c.path[0].y; c.path.shift(); step -= d; }
+      else { c.x += (c.path[0].x - c.x) / d * step; c.y += (c.path[0].y - c.y) / d * step; step = 0; }
+    }
+    const lit = c.fuel > 0;
+    c.ang += dt * (lit ? 2.6 : 0.8);
+    if (dist(c, cart) < 36) c.fuel = Math.min(1, c.fuel + dt / 1.5);
+    else if (lit) c.fuel = Math.max(0, c.fuel - dt / 22);
+    if (!lit) continue;
+    for (const p of S.places) if (dist(c, p) < 46) p.want = Math.max(0, p.want - dt * 0.5);
+    // each devil throws sparks along the ring's tangent and a little outwards: that is the spiral
+    for (let i = 0; i < DEVILS; i++) {
+      if (Math.random() > 0.5) continue;
+      const a = c.ang + i * TAU / DEVILS, cx = Math.cos(a), sy = Math.sin(a);
+      spark(c.x + cx * RING, c.y + sy * RING * TILT, (-sy * 55 + cx * 30), (cx * 55 + sy * 30) * TILT, 0.5 + Math.random() * 0.4);
+    }
+  }
+  // two lit colles meeting: a joint lighting instead of a crash
+  for (let i = 0; i < S.colles.length; i++) for (let j = i + 1; j < S.colles.length; j++) {
+    const a = S.colles[i], b = S.colles[j];
+    if (a.fuel > 0 && b.fuel > 0 && a.cool <= 0 && b.cool <= 0 && dist(a, b) < 40) {
+      a.cool = b.cool = 6; S.joins++; burst(a, 90); burst(b, 90);
+      for (const p of S.places) if (dist(a, p) < 150) p.want = Math.max(0, p.want - 0.3);
+    }
+  }
+  S.happy += dt * S.places.reduce((n, p) => n + 1 - p.want, 0) / S.places.length;
+  S.time += dt;
+  if (S.time >= S.L.t) S.done = true;
+}
+
+function draw() {
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.fillStyle = '#0b0a10'; g.fillRect(0, 0, cv.width, cv.height);
+  g.setTransform(scale, 0, 0, scale, ox, oy);
+  const [cx, cy] = S.L.cart;
+  g.strokeStyle = '#1b1924'; g.lineWidth = 26; g.lineCap = 'round'; g.beginPath();
+  S.places.forEach((p, i) => {
+    const q = S.places[(i + 1) % S.places.length];
+    g.moveTo(p.x, p.y); g.lineTo(q.x, q.y); g.moveTo(p.x, p.y); g.lineTo(cx, cy);
+  });
+  g.stroke();
+  for (const p of S.places) {
+    g.fillStyle = '#24212e'; g.beginPath(); g.ellipse(p.x, p.y, 34, 34 * TILT + 8, 0, 0, TAU); g.fill();
+    g.fillStyle = `hsl(35 ${20 + (1 - p.want) * 70}% ${35 + (1 - p.want) * 30}%)`; // the crowd warms up as it gets its fire
+    for (let i = 0; i < 12; i++) { const a = i * TAU / 12; g.fillRect(p.x + Math.cos(a) * 30 - 2, p.y + Math.sin(a) * (30 * TILT + 7) - 2, 4, 4); }
+    g.strokeStyle = p.want > 0.8 ? '#ff5a3c' : '#8a8596'; g.lineWidth = 4; g.lineCap = 'butt';
+    g.beginPath(); g.arc(p.x, p.y - 40, 8, -TAU / 4, -TAU / 4 + TAU * p.want); g.stroke();
+  }
+  g.fillStyle = '#6b6776'; g.fillRect(cx - 14, cy - 10, 28, 20);
+  g.fillStyle = '#0b0a10'; g.font = 'bold 13px system-ui'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('P', cx, cy + 1);
+  for (const c of S.colles) {
+    if (c.path.length) {
+      g.strokeStyle = 'rgba(255,140,40,.75)'; g.lineWidth = 3; g.lineCap = 'round'; g.setLineDash([2, 8]);
+      g.beginPath(); g.moveTo(c.x, c.y); for (const p of c.path) g.lineTo(p.x, p.y); g.stroke(); g.setLineDash([]);
+    }
+  }
+  g.globalCompositeOperation = 'lighter';
+  for (const s of sparks) {
+    const k = s.life / s.max;
+    g.fillStyle = `rgba(255,${80 + k * 160 | 0},${k * k * 120 | 0},${k})`;
+    g.fillRect(s.x - 1.2, s.y - 1.2, 2.4, 2.4);
+  }
+  g.globalCompositeOperation = 'source-over';
+  for (const c of S.colles) {
+    g.fillStyle = c.fuel > 0 ? '#e23a2e' : '#5a5664';
+    for (let i = 0; i < DEVILS; i++) {
+      const a = c.ang + i * TAU / DEVILS;
+      g.beginPath(); g.arc(c.x + Math.cos(a) * RING, c.y + Math.sin(a) * RING * TILT, 3.4, 0, TAU); g.fill();
+    }
+    g.fillStyle = '#2a2733'; g.fillRect(c.x - 14, c.y + 20, 28, 4);
+    g.fillStyle = c.fuel > 0.25 ? '#ffb347' : '#ff5a3c'; g.fillRect(c.x - 14, c.y + 20, 28 * c.fuel, 4);
+  }
+  g.fillStyle = '#d8d4e0'; g.font = '600 14px system-ui'; g.textAlign = 'left'; g.fillText(`Nivell ${level + 1}`, 14, 22);
+  g.textAlign = 'right'; g.fillText(`${Math.max(0, Math.ceil(S.L.t - S.time))} s`, W - 14, 22);
+  g.fillStyle = '#2a2733'; g.fillRect(14, 36, W - 28, 3);
+  g.fillStyle = '#ffb347'; g.fillRect(14, 36, (W - 28) * Math.min(1, S.time / S.L.t), 3);
+  g.textAlign = 'center';
+  if (!S.done && level === 0 && S.time < 8) {
+    g.fillStyle = '#8a8596'; g.font = '13px system-ui';
+    g.fillText('Arrossega una rotllana fins a una plaça.', W / 2, H - 34);
+    g.fillText('Quan s’apagui, porta-la al carro (P).', W / 2, H - 16);
+  }
+  if (S.done) {
+    g.fillStyle = 'rgba(11,10,16,.8)'; g.fillRect(0, 0, W, H);
+    const n = stars(S.happy / S.L.t);
+    g.fillStyle = '#ffb347'; g.font = '48px system-ui'; g.fillText('★'.repeat(n) + '☆'.repeat(3 - n), W / 2, H / 2 - 20);
+    g.fillStyle = '#d8d4e0'; g.font = '15px system-ui';
+    g.fillText(`Públic content: ${Math.round(S.happy / S.L.t * 100)} % · Enceses conjuntes: ${S.joins}`, W / 2, H / 2 + 30);
+    g.fillStyle = '#8a8596'; g.fillText('Toca per seguir', W / 2, H / 2 + 60);
+  }
+}
+
+const world = (e) => ({ x: (e.clientX * cv.width / innerWidth - ox) / scale, y: (e.clientY * cv.height / innerHeight - oy) / scale });
+cv.addEventListener('pointerdown', (e) => {
+  if (S.done) { start(level + 1); return; }
+  const p = world(e);
+  grabbed = S.colles.reduce((best, c) => (dist(c, p) < 45 && (!best || dist(c, p) < dist(best, p)) ? c : best), null);
+  if (grabbed) { grabbed.path = []; cv.setPointerCapture(e.pointerId); }
+});
+cv.addEventListener('pointermove', (e) => {
+  if (!grabbed) return;
+  const p = world(e), last = grabbed.path[grabbed.path.length - 1] || grabbed;
+  if (dist(p, last) > 6) grabbed.path.push(p);
+});
+addEventListener('pointerup', () => { grabbed = null; });
+addEventListener('pointercancel', () => { grabbed = null; });
+
+let prev = performance.now();
+requestAnimationFrame(function frame(now) {
+  update(Math.min(0.05, (now - prev) / 1000)); prev = now;
+  draw();
+  requestAnimationFrame(frame);
+});
+</script>
+</html>

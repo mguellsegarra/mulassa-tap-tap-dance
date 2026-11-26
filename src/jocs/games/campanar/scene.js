@@ -17,6 +17,7 @@ import { skySettings } from './sky.js';
 import { createTowerTurn } from './turn.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
+import { STACK_TRY, STACK_LENS, STACK_ZOOM, stackPerfect } from './stack.js';
 import { pixelRatio } from '#plassa/quality.js';
 
 // terracotta, apricot, butter, leaf, teal, rose and round again: 8 floors from one to the next
@@ -27,7 +28,7 @@ export function colorOf(n) {
   return STOPS[i].clone().lerp(STOPS[(i + 1) % STOPS.length], t - Math.floor(t));
 }
 // ?zoom=N puts the camera N times as far (1: the reference game's framing)
-const ZOOM = +new URLSearchParams(location.search).get('zoom') || 1;
+const ZOOM = +new URLSearchParams(location.search).get('zoom') || (STACK_TRY ? STACK_ZOOM : 1); // ?stack: far off, a long lens (stack.js)
 // ?cossos=0: no bodies (each slab its own plan), to compare; ?tol=N tries another grouping tolerance
 const BODY_TOL = new URLSearchParams(location.search).get('cossos') === '0' ? 0 : +new URLSearchParams(location.search).get('tol') || TOL;
 const VIEW = new Vector3(2.3, 2.3, 2.3).multiplyScalar(SIZE * ZOOM); // the camera's offset from the top
@@ -38,7 +39,7 @@ export function createScene(canvas) {
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
   const scene = new Scene();
-  const camera = new PerspectiveCamera(46, 1, 0.1, 400);
+  const camera = new PerspectiveCamera(46, 1, 0.1, STACK_TRY ? 2000 : 400);
   // the sky behind the tower: a night's clouds (Astra's) under Fable's stars
   const clouds = createClouds(scene, camera, renderer, { night: 0.8 }), stars = createStars(scene, camera, renderer);
   // light from above and a second one on the left face: the top, the left and the right faces in three clear tones
@@ -150,7 +151,7 @@ export function createScene(canvas) {
     renderer.setPixelRatio(pixelRatio(w, h));
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    camera.fov = 2 * Math.atan(Math.tan(0.4) * Math.max(1, h / w / 1.6)) * 180 / Math.PI; // a tall phone widens it
+    camera.fov = 2 * Math.atan(Math.tan(STACK_TRY ? STACK_LENS : 0.4) * Math.max(1, h / w / 1.6)) * 180 / Math.PI; // a tall phone widens it
     camera.updateProjectionMatrix();
   }
   resize();
@@ -238,6 +239,7 @@ export function createScene(canvas) {
     },
     // a perfect drop: a flat ring of the slab's colour widens from its top and fades in 0.6 s, a little wider each in a row
     ripple(n, rect, y, streak) {
+      if (STACK_TRY) return stackPerfect((m, tick) => { scene.add(m); fx.push({ m, tick: t => tick(t) || (gone(m), false) }); }, rect, y - FLOOR, streak);
       const m = new Mesh(plane, new MeshBasicMaterial({ color: colorOf(n), transparent: true, opacity: 0.9, depthWrite: false }));
       m.position.set(rect.x, y + 0.002, rect.z);
       scene.add(m);

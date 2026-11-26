@@ -3,7 +3,9 @@
 // shortcut: the words are provisional Catalan in the page, no locales/ nor Sentry/update watch yet; add them when it leaves POC.
 import { createScene } from './scene.js';
 import { paintSky, tuneSky, climbSky } from './sky.js';
-import { SIZE, FLOOR, RANGE, REAL, drop, speedAt, metresOf } from './rules.js';
+import { SIZE, FLOOR, RANGE as GAME_RANGE, REAL, drop, speedAt, metresOf } from './rules.js';
+import { STACK_TRY, STACK_REACH, STACK_PERFECT } from './stack.js';
+const RANGE = STACK_TRY ? SIZE * STACK_REACH : GAME_RANGE; // ?stack: the slab comes from farther (stack.js)
 import { SFX, unlock, uiBlip } from './audio.js';
 import { deviceBest } from '#plassa/best.js';
 import { haptic } from '#plassa/haptics.js';
@@ -89,7 +91,7 @@ function toSheet() {
 function tap() {
   if (mode !== 'play' || !ready || performance.now() - lastTap < 150) return; // a double tap is one drop
   lastTap = performance.now();
-  const r = drop(top, pos, axis);
+  const r = drop(top, pos, axis, STACK_TRY ? SIZE * STACK_PERFECT : undefined);
   if (r.miss) {
     scene.missMoving(axis, Math.sign(pos - top[axis]) || 1);
     SFX.miss();

@@ -3,6 +3,7 @@
 // higher for each perfect in a row (up to six). The fall is a bubble going down; the tower turning into the campanar a
 // run of bubbles climbing. One AudioContext, unlocked by the first tap (gesture.js).
 import { blipOn } from '#plassa/ui-sound.js';
+import { STACK_TRY } from './stack.js';
 
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 const out = ctx.createGain();
@@ -14,15 +15,15 @@ export const uiBlip = blipOn(ctx, out);
 // from → to Hz in `glide` s; a 2 ms attack, then an exponential decay that is silent by `len`. LEAD: scheduled a little
 // ahead, so a busy main thread starts it late as a whole instead of cutting its attack (a click)
 const LEAD = 0.015;
-function bubble(from, to, { at = 0, glide = 0.01, len = 0.05, peak = 0.5 } = {}) {
+function bubble(from, to, { at = 0, glide = 0.01, len = 0.05, peak = 0.5, attack = 0.002 } = {}) {
   if (ctx.state !== 'running') return;
   const t = ctx.currentTime + LEAD + at, o = ctx.createOscillator(), g = ctx.createGain();
   o.type = 'sine';
   o.frequency.setValueAtTime(from, t);
   o.frequency.exponentialRampToValueAtTime(to, t + glide);
   g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(peak, t + 0.002);
-  g.gain.setTargetAtTime(0, t + 0.004, len / 4);
+  g.gain.linearRampToValueAtTime(peak, t + attack);
+  g.gain.setTargetAtTime(0, t + attack + 0.002, len / 4);
   o.connect(g).connect(out);
   o.start(t);
   o.stop(t + len + 0.03);
@@ -44,3 +45,22 @@ export const SFX = {
   // the whole tower turning into the campanar: one bubble per step of the cascade, up a major scale
   turn: i => { const r = 2 ** (SCALE[i % SCALE.length] / 12); bubble(600 * r, 900 * r, { glide: 0.012, len: 0.06, peak: 0.3 }); },
 };
+
+// ?stack: Stack's own sounds, read from Marc's recording (26 Nov 2026). A slab set down is one sampled click played at
+// 1x or 1.25x (0.75x on the drop that ends the run): a 1150 Hz blip of 25 ms and a soft one an octave below 90 ms later.
+// A perfect is a soft sine note and its octave 90 ms behind, about half a second long: C4 on the first, one step up
+// the C major scale for each perfect in a row (C D E F G heard; past five in a row is our guess), back to C after a cut.
+const STACK_MAJOR = [0, 2, 4, 5, 7, 9, 11];
+function stackClick(r) {
+  bubble(1000 * r, 1150 * r, { glide: 0.005 / r, len: 0.05 / r, peak: 0.5 });
+  bubble(520 * r, 575 * r, { at: 0.09 / r, glide: 0.004 / r, len: 0.03 / r, peak: 0.28 });
+}
+if (STACK_TRY) Object.assign(SFX, {
+  place: () => stackClick(Math.random() < 0.35 ? 1.25 : 1),
+  miss: () => stackClick(0.75),
+  perfect: streak => {
+    const d = Math.min(streak - 1, 14), f = 261.63 * 2 ** (STACK_MAJOR[d % 7] / 12 + Math.floor(d / 7)); // two octaves, then it stays
+    bubble(f, f, { glide: 0.001, len: 0.6, peak: 0.5, attack: 0.012 });
+    bubble(2 * f, 2 * f, { at: 0.09, glide: 0.001, len: 0.55, peak: 0.4, attack: 0.012 });
+  },
+});

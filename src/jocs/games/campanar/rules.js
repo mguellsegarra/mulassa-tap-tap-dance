@@ -7,10 +7,10 @@ export const RANGE = SIZE * 1.4; // how far the slab travels each side of the fl
 
 // top: the floor below {x, z, w, d}; at: the moving slab's centre along `axis` ('x' or 'z').
 // → { miss } or { placed, cut, perfect }: placed is the new floor, cut the part that falls ({x, z, w, d}, or null)
-export function drop(top, at, axis) {
+export function drop(top, at, axis, perfect = PERFECT) {
   const size = axis === 'x' ? 'w' : 'd';
   const delta = at - top[axis];
-  if (Math.abs(delta) < PERFECT) return { placed: { ...top }, cut: null, perfect: true };
+  if (Math.abs(delta) < perfect) return { placed: { ...top }, cut: null, perfect: true };
   const keep = top[size] - Math.abs(delta);
   if (keep <= 0) return { miss: true };
   const placed = { ...top, [size]: keep, [axis]: top[axis] + delta / 2 };

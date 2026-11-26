@@ -42,12 +42,12 @@ function sizes(s, r) {
 // bottom only on the corner piers where the opening crosses them, so no stone ever crosses the niche between two floors
 function piercedGeo(r, y0, o) {
   const pos = [], nor = [], uv = [], groups = [], edges = Array.from({ length: 6 }, () => new Vector2(0, 1));
-  const { s } = o, a = y0 - o.y0, c = a + FLOOR, ys = cuts(s, a, c), bs = walls(r, o.cx, o.cz, o.y0);
+  const { s } = o, a = y0 - o.y0, c = a + FLOOR, ys = cuts(s, a, c), bs = walls(r, o.y0);
   const put = (p, n, u, v) => { pos.push(p.x, p.y, p.z); nor.push(n.x, n.y, n.z); uv.push(u, v); };
   const strip = (b, ua0, ua1, ya, ub0, ub1, yb) => {
     if (ua1 - ua0 < 1e-5 && ub1 - ub0 < 1e-5) return;
     const P = [[ua0, ya], [ua1, ya], [ub1, yb], [ua0, ya], [ub1, yb], [ub0, yb]];
-    for (const [u, y] of P) put(at(b, u, y, 0), b.N, (u - b.axis) / SIZE + 0.5, (y - a) / FLOOR);
+    for (const [u, y] of P) put(at(b, u, y, 0), b.N, u / SIZE + 0.5, (y - a) / FLOOR); // the wall's middle on the axis
   };
   const side = b => {
     const start = pos.length / 3;
@@ -59,7 +59,7 @@ function piercedGeo(r, y0, o) {
       strip(b, Math.min(b.u1, wa), b.u1, ya, Math.min(b.u1, wb), b.u1, yb);
     }
     groups.push({ start, count: pos.length / 3 - start, materialIndex: b.mat });
-    const ua = (b.u0 - b.axis) / SIZE + 0.5, ub = (b.u1 - b.axis) / SIZE + 0.5;
+    const ua = b.u0 / SIZE + 0.5, ub = b.u1 / SIZE + 0.5;
     edges[b.mat] = new Vector2(Math.min(ua, ub), Math.max(ua, ub));
   };
   const x0 = r.x - r.w / 2, x1 = r.x + r.w / 2, z0 = r.z - r.d / 2, z1 = r.z + r.d / 2;
@@ -72,8 +72,8 @@ function piercedGeo(r, y0, o) {
     };
     if (h <= s.ySill + 1e-3 || h >= s.yApex - 1e-3) rect(x0, z0, x1, z1);
     else {
-      const w = Math.max(halfWidth(h, s), s.hw * 1.26), lx = Math.min(x1, o.cx - w), rx = Math.max(x0, o.cx + w);
-      const lz = Math.min(z1, o.cz - w), rz = Math.max(z0, o.cz + w);
+      const w = Math.max(halfWidth(h, s), s.hw * 1.26), lx = Math.min(x1, r.x - w), rx = Math.max(x0, r.x + w);
+      const lz = Math.min(z1, r.z - w), rz = Math.max(z0, r.z + w);
       rect(x0, z0, lx, lz); rect(rx, z0, x1, lz); rect(x0, rz, lx, z1); rect(rx, rz, x1, z1);
     }
     groups.push({ start, count: pos.length / 3 - start, materialIndex: mat });
@@ -102,7 +102,7 @@ function openingSlice(r, y0, o) {
     const up = clamp01((y - s.ySill) / Math.max(0.1, s.yApex - s.ySill)), bounce = (1 - deep * 0.75) * Math.max(0, 1 - up * 2.5);
     return k.clone().lerp(DEEP, up * 0.58 + deep * 0.25).lerp(DARK_SILL, bounce * 0.55);
   };
-  for (const b of walls(r, o.cx, o.cz, o.y0)) {
+  for (const b of walls(r, o.y0)) {
     const P = (u, y, n) => at(b, u, y, n), span = (b.u1 - b.u0) * 0.46;
     const sillH = s.sillH ?? Math.min(0.055, s.hw * 0.24), sy0 = Math.max(a, s.ySill - sillH), sy1 = Math.min(c, s.ySill);
     if (sy1 > sy0 + 1e-4) { // the sill, proud of the wall, its top sloping in to the jambs' foot
@@ -188,7 +188,7 @@ function tracery(lit, P, s, a, c, tWall) {
 // the four bells, one hung in each wall's niche, whole: they go in with the motif's first floor
 function chamberBells(r, o) {
   const { s } = o, { bellZ, yHang, beam } = sizes(s, r), one = chamberBell(s.D, beam);
-  const all = walls(r, o.cx, o.cz, o.y0).map(b => {
+  const all = walls(r, o.y0).map(b => {
     const p = at(b, 0, yHang, -bellZ);
     return one.clone().applyMatrix4(new Matrix4().set(b.T.x, 0, b.N.x, p.x, 0, 1, 0, p.y, b.T.z, 0, b.N.z, p.z, 0, 0, 0, 1));
   });
@@ -210,14 +210,14 @@ export function createOpenings(scene) {
   };
   const dark = pool(scene, new MeshBasicMaterial({ vertexColors: true })), hands = createClockHands(scene);
   return {
-    // slab m (cut to its plan) wears course `key`, a motif centred on (cx, cz), its glacis `batter`: its geometry is set
+    // slab m (cut to its plan) wears course `key`, its glacis `batter`: its geometry is set
     // and its faces returned (the flash of scene.js's turn fades on them)
-    dress(m, key, cx, cz, batter) {
+    dress(m, key, batter) {
       const i = Math.round((m.position.y - FLOOR / 2) / FLOOR), y0 = i * FLOOR, odd = i % 2 === 1;
       const r = { x: m.position.x, z: m.position.z, w: m.scale.x, d: m.scale.z }, ch = chamberOf(key, i);
-      const o = ch && { ...ch, y0: ch.lo * FLOOR, cx, cz };
+      const o = ch && { ...ch, y0: ch.lo * FLOOR };
       const clock = clockOf(key, i), course = !batter && COURSES[key]; // a string course on a glacis stays painted
-      const { g, edges } = o ? piercedGeo(r, y0, o) : stoneGeo(m, FLOOR, cx, cz, batter);
+      const { g, edges } = o ? piercedGeo(r, y0, o) : stoneGeo(m, FLOOR, batter);
       m.geometry = g;
       // a piece in relief stands on plain ashlar: the big one at the foot, the shaft's over it
       const plain = `A/${o?.s.door || key === 'A/imposta' ? 'base' : 'fust'}-${odd ? 'senar' : 'parell'}`;
@@ -231,10 +231,10 @@ export function createOpenings(scene) {
         if (i === o.lo && o.s.D) chamberBells(r, o).forEach(lit.add);
       }
       if (clock) {
-        lit.add(clockSlice(r, y0, clock, cx, cz));
-        if (i === clock.lo + clock.n - 1) hands.show(clockFaces(r, clock, cx, cz)); // the hands with the last floor
+        lit.add(clockSlice(r, y0, clock));
+        if (i === clock.lo + clock.n - 1) hands.show(clockFaces(r, clock)); // the hands with the last floor
       }
-      if (course) lit.add(course(r, y0, cx, cz));
+      if (course) lit.add(course(r, y0));
       return mats;
     },
     // what flashes with a floor wearing `key` besides its own faces: its opening's frames (and bells), the whole motif so

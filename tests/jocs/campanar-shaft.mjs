@@ -24,13 +24,12 @@ assert.match(wide, /a\.{6}=\.\.WW\.\.=\.\.ee\.\.=\.\.WW/, `the shaft over the cl
 // laid gets a smaller one: nothing settled changes)
 for (let n = 21; n <= 30; n++) assert.equal(facade(tower(plan(n, 1))).courses.at(-5).key, 'A/campanes-04', `${n} floors: the whole chamber`);
 
-// the terrace: a narrow ledge, or a wide one on one side only (a rail squeezed against the wall over it), gets the
-// weathering; a terrace round the body over it a balustrade on its outer edge, flat stone tones for the lit pool, clear of
-// the body over it and inside the ledge (but for the plinth's lip), the corner pinnacles about a floor tall
-const lower = { x: 0.1, z: -0.2, w: 2, d: 1.8 };
-assert.equal(terraceRail(lower, { ...lower, w: lower.w - TERRACE * 0.9, x: lower.x - TERRACE * 0.45 }, 3), null, 'a narrow ledge: weathering');
-assert.equal(terraceRail(lower, { x: 0.3, z: -0.2, w: 0.9, d: 1.8 - 0.04 }, 3), null, 'a terrace on one side only: weathering');
-const upper = { x: 0.1, z: -0.2, w: 1.0, d: 0.9 }; // a terrace all round
+// the terrace (concentric squares, the same ledge all round): a narrow ledge gets the weathering; a wide one a
+// balustrade on its outer edge, flat stone tones for the lit pool, clear of the body over it and inside the ledge (but
+// for the plinth's lip), the corner pinnacles about a floor tall
+const lower = { x: 0, z: 0, w: 2, d: 2 };
+assert.equal(terraceRail(lower, { ...lower, w: lower.w - TERRACE * 1.8, d: lower.d - TERRACE * 1.8 }, 3), null, 'a narrow ledge: weathering');
+const upper = { x: 0, z: 0, w: 1.0, d: 1.0 };
 const g = terraceRail(lower, upper, 3), p = g.attributes.position;
 assert.equal(g.attributes.color.count, p.count);
 assert.equal(g.attributes.normal.count, p.count);

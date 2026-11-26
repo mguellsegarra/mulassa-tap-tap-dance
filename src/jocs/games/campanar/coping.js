@@ -20,7 +20,7 @@ const extent = r => ({ x0: r.x - r.w / 2, x1: r.x + r.w / 2, z0: r.z - r.d / 2, 
 // a plan's corners, counter-clockwise seen from above; side i runs from corner i to i + 1: +x, -z, -x, +z
 const planCorners = r => { const e = extent(r); return [[e.x1, e.z1], [e.x1, e.z0], [e.x0, e.z0], [e.x0, e.z1]]; };
 const ledgesOf = (lo, up) => { const a = extent(lo), b = extent(up); return [a.x1 - b.x1, b.z0 - a.z0, b.x0 - a.x0, a.z1 - b.z1]; };
-const SIDE_FACE = [0, 5, 1, 4]; // a box's side faces (material index) for those sides
+const SIDE_FACE = [0, 5, 1, 4]; // a box's side faces (material index)
 
 // triangles pushed one by one (positions, colours), flat normals at the end
 function triangles() {
@@ -78,8 +78,8 @@ export function copingMat(outer, inner, y0 = 0, rise = FLOOR, scale = 1) {
 export function copeSlab(mats, r, batter, y0) {
   mats[2] = mats[3] = copingMat(r, null, y0);
   if (batter) {
-    const glacis = copingMat(r, batter, y0, FLOOR), led = ledgesOf(r, batter);
-    SIDE_FACE.forEach((f, i) => { if (led[i] >= EPS) mats[f] = glacis; });
+    const glacis = copingMat(r, batter, y0, FLOOR);
+    if (ledgesOf(r, batter)[0] >= EPS) for (const f of SIDE_FACE) mats[f] = glacis; // the same ledge all round
   }
   return mats;
 }
@@ -98,41 +98,33 @@ function stringCourse(lower, y) {
   boxAt(s, { x0: e.x0 - by, x1: e.x1 + by, z0: e.z0 - by, z1: e.z1 + by }, y - FLOOR * 0.16, y);
   return s.geo();
 }
-// the weathering over a setback: one mitred hip from the lower plan's edge up to the upper wall (a flush side gets only
-// the cheeks beside the wall), the string course round it, both in coping stones. → a mesh or null
+// the weathering over a setback, the same ledge all round (concentric squares, rules.js): one mitred hip from the lower
+// plan's edge up to the upper wall, the string course round it, both in coping stones. → a mesh or null
 export function hipWeathering(lower, upper, y, rise) {
-  const led = ledgesOf(lower, upper);
-  if (Math.max(...led) < EPS) return null;
-  const h = Math.min(rise, Math.max(...led) * 0.7), L = planCorners(lower), U = planCorners(upper), s = triangles();
+  const led = ledgesOf(lower, upper)[0];
+  if (led < EPS) return null;
+  const h = Math.min(rise, led * 0.7), L = planCorners(lower), U = planCorners(upper), s = triangles();
   for (let i = 0; i < 4; i++) {
     const j = (i + 1) % 4, p = (c, yy) => [c[0], yy, c[1]];
-    if (led[i] >= EPS) s.quad(p(L[i], y), p(L[j], y), p(U[j], y + h), p(U[i], y + h));
-    else {
-      if (Math.hypot(L[i][0] - U[i][0], L[i][1] - U[i][1]) > EPS) s.tri([p(L[i], y), p(U[i], y), p(U[i], y + h)]);
-      if (Math.hypot(L[j][0] - U[j][0], L[j][1] - U[j][1]) > EPS) s.tri([p(U[j], y), p(L[j], y), p(U[j], y + h)]);
-    }
+    s.quad(p(L[i], y), p(L[j], y), p(U[j], y + h), p(U[i], y + h));
   }
   s.quad(...U.map(c => [c[0], y + h, c[1]])); // closed on top: under the floor above, or round the spire's foot
   return new Mesh(mergeGeometries([s.geo(), stringCourse(lower, y)]), copingMat(lower, upper, y, h));
 }
 
-// a wide terrace's balustrade (Valls' «balustrada calada»), where a weathering would only lie flat: on each side whose
-// ledge holds it, a plinth proud of the wall, square balusters and a handrail along the outer edge, and on its corners a
-// small pier with a pyramid cap; flat stone tones, for openings.js's lit pool (no draw call more). → its geometry, or
-// null unless the terrace goes round the body above, TERRACE deep at least on three sides (hipWeathering then): a rail on
-// one or two sides only stood squeezed against that body's wall, a lopsided thing
+// a wide terrace's balustrade (Valls' «balustrada calada»), where a weathering would only lie flat: on each side a plinth
+// proud of the wall, square balusters and a handrail along the outer edge, and on its corners a small pier with a
+// pyramid cap; flat stone tones, for openings.js's lit pool (no draw call more). → its geometry, or null on a terrace
+// less than TERRACE deep (hipWeathering then). The ledge is the same all round (concentric squares, rules.js)
 export const TERRACE = SIZE * 0.15;
 export function terraceRail(lower, upper, y) {
-  const led = ledgesOf(lower, upper);
-  if (led.filter(l => l >= TERRACE).length < 3) return null;
+  if (ledgesOf(lower, upper)[0] < TERRACE) return null;
   const s = triangles(), e = extent(lower), t = SIZE * 0.022, pw = t * 1.8, h = FLOOR * 0.5, by = SIZE * 0.012, foot = y + FLOOR * 0.08;
-  const on = led.map(l => l >= pw * 1.5); // a narrower ledge stays bare
   const sideBox = (i, inn, out, a0, a1, y0, y1, c, cTop) => { // a box on side i, from `inn` in from its edge to `out` beyond it
     const edge = [e.x1, e.z0, e.x0, e.z1][i], dir = [1, -1, -1, 1][i], [p, q] = [edge - dir * inn, edge + dir * out].sort((m, n) => m - n);
     boxAt(s, i % 2 ? { x0: a0, x1: a1, z0: p, z1: q } : { x0: p, x1: q, z0: a0, z1: a1 }, y0, y1, c, cTop);
   };
   for (let i = 0; i < 4; i++) {
-    if (!on[i]) continue;
     const [a0, a1] = i % 2 ? [e.x0, e.x1] : [e.z0, e.z1], n = Math.max(1, Math.round((a1 - a0 - 2 * pw) / (t * 2.2)));
     sideBox(i, t * 1.3, by, a0 - by, a1 + by, y, foot, P_BAND, P_TOP);
     for (let k = 0; k < n; k++) {
@@ -141,8 +133,7 @@ export function terraceRail(lower, upper, y) {
     }
     sideBox(i, t * 1.2, t * 0.1, a0, a1, y + h - FLOOR * 0.07, y + h, P_BAND, P_TOP);
   }
-  planCorners(lower).forEach(([x, z], c) => { // corner c starts side c and ends side c - 1
-    if (!on[c] && !on[(c + 3) % 4]) return;
+  planCorners(lower).forEach(([x, z]) => {
     const cx = x - Math.sign(x - lower.x) * pw / 2, cz = z - Math.sign(z - lower.z) * pw / 2, top = y + h + FLOOR * 0.1, b = top + FLOOR * 0.05;
     const sq = w => ({ x0: cx - w / 2, x1: cx + w / 2, z0: cz - w / 2, z1: cz + w / 2 }), R = pw * 0.5;
     boxAt(s, sq(pw), y, top, P_BODY, P_TOP);
@@ -200,16 +191,15 @@ export function ribbedSpire(g0, r0, H, cage) {
   return mergeGeometries(parts);
 }
 
-// the bell chamber's pinnacles on the parapet's corners the plan above leaves free: a shaft, a band, a smaller shaft,
-// a capping, a pyramid and a finial, in flat stone tones, all one mesh
+// the bell chamber's pinnacles on the parapet's corners: a shaft, a band, a smaller shaft, a capping, a pyramid and a
+// finial, in flat stone tones, all one mesh
 const pinnacleStone = new MeshLambertMaterial({ vertexColors: true, side: DoubleSide });
 const P_TOP = tone(0.85), P_BAND = tone(1), P_BODY = tone(0.45);
-export function copedPinnacles(r, y, above) {
+export function copedPinnacles(r, y) {
   const s = triangles(), p = Math.min(r.w, r.d) * 0.16, parts = [];
   const paint = (g, c) => g.setAttribute('color', new Float32BufferAttribute(Array.from({ length: g.attributes.position.count }, () => [c.r, c.g, c.b]).flat(), 3));
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const cx = r.x + sx * (r.w / 2 - p / 2), cz = r.z + sz * (r.d / 2 - p / 2);
-    if (above && Math.abs(cx - above.x) < above.w / 2 + p / 2 && Math.abs(cz - above.z) < above.d / 2 + p / 2) continue;
     const sq = w => ({ x0: cx - w / 2, x1: cx + w / 2, z0: cz - w / 2, z1: cz + w / 2 });
     boxAt(s, sq(p), y, y + p * 0.8, P_BODY, P_TOP);
     boxAt(s, sq(p * 1.22), y + p * 0.8, y + p * 0.95, P_BAND);

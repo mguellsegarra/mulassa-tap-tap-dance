@@ -43,10 +43,6 @@ assert.equal(n.top, 'vane');
 assert(needle[n.cap].w / SIZE >= 0.22, 'the bell chamber on a slab wide enough for bells');
 assert(keys(n).slice(n.cap + 1).every(k => k === 'agulla'), 'nothing but the spire over the parapet');
 assert(keys(n).slice(0, n.cap + 1).every(k => k !== 'agulla'), 'the parapet and under it all stone');
-// a motif over several slabs is centred on the part they share
-const off = tower(21, () => SIZE).map((r, i) => (i > 12 ? { ...r, x: 0.4, w: SIZE - 0.8 } : r));
-const bells = facade(off).courses.filter(c => c.key.includes('campanes'));
-assert(bells.length >= 2 && bells.every(c => c.cx === 0.4), 'the bell opening centred on what its slabs share');
 // a short tower still gets bells (the smallest that fit) and its crown
 const short = facade(tower(5, () => SIZE));
 assert(keys(short).some(k => k.includes('campanes')) && short.top === 'crown');

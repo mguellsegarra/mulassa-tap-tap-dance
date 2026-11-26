@@ -72,16 +72,16 @@ export function cuts(s, a, b) {
   }
   return [...ys].sort((p, q) => p - q);
 }
-// a plan's four walls in the box's material order (+x, -x, +z, -z): o on the wall at the motif's centre (cx, cz) and the
-// motif's foot, T along it the way stone.js's u grows, N out of it; u0..u1 the wall along T; axis: the tower's axis on
-// T, where the courses' joints are anchored
-export function walls(r, cx, cz, y0) {
-  const x0 = r.x - r.w / 2, x1 = r.x + r.w / 2, z0 = r.z - r.d / 2, z1 = r.z + r.d / 2;
+// a plan's four walls in the box's material order (+x, -x, +z, -z): o on the wall's middle (every motif is centred on
+// the plan, which is on the tower's axis) at the motif's foot, T along it the way stone.js's u grows, N out of it;
+// u0..u1 the wall along T
+export function walls(r, y0) {
+  const hw = r.w / 2, hd = r.d / 2;
   return [
-    { mat: 0, o: new Vector3(x1, y0, cz), T: new Vector3(0, 0, -1), N: new Vector3(1, 0, 0), u0: cz - z1, u1: cz - z0, axis: cz },
-    { mat: 1, o: new Vector3(x0, y0, cz), T: new Vector3(0, 0, 1), N: new Vector3(-1, 0, 0), u0: z0 - cz, u1: z1 - cz, axis: -cz },
-    { mat: 4, o: new Vector3(cx, y0, z1), T: new Vector3(1, 0, 0), N: new Vector3(0, 0, 1), u0: x0 - cx, u1: x1 - cx, axis: -cx },
-    { mat: 5, o: new Vector3(cx, y0, z0), T: new Vector3(-1, 0, 0), N: new Vector3(0, 0, -1), u0: cx - x1, u1: cx - x0, axis: cx },
+    { mat: 0, o: new Vector3(r.x + hw, y0, r.z), T: new Vector3(0, 0, -1), N: new Vector3(1, 0, 0), u0: -hd, u1: hd },
+    { mat: 1, o: new Vector3(r.x - hw, y0, r.z), T: new Vector3(0, 0, 1), N: new Vector3(-1, 0, 0), u0: -hd, u1: hd },
+    { mat: 4, o: new Vector3(r.x, y0, r.z + hd), T: new Vector3(1, 0, 0), N: new Vector3(0, 0, 1), u0: -hw, u1: hw },
+    { mat: 5, o: new Vector3(r.x, y0, r.z - hd), T: new Vector3(-1, 0, 0), N: new Vector3(0, 0, -1), u0: -hw, u1: hw },
   ];
 }
 export const at = (b, u, y, n) => new Vector3(b.o.x + b.T.x * u + b.N.x * n, b.o.y + y, b.o.z + b.T.z * u + b.N.z * n);

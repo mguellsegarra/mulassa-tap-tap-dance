@@ -99,9 +99,9 @@ export function scales() {
   return t;
 }
 // stone UVs from world position: one texture width per first slab's side, one course per floor (v counts floors from
-// the ground), so the courses line up floor to floor and a cut slab keeps its part of the pattern. A motif is centred
-// on (cx, cz) instead of the tower's axis. → the geometry and each side face's u range (for its quoins)
-export function stoneGeo(m, h, cx = 0, cz = 0, batter) {
+// the ground), so the courses line up floor to floor and a cut slab keeps its part of the pattern. → the geometry and
+// each side face's u range (for its quoins)
+export function stoneGeo(m, h, batter) {
   const g = box.clone(), pos = g.attributes.position, nor = g.attributes.normal, uv = g.attributes.uv;
   for (let i = 0; i < pos.count; i++) {
     if (batter && pos.getY(i) > 0) {
@@ -111,7 +111,7 @@ export function stoneGeo(m, h, cx = 0, cz = 0, batter) {
     const wx = m.position.x + pos.getX(i) * m.scale.x, wz = m.position.z + pos.getZ(i) * m.scale.z;
     const wy = m.position.y + pos.getY(i) * h;
     if (nor.getY(i)) uv.setXY(i, wx / SIZE + 0.5, wz / SIZE + 0.5);
-    else uv.setXY(i, (nor.getX(i) ? -nor.getX(i) * (wz - cz) : nor.getZ(i) * (wx - cx)) / SIZE + 0.5, wy / FLOOR);
+    else uv.setXY(i, (nor.getX(i) ? -nor.getX(i) * wz : nor.getZ(i) * wx) / SIZE + 0.5, wy / FLOOR);
   }
   if (batter) g.computeVertexNormals();
   const edges = [0, 1, 2, 3, 4, 5].map(f => {

@@ -14,7 +14,7 @@ import { box, campanarFoot } from './stone.js';
 import { setCopingInner, terraceRail } from './coping.js';
 import { createOpenings } from './openings.js';
 import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments } from './crown.js';
-import { TOL, sameCampanarPlan } from './bodies.js';
+import { sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings, skyPan } from './sky.js';
 import { createTowerTurn } from './turn.js';
@@ -28,8 +28,6 @@ import { pixelRatio } from '#plassa/quality.js';
 
 // ?zoom=N puts the camera N times as far (1: the reference game's framing)
 const ZOOM = +new URLSearchParams(location.search).get('zoom') || (STACK_TRY ? STACK_ZOOM : 1); // ?stack: far off, a long lens (stack.js)
-// ?cossos=0: no bodies (each slab its own plan), to compare; ?tol=N tries another grouping tolerance
-const BODY_TOL = new URLSearchParams(location.search).get('cossos') === '0' ? 0 : +new URLSearchParams(location.search).get('tol') || TOL;
 const VIEW = new Vector3(2.3, 2.3, 2.3).multiplyScalar(SIZE * ZOOM); // the camera's offset from the top
 const easeOut = t => 1 - (1 - t) ** 3;
 
@@ -48,7 +46,7 @@ export function createScene(canvas) {
   const weather = new Group(); // the weatherings on the settled floors' bare tops (crown.js)
   scene.add(weather);
   let turning = [], holdTurns = 0; // the settled floors still to turn to stone, one a frame (no long frame on the tap); s held
-  let slabs = [], fx = [], moving = null, camY = 0, aimY = 0, outro = null, crown = null, plan = createFacade(BODY_TOL);
+  let slabs = [], fx = [], moving = null, camY = 0, aimY = 0, outro = null, crown = null, plan = createFacade();
   const freeLook = createTowerTurn(Math.atan2(VIEW.x, VIEW.z)); // the end's free look round the tower (turn.js)
   // lift: the shares of the screen's top and bottom kept clear (the end's words, its buttons), eased;
   // aside: the picture moved right by that share of the width (the wide home), eased too
@@ -100,13 +98,13 @@ export function createScene(canvas) {
   const openings = createOpenings(scene); // what a settled floor wears: the bell chamber's openings and bells (openings.js)
 
   // a placed slab turns to stone (or, already stone, to another course): a white flash fading out, a small swell
-  function turn(m, key, cx = 0, cz = 0, batter) {
-    const was = m.userData.stone, id = idOf(key, cx, cz, m, batter);
+  function turn(m, key, batter) {
+    const was = m.userData.stone, id = idOf(key, m, batter);
     if (was === id) return [];
     if (was) m.geometry.dispose();
     m.userData.stone = id;
     for (const x of [m.material].flat()) x.dispose();
-    const mats = m.material = openings.dress(m, key, cx, cz, batter); // its geometry and faces, the bell chamber's pierced
+    const mats = m.material = openings.dress(m, key, batter); // its geometry and faces, the bell chamber's pierced
     const glow = [...mats, ...openings.flashing(key)];
     fx.push({ m, tick: t => { // a white flash fading into the stone, and a small swell
       const k = Math.min(1, t / 0.35);
@@ -117,14 +115,14 @@ export function createScene(canvas) {
     } });
     return glow; // what flashes: pieces built with it join in
   }
-  // what a slab wears: its course, the motif's centre, its plan (its body's) and its batter
-  const idOf = (key, cx, cz, m, b) => `${key}@${cx},${cz}|${m.position.x},${m.position.z},${m.scale.x},${m.scale.z}|${b ? [b.x, b.z, b.w, b.d] : ''}`;
+  // what a slab wears: its course, its plan (its body's) and its batter
+  const idOf = (key, m, b) => `${key}|${m.position.x},${m.position.z},${m.scale.x},${m.scale.z}|${b ? [b.x, b.z, b.w, b.d] : ''}`;
   const built = () => slabs.map(m => m.userData.built);
   // a slab takes its settled course: cut to its body's plan, then turned
   function settleSlab(m, c, r) {
     m.scale.set(r.w, m.scale.y, r.d);
     m.position.set(r.x, m.position.y, r.z);
-    const glow = turn(m, c.key, c.cx, c.cz, c.batter);
+    const glow = turn(m, c.key, c.batter);
     // the floors still in colour that will wear this body's plan, or the next one's it slopes in to, take it now: no
     // colour over narrower stone
     for (const [j, p] of c.ahead ?? []) {
@@ -161,7 +159,7 @@ export function createScene(canvas) {
       if (moving?.parent) gone(moving);
       if (crown) { scene.remove(crown); disposeCampanarOrnaments(crown); }
       openings.reset();
-      slabs = []; turning = []; fx = []; moving = null; outro = null; crown = null; plan = createFacade(BODY_TOL);
+      slabs = []; turning = []; fx = []; moving = null; outro = null; crown = null; plan = createFacade();
       lift = [0, 0]; lifted = [0, 0];
       camera.clearViewOffset();
       camera.zoom = 1;
@@ -198,7 +196,7 @@ export function createScene(canvas) {
       while (turning.length) turning.shift()(); // the floors still waiting turn now, before the wave
       const { courses, rects, cap } = plan.finish(built()); // the floors still in colour settle; the top is laid
       const steps = slabs.map((m, i) => [m, courses[i], rects[i]])
-        .filter(([m, c, r]) => c.key !== 'agulla' && m.userData.stone !== idOf(c.key, c.cx, c.cz, { position: r, scale: { x: r.w, z: r.d } }, c.batter));
+        .filter(([m, c, r]) => c.key !== 'agulla' && m.userData.stone !== idOf(c.key, { position: r, scale: { x: r.w, z: r.d } }, c.batter));
       const gap = Math.min(70, 1200 / Math.max(1, steps.length));
       steps.forEach(([m, c, r], i) => setTimeout(() => { if (m.parent) { settleSlab(m, c, r); each(i); } }, 350 + i * gap));
       const rect = rects[rects.length - 1] ?? { x: 0, z: 0, w: SIZE, d: SIZE };
@@ -210,7 +208,7 @@ export function createScene(canvas) {
         if (thin) { // the floors too thin for bells go under an octagonal spire as tall as them (crown.js), centred on the parapet
           for (let i = cap + 1; i < slabs.length; i++) slabs[i].visible = false;
           const spire = makeStoneSpire(parapet, tops[cap], thin * FLOOR), slope = makeWeathering(parapet, spire.foot, tops[cap], FLOOR * 0.4);
-          parts.push(spire.g, makePinnacles(parapet, tops[cap], spire.foot));
+          parts.push(spire.g, makePinnacles(parapet, tops[cap]));
           if (slope) crown.add(slope);
         } else parts.push(buildCampanarHead(parapet, tops[cap] ?? 0), makePinnacles(parapet, tops[cap]));
         crown.add(...parts);

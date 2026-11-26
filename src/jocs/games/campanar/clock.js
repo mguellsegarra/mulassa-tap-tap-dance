@@ -22,10 +22,10 @@ export function clockOf(key, i) {
 }
 // each wall's clock: centred on the motif's middle, its radius the most the bay allows (a little air under the arcading
 // over it and beside the quoins)
-export function clockFaces(r, o, cx, cz) {
+export function clockFaces(r, o) {
   const cy = o.n * FLOOR / 2, y0 = o.lo * FLOOR;
   // R: the ring's; its shadow on the wall reaches 3.5% past it
-  return walls(r, cx, cz, y0).map(b => ({ b, cy, R: Math.min(cy - 0.035, Math.min(-b.u0, b.u1) - quoinOf(b.u1 - b.u0) - 0.035) / 1.035 }));
+  return walls(r, y0).map(b => ({ b, cy, R: Math.min(cy - 0.035, Math.min(-b.u0, b.u1) - quoinOf(b.u1 - b.u0) - 0.035) / 1.035 }));
 }
 // the hands' angles (radians, clockwise from twelve) at h:m: the hour hand moves on through its hour
 export const handAngles = (h, m) => ({ hour: ((h % 12) + m / 60) * TAU / 12, minute: (m % 60) * TAU / 60 });
@@ -37,9 +37,9 @@ const bar = (cy, th, r0, r1, w) => {
   return [[s * r0 - px, cy + c * r0 - py], [s * r1 - px, cy + c * r1 - py], [s * r1 + px, cy + c * r1 + py], [s * r0 + px, cy + c * r0 + py]].map(p => [...p, true]);
 };
 // floor y0's slice of every wall's clock: its shadow on the wall, the ring in two steps, the dial, the marks, the boss
-export function clockSlice(r, y0, o, cx, cz) {
+export function clockSlice(r, y0, o) {
   const t = tris(), a = y0 - o.lo * FLOOR, c = a + FLOOR;
-  for (const { b, cy, R } of clockFaces(r, o, cx, cz)) {
+  for (const { b, cy, R } of clockFaces(r, o)) {
     const P = (u, y, n) => at(b, u, y, n), ri = R * 0.84;
     for (let k = 0; k < N; k++) {
       const t0 = k * TAU / N, t1 = (k + 1) * TAU / N;

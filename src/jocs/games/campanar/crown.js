@@ -13,23 +13,16 @@ const iron = new MeshLambertMaterial({ color: '#8a5a35' }), gold = new MeshLambe
 // a spire's height and a cross that read from afar.
 // The iron is a small cage at the top (Fable's R1): warm bronze, the hours bell gold inside it, a gold cross on top.
 export function buildCampanarHead(base, y) {
-  const g = new Group(), tip = base, foot = base;
+  const g = new Group();
   g.position.y = y;
   const height = Math.max(Math.min(base.w, base.d) * 1.15, SIZE * 0.5), shoulder = 0.60;
   const metalScale = Math.max(Math.min(base.w, base.d, height), SIZE * 0.3);
   const bar = metalScale * 0.032;
-  const ring = (t, span) => {
-    const r = base;
-    const axis = (c, side) => {
-      const size = Math.min(foot[side] * 0.76 * span, r[side] * 0.94);
-      const mid = foot[c] + (tip[c] - foot[c]) * t;
-      const travel = Math.max(0, (r[side] - size) / 2 - bar);
-      return [Math.max(r[c] - travel, Math.min(mid, r[c] + travel)), size];
-    };
-    const [x, w] = axis('x', 'w'), [z, d] = axis('z', 'd');
+  const ring = (t, span) => { // an octagon on the parapet's axis at height t, span its share of the foot's
+    const w = Math.min(base.w * 0.76 * span, base.w * 0.94), d = Math.min(base.d * 0.76 * span, base.d * 0.94);
     return Array.from({ length: 8 }, (_, j) => {
       const angle = (j + 0.5) * Math.PI / 4;
-      return new Vector3(x + Math.cos(angle) * w / 2, t * height, z + Math.sin(angle) * d / 2);
+      return new Vector3(base.x + Math.cos(angle) * w / 2, t * height, base.z + Math.sin(angle) * d / 2);
     });
   };
   const vertices = [], uvs = [], metal = [], up = new Vector3(0, 1, 0);
@@ -80,7 +73,7 @@ export function buildCampanarHead(base, y) {
   bell.position.set(terrace.x, terrace.y + height * (1 - shoulder) * 0.35, terrace.z);
   g.add(bell);
   const finial = Math.max(metalScale * 0.17, SIZE * 0.16), thick = Math.max(bar, SIZE * 0.014); // the cross reads from afar
-  const at = (x, h) => new Vector3(tip.x + x, height + h, tip.z);
+  const at = (x, h) => new Vector3(base.x + x, height + h, base.z);
   g.add(new Mesh(mergeGeometries(metal), iron));
   metal.length = 0; // the cross on its own, in gold
   rod(at(0, 0), at(0, finial), thick);
@@ -91,7 +84,7 @@ export function buildCampanarHead(base, y) {
 // over a bell chamber whose floors above ran too thin for bells: an octagonal stone spire centred on the parapet `base`
 // at y, as tall as those floors (h): the campanar as tall as the player built it, never lower. A moulded ring every
 // three floors, then a small bronze cage with the gold bell and the gold cross. Never shorter than a spire reads.
-// → the group, and the square it stands on (for the pinnacles)
+// → the group, and the square it stands on (for its weathering)
 export const spireHeight = (base, h) => Math.max(h, Math.min(base.w, base.d) * 1.2);
 export function makeStoneSpire(base, y, h) {
   const g = new Group(), r0 = Math.min(base.w, base.d) * 0.3, H = spireHeight(base, h), cage = H - Math.min(H * 0.2, r0 * 1.8);
@@ -127,8 +120,8 @@ export function makeStoneSpire(base, y, h) {
 // a stone weathering where the floor above leaves a floor's top bare, so no ledge holds water (coping.js)
 export const makeWeathering = hipWeathering;
 // the bell chamber's pinnacles, grown from the parapet at y (coping.js)
-export function makePinnacles(r, y, above) {
-  const g = copedPinnacles(r, 0, above);
+export function makePinnacles(r, y) {
+  const g = copedPinnacles(r, 0);
   g.position.y = y;
   return g;
 }

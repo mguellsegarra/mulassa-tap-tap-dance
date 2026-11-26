@@ -82,12 +82,12 @@ function gable(t, P, b, top) {
     prism(t, P, (sg > 0 ? slope : slope.reverse()).map((p, j) => [...p, j < 3]), 0, d2, -9, 9, SILL, STEP);
   }
 }
-const course = draw => (r, y0, cx, cz) => {
+const course = draw => (r, y0) => {
   const t = tris();
-  for (const b of walls(r, cx, cz, y0)) draw(t, (u, y, n) => at(b, u, y, n), b);
+  for (const b of walls(r, y0)) draw(t, (u, y, n) => at(b, u, y, n), b);
   return t.geo();
 };
-// floor y0's course in plan r, centred on (cx, cz) → its lit geometry
+// floor y0's course in plan r → its lit geometry
 export const COURSES = {
   'A/imposta': course((t, P, b) => moulding(t, P, b, IMPOSTA, IMPOSTA_K)),
   'A/faixa': course((t, P, b) => moulding(t, P, b, FAIXA, FAIXA_K)),

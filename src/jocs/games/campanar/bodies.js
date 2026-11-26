@@ -13,18 +13,18 @@ export const AHEAD = 5; // the floors still in colour over the one turning to st
 export function sameCampanarPlan(a, b) {
   return a.x === b.x && a.z === b.z && a.w === b.w && a.d === b.d;
 }
-const near = (a, b, tol) => a.w - b.w < tol * SIZE && a.d - b.d < tol * SIZE;
-const reach = (lo, j, tol) => (j - lo < MIN_FLOORS ? Math.max(tol, TAPER) : tol);
+const near = (a, b, tol) => a.w - b.w < tol * SIZE; // plans are squares on the axis (rules.js): the side tells it all
+const reach = (lo, j) => (j - lo < MIN_FLOORS ? Math.max(TOL, TAPER) : TOL);
 // does floor j (known: the slabs as built) join body {lo, plan}? Near its first and still holding its whole plan
-export const joinsBody = (known, j, body, tol = TOL) => !!body && !!known[j] && near(known[body.lo], known[j], reach(body.lo, j, tol))
-  && known[j].w >= body.plan.w && known[j].d >= body.plan.d;
+export const joinsBody = (known, j, body) => !!body && !!known[j] && near(known[body.lo], known[j], reach(body.lo, j))
+  && known[j].w >= body.plan.w;
 
 // floor i's body, given floor i-1's (prev): it joins it, or starts one whose plan is the narrowest of the floors that
 // join it in the next AHEAD that are known
-export function bodyAt(known, i, prev, tol = TOL) {
-  if (joinsBody(known, i, prev, tol)) return prev;
+export function bodyAt(known, i, prev) {
+  if (joinsBody(known, i, prev)) return prev;
   let plan = known[i];
   // up to AHEAD - 1 floors over it: all the floor under it knew when it sloped in to this plan (facade.js, glacis)
-  for (let j = i + 1; j < known.length && j < i + AHEAD && near(known[i], known[j], reach(i, j, tol)); j++) plan = known[j];
+  for (let j = i + 1; j < known.length && j < i + AHEAD && near(known[i], known[j], reach(i, j)); j++) plan = known[j];
   return { lo: i, plan };
 }

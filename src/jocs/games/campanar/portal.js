@@ -9,13 +9,13 @@ import { tris, prism, ARCH, STEP, SILL, JAMB } from './relief.js';
 
 const WOOD = [new Color('#4a2a17'), new Color('#5a341d')], SEAM = new Color('#2a170c'), IRON = new Color('#262224');
 
-// floor y0's slice of the portal o (chamberOf's, at its foot o.y0, centred on cx, cz) in the plan r: lit pieces only
+// floor y0's slice of the portal o (chamberOf's, at its foot o.y0) in the plan r: lit pieces only
 export function portalSlice(r, y0, o) {
   const t = tris(), { s } = o, a = y0 - o.y0, c = a + FLOOR, tWall = Math.min(s.tWall, Math.min(r.w, r.d) * 0.19);
   const Q = Array.from({ length: s.orders + 1 }, (_, k) => inset(s, k * s.step)), hood = inset(s, -s.band), door = Q.at(-1);
   const dz = tWall / Q.length, proud = s.band * 0.45, hi = Math.min(c, hood.yApex), ys = hi > a + 1e-4 ? cuts({ ...hood, lights: Q }, a, hi) : [];
   const shade = k => ARCH.clone().lerp(JAMB, Math.min(1, k / Q.length));
-  for (const b of walls(r, o.cx, o.cz, o.y0)) {
+  for (const b of walls(r, o.y0)) {
     const P = (u, y, n) => at(b, u, y, n);
     for (let j = 0; j < ys.length - 1; j++) {
       const ya = ys[j], yb = ys[j + 1], ha = halfWidth(ya, hood), hb = halfWidth(yb, hood);

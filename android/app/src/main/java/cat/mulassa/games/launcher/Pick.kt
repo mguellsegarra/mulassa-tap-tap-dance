@@ -124,8 +124,8 @@ fun Picked(model: Launcher, pick: Pick, done: () -> Unit) {
 }
 
 // A box's side seen through the same 3D camera as a rotated graphics layer (RenderNode: scale about the pivot, then
-// android.graphics.Camera's rotation at the pivot, then the translation). Draws the side nearer to us as a quad from the
-// back plane to the front; shift() is how far the face moves to sit on the front plane instead of the middle one.
+// android.graphics.Camera's rotation at the pivot, then the translation). Draws the sides that face us; shift() is how far
+// the face moves to sit on the front plane instead of the middle one.
 private class Side {
     var tx = 0f; var ty = 0f; var scale = 1f; var turn = 0f; var camera = 8f; var depth = 0f
     private val cam = android.graphics.Camera(); private val m = android.graphics.Matrix(); private val pt = FloatArray(8)
@@ -146,25 +146,36 @@ private class Side {
         return pt[0] - pt[4]
     }
 
-    // The shell's outline swept back on the nearer edge: the straight side (from the top chamfer to the drop edge's
-    // bottom one, 0.72 to 11.69) and the two chamfers as slanted facets, so no square end sticks out past a cut corner.
+    // The shell's outline swept back from the face: the straight side (from the top chamfer to the drop edge's bottom
+    // one, 0.72 to 11.69) and the two chamfers as slanted facets. Each facet starts on the face layer's own edge (the
+    // layer's plane, moved by shift(), not the true front plane, which projects a little bigger and stuck out past the cut
+    // corners) and runs `depth` away from the viewer. Back-face culling: a facet is drawn only when its far edge lands
+    // outside its near edge, away from the face; a convex slab's facet folds back over the face exactly when it faces away.
     fun draw(d: DrawScope, u: Float, tint: Color) {
-        if (abs(sin(Math.toRadians(turn.toDouble()))) < 0.01) return
-        val px = d.size.width / 2; val py = d.size.height / 2
-        // the nearer edge is the taller one
-        project(px, py, 0.16f * u, 0.72f * u, 0.16f * u, 11.69f * u, 0f, 0)
-        project(px, py, d.size.width - 0.16f * u, 0.72f * u, d.size.width - 0.16f * u, 11.69f * u, 0f, 4)
-        val left = pt[3] - pt[1] >= pt[7] - pt[5]
-        fun x(at: Float) = if (left) at * u else d.size.width - at * u
-        fun facet(x0: Float, y0: Float, x1: Float, y1: Float, fill: Brush) {
-            project(px, py, x(x0), y0 * u, x(x1), y1 * u, -depth / 2, 0); project(px, py, x(x0), y0 * u, x(x1), y1 * u, depth / 2, 4)
-            d.drawPath(Path().apply { moveTo(pt[0], pt[1]); lineTo(pt[4], pt[5]); lineTo(pt[6], pt[7]); lineTo(pt[2], pt[3]); close() }, fill)
-        }
+        val a = Math.toRadians(turn.toDouble())
+        if (abs(sin(a)) < 0.05) return // within ~3° of front or back: no side
+        val px = d.size.width / 2; val py = d.size.height / 2; val dx = shift(px, py)
+        val far = if (cos(a) >= 0) depth else -depth
+        project(px, py, px, py, px, py, 0f, 0); val cx = pt[0] + dx; val cy = pt[1]
         val ink = hex("#1d100a")
-        project(px, py, 0f, 0.72f * u, 0f, 11.69f * u, 0f, 0)
-        facet(0.16f, 0.72f, 0.16f, 11.69f, Brush.verticalGradient(0f to tint.mix(ink, 0.38f), 1f to tint.mix(ink, 0.6f), startY = pt[1], endY = pt[3]))
-        facet(0.16f, 0.72f, 0.88f, 0f, SolidColor(tint.mix(ink, 0.3f)))
-        facet(0.16f, 11.69f, 0.86f, 12.39f, SolidColor(tint.mix(ink, 0.6f)))
+        for (left in booleanArrayOf(true, false)) {
+            fun x(at: Float) = if (left) at * u else d.size.width - at * u
+            fun facet(x0: Float, y0: Float, x1: Float, y1: Float, fill: (Float, Float) -> Brush) {
+                project(px, py, x(x0), y0 * u, x(x1), y1 * u, 0f, 0); project(px, py, x(x0), y0 * u, x(x1), y1 * u, far, 4)
+                for (i in 0..6 step 2) pt[i] += dx
+                val ax = pt[2] - pt[0]; val ay = pt[3] - pt[1]
+                fun side(qx: Float, qy: Float) = ax * (qy - pt[1]) - ay * (qx - pt[0])
+                if (side((pt[4] + pt[6]) / 2, (pt[5] + pt[7]) / 2) * side(cx, cy) >= 0) return
+                // the near edge tucks 1.5 px under the face, so the two antialiased edges leave no hairline between them
+                val len = kotlin.math.hypot(ax, ay); val nx = -ay / len * 1.5f; val ny = ax / len * 1.5f
+                val inward = if (side(cx, cy) > 0) 1f else -1f
+                for (i in 0..2 step 2) { pt[i] += nx * inward; pt[i + 1] += ny * inward }
+                d.drawPath(Path().apply { moveTo(pt[0], pt[1]); lineTo(pt[4], pt[5]); lineTo(pt[6], pt[7]); lineTo(pt[2], pt[3]); close() }, fill(pt[1], pt[3]))
+            }
+            facet(0.16f, 0.72f, 0.16f, 11.69f) { y0, y1 -> Brush.verticalGradient(0f to tint.mix(ink, 0.38f), 1f to tint.mix(ink, 0.6f), startY = y0, endY = y1) }
+            facet(0.16f, 0.72f, 0.88f, 0f) { _, _ -> SolidColor(tint.mix(ink, 0.3f)) }
+            facet(0.16f, 11.69f, 0.86f, 12.39f) { _, _ -> SolidColor(tint.mix(ink, 0.6f)) }
+        }
     }
 }
 

@@ -87,7 +87,7 @@ struct LiftView: View {
 
 // The turn, as a slab ~7% of its width thick: the front, the back (a real back face, so its engraving reads left to
 // right) and two side faces in the shell's darker shade, each placed in 3D and seen through one perspective, so edge-on
-// it still shows its thickness. Painter's order: the sides, then whichever face looks at the viewer.
+// it still shows its thickness. Painter's order: the sides that face the viewer, then whichever face looks at it.
 private struct Turn: ViewModifier, Animatable {
     var angle: Double
     let color: UIColor
@@ -110,11 +110,16 @@ private struct Turn: ViewModifier, Animatable {
             Rectangle().fill(fill).frame(width: T, height: len * u).frame(width: W, height: H, alignment: .topLeading)
         }
         let top = Color(color.mix(ink, 0.3)), foot = Color(color.mix(ink, 0.6)), s2 = 0.5.squareRoot(), cut = 0.72 * 2.squareRoot()
+        // Back-face culling: only a facet that faces the eye is drawn. The eye, in the slab's own space, sits at x = -L sin(angle)
+        // (L: from the eye to the turn's axis); a facet faces it when the eye is on its outer side. Near front or back no
+        // side faces it, so none is drawn and nothing can peek out past the face's cut corners.
+        let ex = -(2.6 * W + T / 2) * CGFloat(sin(angle * .pi / 180)), y0 = -H / 2 + 0.72 * u, y1 = -H / 2 + 11.69 * u
         func sides(_ x: CGFloat) -> some View { // x = ±1: the right or the left edge
-            ZStack {
-                strip(side, 10.97).modifier(place((0, 0, -1), (x * e, -H / 2 + 0.72 * u, 0)))
-                strip(top, cut).modifier(place((0, 0, -1), (x * e, -H / 2 + 0.72 * u, 0), y: (-x * s2, -s2)))
-                strip(foot, 0.7 * 2.squareRoot()).modifier(place((0, 0, -1), (x * e, -H / 2 + 11.69 * u, 0), y: (-x * s2, s2)))
+            let k = x * ex - e // > 0: the eye is outside this edge's plane
+            return ZStack {
+                strip(side, 10.97).modifier(place((0, 0, -1), (x * e, y0, 0))).opacity(k > 0 ? 1 : 0)
+                strip(top, cut).modifier(place((0, 0, -1), (x * e, y0, 0), y: (-x * s2, -s2))).opacity(k + y0 > 0 ? 1 : 0)
+                strip(foot, 0.7 * 2.squareRoot()).modifier(place((0, 0, -1), (x * e, y1, 0), y: (-x * s2, s2))).opacity(k - y1 > 0 ? 1 : 0)
             }
         }
         return ZStack {

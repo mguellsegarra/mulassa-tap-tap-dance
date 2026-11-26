@@ -42,7 +42,7 @@ struct LauncherRoot: View {
             let sky = Sky.now(t.date)
             TabView(selection: $tab) {
                 Home(model: model, sky: sky, lifted: lifted?.game.id) { lifted = $0 }
-                    .tabItem { Label("Jocs", systemImage: "gamecontroller") }.tag(LauncherTab.games)
+                    .tabItem { Label("launcher.tab.games", systemImage: "gamecontroller") }.tag(LauncherTab.games)
                 ProfilePage(model: model, surface: sky.sheet) { settings = true }
                     .tabItem { Label("html.accountTitle", systemImage: "person.crop.circle") }.tag(LauncherTab.profile)
             }

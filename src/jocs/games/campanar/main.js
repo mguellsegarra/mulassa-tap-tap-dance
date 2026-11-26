@@ -43,7 +43,7 @@ function spawn() {
 
 function start() {
   scene.reset();
-  scene.aside(0);
+  scene.home(false); // the tower rises out of the haze, then the first slab
   n = 1; y = 0; score = 0; streak = 0;
   looking = 0;
   $('end-banner').hidden = $('end-tap').hidden = true;
@@ -52,7 +52,7 @@ function start() {
   show(null);
   $('hud').hidden = false;
   hud();
-  ready = false; // the first slab once the tower has come to the middle (the wide home had it aside)
+  ready = false; // the first slab once the tower has risen into place
 }
 
 function end() {
@@ -129,7 +129,7 @@ function toMenu() {
   show('menu');
   homeAside();
 }
-const homeAside = () => scene.aside(mode === 'menu' && matchMedia('(orientation: landscape)').matches ? 0.25 : 0); // wide: the tower beside the home's column
+const homeAside = () => scene.home(mode === 'menu'); // the home is the sky and the logo; the tower rises on Juga
 
 $('game').addEventListener('pointerdown', e => {
   if (e.button) return;
@@ -199,7 +199,7 @@ function frame(now) {
     scene.slide(axis, pos);
   }
   if (mode !== 'paused') scene.frame(dt);
-  climbSky(scene.climb); // the sky slides, the clouds rise past, the stars come out (sky.js)
+  climbSky(scene.climb, scene.pan); // the sky slides, the clouds rise past, the stars come out; the end's turn pans it (sky.js)
   requestAnimationFrame(frame);
 }
 

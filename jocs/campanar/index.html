@@ -24,16 +24,17 @@
     <div id="hud-mid"><div id="score" role="status">0</div></div>
   </div>
 
-  <!-- The home, as the games' 2.0.0 home (Pop's): MULASSA's red logo with TOWER under it, the pitch, the record and Juga;
-       the tower's foot in 3D shows through the middle (.c-art is only room for it). shortcut: the logo's markup and the home's
+  <!-- The home, as the games' 2.0.0 home (Pop's): MULASSA's red logo with TOWER under it, the pitch, the record and Juga,
+       in the middle of the sky; no tower (it rises on Juga, scene.js home). shortcut: the logo's markup and the home's
        layout are Pop's, copied until they move into Plassa (the extraction plan); then this page uses the base's. -->
   <div id="menu" class="home">
     <a id="back" class="exit corner-l" href="/jocs/"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.6" y="2.8" width="7.5" height="7.5" rx="1.6" transform="rotate(14 17.35 6.55)"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.6"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.6"/></svg><span class="exit-tip">Torna als jocs</span><i class="exit-dot" aria-hidden="true"></i></a>
     <div class="c-hero">
       <div class="c-text">
         <h1 class="tower-title" aria-label="Mulassa Tower"><span class="logo-box"><svg class="logo" aria-hidden="true" focusable="false" viewBox="0 -4 308.6 80" text-anchor="middle" stroke-linejoin="round">
-          <g font-family="'Jersey 10'" font-size="100" stroke-width="12"><text x="154.3" y="66.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#5e1514" stroke="#5e1514" style="paint-order:stroke">MULASSA</text><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" fill="#c0283c" stroke="#fff3d6" style="paint-order:stroke">MULASSA</text></g>
-        </svg><span class="logo-glint" aria-hidden="true"><svg viewBox="0 -4 308.6 80" text-anchor="middle" focusable="false"><text x="154.3" y="60.6" textLength="300" lengthAdjust="spacingAndGlyphs" font-family="'Jersey 10'" font-size="100" fill="#fff">MULASSA</text></svg></span></span><span class="tower-word" aria-hidden="true"><i style="--i:0">T</i><i style="--i:1">O</i><i style="--i:2">W</i><i style="--i:3">E</i><i style="--i:4">R</i></span></h1>
+          <!-- MULASSA as 2.0.0 draws it (deaadc4b, copied from jocs/memory): Baloo 2, the cream extrusion and outline -->
+          <g font-family="'Baloo 2'" font-weight="800" font-size="77" letter-spacing="-5.5" stroke-width="11"><text x="154.3" textLength="300" lengthAdjust="spacingAndGlyphs" y="64" fill="#2a1a10" stroke="#2a1a10" stroke-width="15">MULASSA</text><text x="154.3" textLength="300" lengthAdjust="spacingAndGlyphs" y="60" fill="#2a1a10" stroke="#2a1a10" stroke-width="15">MULASSA</text><text x="154.3" textLength="300" lengthAdjust="spacingAndGlyphs" y="64" fill="#d8bf8f" stroke="#d8bf8f">MULASSA</text><text x="154.3" textLength="300" lengthAdjust="spacingAndGlyphs" y="60" fill="#e8382f" stroke="#fff3d6" style="paint-order:stroke">MULASSA</text></g>
+        </svg><span class="logo-glint" aria-hidden="true"><svg viewBox="0 -4 308.6 80" text-anchor="middle" focusable="false"><text x="154.3" y="60" textLength="300" lengthAdjust="spacingAndGlyphs" font-family="'Baloo 2'" font-weight="800" font-size="77" letter-spacing="-5.5" fill="#fff">MULASSA</text></svg></span></span><span class="tower-word" aria-hidden="true"><i style="--i:0">T</i><i style="--i:1">O</i><i style="--i:2">W</i><i style="--i:3">E</i><i style="--i:4">R</i></span></h1>
         <p class="c-pitch">Toca per deixar caure cada pedra. El que sobresurt, cau. Fins on arribarà el campanar?</p>
         <div class="c-play-row">
           <button id="play" class="btn btn-primary btn-big btn-invite" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span>Juga</span></button>

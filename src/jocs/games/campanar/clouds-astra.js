@@ -104,12 +104,12 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
   geometry.setAttribute('bankAnchor', new Float32BufferAttribute(anchors, 3));
   geometry.setIndex(indices);
   const uniforms = { atlas: { value: astraCloudAtlas() }, aspect: { value: camera.aspect },
-    seconds: { value: 0 }, height: { value: 0 }, night: { value: night } };
+    seconds: { value: 0 }, height: { value: 0 }, night: { value: night }, pan: { value: 0 } };
   const material = new ShaderMaterial({
     uniforms, transparent: true, depthWrite: false,
     vertexShader: `
       attribute vec3 bankAnchor;
-      uniform float seconds, height, aspect;
+      uniform float seconds, height, aspect, pan;
       varying vec2 sampleAt;
       varying float mist, fade;
       void main() {
@@ -117,6 +117,9 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
         float passage = fract(seconds * 0.04 * layer + bankAnchor.y);
         // a long drift across a good part of the screen (about a tenth of it every 2 s on the near banks), and they sink as the tower climbs
         vec2 center = bankAnchor.xy + vec2((passage - 0.5) * 1.2, -height * layer * 0.02);
+        // the end's turn takes them round with the mountains: over a band wider than the screen and a bank, so the jump
+        // back is out of sight
+        center.x = mod(center.x + pan + 2.2, 4.4) - 2.2;
         vec2 size = vec2(min(1.68, 1.16 / aspect), min(1.68 * aspect, 1.16));
         gl_Position = vec4(center + position.xy * size, 0.99998, 1.0);
         sampleAt = uv;
@@ -144,8 +147,10 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
   mesh.renderOrder = -100; // the slabs that are still fading in draw over the sky too
   scene.add(mesh);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-  return { tick(dt, climb) {
+  // pan: the sky's round moved for the end's turn, CSS px (sky.js skyPan)
+  return { tick(dt, climb, pan = 0) {
     uniforms.aspect.value = camera.aspect;
+    uniforms.pan.value = pan * 2 / innerWidth;
     if (!reduced.matches) uniforms.seconds.value += dt;
     uniforms.height.value = reduced.matches ? 0 : Math.min(22, Math.max(0, climb));
   } };

@@ -45,7 +45,7 @@
 </aside>
 <main id="views"></main>
 <script type="module">
-import { carenaSvg } from './carena.mjs';
+import { carena360 } from './carena.mjs';
 import { SKY_DEVICES } from '/src/jocs/games/campanar/sky.js';
 const NAMES = { tots: 'Tots', mobil: 'Mòbil (vertical)', tauleta: 'Tauleta (apaïsada)', escriptori: 'Escriptori' };
 const VIEWS = { mobil: [[375, 667, 0.55], [320, 568, 0.55], [430, 932, 0.45]], tauleta: [[1024, 768, 0.4]], escriptori: [[1440, 900, 0.34], [1440, 700, 0.34], [1920, 1080, 0.26]] };
@@ -148,7 +148,7 @@ function apply() {
   for (const f of frames) {
     const d = deviceOf(f), c = f.contentWindow.__campanar;
     if (!d || !c) continue;
-    urls[d] ??= `"data:image/svg+xml,${encodeURIComponent(carenaSvg(pano, merged(d)))}"`;
+    urls[d] ??= `"data:image/svg+xml,${encodeURIComponent(carena360(pano, merged(d)))}"`;
     c.tuneSky(merged(d), urls[d]);
   }
   document.getElementById('out').value = JSON.stringify(all, null, 2);

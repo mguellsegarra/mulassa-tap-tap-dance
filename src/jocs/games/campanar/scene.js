@@ -5,19 +5,21 @@
 // for good, cut to its body's plan (facade.js; textures/, a short white flash). When the tower falls, the floors still
 // in colour turn too, one wave up, and the crown grows on the top floor: the tiled pyramid and the small bronze cage.
 // The sky and the town are the page's background (style.css), so the canvas is transparent.
-import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Mesh, PlaneGeometry, Group,
-  MeshLambertMaterial, MeshBasicMaterial, Color, Vector3 } from 'three';
+import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Mesh, Group, MeshLambertMaterial,
+  Color, Vector3 } from 'three';
 import { SIZE, FLOOR } from './rules.js';
 import { createFacade } from './facade.js';
 import { box, stoneGeo, stoneMats, courseMats } from './stone.js';
 import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments } from './crown.js';
 import { TOL, sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
-import { skySettings } from './sky.js';
+import { skySettings, skyPan } from './sky.js';
 import { createTowerTurn } from './turn.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
-import { STACK_TRY, STACK_LENS, STACK_ZOOM, stackPerfect } from './stack.js';
+import { STACK_TRY, STACK_LENS, STACK_ZOOM } from './stack.js';
+import { createFoot } from './peu.js';
+import { perfectEffect } from './perfect.js';
 import { pixelRatio } from '#plassa/quality.js';
 
 // terracotta, apricot, butter, leaf, teal, rose and round again: 8 floors from one to the next
@@ -32,7 +34,6 @@ const ZOOM = +new URLSearchParams(location.search).get('zoom') || (STACK_TRY ? S
 // ?cossos=0: no bodies (each slab its own plan), to compare; ?tol=N tries another grouping tolerance
 const BODY_TOL = new URLSearchParams(location.search).get('cossos') === '0' ? 0 : +new URLSearchParams(location.search).get('tol') || TOL;
 const VIEW = new Vector3(2.3, 2.3, 2.3).multiplyScalar(SIZE * ZOOM); // the camera's offset from the top
-const plane = new PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
 const easeOut = t => 1 - (1 - t) ** 3;
 
 export function createScene(canvas) {
@@ -42,7 +43,7 @@ export function createScene(canvas) {
   const camera = new PerspectiveCamera(46, 1, 0.1, STACK_TRY ? 2000 : 400);
   // the sky behind the tower: a night's clouds (Astra's) under Fable's stars
   const clouds = createClouds(scene, camera, renderer, { night: 0.8 }), stars = createStars(scene, camera, renderer);
-  // light from above and a second one on the left face: the top, the left and the right faces in three clear tones
+  // light from above and a fixed sun: from the end's first view the top, the left and the right faces in three tones
   scene.add(new HemisphereLight('#ffffff', '#8a7a6a', 2.2));
   const side = new DirectionalLight('#fff4e0', 1.1);
   side.position.set(0, 0, 2);
@@ -104,6 +105,7 @@ export function createScene(canvas) {
   base.geometry = foot.g;
   base.material = stoneMats('A/base-parell', foot.edges, false);
   scene.add(base);
+  const peu = createFoot(scene, base); // fading into the valley, sunk at the home (peu.js)
 
   // a placed slab turns to stone (or, already stone, to another course): a white flash fading out, a small swell
   function turn(m, key, cx = 0, cz = 0, batter) {
@@ -238,18 +240,8 @@ export function createScene(canvas) {
       moving = null;
     },
     // a perfect drop: a flat ring of the slab's colour widens from its top and fades in 0.6 s, a little wider each in a row
-    ripple(n, rect, y, streak) {
-      if (STACK_TRY) return stackPerfect((m, tick) => { scene.add(m); fx.push({ m, tick: t => tick(t) || (gone(m), false) }); }, rect, y - FLOOR, streak);
-      const m = new Mesh(plane, new MeshBasicMaterial({ color: colorOf(n), transparent: true, opacity: 0.9, depthWrite: false }));
-      m.position.set(rect.x, y + 0.002, rect.z);
-      scene.add(m);
-      const grow = 1.5 + 0.08 * Math.min(streak - 1, 6);
-      fx.push({ m, tick: t => {
-        const k = Math.min(1, t / 0.6), s = 1 + (grow - 1) * (1 - (1 - k) ** 2);
-        m.scale.set(rect.w * s, 1, rect.d * s);
-        m.material.opacity = 0.9 * (1 - k);
-        return k < 1 || (gone(m), false);
-      } });
+    ripple(n, rect, y, streak) { // a perfect drop's mark (perfect.js)
+      perfectEffect((m, tick) => { scene.add(m); fx.push({ m, tick: t => tick(t) || (gone(m), false) }); }, colorOf(n), rect, y, streak);
     },
     // the end: in 0.8 s the camera eases back until the whole tower fits
     pullOut() {
@@ -261,6 +253,7 @@ export function createScene(canvas) {
     // keep the top and bottom shares of the screen clear: the whole tower is framed in the space between
     lift(top, bottom) { lift = [top, bottom]; },
     aside(share) { aside = share; },
+    home: on => peu.home(on),
     look: freeLook.drag, // the end's free look (turn.js)
     letGo: freeLook.letGo,
     frame(dt) {
@@ -280,6 +273,7 @@ export function createScene(canvas) {
       } else camY += (aimY - camY) * (1 - Math.exp(-Math.log(2) / 0.25 * dt)); // half the way every 0.25 s
       lifted = lifted.map((v, i) => v + (lift[i] - v) * Math.min(1, dt * 6));
       asided += (aside - asided) * Math.min(1, dt * 5); // from the home's side to the middle in about half a second, no jump
+      peu.tick(dt);
       const [lt, lb] = lifted;
       if (lt + lb > 0.001 || Math.abs(asided) > 0.0005) { // farther, so it fits the space left; the picture shifted to that space's middle
         k /= 1 - lt - lb;
@@ -288,11 +282,12 @@ export function createScene(canvas) {
       } else camera.clearViewOffset();
       freeLook.place(camera, Math.hypot(VIEW.x, VIEW.z) * k, VIEW.y * k * tilt, camY, dt);
       camera.lookAt(0, camY - 0.3 * SIZE, 0);
-      clouds.tick(dt, camY);
-      stars.tick(dt, camY);
+      clouds.tick(dt, camY, skyPan(freeLook.spin)); // the end's turn: the sky's round, its clouds and stars go with it
+      stars.tick(dt, camY, skyPan(freeLook.spin));
       renderer.render(scene, camera);
     },
     get climb() { return camY; },
-    get settled() { return Math.abs(asided - aside) < 0.05; }, // the picture nearly in the middle: the first slab comes down as it ends
+    get pan() { return skyPan(freeLook.spin); },
+    get settled() { return Math.abs(asided - aside) < 0.05 && peu.risen; }, // the tower risen: the first slab comes down as it ends
   };
 }

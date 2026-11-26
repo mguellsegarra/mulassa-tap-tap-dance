@@ -53,7 +53,7 @@ const fableNightBase = 0.8; // the night already there at the home screen
 export function createStars(scene, camera, renderer) {
   const canvas = renderer.domElement;
   const uniforms = { frame: { value: new Vector2(canvas.width, canvas.height) }, ratio: { value: 1 },
-    night: { value: 0 }, seconds: { value: 0 } };
+    night: { value: 0 }, seconds: { value: 0 }, pan: { value: 0 } };
   const material = new ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, premultipliedAlpha: true,
     vertexShader: `
@@ -61,7 +61,7 @@ export function createStars(scene, camera, renderer) {
       attribute vec4 hue;  // its tint, its light
       attribute vec2 beat; // its twinkle: phase, pace
       uniform vec2 frame;  // the drawing buffer, px
-      uniform float ratio, night, seconds;
+      uniform float ratio, night, seconds, pan; // pan: the end's turn, in the field's own units
       varying vec4 light;
       varying vec2 disc;
       varying float halo, sky, up, rays, grow;
@@ -79,7 +79,9 @@ export function createStars(scene, camera, renderer) {
           up = position.y * 0.5 + 0.5;
           return;
         }
-        vec2 at = vec2(star.x * frame.y / frame.x, star.y);
+        // the end's turn takes the field round with the mountains; it wraps over its own width (no star is missed)
+        float x = mod(star.x + pan + ${fableSkyReach.toFixed(1)}, ${(2 * fableSkyReach).toFixed(1)}) - ${fableSkyReach.toFixed(1)};
+        vec2 at = vec2(x * frame.y / frame.x, star.y);
         float seen = smoothstep(star.w, star.w + 0.08, fableDark(at.y * 0.5 + 0.5, night));
         // it only dims: brighter than its own light would bleach its tint
         float twinkle = 1.0 - (0.07 + 0.006 * star.z)
@@ -128,7 +130,9 @@ export function createStars(scene, camera, renderer) {
   scene.add(mesh);
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let peak = 0, night = fableNightBase;
-  return { tick(dt, climb) {
+  // pan: the sky's round moved for the end's turn, CSS px (sky.js skyPan)
+  return { tick(dt, climb, pan = 0) {
+    uniforms.pan.value = pan * 2 / innerHeight; // the field's x is in half screen heights (as NDC's y)
     // the end's camera comes down to half the tower: the night it earned stays. Only a new run, the climb back at the
     // foot, brings the dusk again
     peak = climb < peak * 0.45 ? climb : Math.max(peak, climb);

@@ -51,3 +51,6 @@ ${mast}
 </svg>
 `;
 }
+// the whole round (the end's camera turns): 360° from the tuned view's own left edge, so the tuned view is the first
+// span degrees of it, the Cogulla and its mast just as tuned
+export const carena360 = (pano, o) => carenaSvg(pano, { ...o, span: 360, center: o.center - o.span / 2 + 180 });

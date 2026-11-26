@@ -1,4 +1,5 @@
-// A perfect drop's mark on the new top: the game's own, a sheet of the floor's colour that swells out from it and fades,
+// How a placed slab settles (a perfect from its speed, a cut squaring onto the axis) and a perfect drop's mark on the
+// new top: the game's own, a sheet of the floor's colour that swells out from it and fades,
 // wider the longer the run of perfects; with ?stack, Stack's white rim and rings (stack.js).
 // add(mesh, tick): the scene's effect list (tick(t) → false when done, the mesh then removed and disposed)
 import { Mesh, MeshBasicMaterial, PlaneGeometry } from 'three';
@@ -35,5 +36,23 @@ export function perfectSettle(m, rect, axis, from, v) {
   return t => {
     m.position[axis] = rect[axis] + (x0 + (v * SETTLE_KEEP + SETTLE_W * x0) * t) * Math.exp(-SETTLE_W * t);
     return t < SETTLE_S || (m.position[axis] = rect[axis], false);
+  };
+}
+// after a cut, the slab rests a moment where it landed on the floor below, then squares onto the tower's axis (rules.js:
+// the same area, centred), eased out: the cut reads first, then the stone takes its shape. m: the slab, already at rect
+// → the effect's tick
+const SQUARE_REST = 0.07, SQUARE_S = 0.16;
+export function squareSettle(m, landed, rect) {
+  const set = k => { // k: 0 where it landed, 1 squared
+    m.position.x = landed.x + (rect.x - landed.x) * k;
+    m.position.z = landed.z + (rect.z - landed.z) * k;
+    m.scale.x = landed.w + (rect.w - landed.w) * k;
+    m.scale.z = landed.d + (rect.d - landed.d) * k;
+  };
+  set(0);
+  return t => {
+    const k = Math.min(1, Math.max(0, (t - SQUARE_REST) / SQUARE_S));
+    set(1 - (1 - k) ** 3);
+    return k < 1;
   };
 }

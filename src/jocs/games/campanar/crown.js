@@ -1,9 +1,10 @@
 // Sant Joan's octagonal tiled roof, its small bronze cage with the gold bell and cross, and stone pinnacles.
 import { Mesh, CylinderGeometry, Group, MeshLambertMaterial, Vector3, BufferGeometry, Float32BufferAttribute,
-  Quaternion, DoubleSide } from 'three';
+  Quaternion } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { SIZE, FLOOR } from './rules.js';
 import { box, scales } from './stone.js';
+import { hipWeathering, copedPinnacles, ribbedSpire, scaleStoneMat, isSharedCoping } from './coping.js';
 
 // the iron in the Plaça del Blat's warm palette: a dark bronze, not black
 const iron = new MeshLambertMaterial({ color: '#8a5a35' }), gold = new MeshLambertMaterial({ color: '#d9a640' });
@@ -88,18 +89,19 @@ export function buildCampanarHead(base, y) {
   return g;
 }
 // over a bell chamber whose floors above ran too thin for bells: an octagonal stone spire centred on the parapet `base`
-// at y, as tall as those floors (h), a moulded ring every three floors, then a small bronze cage with the gold bell and
-// the gold cross. Never shorter than a spire reads. → the group, and the square it stands on (for the pinnacles)
-const spireStone = new MeshLambertMaterial({ color: '#e9cb94', flatShading: true });
+// at y, as tall as those floors (h): the campanar as tall as the player built it, never lower. A moulded ring every
+// three floors, then a small bronze cage with the gold bell and the gold cross. Never shorter than a spire reads.
+// → the group, and the square it stands on (for the pinnacles)
+export const spireHeight = (base, h) => Math.max(h, Math.min(base.w, base.d) * 1.2);
 export function makeStoneSpire(base, y, h) {
-  const g = new Group(), r0 = Math.min(base.w, base.d) * 0.3, H = Math.max(h, r0 * 4), cage = H - Math.min(H * 0.2, r0 * 1.8);
+  const g = new Group(), r0 = Math.min(base.w, base.d) * 0.3, H = spireHeight(base, h), cage = H - Math.min(H * 0.2, r0 * 1.8);
   g.position.set(base.x, y, base.z);
   const radius = t => r0 * (1 - t / H); // the cone's radius at height t
   const oct = (rt, rb, ht, at) => new CylinderGeometry(rt, rb, ht, 8).rotateY(Math.PI / 8).translate(0, at + ht / 2, 0);
   const stone = [oct(radius(cage), r0, cage, 0)], ring = FLOOR * 0.16;
   for (let t = 3 * FLOOR; t < cage - FLOOR; t += 3 * FLOOR) stone.push(oct(radius(t) * 1.16, radius(t) * 1.16, ring, t - ring / 2));
   stone.push(oct(radius(cage) * 1.25, radius(cage) * 1.25, ring, cage - ring)); // the cage's ledge
-  g.add(new Mesh(mergeGeometries(stone), spireStone));
+  g.add(new Mesh(ribbedSpire(mergeGeometries(stone), r0, H, cage), scaleStoneMat())); // fish-scale stone, a rib up each arris
   const metal = [], up = new Vector3(0, 1, 0), bar = Math.max(r0 * 0.05, SIZE * 0.008);
   const rod = (from, to, w = bar) => {
     const d = to.clone().sub(from), mid = from.clone().lerp(to, 0.5);
@@ -122,41 +124,12 @@ export function makeStoneSpire(base, y, h) {
   g.add(bell, new Mesh(mergeGeometries(metal), gold));
   return { g, foot: { x: base.x, z: base.z, w: r0 * 2, d: r0 * 2 } };
 }
-// a stone weathering on a floor's top where the floor above leaves it bare: a slope on each side, from the upper face
-// down to this floor's edge, so no ledge holds water. lower, upper: the two plans; y: the lower floor's top. → a mesh or null
-const weatherStone = new MeshLambertMaterial({ color: '#ecd29e', side: DoubleSide });
-const wedge = new BufferGeometry().setAttribute('position', new Float32BufferAttribute([ // full height at x 0, none at x 1
-  0, 0, -0.5, 0, 1, -0.5, 1, 0, -0.5, 0, 0, 0.5, 1, 0, 0.5, 0, 1, 0.5,
-  1, 0, -0.5, 0, 1, -0.5, 0, 1, 0.5, 1, 0, -0.5, 0, 1, 0.5, 1, 0, 0.5,
-], 3));
-wedge.computeVertexNormals();
-export function makeWeathering(lower, upper, y, rise) {
-  const geos = [];
-  for (const [ledge, inner, along, len, turn, onX] of [
-    [lower.x + lower.w / 2 - (upper.x + upper.w / 2), upper.x + upper.w / 2, lower.z, lower.d, 0, true],
-    [upper.x - upper.w / 2 - (lower.x - lower.w / 2), upper.x - upper.w / 2, lower.z, lower.d, Math.PI, true],
-    [lower.z + lower.d / 2 - (upper.z + upper.d / 2), upper.z + upper.d / 2, lower.x, lower.w, -Math.PI / 2, false],
-    [upper.z - upper.d / 2 - (lower.z - lower.d / 2), upper.z - upper.d / 2, lower.x, lower.w, Math.PI / 2, false]]) {
-    if (ledge < SIZE * 0.01) continue;
-    const g = wedge.clone().scale(ledge, Math.min(ledge * 0.7, rise), len).rotateY(turn);
-    geos.push(onX ? g.translate(inner, y, along) : g.translate(along, y, inner));
-  }
-  return geos.length ? new Mesh(mergeGeometries(geos), weatherStone) : null;
-}
-// the bell chamber's four pinnacles: on the parapet's corners the slab above leaves free
+// a stone weathering where the floor above leaves a floor's top bare, so no ledge holds water (coping.js)
+export const makeWeathering = hipWeathering;
+// the bell chamber's pinnacles, grown from the parapet at y (coping.js)
 export function makePinnacles(r, y, above) {
-  const g = new Group(), p = Math.min(r.w, r.d) * 0.16, stone = new MeshLambertMaterial({ color: '#f1d6a2' });
-  g.position.y = y; // grown from the parapet, not the ground
-  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-    const cx = r.x + sx * (r.w / 2 - p / 2), cz = r.z + sz * (r.d / 2 - p / 2);
-    if (above && Math.abs(cx - above.x) < above.w / 2 + p / 2 && Math.abs(cz - above.z) < above.d / 2 + p / 2) continue;
-    const foot = new Mesh(box, stone);
-    foot.scale.set(p, p * 0.7, p);
-    foot.position.set(cx, p * 0.35, cz);
-    const spire = new Mesh(new CylinderGeometry(0, p * 0.62, p * 1.8, 4).rotateY(Math.PI / 4), stone);
-    spire.position.set(cx, p * 0.7 + p * 0.9, cz);
-    g.add(foot, spire);
-  }
+  const g = copedPinnacles(r, 0, above);
+  g.position.y = y;
   return g;
 }
 
@@ -166,7 +139,7 @@ export function disposeCampanarOrnaments(group) {
   group.traverse(m => {
     if (!m.isMesh) return;
     if (m.geometry !== box) m.geometry.dispose();
-    if (![iron, gold, weatherStone, spireStone].includes(m.material)) materials.add(m.material);
+    if (m.material !== iron && m.material !== gold && !isSharedCoping(m.material)) materials.add(m.material);
   });
   for (const material of materials) {
     material.map?.dispose();

@@ -1,34 +1,31 @@
 // The tower in 3D: flat solid slabs whose colour drifts a step each floor through the Plaça del Blat's warm palette, so
 // every course reads on its own and the cut is plain to see. An offcut falls whole, out of the frame; a new slab fades in; a perfect
-// drop sends a ring out from the top; at the end the camera eases back to the whole tower.
+// drop sends a ring out from the top; at the end the camera looks close at the top, then eases back to the whole tower.
 // The tower stands on the campanar de Valls' stone from the start; five floors under the top, each course turns into it
 // for good, cut to its body's plan (facade.js; textures/, a short white flash). When the tower falls, the floors still
 // in colour turn too, one wave up, and the crown grows on the top floor: the tiled pyramid and the small bronze cage.
 // The sky and the town are the page's background (style.css), so the canvas is transparent.
 import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Mesh, Group, MeshLambertMaterial,
-  Color, Vector3 } from 'three';
+  Vector3 } from 'three';
 import { SIZE, FLOOR } from './rules.js';
+import { colorOf } from './palette.js';
 import { createFacade } from './facade.js';
-import { box, stoneGeo, stoneMats, courseMats } from './stone.js';
+import { box, campanarFoot } from './stone.js';
+import { setCopingInner, terraceRail } from './coping.js';
+import { createOpenings } from './openings.js';
 import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments } from './crown.js';
 import { TOL, sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings, skyPan } from './sky.js';
 import { createTowerTurn } from './turn.js';
+import { endShot, stepEndShot, widenEndShot } from './end-camera.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
 import { STACK_TRY, STACK_LENS, STACK_ZOOM } from './stack.js';
 import { createFoot } from './peu.js';
-import { perfectEffect, perfectSettle, PERFECT_MARK } from './perfect.js';
+import { perfectEffect, perfectSettle, squareSettle, PERFECT_MARK } from './perfect.js';
 import { pixelRatio } from '#plassa/quality.js';
 
-// terracotta, apricot, butter, leaf, teal, rose and round again: 8 floors from one to the next
-const STOPS = ['#ef7f4c', '#f4a95a', '#f5d36e', '#a8d277', '#62c2b1', '#ee8f86'].map(c => new Color(c));
-const EACH = 8;
-export function colorOf(n) {
-  const t = n / EACH, i = Math.floor(t) % STOPS.length;
-  return STOPS[i].clone().lerp(STOPS[(i + 1) % STOPS.length], t - Math.floor(t));
-}
 // ?zoom=N puts the camera N times as far (1: the reference game's framing)
 const ZOOM = +new URLSearchParams(location.search).get('zoom') || (STACK_TRY ? STACK_ZOOM : 1); // ?stack: far off, a long lens (stack.js)
 // ?cossos=0: no bodies (each slab its own plan), to compare; ?tol=N tries another grouping tolerance
@@ -97,34 +94,28 @@ export function createScene(canvas) {
     } });
   }
 
-  // the foot: the campanar's big ashlar from the first frame, down out of sight
-  const base = new Mesh(box);
-  base.scale.set(SIZE, 200, SIZE);
-  base.position.y = -100;
-  const foot = stoneGeo(base, 200);
-  base.geometry = foot.g;
-  base.material = stoneMats('A/base-parell', foot.edges, false);
+  const base = campanarFoot(); // the foot, down out of sight (stone.js)
   scene.add(base);
   const peu = createFoot(scene, base); // fading into the valley, sunk at the home (peu.js)
+  const openings = createOpenings(scene); // what a settled floor wears: the bell chamber's openings and bells (openings.js)
 
   // a placed slab turns to stone (or, already stone, to another course): a white flash fading out, a small swell
   function turn(m, key, cx = 0, cz = 0, batter) {
     const was = m.userData.stone, id = idOf(key, cx, cz, m, batter);
-    if (was === id) return;
-    const { g, edges } = stoneGeo(m, FLOOR, cx, cz, batter);
+    if (was === id) return [];
     if (was) m.geometry.dispose();
-    m.geometry = g;
     m.userData.stone = id;
     for (const x of [m.material].flat()) x.dispose();
-    const mats = courseMats(key, edges, Math.round((m.position.y - FLOOR / 2) / FLOOR) % 2 === 1);
-    m.material = mats;
+    const mats = m.material = openings.dress(m, key, cx, cz, batter); // its geometry and faces, the bell chamber's pierced
+    const glow = [...mats, ...openings.flashing(key)];
     fx.push({ m, tick: t => { // a white flash fading into the stone, and a small swell
       const k = Math.min(1, t / 0.35);
-      for (const x of mats) x.emissiveIntensity = 0.9 * (1 - k) ** 2;
+      for (const x of glow) x.emissiveIntensity = 0.9 * (1 - k) ** 2;
       const sw = 1 + 0.06 * Math.sin(Math.PI * k);
       m.scale.y = FLOOR * sw;
       return k < 1;
     } });
+    return glow; // what flashes: pieces built with it join in
   }
   // what a slab wears: its course, the motif's centre, its plan (its body's) and its batter
   const idOf = (key, cx, cz, m, b) => `${key}@${cx},${cz}|${m.position.x},${m.position.z},${m.scale.x},${m.scale.z}|${b ? [b.x, b.z, b.w, b.d] : ''}`;
@@ -133,7 +124,7 @@ export function createScene(canvas) {
   function settleSlab(m, c, r) {
     m.scale.set(r.w, m.scale.y, r.d);
     m.position.set(r.x, m.position.y, r.z);
-    turn(m, c.key, c.cx, c.cz, c.batter);
+    const glow = turn(m, c.key, c.cx, c.cz, c.batter);
     // the floors still in colour that will wear this body's plan, or the next one's it slopes in to, take it now: no
     // colour over narrower stone
     for (const [j, p] of c.ahead ?? []) {
@@ -141,9 +132,12 @@ export function createScene(canvas) {
       if (s && !s.userData.settled) { s.scale.set(p.w, s.scale.y, p.d); s.position.set(p.x, s.position.y, p.z); }
     }
     m.userData.settled = { rect: r, batter: c.batter };
-    // the floor below, settled before it, gets its weathering where this one leaves its top bare (none under a glacis)
-    const under = slabs[slabs.indexOf(m) - 1]?.userData.settled;
-    const w = under && !under.batter && makeWeathering(under.rect, r, m.position.y - FLOOR / 2, FLOOR * 0.6);
+    // the floor below, settled before it, gets its weathering where this one leaves its top bare (none under a glacis),
+    // or round a wide terrace a balustrade (coping.js)
+    const under = slabs[slabs.indexOf(m) - 1]?.userData.settled, y = m.position.y - FLOOR / 2;
+    setCopingInner(slabs[slabs.indexOf(m) - 1] ?? base, r); // and the shadow at this wall's foot on its top
+    const rail = under && !under.batter && terraceRail(under.rect, r, y), w = under && !under.batter && !rail && makeWeathering(under.rect, r, y, FLOOR * 0.6);
+    if (rail) glow.push(...openings.terrace(rail, c.key));
     if (w) weather.add(w);
   }
   const gone = m => { scene.remove(m); for (const x of [m.material].flat()) x.dispose(); if (m.userData.stone) m.geometry.dispose(); };
@@ -162,10 +156,11 @@ export function createScene(canvas) {
     resize,
     reset() {
       for (const m of slabs) gone(m);
-      for (const w of [...weather.children]) { weather.remove(w); w.geometry.dispose(); }
+      for (const w of [...weather.children]) { weather.remove(w); w.geometry.dispose(); w.material.dispose(); }
       for (const e of fx) if (e.m?.parent) gone(e.m);
       if (moving?.parent) gone(moving);
       if (crown) { scene.remove(crown); disposeCampanarOrnaments(crown); }
+      openings.reset();
       slabs = []; turning = []; fx = []; moving = null; outro = null; crown = null; plan = createFacade(BODY_TOL);
       lift = [0, 0]; lifted = [0, 0];
       camera.clearViewOffset();
@@ -178,14 +173,15 @@ export function createScene(canvas) {
     moving(n, rect, y) { moving = slab(n, rect, y, n === 1); },
     slide(axis, v) { if (moving) moving.position[axis] = v; },
     // axis, v: the slab's travel and speed as it was dropped
-    place(rect, axis, v = 0) {
-      const m = moving, from = m.position[axis], whole = m.scale.x === rect.w && m.scale.z === rect.d; // whole: a perfect
+    // landed: after a cut, what stood on the floor below: the slab rests there a moment, then squares onto the axis
+    place(rect, axis, v = 0, landed = null) {
+      const m = moving, from = m.position[axis], whole = !landed; // whole: a perfect
       moving.scale.set(rect.w, FLOOR, rect.d);
       moving.position.x = rect.x;
       moving.position.z = rect.z;
-      const settle = whole && perfectSettle(m, rect, axis, from, v); // it settles from its speed (perfect.js); its mark waits
+      const settle = whole ? perfectSettle(m, rect, axis, from, v) : squareSettle(m, landed, rect); // its mark waits
       if (settle) fx.push({ tick: settle });
-      snapping = holdTurns = settle ? PERFECT_MARK : 0; // the floors below turn to stone with the mark, not before it
+      snapping = holdTurns = whole && settle ? PERFECT_MARK : 0; // the floors below turn to stone with the mark, not before it
       moving.userData.built = { ...rect };
       slabs.push(moving);
       aimY = moving.position.y + FLOOR / 2;
@@ -211,7 +207,7 @@ export function createScene(canvas) {
         crown = new Group();
         const tops = slabs.map(m => m.position.y + FLOOR / 2), parapet = rects[cap] ?? rects[0] ?? rect;
         const thin = courses.filter(c => c.key === 'agulla').length, parts = [];
-        if (thin) { // the floors too thin for bells go under an octagonal spire as tall as them, centred on the parapet
+        if (thin) { // the floors too thin for bells go under an octagonal spire as tall as them (crown.js), centred on the parapet
           for (let i = cap + 1; i < slabs.length; i++) slabs[i].visible = false;
           const spire = makeStoneSpire(parapet, tops[cap], thin * FLOOR), slope = makeWeathering(parapet, spire.foot, tops[cap], FLOOR * 0.4);
           parts.push(spire.g, makePinnacles(parapet, tops[cap], spire.foot));
@@ -224,6 +220,7 @@ export function createScene(canvas) {
           const k = Math.min(1, t / 0.45), s = k < 1 ? 1 + 0.25 * Math.sin(Math.PI * k) * (1 - k) * 2 - (1 - k) ** 3 : 1;
           for (const x of parts) x.scale.set(1, Math.max(0.01, s), 1);
           if (k === 1) { // the cuts have settled; only the uncovered tops and the four walls can show
+            if (outro) widenEndShot(outro); // grown: the camera eases out to the whole tower (end-camera.js)
             for (let i = 0; i <= cap; i++) {
               const geo = slabs[i].geometry;
               const covered = i < cap && sameCampanarPlan(courses[i].batter ?? rects[i], rects[i + 1]);
@@ -249,12 +246,10 @@ export function createScene(canvas) {
       const wait = snapping, add = (m, tick) => { m.visible = !wait; scene.add(m); fx.push({ m, tick: t => t < wait || (m.visible = true, tick(t - wait)) || (gone(m), false) }); };
       perfectEffect(add, colorOf(n), rect, y, streak);
     },
-    // the end: in 0.8 s the camera eases back until the whole tower fits
+    // the end: the camera eases to the top, close, then back until the whole tower fits (end-camera.js); per device
+    // (sky.js), the share of its height kept over the aim, and its lens
     pullOut() {
-      const top = aimY + SIZE * 1.8; // the crown's cross
-      const fit = Math.max(1, (top / 2 + 1.5 * SIZE) / Math.tan(camera.fov * Math.PI / 360) / VIEW.length());
-      const { tilt, lens } = skySettings(); // per device (sky.js): the share of its height kept over the tower's middle, its lens
-      outro = { t: 0, fromY: camY, toY: top / 2, toK: fit, tilt, lens };
+      outro = endShot(camY, aimY, half => Math.max(1, half / Math.tan(camera.fov * Math.PI / 360) / VIEW.length()), skySettings());
     },
     // keep the top and bottom shares of the screen clear: the whole tower is framed in the space between
     lift(top, bottom) { lift = [top, bottom]; },
@@ -264,18 +259,14 @@ export function createScene(canvas) {
     letGo: freeLook.letGo,
     frame(dt) {
       if ((holdTurns -= dt) <= 0) turning.shift()?.();
+      openings.tick(); // the clock's hands follow the device's time
       for (const e of fx) e.alive = e.tick(e.age = (e.age ?? 0) + dt, dt);
       fx = fx.filter(e => e.alive);
       let k = 1, tilt = 1;
       if (outro) {
-        outro.t = Math.min(1, outro.t + dt / 0.8);
-        const s = outro.t < 0.5 ? 4 * outro.t ** 3 : 1 - (-2 * outro.t + 2) ** 3 / 2;
-        camY = outro.fromY + (outro.toY - outro.fromY) * s;
-        // the whole tower from lower and farther, through a longer lens: it stands straight, not thin below and wide above
-        const zoom = 1 + (outro.lens - 1) * s;
-        k = (1 + (outro.toK - 1) * s) * zoom;
-        tilt = 1 - (1 - outro.tilt) * s;
-        if (camera.zoom !== zoom) { camera.zoom = zoom; camera.updateProjectionMatrix(); }
+        stepEndShot(outro, dt);
+        camY = outro.y; k = outro.k; tilt = outro.tilt;
+        if (camera.zoom !== outro.zoom) { camera.zoom = outro.zoom; camera.updateProjectionMatrix(); }
       } else camY += (aimY - camY) * (1 - Math.exp(-Math.log(2) / 0.25 * dt)); // half the way every 0.25 s
       lifted = lifted.map((v, i) => v + (lift[i] - v) * Math.min(1, dt * 6));
       asided += (aside - asided) * Math.min(1, dt * 5); // from the home's side to the middle in about half a second, no jump

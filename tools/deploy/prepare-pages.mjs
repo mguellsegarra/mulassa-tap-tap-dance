@@ -55,6 +55,7 @@ export async function preparePages(directory, song) {
       || /^jocs\/[\w-]+\/index\.html$/.test(name) // docs/jocs/README.md: one page per mini-game
       || name === 'pop/index.html' // mulassa.cat/pop: Mulassa Pop
       || name === 'jocs/index.html' // mulassa.cat/jocs: a short link to the games picker
+      || name === 'campanar.webmanifest' // Mulassa Tower installed as its own app, full screen (jocs/campanar/index.html)
       || /^jocs\/[\w-]+\/(cards|hero)\/[\w-]+\.(jpg|svg|png|webp)$/.test(name) // a mini-game's own pictures; the games menu's cards and wide heroes
       || /^jocs\/menu\/video\/[\w-]+\.(mp4|jpg)$/.test(name) // the games menu's hero clips and their first frames (src/jocs/menu/hero-video.js)
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»

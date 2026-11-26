@@ -100,7 +100,7 @@ function tap() {
   }
   if (r.cut) scene.fall(n, r.cut, y, axis, Math.sign(pos - top[axis]));
   top = r.placed;
-  scene.place(top, axis, dir * speedAt(n)); // its speed: a perfect's snap settles from it
+  scene.place(top, axis, dir * speedAt(n), r.landed); // its speed: a perfect's snap settles from it
   y += FLOOR;
   if (r.perfect) { streak++; SFX.perfect(streak); haptic('hit'); scene.ripple(n, top, y, streak); } else { streak = 0; SFX.place(); haptic('tap'); }
   score++;

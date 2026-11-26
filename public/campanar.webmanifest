@@ -1,0 +1,24 @@
+{
+  "id": "/jocs/campanar/",
+  "name": "Mulassa Tower",
+  "short_name": "Mulassa Tower",
+  "start_url": "/jocs/campanar/",
+  "scope": "/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#3d4a6c",
+  "theme_color": "#3d4a6c",
+  "icons": [
+    {
+      "src": "/jocs-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/jocs-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

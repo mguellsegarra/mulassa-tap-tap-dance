@@ -1,10 +1,15 @@
 /* Campanar's own screens: the sky behind, the tower's canvas, the HUD and the home's title. The look is the base
    (packages/plassa/src/base.css, game.css); this file sets the game's colour tokens: stone, terracotta and a morning sky. */
-:root { --accent: #e0703a; --button-gold-bg: linear-gradient(180deg, #ffb27a 0%, #e0703a 55%, #c25a28 100%); --button-bg: #4a2f22e8; --ink: #3a2016; --sheet-color: #4a2f22; --sheet-bg: linear-gradient(#5e3d2c, #4a2f22); --sheet-radius: 24px; --page-edge: #8fdcd8; --page-bg: #8fdcd8; --game: #e0703a; --game-word: #3fd3b8; }
+:root { --accent: #e0703a; --button-gold-bg: linear-gradient(180deg, #ffb27a 0%, #e0703a 55%, #c25a28 100%); --button-bg: #4a2f22e8; --ink: #3a2016; --sheet-color: #4a2f22; --sheet-bg: linear-gradient(#5e3d2c, #4a2f22); --sheet-radius: 24px; --page-edge: #8fdcd8; --page-bg: linear-gradient(#354364 50%, #1e1820 50%); --boot-bg: linear-gradient(#354364, #3d4a6c 12%, #3d4a6c 70%, #1e1820); /* Safari takes its bars' colours from the first screen's edges */ --game: #e0703a; --game-word: #3fd3b8; }
 /* the sky and the hills far away: taller than the screen, its bottom on the screen's; sky.js slides it down as the tower climbs */
 #sky { position: fixed; left: 0; right: 0; bottom: 0; height: 135dvh; background: linear-gradient(#77a3b3, #93b7c0 55%, #e7b2a2 90%, #efbba3); } /* its hills per device: sky.js */
 #sky > div { position: absolute; inset: 0; pointer-events: none; }
 
+/* on a phone, the game's edges melt into the colours Safari paints its bars with (--page-bg, a shade lighter on the
+   phone): a long, eased dusk at the bottom and a short one at the top, so neither reads as a band nor as a seam */
+#edge { display: none; position: fixed; z-index: 1; inset: 0; pointer-events: none;
+  background: linear-gradient(#354364, #35436400 7%), linear-gradient(#1e182000 70%, #1e182014 80%, #1e182059 90%, #1e1820b3 96%, #1e1820); }
+@media (pointer: coarse) { #edge { display: block; } }
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 
 #hud { position: fixed; z-index: 2; top: calc(var(--sat) + 12px); left: 16px; right: 16px; display: grid; grid-template-columns: var(--round-size) 1fr var(--round-size); align-items: center; pointer-events: none; }

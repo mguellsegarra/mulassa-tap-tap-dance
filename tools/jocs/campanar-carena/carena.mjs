@@ -40,14 +40,19 @@ export function carenaSvg(pano, o) {
     tx = (top_ + shift) * pano.step + (o.antennaShift ?? 0); // antennaShift: degrees by hand, where the eye puts the top
     ty -= (a - c) * shift / 4;
   }
-  // a thin mast that ends in a sharp point: straight for its lower 70 %, then tapering
-  const w = o.antennaW / 2, top = ty - o.antenna, neck = ty - o.antenna * 0.7, g = v => +v.toFixed(3);
-  const mast = ty < Infinity ? `<polygon fill="${o.nearColor}" points="${g(tx - w)},${g(ty + 0.05)} ${g(tx - w)},${g(neck)} ${g(tx)},${g(top)} ${g(tx + w)},${g(neck)} ${g(tx + w)},${g(ty + 0.05)}"/>` : '';
+  // the mast: a sharp point, a thin straight shaft, and at its foot the hill itself rising to it, a concave cusp that
+  // lifts the ridge by antennaRise of the mast at the shaft and fades out over antennaSpread degrees each side; drawn on
+  // the hill with the hill's own gradient, so no seam and no other tone
+  const w = o.antennaW / 2, top = ty - o.antenna, neck = ty - o.antenna * 0.85, g = v => +v.toFixed(3);
+  const hill = x => { const k = Math.max(0, Math.min(near.length - 1.001, x / pano.step)), i = Math.floor(k); return near[i] + (near[i + 1] - near[i]) * (k - i); };
+  const cusp = (x, d) => hill(x) + 0.04 - (o.antenna * (o.antennaRise ?? 0.35) + 0.04) * Math.exp(-d / (o.antennaSpread ?? 0.35));
+  const side = sgn => Array.from({ length: 25 }, (_, k) => { const d = (o.antennaSpread ?? 0.35) * 5 * (k / 24) ** 2, x = tx + sgn * (w + d); return `${g(x)},${g(cusp(x, d))}`; });
+  const mast = ty < Infinity ? `<path fill="url(#g)" d="M${g(tx)},${g(top)} L${g(tx + w)},${g(neck)} L${side(1).join(' L')} L${side(-1).reverse().join(' L')} L${g(tx - w)},${g(neck)} Z"/>` : '';
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${o.span} ${H}" preserveAspectRatio="xMidYMax slice">
 <path fill="${o.farColor}" d="${ridge(heights(30))}"/>
 <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="0" x2="0" y1="${y(4.5)}" y2="${H}"><stop offset="0" stop-color="${o.nearColor}"/><stop offset="1" stop-color="${o.groundColor ?? o.nearColor}"/></linearGradient>
-<path fill="url(#g)" d="${ridge(near)}"/>
 ${mast}
+<path fill="url(#g)" d="${ridge(near)}"/>
 </svg>
 `;
 }

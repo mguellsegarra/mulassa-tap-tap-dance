@@ -1,4 +1,4 @@
-// Campanar (POC): a drop keeps only what stands on the floor below, a near drop snaps whole; the metres follow the real
+// Campanar (POC): a drop keeps what stands on the floor below, squared on the axis, a near drop snaps whole; the metres follow the real
 // campanar's scale; and the painter that turns the tower the player built into the campanar, floor by floor as each
 // turns to stone: bells on the last floor wide enough for them, the floors too thin for them left for the spire, the
 // motifs whole, bodies never wider than built, and a settled floor never changed again, over realistic runs.
@@ -8,14 +8,19 @@ import { facade, createFacade } from '../../src/jocs/games/campanar/facade.js';
 import { TOL } from '../../src/jocs/games/campanar/bodies.js';
 
 const top = { x: 0, z: 0, w: SIZE, d: SIZE };
-// the cut: the overlap stays (centred between the two), the overhang falls on its side, sizes add up to the floor below
+// the cut: the overhang falls on its side, what landed and the offcut add up to the floor below; what is left is squared
+// on the tower's axis with the same area (B Escairat), inside the floor below
 const cut = drop(top, 0.6, 'x');
 assert.equal(cut.perfect, false);
-assert.equal(cut.placed.w + cut.cut.w, SIZE, 'nothing lost or made by a cut');
-assert.equal(cut.placed.d, SIZE, 'the other side untouched');
-assert(cut.cut.x > cut.placed.x, 'the offcut on the side it overhung');
-assert.equal(cut.placed.x + cut.placed.w / 2, top.x + top.w / 2, 'the kept part ends at the floor below');
-assert.deepEqual(drop(top, PERFECT * 0.9, 'z'), { placed: top, cut: null, perfect: true }, 'a near drop snaps whole');
+assert.equal(cut.landed.w + cut.cut.w, SIZE, 'nothing lost or made by a cut');
+assert.equal(cut.landed.d, SIZE, 'the other side untouched where it landed');
+assert(cut.cut.x > cut.landed.x, 'the offcut on the side it overhung');
+assert.equal(cut.landed.x + cut.landed.w / 2, top.x + top.w / 2, 'what landed ends at the floor below');
+assert.equal(cut.placed.w, cut.placed.d, 'squared');
+assert(Math.abs(cut.placed.w * cut.placed.d - cut.landed.w * cut.landed.d) < 1e-9, 'with the same area');
+assert.deepEqual([cut.placed.x, cut.placed.z], [top.x, top.z], 'on the axis');
+assert(cut.placed.w <= top.w, 'inside the floor below');
+assert.deepEqual(drop(top, PERFECT * 0.9, 'z'), { placed: top, landed: null, cut: null, perfect: true }, 'a near drop snaps whole');
 assert.deepEqual(drop(top, SIZE, 'x'), { miss: true }, 'nothing over the floor below: the run ends');
 // the metres: 42 floors are the real campanar's 74 m
 assert.equal(metresOf(42), REAL);
@@ -72,6 +77,7 @@ for (let seed = 1; seed <= 200; seed++) {
     if (d.miss) break;
     played.push(last = d.placed);
   }
+  assert(played.every(p => p.w === p.d && p.x === 0 && p.z === 0), `run ${seed}: every floor square on the axis`);
   const live = createFacade(), settled = [], shown = played.map(p => ({ ...p }));
   for (let k = 1; k <= played.length; k++) {
     while (live.ready(played.slice(0, k))) {

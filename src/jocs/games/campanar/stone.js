@@ -1,9 +1,10 @@
 // The campanar's stone: its textures (Codex's, textures/A, C and XS, loaded once each; the needle's tiles and iron drawn
 // here), the stone material (Codex's beige grey mapped onto the Plaça del Blat's warm palette, quoins at each face's real
 // edges), and the world-aligned UVs that line the courses up floor to floor. facade.js says which slab wears which.
-import { BoxGeometry, MeshLambertMaterial, Color, Vector2, TextureLoader, RepeatWrapping, SRGBColorSpace, CanvasTexture,
+import { BoxGeometry, Mesh, MeshLambertMaterial, Color, Vector2, TextureLoader, RepeatWrapping, SRGBColorSpace, CanvasTexture,
   DoubleSide } from 'three';
 import { SIZE, FLOOR } from './rules.js';
+import { copeSlab } from './coping.js';
 
 export const box = new BoxGeometry(1, 1, 1);
 const loader = new TextureLoader(), textures = new Map();
@@ -49,6 +50,7 @@ const NEEDLE = {
 // the corner quoins: painted at each face's real edges (a cut slab keeps them), from a strip one slab high whose left is
 // the corner; alternate floors swap the long and the short block, and the two faces of a corner disagree, as stone does
 const QUOIN = SIZE * 0.16;
+export const quoinOf = w => Math.min(QUOIN, w * 0.12); // a quoin's width on a face w wide, as the shader paints it
 // Codex's stone is beige grey: its shades are mapped onto the Plaça del Blat's warm stone (by lightness: a warm brown for
 // openings and joints, sandstone, butter for the lit faces), a little of the original colour kept for bells and hands
 const PALETTE = ['#7a4f2e', '#e2b77c', '#fbe7b5'].map(c => new Color(c));
@@ -75,6 +77,8 @@ function stoneMat(map, edge, quoin) {
   };
   return mat;
 }
+// a top's texture until coping.js draws its coping stones (scene.js turn): the big ashlar, for the foot's first frame
+const TOP = 'A/base-parell';
 // fish-scale roof tiles for the crown's pyramid: light stone-coloured rows, as on the real campanar
 export function scales() {
   const c = document.createElement('canvas');
@@ -119,12 +123,22 @@ export function stoneGeo(m, h, cx = 0, cz = 0, batter) {
 // a face set: four sides on `key` with quoins at their edges, the top on the paving; floor parity picks the quoins
 export function stoneMats(key, edges, odd) {
   const q = f => tex(`A/cantonera-${(f < 2) === odd ? 'senar' : 'parell'}`);
-  const side = f => stoneMat(tex(key), edges[f], q(f)), top = stoneMat(tex('A/tapa'));
+  const side = f => stoneMat(tex(key), edges[f], q(f)), top = stoneMat(tex(TOP));
   return [side(0), side(1), top, top, side(4), side(5)];
 }
 // a slab's faces for its course: the iron lattice see-through on every face, the tiles without quoins, or stone
 export function courseMats(key, edges, odd) {
   if (key === 'ferro') return Array(6).fill(new MeshLambertMaterial({ map: tex('ferro'), alphaTest: 0.5, side: DoubleSide, emissive: '#ffffff', emissiveIntensity: 0 }));
-  if (key === 'escates') { const t = stoneMat(tex('escates')), top = stoneMat(tex('A/tapa')); return [t, t, top, top, t, t]; }
+  if (key === 'escates') { const t = stoneMat(tex('escates')), top = stoneMat(tex(TOP)); return [t, t, top, top, t, t]; }
   return stoneMats(key, edges, odd);
+}
+// the campanar's foot: the big ashlar from the first frame down out of sight, its top in coping stones
+export function campanarFoot() {
+  const base = new Mesh(box);
+  base.scale.set(SIZE, 200, SIZE);
+  base.position.y = -100;
+  const foot = stoneGeo(base, 200);
+  base.geometry = foot.g;
+  base.material = copeSlab(stoneMats('A/base-parell', foot.edges, false), { x: 0, z: 0, w: SIZE, d: SIZE }, null, 0);
+  return base;
 }

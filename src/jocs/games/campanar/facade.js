@@ -1,7 +1,7 @@
 // Lay out Sant Joan's stonework on the player's tower, floor by floor as each turns to stone (AHEAD under the top), and
 // never touch a floor again once it is settled: its body's plan (bodies.js) and its course. From the ground up: the
-// portal, the big ashlar, a string course; a window in the middle of a tall body, a plain stretch between two; the clock and the cornice of blind arches over it,
-// earned once by a clean stretch; a glacis, the top floor of a body sloping in to the next one's plan. The top: the
+// portal, the big ashlar, a string course; the shaft in bays of BAY floors between thin string courses, each with a window or
+// an arrow slit in its middle; the clock and the cornice of blind arches over it, earned once by a clean stretch; a glacis, the top floor of a body sloping in to the next one's plan. The top: the
 // parapet over the bell chamber, on the last floor wide enough for bells. A floor too thin for them tells, as soon as
 // it is laid, where that top is; a tower that ends wide has it on its last floor, laid on the floors still in colour
 // when the run ends. Above it, the floors too thin for bells ('agulla') stay in colour till the end, then go under an
@@ -12,11 +12,16 @@ import { TOL, AHEAD, bodyAt, joinsBody, sameCampanarPlan } from './bodies.js';
 
 const campanarWidths = { A: 0.65, C: 0.4, XS: 0.22 };
 const sizeOf = v => Object.keys(campanarWidths).find(k => v >= campanarWidths[k]); // a motif's set for a share of the full side
-const LEN = { bells: { A: 4, C: 3, XS: 2 }, clock: { A: 3, C: 2 }, portal: { A: 3, C: 2 }, window: { A: 2, C: 2, XS: 2 } };
+export const LEN = { bells: { A: 4, C: 3, XS: 2 }, clock: { A: 3, C: 2 }, portal: { A: 3, C: 2 }, window: { A: 2, C: 2, XS: 2 } };
 const FILE = { bells: 'campanes', clock: { A: 'rellotge3', C: 'rellotge' }, portal: 'portal', window: { A: 'mainell', C: 'mainell', XS: 'espitllera' } };
 const fileOf = (motif, set) => `${set}/${typeof FILE[motif] === 'string' ? FILE[motif] : FILE[motif][set]}`;
 // the big ashlar six floors over the portal; the clock from the twelfth floor; windows at least ten floors apart
 const BASE_FLOORS = 6, CLOCK_FROM = 12, WINDOW_GAP = 10;
+// a body's opening two floors over its foot: a window, or an arrow slit when the last window is nearer than WINDOW_GAP.
+// A long body is parted in bays, as Valls' thin string courses part its shaft: a string course BAY floors over the last
+// line across the wall (the body's foot, the imposta, the arches over the clock, a string course), and in its bay an
+// opening two floors clear of it; none in the bay right over the clock, so its stage reads
+export const BAY = 7;
 const AXIS = { x: 0, z: 0 };
 const share = r => Math.min(r.w, r.d) / SIZE;
 const courseOf = (kind, i) => `A/${kind}-${i % 2 ? 'senar' : 'parell'}`;
@@ -26,7 +31,8 @@ const courseOf = (kind, i) => `A/${kind}-${i % 2 ? 'senar' : 'parell'}`;
 // top: 'crown' | 'vane', cap } (cx, cz: where a motif is centred; cap: the parapet's floor, -1 when the tower has none)
 export function createFacade(tol = TOL) {
   const floors = [], pending = new Map(); // pending: a motif's upper pieces, chosen with its first floor
-  let baseUntil = BASE_FLOORS, clock = false, lastWindow = -Infinity;
+  let baseUntil = BASE_FLOORS, clock = false, lastWindow = -Infinity, lastOpen = -Infinity;
+  let line = -Infinity; // the last floor a band crosses (the imposta, the arches, a string course)
 
   // the parapet's floor: under the first slab too thin for bells, or the last one when the run has ended
   const capOf = (known, ended) => {
@@ -68,13 +74,23 @@ export function createFacade(tol = TOL) {
       if (portal) { motif('portal', portal); baseUntil += LEN.portal[portal]; }
     }
     if (!f.key) {
-      const set = known[i + 1] && sizeOf(share(at(i + 1))), cset = sizeOf(share(rect)), tall = joins(body.lo + 4);
+      const set = known[i + 1] && sizeOf(share(at(i + 1))), cset = sizeOf(share(rect));
       const clockSet = !clock && i >= CLOCK_FROM && (cset === 'A' ? 'A' : cset === 'C' ? 'C' : null);
       const room = cap === null || i + 5 < cap - 4; // the clock and its arches stay clear of the bell chamber
+      const bay = i - Math.max(body.lo - 1, line), clear = j => cap === null || j < cap - 4; // so do the bays' pieces
+      const spaced = i === body.lo + 2 || i - lastOpen >= 4; // two plain floors over the last opening (or the clock) in a body
       if (i < baseUntil) put(courseOf('base', i), AXIS);
-      else if (i === baseUntil) put('A/imposta', AXIS);
-      else if (clockSet && room && known[i + LEN.clock[clockSet]] && flat(i + LEN.clock[clockSet])) { motif('clock', clockSet, 'A/arquets'); clock = true; }
-      else if (i === body.lo + 2 && tall && set && i - lastWindow >= WINDOW_GAP && flat(i + 1)) { motif('window', set); lastWindow = i; }
+      else if (i === baseUntil) { put('A/imposta', AXIS); line = i; }
+      else if (clockSet && room && known[i + LEN.clock[clockSet]] && flat(i + LEN.clock[clockSet])) {
+        motif('clock', clockSet, 'A/arquets');
+        clock = true;
+        line = lastOpen = i + LEN.clock[clockSet];
+      } else if ((i === body.lo + 2 || bay === 3) && spaced && set && clear(i + 1) && flat(i + 2)) { // a plain floor over it
+        const big = i - lastWindow >= WINDOW_GAP;
+        motif('window', big ? set : 'XS');
+        if (big) lastWindow = i;
+        lastOpen = i;
+      } else if (bay >= BAY && spaced && clear(i) && flat(i + 2)) { put('A/faixa', AXIS); line = i; } // never just under a glacis
     }
     // the top floor of a body under a narrower one: a glacis, sloping in to that plan
     if ((!f.key || f.key.startsWith('A/base') || f.key === 'A/imposta') && known[i + 1] && i + 1 <= limit && !joins(i + 1)) {

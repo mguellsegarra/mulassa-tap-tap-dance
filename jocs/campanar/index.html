@@ -4,9 +4,12 @@
   <meta charset="utf-8">
   <script>addEventListener('dragstart', e => e.preventDefault());</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#8fdcd8">
+  <meta name="theme-color" content="#3d4a6c"><!-- the sky's top: Safari's bars blend into it -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Mulassa Tower">
+  <!-- its own app on a home screen (campanar.webmanifest), full screen; shortcut: Mulassa Games' icons until Tower has its own -->
+  <link rel="manifest" href="/campanar.webmanifest">
   <meta name="robots" content="noindex"><!-- POC: out of search until it is a game -->
   <title>Mulassa Tower</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -18,6 +21,7 @@
 <body>
   <div id="sky" aria-hidden="true"></div>
   <canvas id="game" aria-label="El campanar"></canvas>
+  <div id="edge" aria-hidden="true"></div>
 
   <div id="hud" hidden>
     <button id="pause" class="round-btn" aria-label="Pausa"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>

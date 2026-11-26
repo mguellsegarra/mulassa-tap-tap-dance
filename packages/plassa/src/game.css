@@ -1,7 +1,7 @@
 /* The shell every mini-game page shares, after base.css: the fonts, the page, the covers (pause, end, boards) over the
    board, the boot screen and its running Mulassa, the 3, 2, 1, the end sheet's numbers, the way back to Mulassa Games,
    the boards and a player's card, the turn-the-device cover. Colours come from the tokens a game sets (base.css :root, and
-   --page-bg for the page behind everything). A game adds its own screens in its own CSS, never these selectors again. */
+   --page-bg for the page behind everything, --boot-bg for the boot screen when the page's is not a plain colour). A game adds its own screens in its own CSS, never these selectors again. */
 /* Fonts served from this site, the main game's (index.html), with its subsets' ranges: latin, latin-ext, and for uk and ru
    Nunito answering to 'Baloo 2' for Cyrillic only (Baloo has none; fetched only when Cyrillic is on screen). One weight
    range per file here, the games' own (index.html declares 600 and 800 apart). Licences: /fonts/OFL-*.txt. */
@@ -30,7 +30,7 @@ a.round-btn { box-sizing: border-box; display: inline-flex; align-items: center;
 /* boot: the running Mulassa until main.js adds .ready; then it fades out and the menu in, all of it at once.
    Like the main game's #loader: opaque and unblurred, with the blurred menu not drawn under it, so nothing is re-blurred each
    frame and her compositor-run stride keeps going while the boot holds the main thread. */
-#boot { z-index: 4; overflow: hidden; background: var(--page-bg, var(--page-edge, #140c07)); -webkit-backdrop-filter: none; backdrop-filter: none; transition: opacity .3s; }
+#boot { z-index: 4; overflow: hidden; background: var(--boot-bg, var(--page-bg, var(--page-edge, #140c07))); -webkit-backdrop-filter: none; backdrop-filter: none; transition: opacity .3s; }
 /* mulassa.cat's page loader (index.html #loader.page): the card, its words, and the drifting pattern behind, in each game's
    own colour: its page (--page-bg), the pattern a shade lighter over it (a mask, so the tile's own brown never shows) */
 #boot .boot-card { display: flex; flex-direction: column; align-items: center; gap: 14px; box-sizing: border-box; max-width: min(360px, 100vw - 32px); padding: 24px; border-radius: 20px; background: #0000008c; -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }

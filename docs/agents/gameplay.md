@@ -36,7 +36,7 @@
 - In-game top HUD (`drawTop`): one row, the pixel mulassa (`mulaPortrait`: leans back and throbs below 35%, hops on a refill) + the ÀNIM bar (health); under it, a centred pill of a fixed width with no captions, in the pixel font, hidden until a note is judged: the PUNTS (six digits, one sprite per digit, `C.score`, those not reached yet dimmed like LEDs, the same value as the results), a dash and the ENCERTS % (the quality: perfect = 1, good = 0.8); the 70% goal is only on the results screen.
   Song progress: a ring round the pause button (`drawProgressRing`, hud/top.js; `PROG_T0`/`PROG_T1` bound it, first note → `song.end` on `songTime()`); the «x2 PUNTS» tag sits on the panel's top edge.
 - Lane (`lane()`): the band scales with the screen (1.4x phones, up to 2x big desktops); notes scale only as far as the
-  chart's closest two notes keep half a diameter clear with >= 0.9 s look-ahead (`NOTE_GAP`, `MIN_LOOK`). Nothing
+  chart's closest two notes keep half a diameter clear with >= 0.5 s look-ahead (0.9 shrank DIFÍCIL's notes to 3/4 on phones) (`NOTE_GAP`, `MIN_LOOK`). Nothing
   is drawn inside the ring but hit words. The streak is the «RATXA» badge (`drawStreak`, `streakBox`, knobs in `STREAK`), from
   5 in a row: inside the band just behind the ring (where notes have passed) when there is room, else (portrait phones)
   above-left of the ring, left of the top panel; clear of the ring at its biggest, a missed GUAPA's reach, the judge word,

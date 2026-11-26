@@ -14,14 +14,12 @@ import { PAIR, DRAC_JUMP, keepClear, takeSolo, animPair } from '../figures/drac/
 import { FIGURE_SCENES, sceneOf } from './figure-scenes.js';
 import { setBandLineup } from './quality.js';
 import { setRotllana } from './rotllana.js';
-import { traitsOf, SPLASH_HOST_ID, splashSoloAt } from '../figures/index.js';
-import { store } from '../platform/storage.js';
+import { traitsOf, SPLASH_HOST_ID } from '../figures/index.js';
 
 const SPLASH = { pair: PAIR, keepClear };
-// The splash's figure for this load (figures/index.js splashSoloAt: the Bou alone first, then turns with the pair)
-const SPLASH_VISIT = Number(store.get('splash-turn')) || 0;
-store.set('splash-turn', String(SPLASH_VISIT + 1));
-export const SPLASH_SOLO = splashSoloAt(SPLASH_VISIT);
+// The splash's figure for this load, handed in by ui/splash-turn.js (which owns the visit counter in storage)
+export let SPLASH_SOLO = null;
+export const setSplashSolo = id => { SPLASH_SOLO = id; };
 let animatedFigureId = selectedFigure.id;
 export function resetMotionImpact() {
   clearManualImpact();

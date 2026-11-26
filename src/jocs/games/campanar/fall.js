@@ -1,6 +1,7 @@
 // A cut piece's fall: a rigid block in the plane of its cut (u along the cut's axis, y up) that drops past the tower and
 // meets its ledges as a block would: it lands, bounces a little, slides and tips over an edge. It never stays on a
-// terrace: once it settles, it hops and flips outward, a little trick, and goes on falling. No physics engine (a few lines do for one box against flat ledges): impulses at each contact, with friction.
+// terrace: once it settles, it hops and flips outward, a little trick, and goes on falling. No physics engine (a few lines
+// do for one box against flat ledges): impulses at each contact, with friction.
 // Pure: no three, no DOM.
 const BOUNCE = 0.18, FRICTION = 0.6, STEPS = 6, REST = 0.3; // REST: seconds nearly still before it hops off
 

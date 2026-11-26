@@ -28,7 +28,7 @@ compassos 43-47 (la primera de les quatre vegades seguides del mateix tema; el c
 `tools/music/build_bou_mobile.py` (`DROP`) torna a generar l'àudio amb el mateix generador i comprova que, fora de la
 unió, és la revisió 20; `playback.json` (`cutBars`) ho indica i `timing.json` passa a ser el mapa de la forma curta (el de
 la v13 sense aquest tram). El ball (`bou-dance.js`), el videoclip (`bou-clip.js`), el xart i la percussió s'hi han
-adaptat. La v13 aprovada i el seu ZIP no canvien. Escolta pendent.
+adaptat. La v13 aprovada i el seu ZIP no canvien. Escoltada i acceptada pel propietari al mòbil (15/11/2026).
 
 La revisió 20 corregeix una errata de la partitura: al compàs 12,
 temps 3, la Gralla I fa si natural, no el si bemoll imprès. Al PDF hi falta el becaire: el baix fa sol (la dominant),

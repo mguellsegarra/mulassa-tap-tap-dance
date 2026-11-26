@@ -51,7 +51,12 @@ export function buildBouRig() {
   // thigh out through the skirt (it showed through the cloth by up to 21 cm).
   // x past 0, eased in over HIP_EASE m either side (a smooth max(0, x))
   const softOver = x => x <= -HIP_EASE ? 0 : x >= HIP_EASE ? x : (x + HIP_EASE) ** 2 / (4 * HIP_EASE);
-  const SKIRT = { x: .51, front: .9, back: -1.23 }; // m in the shell's frame a knee keeps inside: its cloth (flanks .60, front 1.0, back -1.33) less the leg's own width
+  // from: m between a carrier's ankles the turn starts at (a little even standing, .22 apart: no step into it);
+  // over: m it takes to be whole; turn: how far the knee turns (tan)
+  const KNEE_APART = { from: .3, over: .3, turn: .42 };
+  // (the front: the cloth's wall starts at .95, where its lowest step hangs, not at the chest's 1.0, and a bent knee's
+  // corner reaches 17 cm past its middle: at .9 a knee's tip showed through the front's steps on every leg pass)
+  const SKIRT = { x: .51, front: .78, back: -1.23 }; // m in the shell's frame a knee keeps inside: its cloth (flanks .60, front .95, back -1.33) less the leg's own width
   const toShell = new THREE.Matrix4(), local = new THREE.Vector3();
   function poseLegs() {
     root.updateMatrix(); body.updateMatrix(); toShell.multiplyMatrices(root.matrix, body.matrix).invert(); // (the shell in the legs' own frame, the dance's: not the world's)
@@ -83,6 +88,13 @@ export function buildBouRig() {
         { const full = THIGH + SHIN, soft = KNEE_SOFT * full, far = hip.distanceTo(ankle);
           if (far > soft) { const to = full - (full - soft) * Math.exp(-(far - soft) / (full - soft)); if (to > flat) hip.y = Math.min(hip.y, ankle.y + Math.sqrt(to * to - flat * flat)); } }
         fwd.set(Math.sin(yaw), 0, Math.cos(yaw));
+        // a foot stepping across close by its mate's: the knee turns a little away from that ankle (KNEE_APART), as legs
+        // that cross do, so the shin clears it (bending straight ahead, its shin went through its mate's ankle on the side steps)
+        {
+          const ax = ankle.x - mate.position.x, az = ankle.z - mate.position.z, gap = Math.hypot(ax, az);
+          const k = KNEE_APART.turn * Math.min(1, softOver(KNEE_APART.from - gap) / KNEE_APART.over);
+          if (k > 0 && gap > 1e-3) { fwd.x += k * ax / gap; fwd.z += k * az / gap; }
+        }
         const dist = hip.distanceTo(ankle);
         d.subVectors(ankle, hip).divideScalar(dist);
         fwd.addScaledVector(d, -fwd.dot(d)).normalize();

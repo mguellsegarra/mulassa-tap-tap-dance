@@ -52,12 +52,12 @@ const bucket = o => ({ runs: 0, completed: 0, collapsed: 0, seconds: 0, perfect:
   const d = statsData({
     'mulassa-valls/mulassa-v3/1': bucket({ runs: 10, completed: 8, collapsed: 1, seconds: 700, perfect: 900, good: 100, miss: 64, guapa: 70, guapaTotal: 88, balloons: 9, holds: 20, bestCombo: 120, bestStars: 3, errors: { early: 30, late: 10, silent: 20 } }),
     'drac-valls/drac-v1/0': bucket({ runs: 2, completed: 2, seconds: 200, perfect: 200, good: 12, guapaTotal: 24, guapa: 20, bestCombo: 90, bestStars: 2 }), // no errors: a card's totals
-    'mulassa-valls/mulassa-v2b/2': bucket({ runs: 1, completed: 1, bestStars: 3 }), // a dance replaced: its stars stay out of the 18
+    'mulassa-valls/mulassa-v2b/2': bucket({ runs: 1, completed: 1, bestStars: 3 }), // a dance replaced: its stars stay out of the 27
     practice: { runs: 2, seconds: 60 },
   }, ['2026-10-18', '2026-10-19']);
   assert.deepEqual([d.runs, d.seconds, d.collapsed, d.guapa, d.guapaTotal, d.bestCombo], [13, 900, 1, 90, 112, 120]);
   assert.deepEqual(d.byFigure, { 'mulassa-valls': 11, 'drac-valls': 2 });
-  assert.deepEqual([d.stars, d.starsMax], [5, 18], 'stars of the current dances, out of 3 levels × 3 stars × 2 figures');
+  assert.deepEqual([d.stars, d.starsMax], [5, 27], 'stars of the current dances, out of 3 levels × 3 stars × 3 figures (the Bou has its board since 1.4.0)');
   assert.deepEqual([d.errors.early, d.errors.late, d.errors.silent, d.errors.both], [30, 10, 20, 0]);
   assert.equal(d.daysPlayed, 2);
   const { doc } = fakeDoc([]), box = new El();
@@ -66,7 +66,7 @@ const bucket = o => ({ runs: 0, completed: 0, collapsed: 0, seconds: 0, perfect:
   const text = box.textContent;
   assert(/13 ballsMulassa\u00a011 · Drac\u00a02/.test(text) && /15 mina la plaça/.test(text) && /120la millor ratxa/.test(text) && /\d+%de precisió mitjana/.test(text), 'four facts');
   assert(/1Podi a Estrena 2026 · Mulassa/.test(text), 'the podiums as achievements');
-  assert(/1.100 PERFECTE · 112 BÉ · 64 ERROR/.test(text) && /La plaça s’ha quedat sense ànim 1 cop/.test(text) && /90 de 112 cops dobles/.test(text) && /5 de 18 estrelles/.test(text), 'public since judgements and falls too');
+  assert(/1.100 PERFECTE · 112 BÉ · 64 ERROR/.test(text) && /La plaça s’ha quedat sense ànim 1 cop/.test(text) && /90 de 112 cops dobles/.test(text) && /5 de 27 estrelles/.test(text), 'public since judgements and falls too');
   assert(!/Has jugat|seguits ara|rècord|Aviat|On se t’escapen/.test(text), 'a card: no days, no streaks, no errors per kind');
   const more = box.find(e => e.tag === 'button' && e.className.includes('stat-toggle')), panel = box.find(e => e.id === 'card-stats-more');
   assert(panel.hidden && more.attrs['aria-expanded'] === 'false' && more.attrs['aria-controls'] === 'card-stats-more' && /Més estadístiques/.test(more.textContent), 'a card: folded');

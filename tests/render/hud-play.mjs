@@ -69,6 +69,13 @@ for (const [w, h] of [[393, 852], [375, 667], [852, 393], [1280, 720], [2000, 10
     assert(L.bottom - L.top >= 40, `${w}x${h}: the band never shrinks`);
   }
 }
+// phones: DIFÍCIL's notes as big as NORMAL's (MIN_LOOK 0.9 shrank them to 3/4: «les notes més petites del normal»)
+for (const [w, h] of [[393, 852], [375, 667], [320, 568]]) {
+  context.innerWidth = w; context.innerHeight = h; run('resize()');
+  const sOf = d => run(`startGame(${d}); G.state = 'play'; lane().s`);
+  assert.equal(sOf(2), sOf(1), `${w}x${h}: DIFÍCIL's notes the size of NORMAL's`); // the Drac's and Bou's closest gaps (0.198, 0.202 s) match the Mulassa's 0.197 (chart-playable)
+}
+context.innerWidth = 2000; context.innerHeight = 1060; run('resize()');
 assert(run('var big = lane(); big.sb') >= 1.6, 'big desktops get the tablet band (K grows with the screen, so the HUD keeps its proportions)');
 assert(run('var c = insidePlaza(new THREE.Vector3(3, 10, 30), 0, 1, 12); Math.abs(c.z) <= plaza.inner - 1.5 + 1e-9 && c.y > 10'), 'the camera stays inside the plaça, higher instead');
 // Trees and lamps stand out of the play camera's path: wherever she dances (during play her centre stays within
@@ -331,6 +338,16 @@ for (const [perfect, miss, doubled] of [[50, 50, false], [100, 0, true]]) {
   assert(run('G.eeeh'), `the post-song chant and volley play at ${q.toFixed(0)}%`);
 }
 console.log('finale festa for everyone, x2 from 70% ok');
+// The Bou's chant is one BOOOUUUUU!, a letter every 0.12 s: the finale hands its step to the praise and the HUD
+// draws it one letter at a time (the step once got lost on the way and the whole word showed at once).
+run(`var keepTimeout = setTimeout; setTimeout = f => f(); figTheme = figThemes.bou; startGame(1); clock = 1300;
+  for (const n of G.chart) n.hit = 'perfect'; G.next = G.chart.length; G.hold = null; bigPending = null; songNow = song.end + 0.1; frame(1300);`);
+assert.equal(run('G.praise?.word === "BOOOUUUUU!" && G.praise.step'), 0.12, 'the Bou\'s chant comes letter by letter');
+drawnText.length = 0;
+run('clock = G.praise.t0 + 0.5; drawPraise();');
+assert.deepEqual(drawnText, ['B', 'O', 'O', 'O', 'U'], 'half a second in, five letters, each drawn on its own');
+run('setTimeout = keepTimeout; figTheme = figThemes.mulassa;');
+console.log('the Bou\'s letter-by-letter chant ok');
 
 // Dance integration (figures/mulassa/mula-dance.js + accents): the song's choreography owns the heading, hits only accent it and
 // settle back, taps never pile up, holds release smoothly, misses recover, the practice holds its opening stance and a
@@ -592,7 +609,7 @@ console.log('view mode ok');
     const saved = { holdTail, noteDisc, balloonHead, chart: G.chart, state: G.state, next: G.next, hold: G.hold }, out = [];
     holdTail = () => out.push('tail'); balloonHead = () => out.push('roll'); noteDisc = (dir, x, y, r, big) => out.push(big ? 'big' : 'note');
     G.state = 'play'; G.next = 0; G.hold = null;
-    G.chart = [{ t: 1, end: 1.3, input: 'L' }, { t: 1.4, input: 'B', big: true }, { t: 1.5, end: 1.9, balloon: true, need: 4, count: 0, input: 'P' }, { t: 2, input: 'B', big: true }];
+    G.chart = [{ t: 1, end: 1.3, input: 'L' }, { t: 1.35, input: 'B', big: true }, { t: 1.4, end: 1.6, balloon: true, need: 4, count: 0, input: 'P' }, { t: 1.65, input: 'B', big: true }]; // all within 0.4 s: on screen at any MIN_LOOK
     drawLane(1.25);
     Object.assign(G, { chart: saved.chart, state: saved.state, next: saved.next, hold: saved.hold });
     holdTail = saved.holdTail; noteDisc = saved.noteDisc; balloonHead = saved.balloonHead;

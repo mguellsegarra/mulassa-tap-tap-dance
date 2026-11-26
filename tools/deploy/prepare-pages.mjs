@@ -39,6 +39,8 @@ export async function preparePages(directory, song) {
     if (!files.includes(name)) throw new Error(`Missing deployment file: ${name}`);
   }
   const deploy = files.filter(name => !OMIT.has(name));
+  // a QA build (vite.config.js: `-qa` stamp) opens every debug flag on any host: never deployed
+  if (files.includes('version.json') && /-qa$/.test(JSON.parse(await readFile(resolve(root, 'version.json'), 'utf8')).build ?? '')) throw new Error('A QA build (-qa stamp) must never be deployed');
   if (!deploy.some(name => /^assets\/[\w-]+\.js$/.test(name))) throw new Error('Missing built JavaScript');
   if (deploy.length > 20_000) throw new Error('Pages Free file count exceeded');
   for (const name of deploy) {
@@ -49,6 +51,7 @@ export async function preparePages(directory, song) {
       || /^(captures\/[\w-]+\.jpg|videos\/[\w-]+\.(mp4|jpg))$/.test(name) // /projecte/'s screenshots
       || /^[a-z]{2,3}(?:-[A-Za-z]{2,4})?\/projecte\/index\.(html|md)$/.test(name) // /<lang>/projecte/ from tools/deploy/seo-content/<lang>.json
       || /^photo-icons\/[\w-]+\.webp$/.test(name) // free play's drawn move buttons (src/ui/photo-icons.js)
+      || /^escuts\/[\w-]+\.[0-9a-f]{8}\.\d+\.png$/.test(name) // the selector pills' arms (src/ui/escuts.js, tools/ui/build-escuts.mjs)
       || /^jocs\/[\w-]+\/index\.html$/.test(name) // docs/jocs/README.md: one page per mini-game
       || name === 'pop/index.html' // mulassa.cat/pop: Mulassa Pop
       || name === 'jocs/index.html' // mulassa.cat/jocs: a short link to the games picker
@@ -57,7 +60,6 @@ export async function preparePages(directory, song) {
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo
-      || name === 'textures/bitllet-bou.png' // the Bou's banknote (figures/bou/bou-bills.js)
       || name === 'share/bou-tradicional-valls.jpg' // the Bou's share photo, once it is released
       || ['robots.txt', 'sitemap.xml', 'llms.txt', 'index.md', 'projecte/index.html', 'projecte/index.md'].includes(name); // tools/deploy/seo-pages.mjs + public/
     if (!allowed) throw new Error(`Unexpected deployment file: ${name}`);
@@ -76,7 +78,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const songs = [await read('song-mulassa.json'), await read('song-drac.json')];
   // an unreleased figure (src/figures/index.js) ships neither its song's audio nor its textures nor its share photo
   if (UNRELEASED_IDS.has('bou-tradicional-valls')) {
-    for (const name of [(await read('song-bou.json')).audio.split('?')[0], 'textures/bitllet-bou.png', 'share/bou-tradicional-valls.jpg']) await rm(resolve(dist, name), { force: true });
+    for (const name of [(await read('song-bou.json')).audio.split('?')[0], 'share/bou-tradicional-valls.jpg']) await rm(resolve(dist, name), { force: true });
   } else songs.push(await read('song-bou.json'));
   const files = await preparePages(dist, songs);
   console.log(`Pages static artifact ready: ${files.length} files; no Functions or Workers.`);

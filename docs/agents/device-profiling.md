@@ -1,8 +1,9 @@
 # Measuring on real phones
 
-How to measure what blocks the game on the owner's phones, as AGENTS.md (Process, «Blocking cost in ms») requires before
-anything is called done. Built from the 2026-11-03 review (Galaxy S10 and an iPhone in Low Power Mode); its findings
-are in `docs/agents/graphics.md` («DOM blocking costs»), the case notes in the performance-diagnosis skill (P07, P08).
+How to measure what blocks the game on the owner's phones, as AGENTS.md (Process, "Blocking cost in ms") requires before
+anything is called done. Built from the 2026-11-03 review (Galaxy S10 and an iPhone in Low Power Mode). The rules these measurements produced are in `docs/agents/graphics.md` ("DOM blocking costs",
+"iPhones before iOS 18, and first draws"); the case notes are in the performance-diagnosis skill (P07, P08); past numbers
+to compare against are in [reference/device-baselines.md](reference/device-baselines.md).
 A desktop browser, headless Chrome with CPU throttling or a simulator never closes a phone symptom: at 4× throttling a
 Mac still ran 5-10× faster than the S10 and missed costs the S10 showed.
 
@@ -30,7 +31,7 @@ load the URL; the S10 normally stays plugged into mac-studio.
   Settings → Apps → Safari → Advanced → Web Inspector on; tap «Trust»). From mac-studio: `node
   tools/qa/device/ios-inspect.mjs <url> 20 --bridge=<that-mac-ip>:9222`. The game is still served by mac-studio; the
   other Mac only bridges Safari. Installing the bridge is a machine-wide install: the owner confirms it per machine.
-  mbp-m1 (2026-11-03) bridges at `192.168.1.206:9222`; there Chrome also holds `127.0.0.1:9222`, so even on that Mac
+  mbp-m1 (2026-11-03) bridges at `<laptop-lan-ip>:9222`; there Chrome also holds `127.0.0.1:9222`, so even on that Mac
   use the LAN address. Add `--maps=<outDir of a vite build --sourcemap>` to name the minified functions.
 - Keep the iPhone awake for long runs (Settings → Display → Auto-Lock → Never, restored afterwards).
 - **iPhone with a cable, unattended** (the owner leaves it plugged in and does nothing): Xcode's Device Hub
@@ -42,9 +43,8 @@ load the URL; the S10 normally stays plugged into mac-studio.
   right for Control Center (Low Power Mode's toggle: iOS turns it off by itself at 80% while charging). Safari's audio
   starts only after a real touch on the splash; then `__dbg.choose(level)` with `?autoplay` plays a whole song, and
   `&mute` keeps it silent. Check the state left the splash after the tap and tap again if not (a tap can miss); Device
-  Hub can restart with a new pid and window, and the phone sits at another place in its window then. (2026-11-14: the
-  Control Center drag and the Home button did nothing, and a zoomed mirror swallowed every click: «A performance hunt»
-  below.)
+  Hub can restart with a new pid and window, and the phone sits at another place in its window then. What failed on
+  2026-11-14 (the Control Center drag, the Home button, a zoomed mirror): "A performance hunt" below.
 - **What the iPhone actually shows** (not what rAF reports): a small Swift program can turn on CoreMediaIO's screen
   capture devices (`kCMIOHardwarePropertyAllowScreenCaptureDevices`, as QuickTime does) and record the plugged-in
   iPhone's screen with `AVCaptureMovieFileOutput` at 60 fps; ffmpeg alone does not list it. Start the recording before
@@ -55,15 +55,12 @@ load the URL; the S10 normally stays plugged into mac-studio.
 
 On the iPhone in Low Power Mode, Safari's CPU instrument (per-thread usage every 0.5 s through the bridge:
 `Timeline.setInstruments(['Timeline','CPU'])` + `CPUProfiler.startTracking`) showed the JavaScript heap's collector
-threads at 10-25% of the CPU all the time, the main thread at 30-55%. The JavaScript is the same everywhere, so who
-allocates is measured on the Mac: `node tools/qa/alloc-profile.mjs <dev url>` (V8's sampling heap profiler, 10 s of the
-splash and of the idle reel). 2026-11-03: 12.8 MB/s on the splash, 7.5 MB/s in the idle reel: the Drac's leg normals
-(`drac-legs.js` `normals`, `Math.hypot`), the crowd grid's cells (`crowd-grid.js` `fillCells`), three.js re-reading a
-material's program parameters every frame (`getParameters` from `stage.js` `renderScreen`), uniform matrices, the
-crowd's poses (`representation/pose.js`) and the idle lens (`cameras.js` `frameMenuLens`). The game's rule is no
-per-frame allocation (`docs/agents/graphics.md`): a change to a hot path states its MB/s before and after, and
-`npm run check:gpu` fails on a budget overrun or a material re-evaluated every frame (`tests/render/alloc-budget.mjs`).
-After the fixes of that day: 7.3 MB/s on the splash, 5.6 in the idle reel (6.9 / 6.1 in the test's own run).
+threads at 10-25% of the CPU all the time. The JavaScript is the same everywhere, so who allocates is measured on the
+Mac: `node tools/qa/alloc-profile.mjs <dev url>` (V8's sampling heap profiler, 10 s of the splash and of the idle reel).
+The game's rule is no per-frame allocation (`docs/agents/graphics.md`): a change to a hot path states its MB/s before and
+after, and `npm run check:gpu` fails on a budget overrun or a material re-evaluated every frame
+(`tests/render/alloc-budget.mjs`; a budget is raised only with a measured reason, written here). The 2026-11-03 sources
+and numbers (12.8 → 7.3 MB/s on the splash): [reference/device-baselines.md](reference/device-baselines.md#allocations-2026-11-03).
 
 ## A review, step by step
 
@@ -100,7 +97,7 @@ After the fixes of that day: 7.3 MB/s on the splash, 5.6 in the idle reel (6.9 /
    owner was a rule on its neighbours. Compare the whole lost time, not only the frame you are chasing: a fix can move
    the cost to another second (docs/agents/graphics.md, the `will-change` entry).
 8. **Report** before/after with device, browser, build, size, Low Power Mode and cold or warm. Compare against the
-   baseline below; record new results there when they change.
+   baselines in [reference/device-baselines.md](reference/device-baselines.md); record new results there when they change.
 
 ## Pitfalls met (do not repeat them)
 
@@ -111,6 +108,15 @@ Android / Chrome:
   Android's «Clear cache» does not empty: the morning after a Chrome update the S10 compiled 52 programs (604 ms) under the
   page cover and 17 (413 ms) at the idle wake; hours later, the same builds hit the driver cache (0 compiles). Count the
   `VulkanCreateGraphicsPipelines` (builds), not only their ms, and note Chrome's version and update time.
+- A player's first visit after a Chrome update has that cache empty, and only one switch reproduces it at will:
+  `--disable-gpu-shader-disk-cache` in `/data/local/tmp/chrome-command-line` (`chrome <switches>`; read because the
+  S10's LineageOS is a debuggable build), written before Chrome starts and removed afterwards (`"cold": true` in an
+  `android-frames.mjs` plan; `SystemInfo.getInfo` on the browser target shows the command line). With it the first
+  figure change built 26 programs in a 542-575 ms frame; with the cache as it stood, 6 in 100-157 ms, or none. A
+  run that stops Chrome seconds after a program is built keeps Chrome from saving it, so the same miss repeats run
+  after run and looks permanent: left alive a minute and sent to the background (Home), Chrome saved them and the next
+  start built none. That also leaves the phone warm for every later run: use the switch, not the leftovers.
+  The compositor thread's own programs (6 a start, 5 of them at the selector's opening, ~65 ms) are never saved.
 - The S10 is shared by every agent on mac-studio. `android-cost.mjs` and `android-frames.mjs` stop Chrome at each run,
   which ends any other agent's session on it: ask the owner that the phone is free before starting, and say so when
   done. A phone another agent is using also measures wrong: with 100+ tabs left open and two pages at 60-110% CPU the
@@ -179,118 +185,62 @@ Measuring in general:
   Compare like with like.
 - A hook blocks shell commands containing a bare `open` (it brings apps to the front): write such scripts with the
   file tool and run them with `node`, or name the variable otherwise.
+- The desktop locates, the phone sizes: build-time town arms saved 205 ms on headless Chromium at 4× CPU throttle and
+  893 ms on the S10 (GPU readbacks are cheap on a software canvas). Never report a desktop gain as the phone's.
+- An ablation (a feature switched off, a change reverted) is built in a temporary worktree, never in the shared
+  checkout other agents build from; A and B interleaved, cold, at least three runs each.
 
-A performance hunt (2026-11-14: a day of wrong turns on the Bou's final and the selector; read before starting one):
+## A performance hunt
+
+Read before starting one. The lessons of 2026-11-14 and 15 (a day of wrong turns on the Bou's final and the selector, then
+two reviews); the cases behind each are in [reference/performance-hunt-2026-11-14.md](reference/performance-hunt-2026-11-14.md).
+
 - **Ask where and how it happens before measuring anything**: which screen, playing or watching, which phone, Low Power
-  Mode or not. The owner's «it drops quality and the crowd leaves» was in the song, tapping its notes, in Low Power Mode:
-  a rented phone (60 Hz, no Low Power Mode, no finger) could never show it, and hours went to what it could show.
+  Mode or not. A rented phone (60 Hz, no Low Power Mode, no finger) can never show a complaint made in Low Power Mode with a finger.
 - **Read the game's own verdict first.** With `?perf` every quality change is logged (`[quality] {reason, from, to, hz,
-  lowPower, slowShare, capped, cpu…}`; the probe proxy keeps them): «overload at the splash, 4 s in, slowShare 0.9, cpu
-  10 ms» says the monitor misread the cadence before any profile does. A crowd that thins is a quality step
-  (`stepPeople`) or the song going badly (some of the ring come and go with the accuracy: `crowd-pose.js` `thr`): the
-  log says which.
+  lowPower, slowShare, capped, cpu…}`; the probe proxy keeps them). A crowd that thins is a quality step (`stepPeople`)
+  or the song going badly (`crowd-pose.js` `thr`): the log says which.
 - **A monitor bug is reproduced in node, not on the phone.** Feed `frameMonitor` the frame intervals seen (the probe
-  can post every one: `probe-proxy.mjs … rec`, an `all` array per post) and it steps or not in milliseconds of
-  work; the fix then gets a test that fails without it (`tests/render/low-power.mjs`).
-- **One good session proves nothing: record the owner's sessions and keep them.** A fix validated on one played song
-  failed on the next. Have the owner play through the recording probe (`probe-proxy.mjs <port> <target> <label> <dir>
-  rec`: every rAF interval posted, a big on-screen message while it records and when the quality steps, so they know
-  when to stop), replay the intervals through
-  `framePacer` and `adaptiveQuality` in node, and add each failing session to
-  `tests/render/fixtures/low-power-bou.json`. Never reload or drive the tab while they play.
-- **Have the work reviewed from scratch before calling a monitor rule right.** Two reviewers (2026-11-15), given the
-  commits and no conclusions, each replayed a GPU-bound phone through the pacer and the rule and found it never stepped
-  down again; the recorded sessions alone could not show it. A rule about «whose fault a late frame is» needs the
-  opposite case as a test, not only the complaint's.
-- **Known and left as they are (2026-11-15, from those reviews):** a menu that drowns at every level sets a floor no
-  later menu passes for the session (`menuFloor`); at `low` the Bou's snake takes nearly all the visible ring;
-  `farm-run.mjs` neither requires the owner's AWS profile nor refuses at zero trial minutes; the cover can stay 6 s on a
-  phone that never draws 20 smooth frames (3 before); the fixture test feeds a fixed 9 ms of JavaScript, not the
-  recorded one; the warm-up draw's own task was never timed on a phone.
-- **What the rented phones played (2026-11-14): the Bou only**, with `?autoplay` at difficulty 1 (one whole song on two
-  iPhones, a dozen 30 s passes) and the selector without playing. The Drac and the Mulassa were never played there, and
-  neither was played in Low Power Mode on the owner's phone after the `throttled` rule: the rule is shared, the proof is not.
-- **Before fixing a module, read its last commits** (`git log -5 -- <file>`): the Low Power cadence had been fixed for
-  one frame pattern on 2026-11-03 and for another on 2026-11-13. A third pattern means the rule is wrong, not that one
-  more case is missing; say so to the owner, who remembers the earlier fix.
-- **One comparison names no owner.** Three wrong ones that day: the level buttons (the phone left its slow state at
-  the first injected style, whatever it was), the Mulassa and Drac splash pair (the two profiles were seconds apart in
-  Safari's warm-up; on the Mac the pair and the Bou alone cost the same), and the warm-up draw blamed for a frame that a
-  quality step made. Alternate A and B, repeat across sessions, and check the second variable (time since load, order,
-  the level the 3D is at) before writing a name down. A claim already told to the owner is corrected in so many words.
-- **«Only the first time» is a claim to test**: start the thing three times in one session before calling a frame a
-  first-use cost (the song's first frames repeat at every start; the rave's and the bombo's did not).
-- **Style recalculation has no JavaScript frame**: a forced one shows under whatever read the layout (`stop` in
-  `strip-scroll.js` took the blame for 21 ms of the selector hiding). Chrome's trace says how many elements each
-  `UpdateLayoutTree` restyled, its invalidation tracking says which write scheduled it, and each write timed alone with
-  a `getComputedStyle` after it (Mac, 4x) names the costly one in a minute.
+  can post every one: `probe-proxy.mjs … rec`, an `all` array per post); the fix then gets a test that fails without it
+  (`tests/render/low-power.mjs`).
+- **One good session proves nothing: record the owner's sessions and keep them.** The owner plays through the recording
+  probe (`probe-proxy.mjs <port> <target> <label> <dir> rec`: every rAF interval posted, a big on-screen message while it
+  records and when the quality steps), the intervals are replayed through `framePacer` and `adaptiveQuality` in node,
+  and each failing session joins `tests/render/fixtures/low-power-bou.json`. Never reload or drive the tab while they play.
+- **Have a monitor rule reviewed from scratch** (the commits, no conclusions) before calling it right, and test the
+  opposite case too: a rule about whose fault a late frame is failed on a GPU-bound phone that the recorded sessions
+  could not show.
+- **Before fixing a module, read its last commits** (`git log -5 -- <file>`). A third fix for one more frame pattern
+  means the rule is wrong; say so to the owner, who remembers the earlier fixes.
+- **One comparison names no owner.** Alternate A and B, repeat across sessions, and check the second variable (time
+  since load, order, the level the 3D is at) before writing a name down. A claim already told to the owner is corrected
+  in so many words.
+- **"Only the first time" is a claim to test**: start the thing three times in one session before calling a frame a
+  first-use cost.
+- **Style recalculation has no JavaScript frame**: a forced one shows under whatever read the layout. Chrome's trace says
+  how many elements each `UpdateLayoutTree` restyled, its invalidation tracking which write scheduled it, and each write
+  timed alone with a `getComputedStyle` after it (Mac, 4x) names the costly one in a minute.
 - **JavaScript or the GPU: the Mac says which.** `Emulation.setCPUThrottlingRate` 4 with a CPU profile over the same
-  song seconds: no long frame there points at a first draw or the compositor on the phone (a lead, not proof: another
-  engine can have a JavaScript cost the Mac lacks).
-- **Safari's first seconds are slow at any quality** (an iPhone 18 Pro in Low Power Mode: 30-70 ms of JavaScript a frame
-  for 5-10 s after a load, 9 afterwards): compare profiles taken the same seconds after load, and keep the build whose
-  profile you took (`--maps` needs that build's `.map` files: a rebuild changes the chunk names).
-- **`ios-inspect.mjs --cached`** for a reload as a player's: with the cache disabled Safari's profiler stopped answering
-  («ScriptProfiler.stopTracking timed out», no samples).
-- **Never reload or drive a tab the owner is playing in.** A loop of reloads cut his song; ask, or use another tab.
-- **The plugged-in iPhone, driven without the owner** (Device Hub and Cua on the Mac it is plugged into, from a
-  delegated agent there): a click reaches the phone only with the mirror fitted («Zoom to Fit»; zoomed, with its «Zoom
-  Controls» banner, every click was swallowed); the drag for Control Center and the Home button did nothing that day, so
-  Low Power Mode is the owner's to switch (iOS drops it at 80% of charge: check `lowPower` in `?perf` before every run);
-  a tap at the splash's centre can land on the language prompt or leave Safari, so look before and after each one.
-  Through the probe's `__cmd` a synthetic `pointerdown`/`pointerup`/`click` on the element at the centre passes the
-  splash (no audio), `.sel-card[data-id="…"]` picks a figure and `__dbg.choose(level)` starts its song.
-- **The bridge dies with the cable**: after the phone is unplugged or locked for a while `:9221/json` lists nothing and
-  `:9222` refuses; restart `ios_webkit_debug_proxy` on that Mac. Tabs show only with Safari in front and unlocked.
-- **A tunnel to `vite preview` answers 403** («host is not allowed»): put the probe proxy in front (it is what the
-  tunnel points at). A new quick tunnel may not resolve on this Mac for minutes (a cached miss): check it through a
-  public resolver (`dig @1.1.1.1`, `curl --resolve`) before calling it down.
-- **A rule that reads «never do X in the menus» can be right for one phone and wrong for the rest**: «no quality step
-  out of a song» fixed the iPhone 8's slow selector and was undone the same hour, because weak phones find their level in
-  the menu and would otherwise step down mid-song. Six existing tests said so: read what the failing tests protect
-  before rewriting them.
+  song seconds: no long frame there points at a first draw or the compositor on the phone (a lead, not proof).
+- **Safari's first seconds are slow at any quality** (30-70 ms of JavaScript a frame for 5-10 s after a load, 9
+  afterwards): compare profiles taken the same seconds after load, and keep the build whose profile you took (`--maps`
+  needs that build's `.map` files).
+- **`ios-inspect.mjs --cached`** for a reload as a player's: with the cache disabled Safari's profiler stopped answering.
+- **Never reload or drive a tab the owner is playing in.** Ask, or use another tab.
+- **The plugged-in iPhone, driven without the owner** (Device Hub and Cua on the Mac it is plugged into): fit the mirror
+  ("Zoom to Fit"; zoomed, every click was swallowed); Low Power Mode is the owner's to switch (the drag and the Home
+  button did nothing; iOS drops it at 80% of charge: check `lowPower` in `?perf` before every run); look before and after
+  each tap. Through the probe's `__cmd` a synthetic `pointerdown`/`pointerup`/`click` at the centre passes the splash (no
+  audio), `.sel-card[data-id="…"]` picks a figure and `__dbg.choose(level)` starts its song.
+- **The bridge dies with the cable**: restart `ios_webkit_debug_proxy` on that Mac. Tabs show only with Safari in front and unlocked.
+- **A tunnel to `vite preview` answers 403** ("host is not allowed"): put the probe proxy in front. A new quick tunnel may
+  not resolve on this Mac for minutes: check it through a public resolver (`dig @1.1.1.1`, `curl --resolve`).
+- **A rule that reads "never do X in the menus" can be right for one phone and wrong for the rest**: read what the
+  failing tests protect before rewriting them.
 - Close what the hunt opened (tunnels, previews, proxies, the bridge on the other Mac) and say what stays (the Device
   Farm project, free).
-
-## Baseline, 2026-11-11 (release/1.4.0, d540e86)
-
-Galaxy S10, Chrome, native size, production build served by `vite preview`, cold (Chrome stopped, data cleared), a fresh
-profile (the Bou new and chosen, no heart given), `android-frames.mjs`; each range is three runs.
-
-| Moment | Before | After | What changed |
-| --- | --- | --- | --- |
-| Selector's opening, ms lost in frames over 50 ms (-0.3 s to +0.9 s) | 637-821 | 251-302 | rehearsed under the page cover (`ui/select-warm.js`) |
-| Selector's opening, longest frame | 268-385 ms | 101 ms | same |
-| Page cover's time | 4.5-6.1 s | 5.6-7.0 s | same (the dev-phone's Wi-Fi load included; noisy) |
-| The heart's ribbon showing (~2.4 s after the opening) | 134-168 ms | 17-34 ms | the song's row faded, not `visibility: hidden` |
-| The heart's pulse ending (3.6 s later) | 134-151 ms | 33-34 ms | same |
-| Selector at rest, 17 s (`?perf`) | 57.3-58.5 fps, `medium` | same | the Bou and the Mulassa alike (JS 6.5-6.8 ms, 3D 3.8-4.2 ms a frame) |
-| The new figure's light sweep | — | no frame over 50 ms of its own, 2-4 paints in 2 s | compositor-only (`translate`) |
-
-Still there: the opening's 251-302 ms (frames of 50-117 ms; a trace still counts ~25 programs compiled in one of them,
-not chased: whatever the rehearsal under the cover does not show, the corner buttons among it), and one 100-117 ms
-frame ~0.25 s before the selector shows (the splash's tap itself).
-
-## Baseline, 2026-11-03 (release/1.2.10 with the fixes)
-
-| Interaction | S10, native | S10 at 375×667 | iPhone, Low Power Mode |
-| --- | --- | --- | --- |
-| Sheet opening (stats notice, privacy), synchronous part | 30-45 ms | 28-38 ms | not measured |
-| Board / profile sheet, synchronous part | 49-59 / 35-47 ms | 53 / 46 ms | not measured |
-| Figure change, click task (trace) | ~36 ms | — | — |
-| UI hiding into the idle dance | ≤ 50 ms frames | — | 30 fps steady |
-| Selector's first show, GPU raster | ~475 ms | — | 228-363 ms hitch |
-| Load to first frame (production build) | ~2.1 s | — | 2.4-3.1 s |
-| Idle reel | 58-60 fps | — | before: 12-32% of frames over 80 ms (96/42 ms bursts); with the UI not rendered: 0% (24-30 fps, Low Power Mode) |
-| Allocated per second (Mac, alloc-profile) | splash 12.8 → 7.3 MB/s, idle reel 7.5 → 5.6 MB/s | — | — |
-| Splash, quality level | medium | — | medium kept (it fell to minimal before the 24 Hz fix) |
-
-The iPhone splash's JavaScript (Low Power Mode, production build, 25 s, 9,909 samples): the applause synthesis 15%
-(`platform/applause.js`, sliced on timers on the main thread), the Drac's legs and dance ~13% (`drac-legs.js`,
-`drac-steps.js`, `dance-drac.js`) although the splash shows the Mulassa, her supports 4%, the crowd's contact and grid
-7%, three.js matrices ~13%. No span over 50 ms and no gap without JavaScript in that run: the cost is spread over
-every frame. Next leads: build the applause off the main thread (a Worker), and check why the Drac is posed while
-not on screen.
+- Known and left as they are, and what the rented phones never played (only the Bou, not in Low Power Mode): see the
+  reference page before claiming a rule is proven for every figure.
 
 ## A rented phone (AWS Device Farm)
 
@@ -335,7 +285,3 @@ Traps met (2026-11-14):
   flow of a job is that. A/B it with one variant per job, never two flows in one.
 - `content-visibility` does not exist in Safari before 18: `@supports not (content-visibility: hidden)` is how the CSS
   tells those apart (the idle screen's `display: none`, the selector's stopped animations, `styles/select-sizes.css`).
-
-What it found on the selector: iOS 16 and 17 composite its endless CSS animations and its carousel over the 3D badly
-(iPhone 8: 12 fps, 44 without the animations, 60 without the carousel too; the same iPhone 13 does 30 on iOS 17.6 and
-60 on iOS 18.5). An Android S10 and iOS 18 are not affected.

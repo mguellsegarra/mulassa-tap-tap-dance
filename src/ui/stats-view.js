@@ -13,7 +13,7 @@ export const FIGURE_NAMES = Object.freeze({ [MULASSA.id]: MULASSA.fullName, [DRA
 const COUNTS = ['runs', 'completed', 'collapsed', 'seconds', 'perfect', 'good', 'miss', 'guapa', 'guapaTotal', 'balloons', 'holds', 'bestCombo', 'bestStars'];
 // the judge's own words for each kind of error (judge.js, results.js)
 const ERROR_NAMES = Object.fromEntries(['early', 'late', 'silent', 'move', 'both', 'hold'].map(k => [k, tr(`ui.stats.error.${k}`)]));
-const STARS_MAX = Object.keys(FIGURE_VERSIONS).length * 3 * 3; // every level of every figure's current dance: 18
+const STARS_MAX = Object.keys(FIGURE_VERSIONS).length * 3 * 3; // every level of every figure's current dance: 27
 
 // «3 h 12 min», «45 min», «menys d’1 min»: the total only (decision 19), never when
 export function playTime(seconds) {
@@ -39,7 +39,7 @@ export function statsData(buckets = {}, days = []) {
     const figure = key.split('/')[0];
     byFigure[figure] = (byFigure[figure] || 0) + counters[key].runs;
     for (const k of Object.keys(errors)) errors[k] += Number(c.errors?.[k]) || 0;
-    if ([...current].some(p => key.startsWith(p))) stars += counters[key].bestStars; // a dance replaced: its stars stay out of the 18
+    if ([...current].some(p => key.startsWith(p))) stars += counters[key].bestStars; // a dance replaced: its stars stay out of the 27
   }
   const s = summary({ since: null, owners: { x: { counters, days: [...days], practice: buckets.practice ?? { runs: 0, seconds: 0 } } } }, 'x');
   return { ...s, byFigure, errors, stars, starsMax: STARS_MAX };

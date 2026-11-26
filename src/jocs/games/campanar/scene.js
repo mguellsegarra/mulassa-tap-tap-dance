@@ -51,7 +51,9 @@ export function createScene(canvas) {
   let turning = []; // the settled floors still to turn to stone, one a frame (no long frame on the tap)
   let slabs = [], fx = [], moving = null, camY = 0, aimY = 0, outro = null, crown = null, plan = createFacade(BODY_TOL);
   const freeLook = createTowerTurn(Math.atan2(VIEW.x, VIEW.z)); // the end's free look round the tower (turn.js)
-  let lift = [0, 0], lifted = [0, 0], aside = 0, asided = 0; // the shares of the screen's top and bottom kept clear (the end's words, its buttons), eased; aside: the picture moved right by that share of the width (the wide home), eased too
+  // lift: the shares of the screen's top and bottom kept clear (the end's words, its buttons), eased;
+  // aside: the picture moved right by that share of the width (the wide home), eased too
+  let lift = [0, 0], lifted = [0, 0], aside = 0, asided = 0;
 
   // floor n's slab, fading in over 0.25 s (opaque again after: no sorting); the run's first one comes down into place
   // from a little above over 0.5 s, so it arrives instead of popping up

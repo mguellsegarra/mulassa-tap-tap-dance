@@ -20,7 +20,7 @@
 
 Mulassa Tap Tap Dance és un joc de ritme gratuït i en català per fer ballar figures del bestiari festiu dels Països Catalans. Marques el ritme de la música amb dos botons mentre la figura balla. Les melodies són les de les figures, però he agafat la llibertat de portar-les al terreny dels videojocs: més desenfadades, amb una estètica de blocs i amb una sorpresa amagada a cada ball.
 
-Va començar amb la Mulassa de Valls, que forma part del Seguici Cerimonial de la ciutat, i s'ha anat obrint a més figures. Ara hi ha la Mulassa i el Drac, el Bou Tradicional és a punt de sortir i la idea és que s'hi vagin afegint bèsties d'arreu dels Països Catalans. Es pot jugar en 16 llengües, perquè hi pugui jugar qui no parla català.
+Va començar amb la Mulassa de Valls, que forma part del Seguici Cerimonial de la ciutat, i s'ha anat obrint a més figures. Ara hi ha la Mulassa, el Drac i el Bou Tradicional de Valls, de la Unió Anelles de la Flama, i la idea és que s'hi vagin afegint bèsties d'arreu dels Països Catalans. Es pot jugar en 16 llengües, perquè hi pugui jugar qui no parla català.
 
 <p align="center"><img src=".github/readme/partida.webp" alt="Una partida en marxa: la pista de notes a dalt, la Mulassa ballant a la plaça i confeti en encertar una GUAPA" width="100%"></p>
 
@@ -183,7 +183,7 @@ Pots obrir una issue per avisar d'un problema o proposar un canvi, o enviar un p
 
 ### Afegeix la teva figura
 
-El codi és obert i el joc vol créixer amb bèsties de tot arreu. Si vols veure un gegant, una àliga o qualsevol figura del teu poble ballant a la plaça, la pots portar al joc. Ara hi ha la Mulassa i el Drac, i el Bou Tradicional arriba aviat. Cada figura té el seu model vòxel, la seva música, el seu ball, la seva colla, les seves paraules als botons i la seva festa.
+El codi és obert i el joc vol créixer amb bèsties de tot arreu. Si vols veure un gegant, una àliga o qualsevol figura del teu poble ballant a la plaça, la pots portar al joc. Ara hi ha la Mulassa, el Drac i el Bou Tradicional de Valls. Cada figura té el seu model vòxel, la seva música, el seu ball, la seva colla, les seves paraules als botons i la seva festa.
 
 La guia [docs/figures/nova-figura.md](docs/figures/nova-figura.md) explica:
 - què has d'aportar abans de començar (vídeos sencers del ball, partitura, fotos de la colla);

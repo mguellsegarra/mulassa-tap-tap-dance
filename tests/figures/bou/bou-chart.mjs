@@ -1,5 +1,5 @@
 // The Bou Tradicional in the game: its chart (tools/music/build_bou_chart.mjs) is the approved v13 melody on its own tempo
-// map, its runtime identity is its own, and nothing of it reaches a server that has no board for it.
+// map, its runtime identity is its own, and its board uses the same chart contract as local records.
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import { readFileSync } from 'node:fs';
@@ -73,10 +73,10 @@ for (const c of charts) { // at most four in a row on one side
 }
 for (const n of song.notes) { const b = beatAtTime(song.dance.subdivisionTimes, n[0]); assert(Math.abs(b - Math.round(b)) < 0.02, `${n[0]}: on the exact 1/12-beat grid (bar 63 slows down inside its beats)`); }
 
-// identity: its own song, version, words, records; no board, no publication, no statistics upload
-assert(playable(BOU) === !UNRELEASED_IDS.has(BOU.id) && !hasBoard(BOU) && hasBoard(MULASSA) && hasBoard(DRAC));
+// identity: its own song, version, words, records; board, publication and statistics upload
+assert(playable(BOU) === !UNRELEASED_IDS.has(BOU.id) && hasBoard(BOU) && hasBoard(MULASSA) && hasBoard(DRAC));
 assert.equal(BOU.version, 'bou-v1');
-assert(!PICKER_FIGURES.includes(BOU), 'no Classificació for the Bou');
+assert(PICKER_FIGURES.includes(BOU), 'Classificació includes the Bou');
 assert.equal(runtime.setFigureSong(BOU), true);
 assert.equal(runtime.song, song); assert.equal(runtime.FINALE_T, song.finale);
 assert.equal(trf('collapse.line1'), 'EL BOU'); assert.deepEqual(['input.left', 'input.right', 'input.both'].map(k => trf(k)), ['BRA', 'MA', 'BRAMA'], 'its own drums');
@@ -87,13 +87,13 @@ saveFigureRecord(store, BOU, 2, 91, 123456, 200);
 assert.equal(readFigureRecord(store, BOU, 2).score, 123456);
 assert.equal(readFigureRecord(store, MULASSA, 2), null, 'never the Mulassa\'s record');
 const game = { figureId: BOU.id, figureVersion: BOU.version, diff: 1, practice: false, counts: { perfect: 227, good: 0, miss: 0 }, score: 1000, maxCombo: 227 }; // a valid NORMAL run
-assert.equal(snapshotResult(game, { reason: 'end', query: new URLSearchParams() }), null, 'a Bou run is never published');
+assert(snapshotResult(game, { reason: 'end', query: new URLSearchParams() }), 'a complete Bou run can be published');
 assert.equal(snapshotResult({ ...game, figureVersion: 'mulassa-v3' }, { reason: 'end', query: new URLSearchParams() }), null, 'nor under the Mulassa\'s version');
 assert(validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 227, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: BOU.id }) && !validResult({ version: 'bou-v1', difficulty: 1, counts: { perfect: 227, good: 0, miss: 0 }, score: 1, maxCombo: 1, figureId: MULASSA.id }), 'bou-v1 is the Bou\'s, mirrored for when its board exists');
 const stats = { deviceId: 'd', owners: {} };
-endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: BOU.id, version: BOU.version, level: 1, completed: true, seconds: 150, counts: { perfect: 1, good: 0, miss: 0 } });
+endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: BOU.id, version: BOU.version, level: 1, completed: true, seconds: song.end, counts: { perfect: 227, good: 0, miss: 0 } });
 endRun(stats, 'none', { kind: 'end', date: '2026-10-23', figureId: MULASSA.id, version: MULASSA.version, level: 1, completed: true, seconds: 88, counts: { perfect: 1, good: 0, miss: 0 } });
-assert.deepEqual(Object.keys(payload(stats, 'none').buckets), [`${MULASSA.id}/${MULASSA.version}/1`], 'the Bou\'s statistics stay on the device');
+assert.deepEqual(Object.keys(payload(stats, 'none').buckets), [`${BOU.id}/${BOU.version}/1`, `${MULASSA.id}/${MULASSA.version}/1`], 'both figures upload statistics');
 console.log(`bou chart ok: ${charts.map(c => c.length).join(' / ')} taps, per 7 s FÀCIL ${Math.min(...easy)}-${Math.max(...easy)}, NORMAL ${Math.min(...normal)}-${Math.max(...normal)}, DIFÍCIL ${Math.min(...hard)}-${Math.max(...hard)}; identity, records and server isolation`);
 
 // Exercise the production startGame call site: the Bou counts in like the others (lead-in, jingle, timbals), its recorded intro after BALLA!.

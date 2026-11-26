@@ -22,7 +22,8 @@ const context = vm.createContext({
   privacyMenu: closed(), pauseMenu: closed(), howtoMenu: closed(), settingsMenu: closed(),
   hud: target(), padButtons: buttons, viewMode: false,
   photoKey: () => false, pageActive: () => true, sheetUp: () => false, menuState: () => ['splash', 'select'].includes(G.state), photoScreen: () => G.state === 'select',
-  press: (dir, e) => calls.push({ dir, type: e.type }), bouTap: () => false, // (no Bou close-up waiting)
+  press: (dir, e) => calls.push({ dir, type: e.type }),
+  selectedFigure: { id: 'mulassa-valls' }, sceneOf: () => null, // no finale hook
   settleHold: () => releases.push(true), songTime() {}, eventAt() {},
   haptic() {}, padFeedback() {}, syncPad() {}, releaseAll() {}, clearPhotoKeys() {}, photoRelease() {},
   orbit: { ptrs: new Map() }, look: { ptrs: new Map() }, orbitUp() {}, pnow() {},
@@ -39,7 +40,7 @@ const context = vm.createContext({
 const body = { tagName: 'BODY', dispatchEvent: e => { e.target = body; (listeners.get(e.type) || []).forEach(h => h(e)); } }; // a real dispatch sets the target
 context.document = { addEventListener: context.addEventListener, body };
 vm.runInContext(readFileSync(new URL('../../src/ui/mouse-look.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, '').replace(/^export /gm, ''), context);
-vm.runInContext(readFileSync(new URL('../../src/platform/double-tap.js', import.meta.url), 'utf8').replace(/^export /gm, ''), context);
+vm.runInContext(readFileSync(new URL('../../packages/plassa/src/double-tap.js', import.meta.url), 'utf8').replace(/^export /gm, ''), context);
 vm.runInContext(readFileSync(new URL('../../src/ui/input.js', import.meta.url), 'utf8').replace(/^import .*;\n/gm, ''), context);
 const emit = (type, button, extra = {}) => {
   const e = { type, target: button, preventDefault() {}, pointerId: 1, ...extra };

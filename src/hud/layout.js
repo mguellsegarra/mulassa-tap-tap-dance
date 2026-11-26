@@ -21,7 +21,7 @@ try { new ResizeObserver(() => { setPadTop(null); }).observe(padEl); } catch { /
 // clear gap of NOTE_GAP diameters while a note still shows for at least MIN_LOOK s. Scroll speed on screen = the
 // larger of what that gap needs and the relaxed LOOK[d] pace (capped at MAXSPEED), so bigger notes scroll faster
 // and never overlap. Everything in the band is drawn in lane units scaled by s around the ring (drawLane).
-const NOTE_GAP = 0.5, MIN_LOOK = 0.9;
+const NOTE_GAP = 0.5, MIN_LOOK = 0.5; // 0.5, not 0.9: DIFÍCIL's notes as big as NORMAL's on every phone down to 320 px (they scroll faster; 0.9 shrank them to 3/4)
 const bandScale = () => (HH < 320 ? 1.15 : W < 420 ? (HH >= 720 ? 1.75 : 1.4) : Math.max(1.4, Math.min(2, 1.4 + (Math.min(W, HH) - 260) * 0.6 / 270)));
 const gapCache = new WeakMap();
 function minGap(chart) { // seconds between the closest two notes on the lane (after a hold: from its end)

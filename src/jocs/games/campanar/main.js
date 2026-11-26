@@ -169,7 +169,9 @@ $('back').addEventListener('click', e => {
 });
 const back = () => (mode === 'play' ? pause() : mode === 'paused' ? resume() : null);
 closeOnBackdrop(back);
-guardGpu([$('game')], { lost: pause, restored: () => {}, dead: () => { pause(); window.__gameFail?.('No es pot dibuixar', 'Torna a carregar la pàgina.', 'webgl-not-restored'); } }); // i18n-ok: POC, provisional words until Codex writes the catalogue
+// i18n-ok: POC, provisional words until Codex writes the catalogue
+const gpuDead = () => { pause(); window.__gameFail?.('No es pot dibuixar', 'Torna a carregar la pàgina.', 'webgl-not-restored'); };
+guardGpu([$('game')], { lost: pause, restored: () => {}, dead: gpuDead });
 stopDoubleTapZoom();
 onEveryGesture(unlock);
 setUiSound(uiBlip);

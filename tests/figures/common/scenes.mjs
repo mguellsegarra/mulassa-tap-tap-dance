@@ -27,8 +27,16 @@ run(`setSelectedFigure('bou-tradicional-valls'); setBandLineup(sceneOf('bou-trad
 assert(run(`plaza.band.find(p => p.lineup === 'grallers' && p.kind === 'timbal').arms[1].rotation.x < -1.4`), 'the real crowd pose drives Bou percussion during its intro');
 run(`G.state = 'select'; setSelectedFigure('mulassa-valls');`);
 // what each still takes from a figure's folder: the splash's Drac beside the Mulassa
-const ALLOWED = { 'scene/stage-motion.js': ['drac/drac-play.js', 'drac/drac-demo.js'], 'scene/crowd.js': ['drac/drac-play.js'] };
-for (const f of ['scene/share-capture.js', 'scene/crowd-grid.js', 'scene/crowd-pose.js', 'scene/crowd-mood.js', 'scene/photo-obstacles.js', 'scene/play-camera.js']) ALLOWED[f] = [];
+const ALLOWED = {
+  'scene/stage-motion.js': ['drac/drac-play.js', 'drac/drac-demo.js'],
+  'scene/crowd.js': ['drac/drac-play.js'],
+  'ui/frame-camera.js': ['drac/drac-play.js'],
+};
+for (const f of [
+  'game/tick.js', 'hud/draw.js', 'ui/input.js', 'game/figure-song.js', 'ui/figure-theme-dom.js',
+  'scene/share-capture.js', 'scene/crowd-grid.js', 'scene/crowd-pose.js', 'scene/crowd-mood.js',
+  'scene/photo-obstacles.js', 'scene/play-camera.js',
+]) ALLOWED[f] = [];
 // what the figures do to the people round them comes from their own folders too (crowd-effects.js)
 for (const [, f] of read('scene/crowd-effects.js').matchAll(/^import \{ \w+ \} from '\.\.\/(figures\/[a-z]+\/[a-z-]+\.js)';$/gm))
   assert(Object.keys(FIGURE_TRAITS).some(id => f.startsWith(`figures/${FIGURE_TRAITS[id].key}/`)), `${f}: a figure's own folder`);
@@ -37,3 +45,4 @@ for (const [f, allowed] of Object.entries(ALLOWED)) {
   assert.deepEqual(other, [], `${f} reaches the other figures through the registry`);
 }
 console.log('figure scenes: one hook set per figure in its folder, shared scene files free of them ok');
+

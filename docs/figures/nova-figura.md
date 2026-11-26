@@ -93,7 +93,7 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 - [ ] **Paraules dels botons**: esquerre, dret i tots dos. Mulassa GUA | PA | GUAPA!, Drac CRE | MA | CREMA!, Bou BRA | MA | BRAMA!. Van a `figures.input.*`, `figures.hit.*` i `figures.practice.*.<clau>`.
 - [ ] **Textos per figura (`figures.practice.*`, `figures.chatter.*`)**: una clau `.all` serveix a totes les figures; afegeix `.mulassa|.drac|.bou|<variant>` només si la nova figura ha de dir una altra cosa (el de la variant guanya).
 - [ ] **Colors dels botons**: clar | fosc, distingibles per a qualsevol daltonisme i en gris. Van a `src/game/figure-theme.js`.
-- [ ] **Càntic final**, en tres temps. Bou: "BOU!" / "QUE TOT…" / "HO MOU!". Va a `figures.chant.first|second|last.<clau>`.
+- [ ] **Càntic final**, en tres temps. Bou: un sol "BOOOUUUUU!" (el que crida la colla) que surt lletra a lletra (el quart valor, `step`). Va a `figures.chant.first|second|last.<clau>`; si és una sola paraula, només `last`.
 - [ ] **Frases del públic.** "MIRA, EL BOU!", "QUINA FESTA!"… Van a `figures.chatter.*.<clau>`.
 - [ ] **Quan perds**: títol i subtítol. "EL BOU S'HA AMANSIT!" / "Ara només vol pasturar". Van a `figures.results.collapse*` i `figures.collapse.*`.
 - [ ] **Ajuda de l'energia.** "Cada error desanima la plaça: si es buida, el Bou s'amansa!". Va a `figures.help.energy.<clau>`.
@@ -106,10 +106,9 @@ Copia aquesta llista a la PR i omple-la. Cada línia diu què cal decidir, l'exe
 
 ### Festa, efectes i el toc surrealista
 - [ ] **La festa pròpia**: el foc i el sutge del Drac, la discoteca techno i les carretilles del Bou, el confeti de la Mulassa. Va a `src/figures/<carpeta>/` (`-show.js`, `-fx.js`, `-correfoc.js`).
-- [ ] **El toc surrealista**: el Bou que brama amb la llengua fora i acaba amb una pluja de bitllets, la Mulassa del loader que esquiva les caques de gos. Va al ball o a la festa de la figura.
+- [ ] **El toc surrealista**: el Bou que brama amb la llengua fora, la Mulassa del loader que esquiva les caques de gos. Va al ball o a la festa de la figura.
 - [ ] **Què fa al públic**: el sutge que deixa la gent negra, la conga, la culada. Va a `<clau>-crowd.js`.
 - [ ] **Resposta al toc dels dos botons**: les flames del Drac (CREMA), el bram del Bou. Va al ganxo `onBoth` del seu `<clau>-scene.js`.
-- [ ] **Pla final** (opcional): el Bou baixa la càmera als bitllets. Va al ganxo `endShot` (`figures/bou/bou-end-shot.js`).
 
 ### Model, ball i colla
 - [ ] **Model vòxel** fidel a les fotos, amb els portadors o el que el porti. Skill `mulassacat-voxel`.

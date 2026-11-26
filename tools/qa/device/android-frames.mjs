@@ -8,6 +8,7 @@
 // It stops Chrome on the phone at every run: the phone must be this run's alone (docs/agents/device-profiling.md).
 // usage: node tools/qa/device/android-frames.mjs <plan.json>
 // plan.json: { "url": "http://<lan-ip>:<preview-port>/?mute", "seconds": 17, "reps": 2, "trace": "/tmp/dir" (optional),
+//              "cold": true (optional: Chrome's shader disk cache off, a first visit after a Chrome update; device-profiling.md),
 //              "variants": [["as is"], ["no ribbon", ".sel-heart-tip { display: none !important; }"],
 //                           ["played", "", "", "localStorage.setItem('record-bou-tradicional-valls-1', '{\"score\":1}')"]] }
 //              a variant: [label, css = "", query suffix = "", script before the page = ""]
@@ -22,9 +23,11 @@ if (!/\bdevice\b/.test(adb('devices').split('\n').slice(1).join('\n'))) { consol
 adb('forward', 'tcp:9333', 'localabstract:chrome_devtools_remote');
 if (plan.trace) mkdirSync(plan.trace, { recursive: true });
 const origin = new URL(plan.url).origin;
+const FLAGS = '/data/local/tmp/chrome-command-line'; // Chrome reads its switches there on a debuggable phone
 
 async function run(label, css = '', query = '', js = '', n = 0) {
-  adb('shell', 'am', 'force-stop', 'com.android.chrome'); await sleep(1500);
+  adb('shell', 'am', 'force-stop', 'com.android.chrome');
+  adb('shell', plan.cold ? `echo 'chrome --disable-gpu-shader-disk-cache' > ${FLAGS}` : `rm -f ${FLAGS}`); await sleep(1500);
   const blank = `${origin}/blank-${Date.now()}`; // (a 404 of the same origin: its storage is cleared before the game loads)
   adb('shell', 'am', 'start', '-a', 'android.intent.action.VIEW', '-d', `'${blank}'`, 'com.android.chrome'); await sleep(3000);
   let tab; // Chrome opens its debugging socket a moment after it starts
@@ -78,6 +81,7 @@ async function run(label, css = '', query = '', js = '', n = 0) {
 }
 const order = [], all = {};
 for (let rep = 0; rep < REPS; rep++) order.push(...(rep % 2 ? [...plan.variants].reverse() : plan.variants)); // alternated: neither side always runs on the warmer phone
-for (const [n, v] of order.entries()) { const r = await run(v[0], v[1], v[2], v[3], n); console.log(v[0].padEnd(20), JSON.stringify(r)); (all[v[0]] ??= []).push(r); }
+try { for (const [n, v] of order.entries()) { const r = await run(v[0], v[1], v[2], v[3], n); console.log(v[0].padEnd(20), JSON.stringify(r)); (all[v[0]] ??= []).push(r); } }
+finally { adb('shell', `rm -f ${FLAGS}`); } // never left behind: the owner's Chrome would start cold every time
 console.log('\nper variant, a value per run');
 for (const [label, rs] of Object.entries(all)) console.log(label.padEnd(20), ['coverMs', 'lostOpening', 'lostAll', 'longest'].map(k => `${k} ${rs.map(r => r[k]).join('/')}`).join('   '));

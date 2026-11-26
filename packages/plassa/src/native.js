@@ -67,3 +67,13 @@ export function applyLiveUpdate(id, updater = liveUpdater) {
 const FAILED_BUILDS_KEY = 'live-update-failed';
 function readFailedBuilds() { try { return JSON.parse(store.get(FAILED_BUILDS_KEY)) ?? []; } catch { return []; } }
 const saveFailedBuilds = builds => store.set(FAILED_BUILDS_KEY, JSON.stringify(builds.slice(-20)));
+// Android's WebView has no navigator.share: the Share plugin stands in for it (share-ui.js), the image first written to the
+// app's cache, since the plugin shares a file's address. Closing the system sheet reads as the web's AbortError.
+const asBase64 = file => new Promise((ok, ko) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(',')[1]); r.onerror = ko; r.readAsDataURL(file); });
+export const shareNav = capPlugins?.Share && typeof globalThis.navigator?.share !== 'function' ? {
+  canShare: () => true,
+  async share({ files: [file] = [], text, url }) {
+    const files = file ? [(await capPlugins.Filesystem.writeFile({ path: file.name, data: await asBase64(file), directory: 'CACHE' })).uri] : undefined;
+    await capPlugins.Share.share({ text, url, files }).catch(e => { throw /cancel/i.test(e?.message) ? new DOMException('closed', 'AbortError') : e; });
+  },
+} : globalThis.navigator;

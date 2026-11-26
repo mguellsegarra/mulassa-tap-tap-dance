@@ -86,7 +86,7 @@ export const SHOWREELS = {
     [0, 'wide', 'cut'], [16, 'left', 'glide'], [44, 'front', 'glide'], // the entrance, the first steps, the changes of facing
     [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [172, 'front', 'glide'], // the lateral pass; the turns
     [192, 'left', 'cut'], [224, 'high', 'glide'], [256, 'right', 'glide'], // the start; the festive turns
-    [288, 'front', 'glide'], // the ending and the settle (a glide: the cut fell in the end's banknote rain, bou-bills.js, a jolt)
+    [288, 'front', 'glide'], // the ending and the settle (a glide: a cut there read as a jolt)
   ] },
 };
 

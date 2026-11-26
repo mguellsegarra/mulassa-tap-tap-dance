@@ -13,6 +13,12 @@ UI-only releases do not need database rehearsals, and a read-only review perform
 
 ## Compatibility and delivery
 
+- Review and diff a release against `origin/main` after `git fetch`, never the local `main`: a stale
+  local `main` once tripled the reviewed delta with work already in production. Merge the last
+  released version into the release branch before its version commit; `package.json` must equal the tag.
+- Before designing a backfill or allowance for data that old clients may hold, check that a shipped
+  client could have produced it: a stats credit for a figure never released only opened abuse.
+  A migration that re-asserts a scoring version also checks it is not retired.
 - For client/server changes, compare old and new request/response contracts, including old
   open tabs or cached clients. Check the business rule on both sides, including tie breaks,
   units and result text; HTTP 200 alone does not prove semantic compatibility.

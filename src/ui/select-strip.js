@@ -1,6 +1,6 @@
 // The selector's strip and pills as HTML strings, plus the pixel-art portrait and the scrolling rows' peeking gap (split from select-ui.js).
 import { townOf, playable, portraitArt, portraitPalette, portraitStand } from '../game/figures.js';
-import { escutSvg } from './escuts.js';
+import { escutImg } from './escuts.js';
 import { entityLabel, cardEntityHtml } from './figure-entities.js';
 import { SELECTOR_PORTRAITS, pendingSilhouette } from './selector-portraits.js';
 import { silhouetteBox } from './pending-silhouettes.js';
@@ -15,7 +15,7 @@ export function pixelSvg(art, palette, rim) {
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (on(x, y)) cell(palette[art[y][x]], x, y);
   return `<svg viewBox="0 0 ${w + 2} ${h + 2}" shape-rendering="crispEdges" aria-hidden="true">${[...paths].filter(([, d]) => d).map(([fill, d]) => `<path fill="${fill}" d="${d}"/>`).join('')}</svg>`;
 }
-export const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutSvg(t.id) || '<i aria-hidden="true"></i>'}${t.pill ?? t.name}</button>`; // `pill`: a name shared with other towns, told apart
+export const pillHtml = t => `<button type="button" class="btn btn-secondary sel-pill" data-town="${t.id}" tabindex="0" aria-pressed="false"${t.color ? ` style="--c:${t.color}"` : ''}>${escutImg(t.id) || '<i aria-hidden="true"></i>'}${t.pill ?? t.name}</button>`; // `pill`: a name shared with other towns, told apart
 export const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 // A card's vector portrait as one <img>: its ~30 paths inline (1,600 across the strip) made every forced layout of the selector walk them.
 const svgImg = svg => svg.startsWith('<svg') ? `<img class="${svg.match(/^<svg[^>]*?\sclass="([^"]*)"/)?.[1] ?? ''}" src="data:image/svg+xml,${encodeURIComponent(svg.includes('xmlns=') ? svg : svg.replace('<svg', '<svg xmlns="http://www.w3.org/2000/svg"'))}" alt="" decoding="async">` : svg;

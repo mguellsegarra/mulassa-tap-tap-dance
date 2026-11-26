@@ -6,7 +6,7 @@
 export const CURRENT_SCORE_VERSION = 'mulassa-v3';
 export const SHORT_SCORE_VERSION = 'mulassa-v2-short';
 export const DRAC_SCORE_VERSION = 'drac-v1';
-export const BOU_SCORE_VERSION = 'bou-v1'; // local records only: the server has no such version yet
+export const BOU_SCORE_VERSION = 'bou-v1'; // records and online board share the unchanged chart
 export const LEGACY_SCORE_VERSION = 'mulassa-v1';
 export const FULL_SCORE_ANCHORS = Object.freeze([96572, 113940, 196572]);
 export const SHORT_SCORE_ANCHORS = Object.freeze([69350, 83540, 149972]);

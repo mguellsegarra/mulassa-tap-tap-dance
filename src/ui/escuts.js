@@ -2,6 +2,7 @@
 // ("Escut de <poble>.svg"): each in its own shape (the official ones are "caironats", lozenges), field and charges;
 // crowns and outer ornaments are left out, unless the town needs one to be told apart (València's bat, Sant Julià's laurel: `over`,
 // drawn outside the shield). Banners and card tints use the game's own town accents (select-cards.css --town).
+import { ESCUT_HASH } from './escut-files.js';
 const ESC_T = { or: '#f5c518', gules: '#d62a2a', argent: '#fffaf0', atzur: '#2479d0', sinople: '#2e8b3e', sable: '#2a1a10', carn: '#e0a878', bru: '#a8642c', porpra: '#8a2a8c' };
 const ESC_SHAPE = {
   loz: 'M12 .8 23.2 12 12 23.2.8 12z', // caironat
@@ -192,23 +193,15 @@ export function escutSvg(townId, cls = 'escut') {
     + `<g clip-path="url(#${id})" stroke="none">${arms.art.replaceAll('{id}', id)}</g><path d="${shape}" fill="none" stroke="${ESC_T.sable}" stroke-width="1.1" stroke-linejoin="round"/>${arms.over ? `<g stroke="none">${arms.over}</g>` : ''}</svg>`;
 }
 
-// The selector pills' arms as bitmaps: 33 inline vectors were re-rastered on the selector's first paint (~300 ms of a Galaxy
-// S10's GPU, the 3D stalled behind it; as PNGs, none). Drawn once at 2x the screen's density, so a zoomed layer stays sharp.
-export function escutBitmaps(root, win = globalThis) {
-  const doc = root.ownerDocument, px = Math.ceil(22 * 2 * (win.devicePixelRatio || 1));
-  if (!doc?.createElement('canvas').getContext) return Promise.resolve();
-  return Promise.all([...root.querySelectorAll('svg.escut')].map(async svg => {
-    const src = new win.Image();
-    src.src = `data:image/svg+xml,${encodeURIComponent(svg.outerHTML.replace('<svg', `<svg xmlns="http://www.w3.org/2000/svg" width="${px}" height="${px}"`))}`;
-    let blob = null;
-    try { // (a decode error, or a browser that taints a canvas drawn from a vector: the arm stays a vector)
-      await src.decode();
-      const canvas = doc.createElement('canvas'); canvas.width = canvas.height = px;
-      canvas.getContext('2d').drawImage(src, 0, 0, px, px);
-      blob = await new Promise(done => canvas.toBlob(done));
-    } catch { return; }
-    if (!blob) return;
-    const img = new win.Image(); img.className = svg.getAttribute('class'); img.alt = ''; img.src = win.URL.createObjectURL(blob);
-    svg.replaceWith(img);
-  }));
-}
+// The selector pills' arms are PNGs made at build time (tools/ui/build-escuts.mjs, public/escuts/): drawing the vectors to
+// canvases at boot read the GPU back for ~0.8 s of a Galaxy S10's longest start-up task. 22 px at 2x the screen's density
+// (a zoomed layer stays sharp); the browser picks the file by density, the names carry the arms' hash (a new drawing, a new URL).
+export const ESCUT_DPR = [1, 2, 3, 3.5, 4], escutPx = dpr => Math.ceil(22 * 2 * dpr);
+export const escutFile = (townId, dpr) => `/escuts/${townId}.${ESCUT_HASH[townId]}.${escutPx(dpr)}.png`;
+export const escutImg = townId => !ESCUT_HASH[townId] ? escutSvg(townId)
+  : `<img class="escut" src="${escutFile(townId, 1)}" srcset="${ESCUT_DPR.map(d => `${escutFile(townId, d)} ${d}x`).join(', ')}" data-arms="${townId}" alt="" decoding="async">`;
+// A file that does not come (a dropped connection) leaves the arm as its vector: error events do not bubble, hence the capture.
+export const escutFallback = root => root.addEventListener('error', e => {
+  const img = e.target, town = img?.dataset?.arms;
+  if (town) img.outerHTML = escutSvg(town);
+}, true);

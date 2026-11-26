@@ -64,6 +64,8 @@ export function sentryOptions({ dsn, environment, release, tags = () => ({}), de
     sendClientReports: false,
     enhanceFetchErrorMessages: 'report-only', // never rewrite the game's own error messages
     maxBreadcrumbs: 30,
+    // Microsoft's mail link scanner (CefSharp) rejects with this on any page it opens: not a player, not our code
+    ignoreErrors: [/Object Not Found Matching Id:\d+, MethodName:\w+, ParamCount:\d+/],
     beforeBreadcrumb: scrubBreadcrumb,
     beforeSend(event, hint) {
       if (hint?.originalException?.mulassaReported) return null; // e.g. no WebGL: already a warning, not a crash

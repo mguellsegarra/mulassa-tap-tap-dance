@@ -72,7 +72,7 @@ private final class ChosenBundle: Bundle, @unchecked Sendable {
 // The suggestion, the web's tip in the app's look: a card at the foot of the home over a dim, after the splash.
 struct LanguagePrompt: View {
     @ObservedObject var language = AppLanguage.shared
-    @State private var up = false
+    @ViewState private var up = false
 
     var body: some View {
         ZStack(alignment: .bottom) {

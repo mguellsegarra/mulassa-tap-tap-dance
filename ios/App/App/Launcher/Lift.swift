@@ -14,10 +14,10 @@ struct LiftView: View {
     let lifted: Lifted
     let done: () -> Void // back in its slot, or under the iris
     @Environment(\.accessibilityReduceMotion) private var still
-    @State private var up = false
-    @State private var ready = false // the turn has ended: «Juga» shows, or the lock shakes
-    @State private var shake: CGFloat = 0
-    @State private var leaving = false
+    @ViewState private var up = false
+    @ViewState private var ready = false // the turn has ended: «Juga» shows, or the lock shakes
+    @ViewState private var shake: CGFloat = 0
+    @ViewState private var leaving = false
 
     var body: some View {
         GeometryReader { g in

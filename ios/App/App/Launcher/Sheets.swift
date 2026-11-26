@@ -46,8 +46,8 @@ struct ProfilePage: View {
 struct SettingsSheet: View {
     let surface: Color
     @Binding var shown: Bool
-    @State private var drag: CGFloat = 0
-    @State private var height: CGFloat = 1
+    @ViewState private var drag: CGFloat = 0
+    @ViewState private var height: CGFloat = 1
 
     var body: some View {
         GeometryReader { g in
@@ -85,7 +85,7 @@ private struct SheetCard: View {
     let bottom: CGFloat // the home indicator's inset, kept clear inside the sheet
     let room: CGFloat // the most the sheet may take: past it the page scrolls
     let close: () -> Void
-    @State private var height: CGFloat = 0 // the page's rows at their natural height
+    @ViewState private var height: CGFloat = 0 // the page's rows at their natural height
     private let top: CGFloat = 17 + 60 // the grabber and the header
 
     var body: some View {

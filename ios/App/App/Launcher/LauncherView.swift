@@ -1,5 +1,10 @@
 import SwiftUI
 
+// Xcode 27's @State macro links LazyState from SwiftUICore, but iOS < 27 ships it in SwiftUI: dyld kills the app at launch.
+// The plain property wrapper, through an alias so the macro doesn't apply, keeps the launcher running on iOS 17-26.
+// shortcut: drop it (back to @State) once Apple's SDK fixes the symbol's module or the deployment target reaches 27.
+typealias ViewState = SwiftUI.State
+
 // The launcher's state: the catalogue and its art.
 @MainActor final class Launcher: ObservableObject {
     @Published private(set) var games: [Game] = []
@@ -27,9 +32,9 @@ enum LauncherTab: Hashable { case games, profile }
 // bottom sheet over both; a tapped cartridge lifts over everything (Lift.swift).
 struct LauncherRoot: View {
     @ObservedObject var model: Launcher
-    @State private var tab: LauncherTab = LauncherSheet.atLaunch == nil ? .games : .profile
-    @State private var settings = LauncherSheet.atLaunch == .settings
-    @State private var lifted: Lifted?
+    @ViewState private var tab: LauncherTab = LauncherSheet.atLaunch == nil ? .games : .profile
+    @ViewState private var settings = LauncherSheet.atLaunch == .settings
+    @ViewState private var lifted: Lifted?
     @ObservedObject private var language = AppLanguage.shared
 
     var body: some View {

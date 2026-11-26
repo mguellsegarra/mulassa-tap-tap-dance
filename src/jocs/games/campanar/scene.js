@@ -51,16 +51,19 @@ export function createScene(canvas) {
   let slabs = [], fx = [], moving = null, camY = 0, aimY = 0, outro = null, crown = null, plan = createFacade(BODY_TOL);
   let lift = [0, 0], lifted = [0, 0], aside = 0, asided = 0; // the shares of the screen's top and bottom kept clear (the end's words, its buttons), eased; aside: the picture moved right by that share of the width (the wide home), eased too
 
-  // floor n's slab, fading in over 0.25 s (opaque again after: no sorting)
-  function slab(n, { x, z, w, d }, y) {
+  // floor n's slab, fading in over 0.25 s (opaque again after: no sorting); the run's first one comes down into place
+  // from a little above over 0.5 s, so it arrives instead of popping up
+  function slab(n, { x, z, w, d }, y, first = false) {
+    const enter = first ? 0.5 : 0.25, lift = first ? FLOOR * 2.5 : 0;
     const m = new Mesh(box, new MeshLambertMaterial({ color: colorOf(n), transparent: true, opacity: 0 }));
     m.scale.set(w, FLOOR, d);
-    m.position.set(x, y + FLOOR / 2, z);
+    m.position.set(x, y + FLOOR / 2 + lift, z);
     m.userData.n = n;
     scene.add(m);
     fx.push({ m, tick: t => {
-      const k = Math.min(1, t / 0.25);
+      const k = Math.min(1, t / enter);
       m.material.opacity = easeOut(k);
+      if (lift) m.position.y = y + FLOOR / 2 + lift * (1 - easeOut(k));
       if (k === 1) m.material.transparent = false;
       return k < 1;
     } });
@@ -164,7 +167,7 @@ export function createScene(canvas) {
       camY = aimY = 0;
     },
     // the slab in the player's hands: floor n's colour, the floor below's size
-    moving(n, rect, y) { moving = slab(n, rect, y); },
+    moving(n, rect, y) { moving = slab(n, rect, y, n === 1); },
     slide(axis, v) { if (moving) moving.position[axis] = v; },
     place(rect) {
       moving.scale.set(rect.w, FLOOR, rect.d);
@@ -281,6 +284,6 @@ export function createScene(canvas) {
       renderer.render(scene, camera);
     },
     get climb() { return camY; },
-    get settled() { return Math.abs(asided - aside) < 0.004; }, // the picture no longer sliding sideways
+    get settled() { return Math.abs(asided - aside) < 0.05; }, // the picture nearly in the middle: the first slab comes down as it ends
   };
 }

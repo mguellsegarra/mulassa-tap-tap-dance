@@ -29,11 +29,17 @@ export function carenaSvg(pano, o) {
   };
   const near = heights(o.near);
   // on the ridge's own top near the Cogulla (the drawn point, not the map's): the mast stands on the peak's tip
-  let tx = 0, ty = Infinity;
+  let tx = 0, ty = Infinity, top_ = -1;
   near.forEach((py, k) => {
     const off = Math.abs(((az0 + k * pano.step - COGULLA + 540) % 360) - 180);
-    if (off <= 1.5 && py < ty) { tx = k * pano.step; ty = py; }
+    if (off <= 1.5 && py < ty) { top_ = k; ty = py; }
   });
+  if (top_ >= 0) { // the curve's own top between the samples: the vertex of the parabola through the highest and its two neighbours
+    const a = near[top_ - 1] ?? ty, c = near[top_ + 1] ?? ty, den = a - 2 * ty + c;
+    const shift = den ? Math.max(-1, Math.min(1, (a - c) / (2 * den))) : 0;
+    tx = (top_ + shift) * pano.step + (o.antennaShift ?? 0); // antennaShift: degrees by hand, where the eye puts the top
+    ty -= (a - c) * shift / 4;
+  }
   // a thin mast that ends in a sharp point: straight for its lower 70 %, then tapering
   const w = o.antennaW / 2, top = ty - o.antenna, neck = ty - o.antenna * 0.7, g = v => +v.toFixed(3);
   const mast = ty < Infinity ? `<polygon fill="${o.nearColor}" points="${g(tx - w)},${g(ty + 0.05)} ${g(tx - w)},${g(neck)} ${g(tx)},${g(top)} ${g(tx + w)},${g(neck)} ${g(tx + w)},${g(ty + 0.05)}"/>` : '';

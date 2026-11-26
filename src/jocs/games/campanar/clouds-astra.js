@@ -111,7 +111,7 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
       attribute vec3 bankAnchor;
       uniform float seconds, height, aspect;
       varying vec2 sampleAt;
-      varying float mist;
+      varying float mist, fade;
       void main() {
         float layer = bankAnchor.z;
         float passage = fract(seconds * 0.04 * layer + bankAnchor.y);
@@ -120,22 +120,23 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
         vec2 size = vec2(min(1.68, 1.16 / aspect), min(1.68 * aspect, 1.16));
         gl_Position = vec4(center + position.xy * size, 0.99998, 1.0);
         sampleAt = uv;
-        // Dissolve a bank into the haze before its next passage.
-        mist = layer * (0.79 - height * 0.009)
-          * smoothstep(0.0, 0.15, passage) * (1.0 - smoothstep(0.85, 1.0, passage));
+        mist = layer * (0.79 - height * 0.009);
+        // a bank forms and thins out slowly, over a third of its passage at each end (no pop)
+        fade = smoothstep(0.0, 0.3, passage) * (1.0 - smoothstep(0.7, 1.0, passage));
       }`,
     fragmentShader: `
       uniform sampler2D atlas;
       uniform float night;
       varying vec2 sampleAt;
-      varying float mist;
+      varying float mist, fade;
       void main() {
         vec4 cloud = texture2D(atlas, sampleAt);
         // at night the banks lose the day's light: dim and cool
         vec3 tone = cloud.rgb * mix(vec3(1.0), vec3(0.42, 0.44, 0.6), night);
         // at night the body is solid so the stars behind it are hidden; only the very rim stays soft
+        // (the fade comes after: the night's hard body would otherwise snap a fading bank off)
         float body = cloud.a * mist;
-        gl_FragColor = vec4(tone, mix(body, smoothstep(0.02, 0.3, body), night));
+        gl_FragColor = vec4(tone, mix(body, smoothstep(0.02, 0.3, body), night) * fade);
       }`,
   });
   const mesh = new Mesh(geometry, material);

@@ -129,7 +129,29 @@ function toMenu() {
 }
 const homeAside = () => scene.aside(mode === 'menu' && matchMedia('(orientation: landscape)').matches ? 0.25 : 0); // wide: the tower beside the home's column
 
-$('game').addEventListener('pointerdown', e => { if (e.button) return; if (mode === 'over') toSheet(); else tap(); });
+$('game').addEventListener('pointerdown', e => {
+  if (e.button) return;
+  if (mode !== 'over') return tap();
+  // the end: a drag turns the campanar round (scene.look), a tap without moving goes on to the sheet
+  const c = $('game'), from = { x: e.clientX, y: e.clientY, t: e.timeStamp, moved: 0 };
+  c.setPointerCapture(e.pointerId);
+  const move = m => {
+    const dx = m.clientX - from.x, dy = m.clientY - from.y;
+    from.moved += Math.abs(dx) + Math.abs(dy);
+    scene.look(dx, dy, (m.timeStamp - from.t) / 1000);
+    Object.assign(from, { x: m.clientX, y: m.clientY, t: m.timeStamp });
+  };
+  const up = u => {
+    c.removeEventListener('pointermove', move);
+    c.removeEventListener('pointerup', up);
+    c.removeEventListener('pointercancel', up);
+    scene.letGo(!matchMedia('(prefers-reduced-motion: reduce)').matches && u.type === 'pointerup');
+    if (from.moved < 8 && u.type === 'pointerup') toSheet();
+  };
+  c.addEventListener('pointermove', move);
+  c.addEventListener('pointerup', up);
+  c.addEventListener('pointercancel', up);
+});
 addEventListener('keydown', e => {
   if ((e.key === ' ' || e.key === 'Enter') && (mode === 'play' || looking)) { e.preventDefault(); if (looking) toSheet(); else tap(); }
   if (e.key === 'Escape') back();

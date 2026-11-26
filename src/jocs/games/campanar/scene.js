@@ -14,6 +14,7 @@ import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, dispo
 import { TOL, sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings } from './sky.js';
+import { createTowerTurn } from './turn.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
 import { pixelRatio } from '#plassa/quality.js';
@@ -49,6 +50,7 @@ export function createScene(canvas) {
   scene.add(weather);
   let turning = []; // the settled floors still to turn to stone, one a frame (no long frame on the tap)
   let slabs = [], fx = [], moving = null, camY = 0, aimY = 0, outro = null, crown = null, plan = createFacade(BODY_TOL);
+  const freeLook = createTowerTurn(Math.atan2(VIEW.x, VIEW.z)); // the end's free look round the tower (turn.js)
   let lift = [0, 0], lifted = [0, 0], aside = 0, asided = 0; // the shares of the screen's top and bottom kept clear (the end's words, its buttons), eased; aside: the picture moved right by that share of the width (the wide home), eased too
 
   // floor n's slab, fading in over 0.25 s (opaque again after: no sorting); the run's first one comes down into place
@@ -165,6 +167,7 @@ export function createScene(canvas) {
       camera.zoom = 1;
       camera.updateProjectionMatrix();
       camY = aimY = 0;
+      freeLook.reset();
     },
     // the slab in the player's hands: floor n's colour, the floor below's size
     moving(n, rect, y) { moving = slab(n, rect, y, n === 1); },
@@ -254,6 +257,8 @@ export function createScene(canvas) {
     // keep the top and bottom shares of the screen clear: the whole tower is framed in the space between
     lift(top, bottom) { lift = [top, bottom]; },
     aside(share) { aside = share; },
+    look: freeLook.drag, // the end's free look (turn.js)
+    letGo: freeLook.letGo,
     frame(dt) {
       turning.shift()?.();
       for (const e of fx) e.alive = e.tick(e.age = (e.age ?? 0) + dt, dt);
@@ -277,7 +282,7 @@ export function createScene(canvas) {
         const w = renderer.domElement.width, h = renderer.domElement.height;
         camera.setViewOffset(w, h, -w * asided, h * (lb - lt) / 2, w, h);
       } else camera.clearViewOffset();
-      camera.position.set(VIEW.x * k, camY + VIEW.y * k * tilt, VIEW.z * k);
+      freeLook.place(camera, Math.hypot(VIEW.x, VIEW.z) * k, VIEW.y * k * tilt, camY, dt);
       camera.lookAt(0, camY - 0.3 * SIZE, 0);
       clouds.tick(dt, camY);
       stars.tick(dt, camY);

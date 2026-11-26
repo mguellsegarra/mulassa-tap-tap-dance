@@ -55,7 +55,8 @@ canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; tou
 @keyframes tap-pulse { 50% { opacity: .55; } }
 @media (prefers-reduced-motion: reduce) { #end-banner, #end-tap { animation: none; } }
 /* after the look: the end cover shows only its buttons, low, the tower whole above them (its words are in the banner) */
-#end-menu .sheet { background: none; box-shadow: none; border: 0; padding: 0; }
+#end-menu .sheet { background: none; box-shadow: none; border: 0; padding: 0; overflow: visible; } /* no padding left: the sheet's scroll clip would cut the last button's rim */
+#end-menu { pointer-events: none; } #end-menu .sheet-actions { pointer-events: auto; } /* only its buttons catch: the tower behind can still be turned */
 #end-menu .sheet > :not(.sheet-actions) { display: none; }
 #banner-best:not([hidden]) { color: var(--accent); }
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* as Pop: line icons (to move into game.css with the end sheet, docs plan) */

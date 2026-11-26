@@ -19,7 +19,7 @@ import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
 import { STACK_TRY, STACK_LENS, STACK_ZOOM } from './stack.js';
 import { createFoot } from './peu.js';
-import { perfectEffect } from './perfect.js';
+import { perfectEffect, perfectSettle, PERFECT_MARK } from './perfect.js';
 import { pixelRatio } from '#plassa/quality.js';
 
 // terracotta, apricot, butter, leaf, teal, rose and round again: 8 floors from one to the next
@@ -50,12 +50,12 @@ export function createScene(canvas) {
   scene.add(side);
   const weather = new Group(); // the weatherings on the settled floors' bare tops (crown.js)
   scene.add(weather);
-  let turning = []; // the settled floors still to turn to stone, one a frame (no long frame on the tap)
+  let turning = [], holdTurns = 0; // the settled floors still to turn to stone, one a frame (no long frame on the tap); s held
   let slabs = [], fx = [], moving = null, camY = 0, aimY = 0, outro = null, crown = null, plan = createFacade(BODY_TOL);
   const freeLook = createTowerTurn(Math.atan2(VIEW.x, VIEW.z)); // the end's free look round the tower (turn.js)
   // lift: the shares of the screen's top and bottom kept clear (the end's words, its buttons), eased;
   // aside: the picture moved right by that share of the width (the wide home), eased too
-  let lift = [0, 0], lifted = [0, 0], aside = 0, asided = 0;
+  let lift = [0, 0], lifted = [0, 0], aside = 0, asided = 0, snapping = 0; // snapping: the last perfect's settling time
 
   // floor n's slab, fading in over 0.25 s (opaque again after: no sorting); the run's first one comes down into place
   // from a little above over 0.5 s, so it arrives instead of popping up
@@ -177,10 +177,15 @@ export function createScene(canvas) {
     // the slab in the player's hands: floor n's colour, the floor below's size
     moving(n, rect, y) { moving = slab(n, rect, y, n === 1); },
     slide(axis, v) { if (moving) moving.position[axis] = v; },
-    place(rect) {
+    // axis, v: the slab's travel and speed as it was dropped
+    place(rect, axis, v = 0) {
+      const m = moving, from = m.position[axis], whole = m.scale.x === rect.w && m.scale.z === rect.d; // whole: a perfect
       moving.scale.set(rect.w, FLOOR, rect.d);
       moving.position.x = rect.x;
       moving.position.z = rect.z;
+      const settle = whole && perfectSettle(m, rect, axis, from, v); // it settles from its speed (perfect.js); its mark waits
+      if (settle) fx.push({ tick: settle });
+      snapping = holdTurns = settle ? PERFECT_MARK : 0; // the floors below turn to stone with the mark, not before it
       moving.userData.built = { ...rect };
       slabs.push(moving);
       aimY = moving.position.y + FLOOR / 2;
@@ -240,8 +245,9 @@ export function createScene(canvas) {
       moving = null;
     },
     // a perfect drop: a flat ring of the slab's colour widens from its top and fades in 0.6 s, a little wider each in a row
-    ripple(n, rect, y, streak) { // a perfect drop's mark (perfect.js)
-      perfectEffect((m, tick) => { scene.add(m); fx.push({ m, tick: t => tick(t) || (gone(m), false) }); }, colorOf(n), rect, y, streak);
+    ripple(n, rect, y, streak) { // a perfect drop's mark (perfect.js), once the slab has settled over it
+      const wait = snapping, add = (m, tick) => { m.visible = !wait; scene.add(m); fx.push({ m, tick: t => t < wait || (m.visible = true, tick(t - wait)) || (gone(m), false) }); };
+      perfectEffect(add, colorOf(n), rect, y, streak);
     },
     // the end: in 0.8 s the camera eases back until the whole tower fits
     pullOut() {
@@ -257,7 +263,7 @@ export function createScene(canvas) {
     look: freeLook.drag, // the end's free look (turn.js)
     letGo: freeLook.letGo,
     frame(dt) {
-      turning.shift()?.();
+      if ((holdTurns -= dt) <= 0) turning.shift()?.();
       for (const e of fx) e.alive = e.tick(e.age = (e.age ?? 0) + dt, dt);
       fx = fx.filter(e => e.alive);
       let k = 1, tilt = 1;

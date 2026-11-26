@@ -20,3 +20,20 @@ export function perfectEffect(add, color, rect, y, streak) {
     return k < 1;
   });
 }
+
+// A perfect drop settling into place from the slab's own speed: a critically damped spring, no jump back. The spring's
+// rate (1/s), the share of the speed it keeps (more overshoots), when it is done; PERFECT_MARK: when its mark and the
+// floors' turn to stone show (s, the slab nearly still by then)
+const SETTLE_W = 15, SETTLE_KEEP = 0.3, SETTLE_S = 0.4;
+export const PERFECT_MARK = 0.22;
+// m: the slab, already at rect; from: where it was dropped along axis; v: its speed → the effect's tick, or null when
+// it fell right in place
+export function perfectSettle(m, rect, axis, from, v) {
+  const x0 = from - rect[axis];
+  if (!x0) return null;
+  m.position[axis] = from;
+  return t => {
+    m.position[axis] = rect[axis] + (x0 + (v * SETTLE_KEEP + SETTLE_W * x0) * t) * Math.exp(-SETTLE_W * t);
+    return t < SETTLE_S || (m.position[axis] = rect[axis], false);
+  };
+}

@@ -90,8 +90,8 @@ export function createStars(scene, camera, renderer) {
         vec2 centre = floor((at * 0.5 + 0.5) * frame) + 0.5;
         // a sparkle (Astra's): now and then a star flares and shows four rays; the big ones always a little
         float flare = pow(max(0.0, sin(seconds * 0.37 + beat.x * 5.0)), 24.0);
-        rays = smoothstep(5.0, 10.0, star.z) * (0.25 + 0.5 * flare) + 0.5 * flare * step(3.0, star.z); // small and soft: no star calls for the eye
-        grow = 1.0 + 1.3 * rays; // the quad grows for the rays; the dot keeps its size (disc / grow)
+        rays = smoothstep(6.0, 11.0, star.z) * (0.1 + 0.25 * flare) + 0.2 * flare * step(4.0, star.z); // faint and short: no star calls for the eye
+        grow = 1.0 + 0.8 * rays; // the quad grows for the rays; the dot keeps its size (disc / grow)
         vec2 corner = centre + position.xy * 0.5 * max(2.0, star.z * ratio) * grow * step(0.004, seen); // unseen: no area
         gl_Position = vec4(corner / frame * 2.0 - 1.0, 0.99999, 1.0);
         light = vec4(hue.rgb, 1.0) * (hue.a * seen * twinkle);
@@ -111,7 +111,7 @@ export function createStars(scene, camera, renderer) {
         vec2 d = disc * grow;
         float s = max(0.0, 1.0 - dot(d, d)), soft = s * s, core = soft * soft * soft * soft;
         float cross = (exp2(-90.0 * disc.x * disc.x) + exp2(-90.0 * disc.y * disc.y)) * max(0.0, 1.0 - length(disc));
-        vec4 colour = light * max(mix(soft, core + 0.14 * soft, halo), rays * 0.7 * cross);
+        vec4 colour = light * max(mix(soft, core + 0.14 * soft, halo), rays * 0.5 * cross);
         // the night: indigo at the zenith, through violet, down to the dusk's own colours left over the ridge
         float dark = fableDark(up, night) * sky;
         vec3 tone = mix(mix(vec3(0.47, 0.36, 0.56), vec3(0.23, 0.22, 0.47), smoothstep(0.2, 0.55, up)),

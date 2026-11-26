@@ -114,8 +114,9 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
       varying float mist, fade;
       void main() {
         float layer = bankAnchor.z;
-        float passage = fract(seconds * 0.04 * layer + bankAnchor.y);
-        // a long drift across a good part of the screen (about a tenth of it every 2 s on the near banks), and they sink as the tower climbs
+        // the far banks crawl, the near ones drift a little faster (speed by the square of nearness: 1 to 4 minutes a crossing)
+        float passage = fract(seconds * 0.022 * layer * layer + bankAnchor.y);
+        // a long drift across a good part of the screen, and they sink as the tower climbs
         vec2 center = bankAnchor.xy + vec2((passage - 0.5) * 1.2, -height * layer * 0.02);
         // the end's turn takes them round with the mountains: over a band wider than the screen and a bank, so the jump
         // back is out of sight

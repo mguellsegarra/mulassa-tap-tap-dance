@@ -114,8 +114,9 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
       varying float mist;
       void main() {
         float layer = bankAnchor.z;
-        float passage = fract(seconds * 0.025 * layer + bankAnchor.y);
-        vec2 center = bankAnchor.xy + vec2((passage - 0.5) * 0.42, -height * layer * 0.009);
+        float passage = fract(seconds * 0.04 * layer + bankAnchor.y);
+        // a long drift across a good part of the screen (about a tenth of it every 2 s on the near banks), and they sink as the tower climbs
+        vec2 center = bankAnchor.xy + vec2((passage - 0.5) * 1.2, -height * layer * 0.02);
         vec2 size = vec2(min(1.68, 1.16 / aspect), min(1.68 * aspect, 1.16));
         gl_Position = vec4(center + position.xy * size, 0.99998, 1.0);
         sampleAt = uv;

@@ -1,6 +1,12 @@
 package cat.mulassa.games.launcher
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
@@ -71,10 +77,11 @@ class Launcher(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("launcher", Context.MODE_PRIVATE)
     var games by mutableStateOf<List<Game>>(emptyList()); private set
     var images by mutableStateOf<Map<String, ImageBitmap>>(emptyMap()); private set
-    var icon by mutableStateOf<ImageBitmap?>(null); private set
     var last by mutableStateOf(prefs.getString("last", null)); private set
     var bundle: WebBundle = WebBundle(null); private set
     var play: (Game, Offset) -> Unit = { _, _ -> }
+    // the cartridge lifted into Picked; the activity drops it under the closed iris, so a game returns to the grid
+    var pick by mutableStateOf<Pick?>(null)
     // shortcut: kept on the launcher only; the games read their own sound and music until the settings snapshot
     // (native-shell.md, contract 4) hands these to them. Vibration already gates the launcher's haptics.
     var sound by toggle("sound"); var music by toggle("music"); var vibration by toggle("vibration")
@@ -94,7 +101,6 @@ class Launcher(private val ctx: Context) {
         bundle = b
         games = found
         images = found.mapNotNull { g -> b.image(ctx, g.art)?.let { g.id to it } }.toMap()
-        icon = b.image(ctx, "/apple-touch-icon.png")
     }
 
     fun played(id: String) {
@@ -107,94 +113,75 @@ val M = 16.dp // one spacing unit: side margin = column gap = row gap = header-t
 
 @Composable
 fun haptic(model: Launcher): (Int) -> Unit { val v = LocalView.current; return { if (model.vibration) v.performHapticFeedback(it) } }
-private val REJECT = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
+val REJECT = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
 
 private fun LayoutCoordinates.centre() = boundsInWindow().center
 
-// Round 10: one screen. A header with the logo and the avatar, then every game as a cartridge, two columns, vertical
-// scroll, over the hour's sky. The avatar opens Perfil, whose gear opens Ajustos.
+// Ronda 18: two tabs over the hour's sky. Jocs is the logo and every game as a cartridge, two columns, all scrolling
+// together; Perfil is a page whose gear opens Ajustos. A cartridge tapped lifts out into Picked (Pick.kt).
+enum class Tab { Games, Profile }
+
 @Composable
 fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
     val sky = rememberSky(hour)
-    var sheet by remember { mutableStateOf<Sheet?>(null) }
-    Box(Modifier.fillMaxSize().sky { sky }) {
-        SkyLife(sky)
-        Column(Modifier.fillMaxSize()) {
-            Row(Modifier.windowInsetsPadding(WindowInsets.statusBars).fillMaxWidth().height(64.dp).padding(horizontal = M),
-                verticalAlignment = Alignment.CenterVertically) {
-                Logo()
-                Spacer(Modifier.weight(1f))
-                val profile = stringResource(R.string.html_profile_aria)
-                Avatar(model.icon, 44.dp, Modifier.semantics { contentDescription = profile }.squash(2.dp) { sheet = Sheet.Profile })
-            }
-            Home(model, sky)
+    var tab by rememberSaveable { mutableStateOf(Tab.Games) }
+    var settings by remember { mutableStateOf(false) }
+    val list = rememberLazyListState() // kept across tabs
+    val backdrop = rememberGraphicsLayer() // the page, recorded once more for the tab bar's blur
+    BackHandler(tab == Tab.Profile) { tab = Tab.Games }
+    Box(Modifier.fillMaxSize()) {
+        Box(Modifier.fillMaxSize().drawWithContent { backdrop.record { this@drawWithContent.drawContent() }; drawLayer(backdrop) }.sky { sky }) {
+            SkyLife(sky)
+            if (tab == Tab.Games) Home(model, sky, list, model.pick?.game?.id) { model.pick = it } else ProfilePage { settings = true }
         }
-        Sheets(model, version, sky, sheet) { sheet = it }
+        TabBar(tab, sky, backdrop) { tab = it }
+        model.pick?.let { Picked(model, it) { model.pick = null } }
+        Sheets(model, version, sky, settings) { settings = false }
     }
 }
 
 @Composable
-private fun Home(model: Launcher, sky: Sky) {
-    val list = rememberLazyListState()
+private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?, pick: (Pick) -> Unit) {
     val scrolled by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 4 } }
     val fade by animateFloatAsState(if (scrolled) 1f else 0f, tween(200), label = "fade")
     val u = (LocalConfiguration.current.screenWidthDp.dp - M * 3) / 2 / CART_W
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + 24.dp
+    val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + BAR_GAP + BAR_H + M
     // an odd count leaves one cartridge alone: an «Aviat» one fills the row (not a game: no tap)
     val rows = (model.games.map<Game, Game?> { it } + if (model.games.size % 2 == 1) listOf(null) else emptyList()).chunked(2)
     Box(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, top = M, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M)) {
+        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M)) {
+            // the logo scrolls with the cartridges (owner, ronda 18)
+            item(key = "logo") { Box(Modifier.fillMaxWidth().padding(top = top + 8.dp).height(56.dp), contentAlignment = Alignment.Center) { Logo() } }
             items(rows, key = { row -> row.joinToString { it?.id ?: "aviat" } }) { row ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(M)) {
-                    row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(model, g, u) else Placeholder(u) } }
+                    row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.images[g.id], u, g.id == picked, pick) else Placeholder(u) } }
                 }
             }
         }
-        // scrolled: the header keeps a fade so the cartridges slide under it (a plain gradient: no mask or blur, S10 cost)
-        Box(Modifier.fillMaxWidth().height(32.dp).graphicsLayer { alpha = fade }.drawBehind {
-            drawRect(Brush.verticalGradient(0.15f to sky.header, 0.55f to sky.header.copy(alpha = 0.6f), 1f to Color.Transparent))
+        // scrolled: a veil in the sky's colour behind the status bar, so the clock reads over the cartridges sliding under
+        // it; solid under the icons, then fading out (a plain gradient: no mask or blur, S10 cost)
+        Box(Modifier.fillMaxWidth().height(top + 28.dp).graphicsLayer { alpha = fade }.drawBehind {
+            val solid = top.toPx() / size.height
+            drawRect(Brush.verticalGradient(0f to sky.header, solid * 0.7f to sky.header, 1f to sky.header.copy(alpha = 0f)))
         })
     }
 }
 
-// A tap plays it; a game not out yet shakes and buzzes.
+// A tap lifts it out (Pick.kt); while it is out, its slot stays empty.
 @Composable
-private fun Cell(model: Launcher, game: Game, u: Dp) {
-    val shake = remember { Animatable(0f) }
-    val scope = rememberCoroutineScope()
-    val buzz = haptic(model)
+private fun Cell(game: Game, image: ImageBitmap?, u: Dp, out: Boolean, pick: (Pick) -> Unit) {
     var at by remember { mutableStateOf(Offset.Zero) }
     val aviat = stringResource(R.string.ui_select_aviat)
     val playIt = stringResource(R.string.launcher_play, game.title)
-    Box(Modifier.offset { IntOffset((shake.value * 6.dp.toPx()).roundToInt(), 0) }
+    Box(Modifier.graphicsLayer { alpha = if (out) 0f else 1f }
         .onGloballyPositioned { at = it.centre() }
         .semantics { contentDescription = if (game.soon) aviat else playIt }
-        .squash(u * 0.3f) {
-            if (game.soon) {
-                buzz(REJECT)
-                scope.launch { shake.animateTo(if (shake.targetValue > 0.5f) 0f else 1f, spring(dampingRatio = 0.2f, stiffness = 987f)) }
-            } else model.play(game, at)
-        }) {
-        Cartridge(game.tint, game.short ?: aviat, model.images[game.id], u, locked = game.soon)
+        .squash(u * 0.3f) { pick(Pick(game, at, u)) }) {
+        Cartridge(game.tint, game.short ?: aviat, image, u, locked = game.soon)
     }
 }
 
 @Composable
 private fun Placeholder(u: Dp) =
     Box(Modifier.clearAndSetSemantics {}) { Cartridge(hex("#7a5a44"), stringResource(R.string.ui_select_aviat), null, u, locked = false, placeholder = true) }
-
-// The avatar: the app's icon in a cream ring on a hard drop edge.
-@Composable
-fun Avatar(icon: ImageBitmap?, size: Dp, modifier: Modifier = Modifier) {
-    Box(modifier.size(size).drawBehind {
-        drawCircle(Color.Black.copy(alpha = 0.5f), this.size.minDimension / 2, center + Offset(0f, 3 * density))
-    }) {
-        Box(Modifier.matchParentSize().clip(CircleShape).background(hex("#3ec6ff"))) {
-            icon?.let { Image(it, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop) }
-        }
-        val ring = if (size > 50.dp) 3.dp else 2.dp
-        Box(Modifier.matchParentSize().drawBehind {
-            val w = ring.toPx(); drawCircle(Palette.cream, (this.size.minDimension - w) / 2, style = Stroke(w))
-        })
-    }
-}

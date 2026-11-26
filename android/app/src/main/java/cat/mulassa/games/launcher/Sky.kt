@@ -131,10 +131,10 @@ private val CSS_EASE = CubicBezierEasing(0.42f, 0f, 0.58f, 1f) // CSS ease-in-ou
 private class Lane(val fromTop: Float = -1f, val share: Float = -1f, val fromBottom: Float = -1f, @DrawableRes val c: Int, val w: Float, val s: Int, val p: Float, val o: Float)
 // ronda-15: soft pre-rendered clouds (design/…/ronda-15/clouds/make_clouds.py, style S1), the same bitmaps as iOS
 private val LANES = listOf(
-    Lane(fromTop = 3f, c = R.drawable.cloud_long, w = 80f, s = 160, p = 0.3f, o = 0.5f), // far: small, slow
+    Lane(fromBottom = 150f, c = R.drawable.cloud_long, w = 80f, s = 160, p = 0.3f, o = 0.5f), // far: small, slow
     Lane(share = 0.4f, c = R.drawable.cloud_round, w = 64f, s = 150, p = 0.75f, o = 0.45f),
     Lane(fromBottom = 58f, c = R.drawable.cloud_wisp, w = 96f, s = 170, p = 0.62f, o = 0.5f),
-    Lane(fromTop = 27f, c = R.drawable.cloud_tall, w = 140f, s = 80, p = 0.55f, o = 0.9f), // near: big, quicker
+    Lane(fromBottom = 110f, c = R.drawable.cloud_tall, w = 140f, s = 80, p = 0.55f, o = 0.9f), // near: big, quicker
     Lane(share = 0.62f, c = R.drawable.cloud_twin, w = 140f, s = 95, p = 0.4f, o = 0.8f),
     Lane(fromBottom = 44f, c = R.drawable.cloud_long, w = 160f, s = 75, p = 0.12f, o = 0.9f),
 )

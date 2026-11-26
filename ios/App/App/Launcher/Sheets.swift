@@ -1,15 +1,14 @@
 import SwiftUI
 import StoreKit
 
-// The two places the avatar opens (ronda-10): Profile, whose gear opens Settings. A bottom sheet drawn here, not the
-// system's: on iOS 26+ a partial-height system sheet floats inset from the screen edges; this one is flush with the bottom
-// edge and full width, like Android's. No NavigationStack: its UIKit bar ate the drag, and the owner chose «grows, then
-// swaps» (ronda-14) over a sideways push.
+// Settings, opened by Perfil's gear (ronda-18): a bottom sheet drawn here, not the system's: on iOS 26+ a partial-height
+// system sheet floats inset from the screen edges; this one is flush with the bottom edge and full width, like Android's.
+// No NavigationStack: its UIKit bar ate the drag.
 enum LauncherSheet: Hashable {
     case profile, settings
 
     static var atLaunch: LauncherSheet? {
-        #if DEBUG // `-launcherSheet profile|settings` opens one at launch (captures only)
+        #if DEBUG // `-launcherSheet profile|settings` opens the Perfil tab, and Settings over it, at launch (captures only)
         switch UserDefaults.standard.string(forKey: "launcherSheet") { case "profile": return .profile; case "settings": return .settings; default: break }
         #endif
         return nil
@@ -19,9 +18,32 @@ enum LauncherSheet: Hashable {
 // TODO(app store): the App Store link (https://apps.apple.com/app/id…) once the app has its id; the site until then.
 private let shareURL = URL(string: "https://mulassa.cat")!
 
-// The scrim and the sheet. The drag lives here so the scrim can fade with it; the page state lives in the card, while shown.
-struct ProfileSheet: View {
+// «Perfil», the second tab: the profile rows on the sheets' sky-following surface, the gear top right.
+struct ProfilePage: View {
     @ObservedObject var model: Launcher
+    let surface: Color
+    let settings: () -> Void
+
+    var body: some View {
+        ScrollView { SheetContent { ProfileBody(model: model) } }
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                ZStack {
+                    Text("html.accountTitle").font(.baloo(22)).foregroundStyle(Palette.cream).accessibilityAddTraits(.isHeader)
+                    HStack {
+                        Spacer()
+                        HeaderButton(symbol: "gearshape", action: settings).accessibilityLabel(Text("html.settings.aria"))
+                    }
+                    .padding(.horizontal, M)
+                }
+                .frame(height: 60)
+            }
+            .background(surface)
+    }
+}
+
+// The scrim and the sheet. The drag lives here so the scrim can fade with it.
+struct SettingsSheet: View {
     let surface: Color
     @Binding var shown: Bool
     @State private var drag: CGFloat = 0
@@ -32,10 +54,10 @@ struct ProfileSheet: View {
             ZStack(alignment: .bottom) {
                 if shown {
                     Color.black.opacity(0.32 * (1 - min(drag / height, 1))).ignoresSafeArea()
-                        .onTapGesture { shown = false }.accessibilityHidden(true)
+                        .onTapGesture(perform: close).accessibilityHidden(true)
                         .transition(.opacity)
                         .zIndex(0) // pinned: while leaving, a ZStack may otherwise draw the scrim over the sheet
-                    SheetCard(model: model, surface: surface, bottom: g.safeAreaInsets.bottom, room: g.size.height - 40) { shown = false }
+                    SheetCard(surface: surface, bottom: g.safeAreaInsets.bottom, room: g.size.height - 40, close: close)
                         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = max($0, 1) }
                         .offset(y: drag)
                         .gesture(DragGesture(minimumDistance: 6, coordinateSpace: .global) // global: the sheet moves under the finger
@@ -54,24 +76,19 @@ struct ProfileSheet: View {
             .onChange(of: shown) { if shown { drag = 0 } }
         }
     }
+
+    private func close() { shown = false }
 }
 
 private struct SheetCard: View {
-    @ObservedObject var model: Launcher
     let surface: Color
     let bottom: CGFloat // the home indicator's inset, kept clear inside the sheet
     let room: CGFloat // the most the sheet may take: past it the page scrolls
     let close: () -> Void
-    @State private var page = LauncherSheet.atLaunch ?? .profile // the page drawn
-    @State private var fit = LauncherSheet.atLaunch ?? .profile // the page the sheet's height is sized for
-    @State private var fade: Double = 1 // the page, its title and its left button, while they swap
-    @State private var busy = false
-    @State private var profileRows: CGFloat = 0 // each page's rows, laid out unseen, so the sheet fits the page shown
-    @State private var settingsRows: CGFloat = 0
+    @State private var height: CGFloat = 0 // the page's rows at their natural height
     private let top: CGFloat = 17 + 60 // the grabber and the header
 
     var body: some View {
-        let rows = page == .profile ? profileRows : settingsRows
         VStack(spacing: 0) {
             // the grabber and header take the drag (the card's gesture); 77 pt tall, past the 44 pt touch minimum
             VStack(spacing: 0) {
@@ -80,79 +97,43 @@ private struct SheetCard: View {
             }
             .contentShape(Rectangle())
             Group {
-                if top + rows > room - bottom {
-                    ScrollView { SheetContent { body(page) } }.scrollIndicators(.hidden)
+                if height > room - top - bottom {
+                    ScrollView { SheetContent { SettingsBody() } }.scrollIndicators(.hidden)
                 } else {
-                    SheetContent { body(page) } // no ScrollView when it fits: its pan would take the sheet's drag
+                    SheetContent { SettingsBody() } // no ScrollView when it fits: its pan would take the sheet's drag
                 }
             }
-            .opacity(fade)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            .frame(height: min(fit == .profile ? profileRows : settingsRows, room - top - bottom), alignment: .top)
-            .clipped()
+            .frame(height: min(height, room - top - bottom), alignment: .top)
         }
         .padding(.bottom, bottom)
-        .background {
-            ZStack {
-                measure($profileRows) { ProfileBody(model: model) }
-                measure($settingsRows) { SettingsBody() }
-            }
+        .background { // the rows laid out unseen at their natural height, to size the sheet
+            SheetContent { SettingsBody() }.fixedSize(horizontal: false, vertical: true).hidden().accessibilityHidden(true)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
         }
         .background(surface, in: UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28))
         .contentShape(Rectangle()) // the gaps between cards take the drag too
         .overlay(alignment: .top) { TopLip(base: UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)).fill(Palette.cream.opacity(0.5)).allowsHitTesting(false) }
         .accessibilityAddTraits(.isModal)
-        .accessibilityAction(.escape) { page == .settings ? go(.profile) : close() }
+        .accessibilityAction(.escape, close)
     }
 
     private var header: some View {
         ZStack {
-            Text(page == .profile ? "html.accountTitle" : "html.settingsTitle").font(.baloo(22)).foregroundStyle(Palette.cream)
-                .lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 64).opacity(fade)
+            Text("html.settingsTitle").font(.baloo(22)).foregroundStyle(Palette.cream)
+                .lineLimit(1).minimumScaleFactor(0.7).padding(.horizontal, 64)
                 .accessibilityAddTraits(.isHeader)
             HStack {
-                Group {
-                    if page == .profile {
-                        HeaderButton(symbol: "gearshape") { go(.settings) }.accessibilityLabel(Text("html.settings.aria"))
-                    } else {
-                        HeaderButton(symbol: "chevron.left") { go(.profile) }.accessibilityLabel(Text("launcher.settings.backToProfile"))
-                    }
-                }
-                .opacity(fade)
+                HeaderButton(symbol: "chevron.left", action: close).accessibilityLabel(Text("launcher.settings.backToProfile")) // back to Perfil, under it
                 Spacer()
                 HeaderButton(symbol: "xmark", action: close).accessibilityLabel(Text("html.attr.close"))
             }
             .padding(.horizontal, M)
         }
     }
-
-    // Forward: the sheet grows to the next page's height, then the pages swap. Back: they swap, then it shrinks.
-    // The swap fades one page out completely before the other fades in, so their text never shows at once.
-    private func go(_ next: LauncherSheet) {
-        guard !busy, next != page else { return }
-        busy = true
-        let resize = { (done: @escaping () -> Void) in withAnimation(.smooth(duration: 0.3)) { fit = next } completion: { done() } }
-        let swap = { (done: @escaping () -> Void) in
-            withAnimation(.easeIn(duration: 0.09)) { fade = 0 } completion: {
-                page = next
-                withAnimation(.easeOut(duration: 0.09)) { fade = 1 } completion: { done() }
-            }
-        }
-        if next == .settings { resize { swap { busy = false } } } else { swap { resize { busy = false } } }
-    }
-
-    @ViewBuilder private func body(_ page: LauncherSheet) -> some View {
-        if page == .profile { ProfileBody(model: model) } else { SettingsBody() }
-    }
-
-    private func measure(_ height: Binding<CGFloat>, @ViewBuilder rows: () -> some View) -> some View {
-        SheetContent { rows() }.fixedSize(horizontal: false, vertical: true).hidden().accessibilityHidden(true)
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height.wrappedValue = $0 }
-    }
 }
 
 // The header's round buttons: the system's glass on iOS 26, as the navigation bar drew them before.
-private struct HeaderButton: View {
+struct HeaderButton: View {
     let symbol: String
     let action: () -> Void
 
@@ -166,7 +147,7 @@ private struct HeaderButton: View {
     }
 }
 
-// A page's rows with the sheet's padding; also laid out unseen on the home to size the sheet.
+// A page's rows with the sheet's padding.
 struct SheetContent<Content: View>: View {
     @ViewBuilder let content: Content
     var body: some View { VStack(spacing: M) { content }.padding(M).padding(.bottom, 24 - M) }

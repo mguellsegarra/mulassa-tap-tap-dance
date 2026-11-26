@@ -92,8 +92,8 @@ private final class SkyLifeView: UIView {
     // y (from the status bar's foot, a share of the height, or from the bottom), cloud, width, seconds per crossing, start (0..1), opacity
     private enum Y { case header(CGFloat), share(CGFloat), bottom(CGFloat) }
     private static let lanes: [(Y, String, CGFloat, Double, Double, Float)] = [
-        (.header(3), "long", 80, 160, 0.3, 0.5), (.share(0.4), "round", 64, 150, 0.75, 0.45), (.bottom(58), "wisp", 96, 170, 0.62, 0.5), // far: small, slow
-        (.header(27), "tall", 140, 80, 0.55, 0.9), (.share(0.62), "twin", 140, 95, 0.4, 0.8), (.bottom(44), "long", 160, 75, 0.12, 0.9)] // near: big, quicker
+        (.bottom(150), "long", 80, 160, 0.3, 0.5), (.share(0.4), "round", 64, 150, 0.75, 0.45), (.bottom(58), "wisp", 96, 170, 0.62, 0.5), // far: small, slow
+        (.bottom(110), "tall", 140, 80, 0.55, 0.9), (.share(0.62), "twin", 140, 95, 0.4, 0.8), (.bottom(44), "long", 160, 75, 0.12, 0.9)] // near: big, quicker
 
     private let clouds = CALayer(), night = CALayer(), shootAt = CALayer(), shoot = CAGradientLayer()
     private var laneLayers: [CALayer] = [], twinkles: [CALayer] = []

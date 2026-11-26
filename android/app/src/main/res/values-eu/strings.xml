@@ -23,4 +23,5 @@
     <string name="launcher_settings_help">Laguntza</string>
     <string name="launcher_play">Jokatu %1$s jokoan</string>
     <string name="launcher_opening_game">Jokoa irekitzen…</string>
+    <string name="jocs_menu_play">Jolastu</string>
 </resources>

@@ -23,4 +23,5 @@
     <string name="launcher_settings_help">도움말</string>
     <string name="launcher_play">%1$s 플레이</string>
     <string name="launcher_opening_game">게임 여는 중…</string>
+    <string name="jocs_menu_play">시작</string>
 </resources>

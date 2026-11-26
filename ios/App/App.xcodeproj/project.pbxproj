@@ -19,6 +19,7 @@
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		A1C0DE020000000000000002 /* Catalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020000000000000001 /* Catalogue.swift */; };
 		A1C0DE020100000000000002 /* Cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020100000000000001 /* Cartridge.swift */; };
+		A1C0DE020A00000000000002 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020A00000000000001 /* Lift.swift */; };
 		A1C0DE020200000000000002 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020200000000000001 /* LauncherView.swift */; };
 		A1C0DE020300000000000002 /* Logo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020300000000000001 /* Logo.swift */; };
 		A1C0DE020400000000000002 /* Iris.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020400000000000001 /* Iris.swift */; };
@@ -46,6 +47,7 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A1C0DE020000000000000001 /* Catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalogue.swift; sourceTree = "<group>"; };
 		A1C0DE020100000000000001 /* Cartridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cartridge.swift; sourceTree = "<group>"; };
+		A1C0DE020A00000000000001 /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
 		A1C0DE020200000000000001 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
 		A1C0DE020300000000000001 /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
 		A1C0DE020400000000000001 /* Iris.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Iris.swift; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 				A1C0DE020000000000000001 /* Catalogue.swift */,
 				A1C0DE020100000000000001 /* Cartridge.swift */,
 				A1C0DE020200000000000001 /* LauncherView.swift */,
+				A1C0DE020A00000000000001 /* Lift.swift */,
 				A1C0DE020300000000000001 /* Logo.swift */,
 				A1C0DE020400000000000001 /* Iris.swift */,
 				A1C0DE020500000000000001 /* GameHost.swift */,
@@ -227,6 +230,7 @@
 				A1C0DE020000000000000002 /* Catalogue.swift in Sources */,
 				A1C0DE020100000000000002 /* Cartridge.swift in Sources */,
 				A1C0DE020200000000000002 /* LauncherView.swift in Sources */,
+				A1C0DE020A00000000000002 /* Lift.swift in Sources */,
 				A1C0DE020300000000000002 /* Logo.swift in Sources */,
 				A1C0DE020400000000000002 /* Iris.swift in Sources */,
 				A1C0DE020500000000000002 /* GameHost.swift in Sources */,

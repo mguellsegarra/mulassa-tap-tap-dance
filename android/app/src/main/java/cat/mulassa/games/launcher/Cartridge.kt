@@ -39,6 +39,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -75,12 +78,42 @@ fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Bo
                 }
             }
         }
-        val px = with(LocalDensity.current) { (u * 1.55f).toSp() }
+        val px = with(LocalDensity.current) { (u * 1.4f).toSp() }
         Box(Modifier.offset(u * ART_X, u * 7.92f).size(u * ART_W, u * 1.73f), contentAlignment = Alignment.Center) {
             // the name always fits its label: a long one shrinks rather than gets cut
-            BasicText(name, style = TextStyle(fontFamily = Fonts.pixel, color = Palette.ink, letterSpacing = 0.02.em, textAlign = TextAlign.Center),
+            BasicText(name, style = TextStyle(fontFamily = Fonts.baloo, color = Palette.ink, // Baloo everywhere: the owner dropped the pixel face
+                 textAlign = TextAlign.Center),
                 maxLines = 1, autoSize = TextAutoSize.StepBased(minFontSize = px * 0.5f, maxFontSize = px, stepSize = px * 0.02f))
         }
+    }
+}
+
+// The back, seen half-way through Picked's turn: the shell with a recessed panel, «mulassa.cat», big,
+// laser-engraved in it (tone on tone: a darker inset over a lighter line 1 px lower).
+// Drawn reading left to right; Picked flips it back, since the turn mirrors whatever is behind the face.
+@Composable
+fun CartridgeBack(color: Color, u: Dp) {
+    val measure = rememberTextMeasurer()
+    Canvas(Modifier.size(u * CART_W, u * CART_H)) {
+        val k = u.toPx()
+        val dark = color.mix(hex("#1d100a"), 0.62f); val shadow = color.mix(hex("#1d100a"), 0.3f)
+        val ink = color.mix(hex("#1d100a"), 0.55f); val lit = color.mix(Color.White, 0.45f)
+        scale(k, Offset.Zero) {
+            translate(top = 0.34f) { drawPath(SHAPE, dark) }
+            drawPath(SHAPE, Brush.verticalGradient(0f to color.mix(Color.White, 0.1f), 1f to color.mix(hex("#251008"), 0.18f), startY = 0f, endY = 12.05f))
+            // an engraved outline, as on iOS (the owner chose it over a filled recess)
+            drawRoundRect(lit, Offset(1.4f, 2.2f + 1 / k), Size(7.52f, 7.6f), CornerRadius(0.5f), style = Stroke(0.12f))
+            drawRoundRect(ink, Offset(1.4f, 2.2f), Size(7.52f, 7.6f), CornerRadius(0.5f), style = Stroke(0.12f))
+        }
+        // engraved: the lighter edge 1 px under, then the cut itself
+        fun engrave(text: String, size: Float, centreY: Float) {
+            fun cut(px: Float) = measure.measure(text, TextStyle(fontFamily = Fonts.baloo, fontSize = (px / density / fontScale).sp))
+            // inside the panel with a margin, whatever the font's metrics
+            val t = cut(size * k).let { if (it.size.width > 5.8f * k) cut(size * k * 5.8f * k / it.size.width) else it }
+            val at = Offset((CART_W * k - t.size.width) / 2, centreY * k - t.size.height / 2)
+            drawText(t, lit, at + Offset(0f, 1f)); drawText(t, ink, at)
+        }
+        engrave("mulassa.cat", 1.45f, 6.0f) // the owner: only «mulassa.cat», big
     }
 }
 

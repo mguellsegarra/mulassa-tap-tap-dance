@@ -23,4 +23,5 @@
     <string name="launcher_settings_help">Помощь</string>
     <string name="launcher_play">Играть в %1$s</string>
     <string name="launcher_opening_game">Игра открывается…</string>
+    <string name="jocs_menu_play">Играть</string>
 </resources>

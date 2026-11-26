@@ -54,7 +54,7 @@ enum WebBundle {
 
     // The game's own faces (public/fonts), registered once from whichever bundle the app starts with.
     static func registerFonts(from root: URL) {
-        for name in ["baloo-2-latin", "jersey-10-latin"] {
+        for name in ["baloo-2-latin"] {
             let url = root.appendingPathComponent("fonts/\(name).woff2")
             CTFontManagerRegisterFontsForURL((FileManager.default.fileExists(atPath: url.path) ? url
                 : builtin.appendingPathComponent("fonts/\(name).woff2")) as CFURL, .process, nil)
@@ -65,7 +65,6 @@ enum WebBundle {
 extension Font {
     static func baloo(_ size: CGFloat) -> Font { .custom("Baloo2-ExtraBold", fixedSize: size) }
     static func balooBold(_ size: CGFloat) -> Font { .custom("Baloo2-Bold", fixedSize: size) }
-    static func pixel(_ size: CGFloat) -> Font { .custom("Jersey10-Regular", fixedSize: size) }
 }
 
 extension UIColor {

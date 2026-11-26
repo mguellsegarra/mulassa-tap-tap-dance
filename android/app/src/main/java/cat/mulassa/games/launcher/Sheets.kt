@@ -4,24 +4,15 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.activity.compose.PredictiveBackHandler
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.keyframes
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -29,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +31,10 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,67 +55,47 @@ import androidx.compose.ui.unit.dp
 import cat.mulassa.games.R
 import kotlinx.coroutines.launch
 
-enum class Sheet { Profile, Settings }
-
 // TODO(store): the Play listing is derived from the package; confirm it once the app is published.
 private const val STORE_URL = "https://play.google.com/store/apps/details?id=cat.mulassa.games"
 
-// The two places the header opens (ronda-10's sheets) live in one platform bottom sheet: Material's drag handle, scrim,
-// swipe and back dismiss it. The owner's «creix i després canvia»: Perfil's gear first grows the sheet to Ajustos' height
-// with Perfil still, then swaps the pages with a short fade; the arrow and the system back swap first, then shrink it.
+// Ajustos, opened by Perfil's gear, in a platform bottom sheet: Material's scrim, swipe and back dismiss it, and so do its
+// arrow and X (ronda 18: Perfil is a tab now, so the arrow only closes it). The card is ours inside a clear Material surface.
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Sheets(model: Launcher, version: String, sky: Sky, open: Sheet?, go: (Sheet?) -> Unit) {
-    if (open == null) return
+fun Sheets(model: Launcher, version: String, sky: Sky, open: Boolean, dismiss: () -> Unit) {
+    if (!open) return
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val scope = rememberCoroutineScope()
-    // the close button slides the sheet away first; dropping it at once would cut the animation
-    val nav: (Sheet?) -> Unit = { s -> if (s != null) go(s) else scope.launch { state.hide() }.invokeOnCompletion { go(null) } }
+    // slides the sheet away first; dropping it at once would cut the animation
+    val close: () -> Unit = { scope.launch { state.hide() }.invokeOnCompletion { dismiss() } }
     // no MaterialTheme here: without a ripple, the handle and the rows press as Compose's grey debug box
-    CompositionLocalProvider(LocalIndication provides ripple()) { ModalBottomSheet({ go(null) }, sheetState = state, shape = sheetShape,
-        containerColor = sky.sheet, contentColor = Palette.cream, scrimColor = hex("#0a0603").copy(alpha = 0.6f),
-        dragHandle = { BottomSheetDefaults.DragHandle(color = Palette.cream.copy(alpha = 0.35f)) }) {
-        // a predictive handler, so the gesture's start is ours too: a plain BackHandler let the sheet's own callback shrink
-        // it for a dismiss that never came. A cancelled gesture throws out of collect and stays on Ajustos.
-        PredictiveBackHandler(open == Sheet.Settings) { events -> events.collect {}; go(Sheet.Profile) }
-        // one transition for the header and the body, so their swaps land on the same frames; the X sits outside it, still
-        val page = updateTransition(open, label = "page")
-        Box(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp)) {
-            page.AnimatedContent(Modifier.fillMaxSize(), transitionSpec = { swap() using null }) { s ->
-                Box(Modifier.fillMaxSize()) {
-                    Box(Modifier.align(Alignment.CenterStart)) {
-                        if (s == Sheet.Profile) RoundButton(GEAR, stringResource(R.string.html_settings_aria)) { nav(Sheet.Settings) }
-                        else RoundButton(BACK, stringResource(R.string.launcher_settings_backToProfile)) { nav(Sheet.Profile) }
-                    }
-                    Box(Modifier.align(Alignment.Center)) {
-                        Label(stringResource(if (s == Sheet.Profile) R.string.html_accountTitle else R.string.html_settingsTitle), Fonts.baloo, 22.dp, Palette.cream)
-                    }
-                }
+    CompositionLocalProvider(LocalIndication provides ripple()) { ModalBottomSheet(dismiss, sheetState = state, shape = sheetShape,
+        containerColor = Color.Transparent, contentColor = Palette.cream, scrimColor = hex("#0a0603").copy(alpha = 0.6f),
+        dragHandle = null, contentWindowInsets = { WindowInsets(0) }) {
+        Column(Modifier.background(sky.sheet, sheetShape).windowInsetsPadding(BottomSheetDefaults.windowInsets)) {
+            BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally), color = Palette.cream.copy(alpha = 0.35f))
+            Box(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp)) {
+                RoundButton(BACK, stringResource(R.string.launcher_settings_backToProfile), Modifier.align(Alignment.CenterStart), close)
+                Box(Modifier.align(Alignment.Center)) { Label(stringResource(R.string.html_settingsTitle), Fonts.baloo, 22.dp, Palette.cream) }
+                RoundButton(CLOSE, stringResource(R.string.html_attr_close), Modifier.align(Alignment.CenterEnd), close)
             }
-            RoundButton(CLOSE, stringResource(R.string.html_attr_close), Modifier.align(Alignment.CenterEnd)) { nav(null) }
-        }
-        page.AnimatedContent(transitionSpec = { swap() using resize() }, contentAlignment = Alignment.TopCenter) { s ->
-            when (s) {
-                Sheet.Profile -> Profile()
-                Sheet.Settings -> Settings(model, version)
-            }
+            Settings(model, version)
         }
     } }
 }
 
-private const val GROW_MS = 280
-private const val FADE_MS = 90 // per half: out, then in, so the two pages' text never show together
 private val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
-// Going to Ajustos the swap waits for the grow; coming back it goes first.
-private fun AnimatedContentTransitionScope<Sheet>.swap(): ContentTransform {
-    val wait = if (targetState == Sheet.Settings) GROW_MS else 0
-    return fadeIn(tween(FADE_MS, wait + FADE_MS)) togetherWith fadeOut(tween(FADE_MS, wait))
-}
-
-private fun AnimatedContentTransitionScope<Sheet>.resize() = SizeTransform(clip = true) { from, _ ->
-    if (targetState == Sheet.Settings) tween(GROW_MS, easing = FastOutSlowInEasing)
-    else keyframes { durationMillis = 2 * FADE_MS + GROW_MS; from at 2 * FADE_MS using FastOutSlowInEasing }
+// The Perfil tab: its title, the gear to Ajustos at the top right, and the profile's content (not validated yet: as it was).
+@Composable
+fun ProfilePage(settings: () -> Unit) {
+    Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.statusBars)) {
+        Box(Modifier.fillMaxWidth().padding(horizontal = M).height(64.dp)) {
+            Box(Modifier.align(Alignment.Center)) { Label(stringResource(R.string.html_accountTitle), Fonts.baloo, 26.dp, Palette.cream) }
+            RoundButton(GEAR, stringResource(R.string.html_settings_aria), Modifier.align(Alignment.CenterEnd), settings)
+        }
+        Profile()
+    }
 }
 
 @Composable

@@ -79,10 +79,13 @@ class LauncherActivity : ComponentActivity() {
         lifecycleScope.launch(AndroidUiDispatcher.Main) { // the animations need its frame clock
             bars(false) // the iris covers the whole screen, as on iOS
             iris.forward()
+            // under the covering iris: the game comes back to the grid, so the reverse iris closes on the cartridge's slot
+            model.pick?.let { iris.origin = it.at }
+            model.pick = null
             this@LauncherActivity.game.launch(
                 Intent(this@LauncherActivity, MainActivity::class.java)
                     .putExtra(GameSession.PATH, path).putExtra(GameSession.ID, game.id)
-                    .putExtra(GameSession.X, from.x).putExtra(GameSession.Y, from.y),
+                    .putExtra(GameSession.X, iris.origin.x).putExtra(GameSession.Y, iris.origin.y),
                 ActivityOptionsCompat.makeCustomAnimation(this@LauncherActivity, 0, 0),
             )
         }

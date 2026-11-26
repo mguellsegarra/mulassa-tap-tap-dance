@@ -32,7 +32,7 @@ struct Cartridge: View, Equatable {
     var body: some View {
         let c = color, u = u, art = CGRect(x: 1.21 * u, y: 2.35 * u, width: 7.9 * u, height: 5.35 * u)
         ZStack(alignment: .topLeading) {
-            Canvas { ctx, _ in Self.draw(ctx, color: c, u: u) }
+            Canvas { ctx, _ in Self.draw(ctx, color: c, u: u, back: false) }
             Group {
                 if plus {
                     Color(UIColor(hex: "#59402e")).overlay {
@@ -49,7 +49,7 @@ struct Cartridge: View, Equatable {
             .clipShape(RoundedRectangle(cornerRadius: 0.3 * u))
             .offset(x: art.minX, y: art.minY)
             Text(name)
-                .font(.pixel(1.55 * u)).kerning(0.02 * 1.55 * u)
+                .font(.baloo(1.4 * u)) // Baloo everywhere: the owner dropped the pixel face
                 .foregroundStyle(Palette.ink)
                 .lineLimit(1).minimumScaleFactor(0.5) // a long name shrinks rather than being cut
                 .frame(width: 7.9 * u - 4, height: 1.73 * u)
@@ -59,7 +59,29 @@ struct Cartridge: View, Equatable {
         .drawingGroup() // one bitmap: a scroll only moves it
     }
 
-    private static func draw(_ ctx: GraphicsContext, color c: UIColor, u: CGFloat) {
+    // The cartridge's back, seen halfway through Lift's turn: the same shell, laser-engraved tone on tone (a darker inset
+    // with a lighter edge under it, no new colours): «mulassa.cat», big. Lift shows it as
+    // a real back face, so it reads left to right.
+    static func back(color: UIColor, u: CGFloat) -> some View {
+        Canvas { ctx, _ in draw(ctx, color: color, u: u, back: true) }
+            .frame(width: size.width * u, height: size.height * u).drawingGroup()
+    }
+
+    // The engraving: each mark twice, the shell's light 1 pt lower, then its darker inset on top.
+    private static func engrave(_ ctx: GraphicsContext, color c: UIColor, u: CGFloat) {
+        let ink = UIColor(hex: "#1d100a"), cut = Color(c.mix(ink, 0.3)), lit = Color(c.mix(UIColor(hex: "#fff3d6"), 0.45))
+        func text(_ s: String, _ size: CGFloat, _ y: CGFloat) {
+            for (fill, dy) in [(lit, 1.0), (cut, 0.0)] {
+                ctx.draw(Text(verbatim: s).font(.baloo(size * u)).foregroundColor(fill), at: CGPoint(x: 5.16 * u, y: y * u + dy))
+            }
+        }
+        text("mulassa.cat", 1.1, 6.3) // the owner: only «mulassa.cat», big
+        let frame = Path(roundedRect: CGRect(x: 1.3 * u, y: 2.3 * u, width: 7.72 * u, height: 8.0 * u), cornerRadius: 0.5 * u)
+        ctx.stroke(frame.offsetBy(dx: 0, dy: 1), with: .color(lit), lineWidth: 0.12 * u)
+        ctx.stroke(frame, with: .color(cut), lineWidth: 0.12 * u)
+    }
+
+    private static func draw(_ ctx: GraphicsContext, color c: UIColor, u: CGFloat, back: Bool) {
         func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ rad: CGFloat, _ fill: UIColor) {
             ctx.fill(Path(roundedRect: CGRect(x: x * u, y: y * u, width: w * u, height: h * u), cornerRadius: rad * u), with: .color(Color(fill)))
         }
@@ -72,6 +94,7 @@ struct Cartridge: View, Equatable {
         ctx.fill(shape, with: .linearGradient(Gradient(stops: [.init(color: Color(c.mix(.white, 0.18)), location: 0), .init(color: Color(c), location: 0.52),
                                                                .init(color: Color(c.mix(UIColor(hex: "#251008"), 0.12)), location: 1)]),
                                               startPoint: .zero, endPoint: CGPoint(x: 0, y: 12.05 * u)))
+        if back { engrave(ctx, color: c, u: u); return }
         for y in [1.02, 1.36] { r(2.46, y, 5.4, 0.14, 0.07, shadow); r(2.46, y + 0.14, 5.4, 0.07, 0.035, light) }
         r(0.78, 1.93, 8.76, 8.12, 0.42, dark)
         r(0.89, 2.04, 8.54, 7.9, 0.33, UIColor(hex: "#fff3d6"))

@@ -27,4 +27,7 @@
     <string name="launcher_play">Juga a %1$s</string>
     <string name="launcher_profile_runs">Partides</string>
     <string name="launcher_opening_game">S’obre el joc…</string>
+    <string name="jocs_menu_play">Juga</string>
+    <!-- provisional, Catalan only until Codex writes it and its translations (ronda 18) -->
+    <string name="launcher_tab_games">Jocs</string>
 </resources>

@@ -23,4 +23,5 @@
     <string name="launcher_settings_help">Ajutor</string>
     <string name="launcher_play">Joacă %1$s</string>
     <string name="launcher_opening_game">Se deschide jocul…</string>
+    <string name="jocs_menu_play">Joacă</string>
 </resources>

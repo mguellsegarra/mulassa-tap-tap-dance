@@ -23,7 +23,9 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         bridgeVC.loadViewIfNeeded()
         WebBundle.registerFonts(from: bundleRoot)
         model.load(root: bundleRoot)
-        model.play = { [weak self] game, from in self?.play(game, from: from) }
+        // the tab bar's titles in Baloo, as everything else (the fonts are registered just above)
+        UITabBarItem.appearance().setTitleTextAttributes([.font: UIFont(name: "Baloo2-Bold", size: 11) ?? .systemFont(ofSize: 11)], for: .normal)
+        model.play = { [weak self] game, from, covered in self?.play(game, from: from, covered: covered) }
     }
 
     @MainActor required dynamic init?(coder: NSCoder) { fatalError("built in code") }
@@ -56,7 +58,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     }
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
-    private func play(_ game: Game, from: CGPoint) {
+    private func play(_ game: Game, from: CGPoint, covered: @escaping () -> Void) {
         guard !busy, !game.soon, let path = game.path, WebBundle.isEntryPath(path),
               let server = bridgeVC.bridge?.config.serverURL, let url = URL(string: path, relativeTo: server) else { return }
         busy = true
@@ -64,6 +66,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         showIris(game, from: from)
         iris.forward { [weak self] in
             guard let self else { return }
+            covered()
             bridgeVC.webView?.load(URLRequest(url: url))
             present(bridgeVC, animated: false) { self.liftIrisWhenLoaded() }
         }

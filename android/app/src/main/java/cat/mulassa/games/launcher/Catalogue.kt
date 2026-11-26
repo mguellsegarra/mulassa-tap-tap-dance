@@ -113,5 +113,4 @@ object Palette {
 object Fonts {
     val baloo = FontFamily(Font(R.font.baloo_extrabold, FontWeight.ExtraBold))
     val balooBold = FontFamily(Font(R.font.baloo_bold, FontWeight.Bold))
-    val pixel = FontFamily(Font(R.font.jersey))
 }

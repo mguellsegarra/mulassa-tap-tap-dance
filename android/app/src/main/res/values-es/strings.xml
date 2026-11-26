@@ -23,4 +23,5 @@
     <string name="launcher_settings_help">Ayuda</string>
     <string name="launcher_play">Juega a %1$s</string>
     <string name="launcher_opening_game">Abriendo el juego…</string>
+    <string name="jocs_menu_play">Juega</string>
 </resources>

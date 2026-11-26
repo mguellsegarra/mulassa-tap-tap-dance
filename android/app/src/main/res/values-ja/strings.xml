@@ -23,4 +23,5 @@
     <string name="launcher_settings_help">ヘルプ</string>
     <string name="launcher_play">%1$sをプレイ</string>
     <string name="launcher_opening_game">ゲームを起動中…</string>
+    <string name="jocs_menu_play">あそぶ</string>
 </resources>

@@ -5,7 +5,7 @@ import SwiftUI
     @Published private(set) var games: [Game] = []
     @Published private(set) var images: [String: UIImage] = [:]
     @Published private(set) var icon: UIImage?
-    var play: (Game, CGPoint) -> Void = { _, _ in }
+    var play: (Game, CGPoint, _ covered: @escaping () -> Void) -> Void = { _, _, _ in } // `covered`: the iris is over the launcher
     private var root: URL?
 
     // Read again on every return from a game: a live update may have switched the bundle meanwhile.
@@ -19,61 +19,64 @@ import SwiftUI
     }
 }
 
-let M: CGFloat = 16 // one spacing unit: side margin = column gap = row gap = header-to-grid gap
+let M: CGFloat = 16 // one spacing unit: side margin = column gap = row gap = logo-to-grid gap
 
-// ronda-10: one screen. A header (the logo and the avatar) over the sky, then every game as a cartridge, two a row.
+enum LauncherTab: Hashable { case games, profile }
+
+// ronda-18: two tabs in the system's bar (Liquid Glass on iOS 26), «Jocs» (the cartridges) and «Perfil». Settings is a
+// bottom sheet over both; a tapped cartridge lifts over everything (Lift.swift).
 struct LauncherRoot: View {
     @ObservedObject var model: Launcher
-    @State private var profile = LauncherSheet.atLaunch != nil
-    @State private var scrolled = false
+    @State private var tab: LauncherTab = LauncherSheet.atLaunch == nil ? .games : .profile
+    @State private var settings = LauncherSheet.atLaunch == .settings
+    @State private var lifted: Lifted?
     @ObservedObject private var language = AppLanguage.shared
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 300)) { t in // the sky moves on every 5 minutes, nothing in between
             let sky = Sky.now(t.date)
-            GeometryReader { g in
-                VStack(spacing: 0) {
-                    header
-                    ScrollView {
-                        Cartridges(model: model, width: g.size.width)
-                            .padding([.horizontal, .top], M).padding(.bottom, 24)
-                            .onGeometryChange(for: Bool.self) { $0.frame(in: .scrollView).minY < -4 } action: { scrolled = $0 }
-                    }
-                    .scrollIndicators(.hidden)
-                    .overlay(alignment: .top) { // the cartridges slide under the header through a plain fade (no blur: S10 cost)
-                        LinearGradient(stops: [.init(color: sky.headerTint, location: 0.15), .init(color: sky.headerTint.opacity(0.6), location: 0.55),
-                                               .init(color: sky.headerTint.opacity(0), location: 1)], startPoint: .top, endPoint: .bottom)
-                            .frame(height: 32).opacity(scrolled ? 1 : 0).animation(.easeOut(duration: 0.2), value: scrolled).allowsHitTesting(false)
-                    }
-                }
+            TabView(selection: $tab) {
+                Home(model: model, sky: sky, lifted: lifted?.game.id) { lifted = $0 }
+                    .tabItem { Label("Jocs", systemImage: "gamecontroller") }.tag(LauncherTab.games)
+                ProfilePage(model: model, surface: sky.sheet) { settings = true }
+                    .tabItem { Label("html.accountTitle", systemImage: "person.crop.circle") }.tag(LauncherTab.profile)
             }
-            .background(SkyBackground(sky: sky))
-            .overlay { ProfileSheet(model: model, surface: sky.sheet, shown: $profile) }
+            .tint(Palette.yellowHi)
+            .overlay { if let lifted { LiftView(model: model, lifted: lifted) { self.lifted = nil } } }
+            .overlay { SettingsSheet(surface: sky.sheet, shown: $settings) }
         }
         .environment(\.locale, Locale(identifier: language.code))
         .id(language.code) // a new language redraws every string, the ones read outside Text included
         // LanguagePrompt() waits for the first-run onboarding (owner, 25 Nov 2026)
         .preferredColorScheme(.dark)
     }
+}
 
-    private var header: some View {
-        HStack {
-            Logo()
-            Spacer()
-            Button { profile = true } label: {
-                Group { if let icon = model.icon { Image(uiImage: icon).resizable().scaledToFill() } else { Color.clear } }
-                    .frame(width: 44, height: 44)
-                    .background(Color(UIColor(hex: "#3ec6ff")))
-                    .clipShape(Circle())
-                    .overlay(Circle().strokeBorder(Palette.cream, lineWidth: 2))
-                    // the prototype's hard 3 pt drop edge; a .shadow here would also shade the ring onto the picture
-                    .background(Circle().fill(.black.opacity(0.5)).offset(y: 3))
+// «Jocs»: the logo, centred, scrolls away with the cartridges; under the status bar a veil in the sky's own top colour
+// keeps the clock readable over them (a plain fade, no blur: S10 cost).
+private struct Home: View {
+    @ObservedObject var model: Launcher
+    let sky: Sky
+    let lifted: String?
+    let lift: (Lifted) -> Void
+
+    var body: some View {
+        GeometryReader { g in
+            ScrollView {
+                VStack(spacing: M) {
+                    Logo().padding(.top, 8)
+                    Cartridges(model: model, width: g.size.width, lifted: lifted, lift: lift)
+                }
+                .padding(M)
             }
-            .buttonStyle(Squash(depth: 2))
-            .accessibilityLabel(Text("html.profile.aria"))
+            .scrollIndicators(.hidden)
+            .overlay(alignment: .top) {
+                LinearGradient(stops: [.init(color: Color(sky.top), location: 0), .init(color: Color(sky.top).opacity(0.75), location: 0.55),
+                                       .init(color: Color(sky.top).opacity(0), location: 1)], startPoint: .top, endPoint: .bottom)
+                    .frame(height: g.safeAreaInsets.top + 16).offset(y: -g.safeAreaInsets.top).allowsHitTesting(false)
+            }
         }
-        .padding(.horizontal, M)
-        .frame(height: 64)
+        .background(SkyBackground(sky: sky))
     }
 }
 
@@ -81,11 +84,15 @@ struct LauncherRoot: View {
 struct Cartridges: View {
     @ObservedObject var model: Launcher
     let width: CGFloat
+    let lifted: String?
+    let lift: (Lifted) -> Void
 
     var body: some View {
         let u = (width - 3 * M) / 2 / Cartridge.size.width
         LazyVGrid(columns: [GridItem(.flexible(), spacing: M), GridItem(.flexible(), spacing: M)], spacing: M) {
-            ForEach(model.games) { game in CartridgeCell(model: model, game: game, u: u) }
+            ForEach(model.games) { game in
+                CartridgeCell(model: model, game: game, u: u, lift: lift).opacity(lifted == game.id ? 0 : 1) // its slot stays empty while it is out
+            }
             if model.games.count % 2 == 1 {
                 Cartridge.filler(u: u).equatable().accessibilityHidden(true)
             }
@@ -97,19 +104,15 @@ struct CartridgeCell: View {
     @ObservedObject var model: Launcher
     let game: Game
     let u: CGFloat
-    @State private var shake = false
+    let lift: (Lifted) -> Void
 
     var body: some View {
         GeometryReader { p in
-            Button {
-                if game.soon { withAnimation(.spring(response: 0.2, dampingFraction: 0.2)) { shake.toggle() } } else { model.play(game, p.frame(in: .global).center) }
-            } label: { Cartridge(game: game, image: model.images[game.id], u: u).equatable() }
-            .buttonStyle(Squash(depth: 0.3 * u))
-            .accessibilityLabel(game.soon ? Text("ui.select.aviat") : Text("Juga a \(game.title)"))
+            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { Cartridge(game: game, image: model.images[game.id], u: u).equatable() }
+                .buttonStyle(Squash(depth: 0.3 * u))
+                .accessibilityLabel(game.soon ? Text("ui.select.aviat") : Text(verbatim: game.title))
         }
         .frame(width: Cartridge.size.width * u, height: Cartridge.size.height * u)
-        .offset(x: shake ? 4 : 0)
-        .sensoryFeedback(.error, trigger: shake)
     }
 }
 

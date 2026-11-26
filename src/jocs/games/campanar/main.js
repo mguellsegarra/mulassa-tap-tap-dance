@@ -7,6 +7,7 @@ import { SIZE, FLOOR, RANGE as GAME_RANGE, REAL, drop, speedAt, metresOf } from 
 import { STACK_TRY, STACK_REACH, STACK_PERFECT } from './stack.js';
 const RANGE = STACK_TRY ? SIZE * STACK_REACH : GAME_RANGE; // ?stack: the slab comes from farther (stack.js)
 import { SFX, unlock, uiBlip } from './audio.js';
+import { RITME, ritmeStart, ritmeStop, ritmeHold, ritmeTick, ritmeAt, ritmeSpeed, ritmeDrop, ritmeLog, ritmeAudio } from './ritme.js';
 import { deviceBest } from '#plassa/best.js';
 import { haptic } from '#plassa/haptics.js';
 import { setupOrientation } from '#plassa/orientation.js';
@@ -34,6 +35,9 @@ function hud() {
   $('score').textContent = `${metresOf(score)} m`; // the same metres as the end sheet
 }
 
+// ?ritme: the slab is where the audio clock says, at page time ms (now when left out)
+function ritmeSlide(ms) { const s = ritmeAt(ms); pos = top[axis] + s.at * RANGE; dir = s.dir; }
+
 function spawn() {
   axis = n % 2 ? 'x' : 'z';
   dir = 1;
@@ -53,10 +57,12 @@ function start() {
   $('hud').hidden = false;
   hud();
   ready = false; // the first slab once the tower has risen into place
+  if (RITME) ritmeStart();
 }
 
 function end() {
   mode = 'over';
+  ritmeStop();
   $('hud').hidden = true; // nothing over the campanar as it comes whole
   scene.pullOut();
   scene.turnAll(SFX.turn, SFX.bell); // the top becomes the campanar's, a bubble each course, a bell for the crown
@@ -88,10 +94,12 @@ function toSheet() {
   scene.lift(($('end-banner').getBoundingClientRect().bottom + 12) / innerHeight, Math.min(0.4, ($('end-menu').querySelector('.sheet-actions').offsetHeight + 40) / innerHeight));
 }
 
-function tap() {
+function tap(ms) { // ms: the event's own time (?ritme judges the tap where the finger fell, not when the page got to it)
   if (mode !== 'play' || !ready || performance.now() - lastTap < 150) return; // a double tap is one drop
   lastTap = performance.now();
+  if (RITME) ritmeSlide(ms);
   const r = drop(top, pos, axis, STACK_TRY ? SIZE * STACK_PERFECT : undefined);
+  if (RITME) ritmeDrop(ms, r.miss ? -1 : r.perfect ? streak + 1 : 0); // ?ritme: it sings the perfect's note itself, on its beat
   if (r.miss) {
     scene.missMoving(axis, Math.sign(pos - top[axis]) || 1);
     SFX.miss();
@@ -100,9 +108,9 @@ function tap() {
   }
   if (r.cut) scene.fall(n, r.cut, y, axis, Math.sign(pos - top[axis]));
   top = r.placed;
-  scene.place(top, axis, dir * speedAt(n), r.landed); // its speed: a perfect's snap settles from it
+  scene.place(top, axis, dir * (RITME ? ritmeSpeed(RANGE) : speedAt(n)), r.landed); // its speed: a perfect's snap settles from it
   y += FLOOR;
-  if (r.perfect) { streak++; SFX.perfect(streak); haptic('hit'); scene.ripple(n, top, y, streak); } else { streak = 0; SFX.place(); haptic('tap'); }
+  if (r.perfect) { streak++; RITME || SFX.perfect(streak); haptic('hit'); scene.ripple(n, top, y, streak); } else { streak = 0; SFX.place(); haptic('tap'); }
   score++;
   n++;
   hud();
@@ -112,15 +120,18 @@ function tap() {
 function pause() {
   if (mode !== 'play') return;
   mode = 'paused';
+  ritmeHold(true);
   show('pause-menu');
 }
 function resume() {
   if (mode !== 'paused') return;
   mode = 'play';
+  ritmeHold(false);
   show(null);
 }
 function toMenu() {
   mode = 'menu';
+  ritmeStop();
   $('hud').hidden = true;
   scene.reset();
   looking = 0;
@@ -133,7 +144,7 @@ const homeAside = () => scene.home(mode === 'menu'); // the home is the sky and 
 
 $('game').addEventListener('pointerdown', e => {
   if (e.button) return;
-  if (mode !== 'over') return tap();
+  if (mode !== 'over') return tap(e.timeStamp);
   // the end: a drag turns the campanar round (scene.look), a tap without moving goes on to the sheet
   const c = $('game'), from = { x: e.clientX, y: e.clientY, t: e.timeStamp, moved: 0 };
   c.setPointerCapture(e.pointerId);
@@ -155,7 +166,7 @@ $('game').addEventListener('pointerdown', e => {
   c.addEventListener('pointercancel', up);
 });
 addEventListener('keydown', e => {
-  if ((e.key === ' ' || e.key === 'Enter') && (mode === 'play' || looking)) { e.preventDefault(); if (looking) toSheet(); else tap(); }
+  if ((e.key === ' ' || e.key === 'Enter') && (mode === 'play' || looking)) { e.preventDefault(); if (looking) toSheet(); else tap(e.timeStamp); }
   if (e.key === 'Escape') back();
 });
 $('play').addEventListener('click', start);
@@ -192,10 +203,15 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
   last = now;
-  if (mode === 'play' && !ready && scene.settled) { ready = true; spawn(); }
+  // ?ritme: the music runs ahead of the clock, and the slab comes out on its downbeat (ritme.js)
+  const out = mode === 'play' && (!RITME || ritmeTick(!ready && scene.settled));
+  if (mode === 'play' && !ready && scene.settled && out) { ready = true; spawn(); }
   if (mode === 'play' && ready) {
-    pos += dir * speedAt(n) * dt;
-    if (Math.abs(pos - top[axis]) > RANGE) { pos = top[axis] + Math.sign(pos - top[axis]) * RANGE; dir = -dir; }
+    if (RITME) ritmeSlide();
+    else {
+      pos += dir * speedAt(n) * dt;
+      if (Math.abs(pos - top[axis]) > RANGE) { pos = top[axis] + Math.sign(pos - top[axis]) * RANGE; dir = -dir; }
+    }
     scene.slide(axis, pos);
   }
   if (mode !== 'paused') scene.frame(dt);
@@ -206,7 +222,7 @@ function frame(now) {
 toMenu();
 scene.frame(0);
 requestAnimationFrame(frame);
-if (import.meta.env.DEV) window.__campanar = { get mode() { return mode; }, get n() { return n; }, tap, start,
+if (import.meta.env.DEV) window.__campanar = { get mode() { return mode; }, get n() { return n; }, tap, start, ritmeLog, ritmeAudio,
   tuneSky: (o, svgUrl) => tuneSky(sky, o, svgUrl), // dev: the carena tuner's settings (tools/jocs/campanar-carena/)
   perfect() { pos = top[axis]; lastTap = 0; tap(); }, // dev: a perfect drop, to see the whole tower quickly
   miss() { pos = top[axis] + SIZE * 2; lastTap = 0; tap(); },

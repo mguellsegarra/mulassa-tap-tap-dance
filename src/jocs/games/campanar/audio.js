@@ -6,19 +6,22 @@ import { blipOn } from '#plassa/ui-sound.js';
 import { STACK_TRY } from './stack.js';
 
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
+export { ctx as audioCtx }; // ritme.js: the slab on the audio clock
 const out = ctx.createGain();
-out.gain.value = 0.9;
+out.gain.value = new URLSearchParams(location.search).has('mute') ? 0 : 0.9; // ?mute: the clock still runs, silent
 out.connect(ctx.destination);
+export { out as audioOut };
 export const unlock = () => { if (ctx.state !== 'running') ctx.resume().catch(() => {}); };
 export const uiBlip = blipOn(ctx, out);
 
 // from → to Hz in `glide` s; a 2 ms attack, then an exponential decay that is silent by `len`. LEAD: scheduled a little
 // ahead, so a busy main thread starts it late as a whole instead of cutting its attack (a click)
 const LEAD = 0.015;
-function bubble(from, to, { at = 0, glide = 0.01, len = 0.05, peak = 0.5, attack = 0.002 } = {}) {
+// when: the context's own time instead of `at` seconds from now (the music's grid, ritme-loop.js)
+export function bubble(from, to, { at = 0, when, type = 'sine', glide = 0.01, len = 0.05, peak = 0.5, attack = 0.002 } = {}) {
   if (ctx.state !== 'running') return;
-  const t = ctx.currentTime + LEAD + at, o = ctx.createOscillator(), g = ctx.createGain();
-  o.type = 'sine';
+  const t = when ?? ctx.currentTime + LEAD + at, o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type;
   o.frequency.setValueAtTime(from, t);
   o.frequency.exponentialRampToValueAtTime(to, t + glide);
   g.gain.setValueAtTime(0, t);

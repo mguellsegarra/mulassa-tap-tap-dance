@@ -94,7 +94,8 @@ fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Bo
 @Composable
 fun CartridgeBack(color: Color, u: Dp) {
     val measure = rememberTextMeasurer()
-    Canvas(Modifier.size(u * CART_W, u * CART_H)) {
+    // its own offscreen layer, like the face's: drawn (and its text measured) once, then only moved
+    Canvas(Modifier.size(u * CART_W, u * CART_H).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
         val k = u.toPx()
         val dark = color.mix(hex("#1d100a"), 0.62f); val shadow = color.mix(hex("#1d100a"), 0.3f)
         val ink = color.mix(hex("#1d100a"), 0.55f); val lit = color.mix(Color.White, 0.45f)

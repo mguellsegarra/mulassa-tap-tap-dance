@@ -3,9 +3,9 @@ package cat.mulassa.games.launcher
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -45,6 +44,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cat.mulassa.games.R
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.cos
@@ -53,30 +53,60 @@ import kotlin.math.sin
 // A cartridge tapped on the home: where it was (its centre in the window) and its size there.
 class Pick(val game: Game, val at: Offset, val u: Dp)
 
-private const val TURN_MS = 500
-private val TURN = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
+// Ronda 22's choreography, shared with iOS (design/mulassa-games/app-home/ronda-22/timings.md): no spring, no overshoot.
+private val EASE_IN_OUT = CubicBezierEasing(0.42f, 0f, 0.58f, 1f)
+private val EASE_OUT = CubicBezierEasing(0.33f, 0f, 0.2f, 1f)
 private val BUTTON_H = 56.dp
 private val BUTTON_GAP = 24.dp
 private const val DEPTH = 0.075f // the side's depth, of the face's width
 
 // Ronda 18's intermediate screen («més senzill»): the cartridge lifts out of its slot and turns once around its vertical
-// axis, like a card, while it grows to the middle over the dimmed home; under it, «Juga» starts the iris. Outside or back
-// turns it back into its slot. An «Aviat» one turns, then shakes, with no button. Laid out at its final size and scaled
-// down at the start, so the art stays sharp; only layer transforms and alpha move.
+// axis, like a card, while it grows to the middle over the dimmed, blurred home (`veil`, owned by LauncherRoot); it lingers
+// on its back so «mulassa.cat» reads; under it, «Juga» starts the iris. Outside or back turns it back into its slot. An
+// «Aviat» one turns, then shakes, with no button. Laid out at its final size and scaled down at the start, so the art stays
+// sharp. Both faces are composed once, each on its own offscreen layer: the turn only moves cached layers (transforms and
+// alpha), nothing is measured or redrawn per frame but the thin side.
 @Composable
-fun Picked(model: Launcher, pick: Pick, done: () -> Unit) {
+fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1D>, done: () -> Unit) {
     val res = LocalContext.current.contentResolver
     val still = remember { Settings.Global.getFloat(res, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
-    val p = remember { Animatable(0f) }
+    val lift = remember { Animatable(0f) }
+    val turn = remember { Animatable(0f) }
+    val juga = remember { Animatable(0f) }
     val shake = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val buzz = haptic(model)
-    val back by remember { derivedStateOf { !still && (TURN.transform(p.value) * 360f).let { it > 90f && it < 270f } } }
     val leaving = remember { booleanArrayOf(false) }
-    val close = { if (!leaving[0]) { leaving[0] = true; scope.launch { p.animateTo(0f, tween(TURN_MS, easing = LinearEasing)); done() } } }
+    val close = {
+        if (!leaving[0]) {
+            leaving[0] = true
+            scope.launch {
+                val ms = if (still) 300 else 600
+                launch { juga.animateTo(0f, tween(120, easing = LinearEasing)) }
+                launch { veil.animateTo(0f, tween(ms, easing = EASE_IN_OUT)) }
+                launch { turn.animateTo(0f, tween(ms, easing = EASE_IN_OUT)) }
+                lift.animateTo(0f, tween(ms, easing = EASE_IN_OUT))
+                done()
+            }
+        }
+    }
     LaunchedEffect(pick) {
-        p.animateTo(1f, tween(TURN_MS, easing = LinearEasing))
-        if (pick.game.soon) { buzz(REJECT); shake.animateTo(0f, spring(dampingRatio = 0.15f, stiffness = 1500f), initialVelocity = 40f) }
+        veil.snapTo(0f)
+        coroutineScope {
+            if (still) {
+                launch { veil.animateTo(1f, tween(300, easing = EASE_IN_OUT)) }
+                launch { juga.animateTo(1f, tween(200, 100, EASE_OUT)) }
+                lift.animateTo(1f, tween(300, easing = EASE_IN_OUT))
+            } else {
+                launch { veil.animateTo(1f, tween(500, easing = EASE_OUT)) }
+                launch { juga.animateTo(1f, tween(250, 1150, EASE_OUT)) }
+                launch { lift.animateTo(1f, tween(1300, easing = EASE_IN_OUT)) }
+                turn.animateTo(180f, tween(550, easing = EASE_IN_OUT))
+                turn.animateTo(190f, tween(300, easing = LinearEasing)) // the back lingers, still drifting
+                turn.animateTo(360f, tween(450, easing = EASE_OUT))
+            }
+        }
+        if (pick.game.soon && !leaving[0]) { buzz(REJECT); shake.animateTo(0f, spring(dampingRatio = 0.15f, stiffness = 1500f), initialVelocity = 40f) }
     }
     BackHandler { close() }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -89,16 +119,15 @@ fun Picked(model: Launcher, pick: Pick, done: () -> Unit) {
         val below = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + BAR_GAP + BAR_H
         val top = above + (maxHeight - above - below - block) / 2
         val to = with(d) { Offset(maxWidth.toPx() / 2, (top + h / 2).toPx()) }
-        Box(Modifier.fillMaxSize().graphicsLayer { alpha = p.value }.drawBehind { drawRect(hex("#0a0603").copy(alpha = 0.6f)) }
+        Box(Modifier.fillMaxSize().graphicsLayer { alpha = veil.value }.drawBehind { drawRect(hex("#0a0603").copy(alpha = 0.6f)) }
             .clickable(null, null) { close() })
-        // the move eases out; the turn eases in and out on its own, so it spreads over the whole half second
         val side = remember { Side() }
         fun Density.lift() = side.apply {
-            val e = FastOutSlowInEasing.transform(p.value); val s = pick.u / big
+            val e = lift.value; val s = pick.u / big
             tx = (pick.at.x - to.x) * (1 - e) + shake.value * 8.dp.toPx()
             ty = (pick.at.y - to.y) * (1 - e)
             scale = s + (1 - s) * e
-            turn = if (still) 0f else 360f * TURN.transform(p.value)
+            this.turn = turn.value
             camera = 14 * density * 8 // a soft perspective for a card this big
             depth = w.toPx() * DEPTH
         }
@@ -112,12 +141,15 @@ fun Picked(model: Launcher, pick: Pick, done: () -> Unit) {
             translationX = side.tx + side.shift(size.width / 2, size.height / 2); translationY = side.ty
             scaleX = side.scale; scaleY = side.scale; rotationY = side.turn; cameraDistance = side.camera
         }.clickable(null, null) {}) {
+            fun back() = cos(Math.toRadians(turn.value.toDouble())) < 0
+            Box(Modifier.graphicsLayer { alpha = if (back()) 0f else 1f }) {
+                Cartridge(pick.game.tint, pick.game.short ?: stringResource(R.string.ui_select_aviat), model.images[pick.game.id], big, locked = pick.game.soon)
+            }
             // the turn mirrors the back: flipped once more, its engraving reads left to right
-            if (back) Box(Modifier.graphicsLayer { scaleX = -1f }) { CartridgeBack(pick.game.tint, big) } else Cartridge(pick.game.tint, pick.game.short ?: stringResource(R.string.ui_select_aviat),
-                model.images[pick.game.id], big, locked = pick.game.soon)
+            Box(Modifier.graphicsLayer { alpha = if (back()) 1f else 0f; scaleX = -1f }) { CartridgeBack(pick.game.tint, big) }
         }
         if (!pick.game.soon) Box(Modifier.offset((maxWidth - w) / 2 + big * 0.16f, top + h + BUTTON_GAP).size(w - big * 0.32f, BUTTON_H)
-            .graphicsLayer { alpha = ((p.value - 0.6f) / 0.4f).coerceIn(0f, 1f) }) {
+            .graphicsLayer { alpha = juga.value }) {
             PlayButton(stringResource(R.string.jocs_menu_play)) { model.play(pick.game, to) }
         }
     }

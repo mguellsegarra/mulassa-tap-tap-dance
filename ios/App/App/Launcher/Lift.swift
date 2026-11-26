@@ -3,7 +3,9 @@ import SwiftUI
 // ronda-18's in-between step: the tapped cartridge lifts out of its slot and turns once around its vertical axis, like a
 // card, while it grows to the middle; the home dims and «Juga» comes in under it. Outside (or back) turns it home again.
 // A locked «Aviat» makes the same turn, then shakes, with no button. Reduced motion: no travel or turn, a fade and a scale.
-// Everything animated is a transform or an opacity over two cached bitmaps (the cartridge's front and back).
+// Everything animated is a transform or an opacity over two bitmaps drawn once at tap time (the cartridge's front and
+// back): ronda 22 found a 230-310 ms stall when the back's Canvas first drew halfway through the turn.
+// Timings and curves are shared with Android: design/mulassa-games/app-home/ronda-22/timings.md.
 struct Lifted: Equatable {
     let game: Game
     let from: CGRect // its slot, in screen points
@@ -14,7 +16,11 @@ struct LiftView: View {
     let lifted: Lifted
     let done: () -> Void // back in its slot, or under the iris
     @Environment(\.accessibilityReduceMotion) private var still
+    @Environment(\.displayScale) private var scale
     @ViewState private var up = false
+    @ViewState private var veil = false // the blurred, dimmed home behind
+    @ViewState private var angle = 0.0
+    @ViewState private var faces = Faces()
     @ViewState private var ready = false // the turn has ended: «Juga» shows, or the lock shakes
     @ViewState private var shake: CGFloat = 0
     @ViewState private var leaving = false
@@ -29,10 +35,12 @@ struct LiftView: View {
             let u = width / Cartridge.size.width, height = Cartridge.size.height * u
             let centre = CGPoint(x: w / 2, y: (top + bottom) / 2 - (gap + button) / 2) // the cartridge and «Juga» together, centred
             let k = lifted.from.width / width
+            let face = faces.get(game, model.images[game.id], u: u, scale: scale)
             ZStack(alignment: .topLeading) {
-                Color.black.opacity(up ? 0.55 : 0).onTapGesture(perform: close).accessibilityHidden(true)
-                Cartridge(game: game, image: model.images[game.id], u: u).equatable()
-                    .modifier(Turn(angle: up && !still ? 360 : 0, color: game.tint, u: u))
+                ZStack { Rectangle().fill(.ultraThinMaterial); Color.black.opacity(0.55) } // a material: the blur costs no redraw
+                    .opacity(veil ? 1 : 0).onTapGesture(perform: close).accessibilityHidden(true)
+                Image(uiImage: face.front).resizable().frame(width: width, height: height)
+                    .modifier(Turn(angle: angle, color: game.tint, u: u, back: face.back))
                     .modifier(Shake(t: shake))
                     .scaleEffect(up ? 1 : still ? 0.92 : k)
                     .opacity(still && !up ? 0 : 1)
@@ -62,20 +70,43 @@ struct LiftView: View {
         .accessibilityAction(.escape, close)
         .sensoryFeedback(.error, trigger: shake)
         .onAppear(perform: open)
+        #if DEBUG
+        .onAppear { FrameLog.shared.start() }.onDisappear { FrameLog.shared.stop() }
+        #endif
     }
 
+    private static func inOut(_ d: Double) -> Animation { .timingCurve(0.42, 0, 0.58, 1, duration: d) }
+    private static func out(_ d: Double) -> Animation { .timingCurve(0.33, 0, 0.2, 1, duration: d) }
+
+    // 0-550 ms a half turn, 550-850 a slow drift (180 to 190°) so the back's «mulassa.cat» reads, 850-1300 the rest;
+    // the lift runs under all of it and «Juga» comes in at 1150. Each step checks `leaving`: a close mid-turn wins.
     private func open() {
-        withAnimation(still ? .easeOut(duration: 0.25) : .timingCurve(0.42, 0, 0.58, 1, duration: 0.6)) { up = true } completion: {
-            withAnimation(.easeOut(duration: 0.2)) { ready = true }
-            if lifted.game.soon { withAnimation(.linear(duration: 0.4)) { shake = 1 } }
+        if still {
+            withAnimation(Self.inOut(0.3)) { up = true; veil = true } completion: {
+                guard !leaving else { return }
+                withAnimation(Self.out(0.2)) { ready = true }
+            }
+            return
+        }
+        withAnimation(Self.inOut(1.3)) { up = true }
+        withAnimation(Self.out(0.5)) { veil = true }
+        if !lifted.game.soon { withAnimation(Self.out(0.25).delay(1.15)) { ready = true } }
+        withAnimation(Self.inOut(0.55)) { angle = 180 } completion: {
+            guard !leaving else { return }
+            withAnimation(.linear(duration: 0.3)) { angle = 190 } completion: {
+                guard !leaving else { return }
+                withAnimation(Self.out(0.45)) { angle = 360 } completion: {
+                    if lifted.game.soon && !leaving { withAnimation(.linear(duration: 0.4)) { shake = 1 } }
+                }
+            }
         }
     }
 
     private func close() {
         guard !leaving else { return }
         leaving = true
-        withAnimation(.easeIn(duration: 0.12)) { ready = false }
-        withAnimation(still ? .easeIn(duration: 0.2) : .timingCurve(0.42, 0, 0.58, 1, duration: 0.5)) { up = false } completion: { done() }
+        withAnimation(.linear(duration: 0.12)) { ready = false }
+        withAnimation(Self.inOut(still ? 0.3 : 0.6)) { up = false; veil = false; angle = 0 } completion: { done() }
     }
 
     private func play(from centre: CGPoint) {
@@ -92,6 +123,7 @@ private struct Turn: ViewModifier, Animatable {
     var angle: Double
     let color: UIColor
     let u: CGFloat
+    let back: UIImage
     var animatableData: Double { get { angle } set { angle = newValue } }
 
     func body(content: Content) -> some View {
@@ -126,7 +158,7 @@ private struct Turn: ViewModifier, Animatable {
             sides(1)
             sides(-1)
             content.opacity(front ? 1 : 0).modifier(place((1, 0, 0), (-W / 2, -H / 2, 0)))
-            Cartridge.back(color: color, u: u).opacity(front ? 0 : 1).modifier(place((-1, 0, 0), (W / 2, -H / 2, -T)))
+            Image(uiImage: back).resizable().frame(width: W, height: H).opacity(front ? 0 : 1).modifier(place((-1, 0, 0), (W / 2, -H / 2, -T)))
         }
     }
 }
@@ -145,6 +177,24 @@ private struct Slab: GeometryEffect {
     }
 }
 
+// The two faces as bitmaps, drawn once per lift (the first body, before anything moves) at the lifted size.
+@MainActor private final class Faces {
+    private var key: (String, CGFloat)?
+    private(set) var front = UIImage(), back = UIImage()
+    func get(_ game: Game, _ image: UIImage?, u: CGFloat, scale: CGFloat) -> Faces {
+        guard key?.0 != game.id || key?.1 != u else { return self }
+        key = (game.id, u)
+        func draw(_ v: some View) -> UIImage {
+            let r = ImageRenderer(content: v)
+            r.scale = scale
+            return r.uiImage ?? UIImage()
+        }
+        front = draw(Cartridge(game: game, image: image, u: u))
+        back = draw(Cartridge.back(color: game.tint, u: u))
+        return self
+    }
+}
+
 // Three quick swings that die out (a «no»).
 private struct Shake: GeometryEffect {
     var t: CGFloat
@@ -153,3 +203,23 @@ private struct Shake: GeometryEffect {
         ProjectionTransform(CGAffineTransform(translationX: 9 * sin(t * .pi * 6) * (1 - t), y: 0))
     }
 }
+
+#if DEBUG
+// Ronda 22's evidence: every frame's duration while the lift is up, one line per frame to the unified log
+// (`log show --predicate 'eventMessage CONTAINS "[lift-frame]"'`), so drops show as gaps over the display's interval.
+final class FrameLog: NSObject {
+    static let shared = FrameLog()
+    private var link: CADisplayLink?
+    private var last: CFTimeInterval = 0
+    func start() {
+        stop()
+        link = CADisplayLink(target: self, selector: #selector(tick))
+        link?.add(to: .main, forMode: .common)
+    }
+    func stop() { link?.invalidate(); link = nil; last = 0 }
+    @objc private func tick(_ l: CADisplayLink) {
+        if last > 0 { NSLog("[lift-frame] %.2f %.2f", (l.timestamp - last) * 1000, (l.targetTimestamp - l.timestamp) * 1000) }
+        last = l.timestamp
+    }
+}
+#endif

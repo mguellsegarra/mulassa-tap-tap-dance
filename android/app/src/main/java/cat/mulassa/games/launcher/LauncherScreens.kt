@@ -37,6 +37,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -49,7 +51,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -129,13 +133,30 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
     val list = rememberLazyListState() // kept across tabs
     val backdrop = rememberGraphicsLayer() // the page, recorded once more for the tab bar's blur
     BackHandler(tab == Tab.Profile) { tab = Tab.Games }
+    val veil = remember { Animatable(0f) } // Picked's blur and dim over the home, 0 to 1
+    // While a cartridge is picked the home shows blurred: a snapshot taken once, blurred once (a fixed radius on a still
+    // image, so HWUI keeps the filtered result) and faded in over the live home. A live blur would refilter the whole
+    // screen every frame, since the clouds keep moving under it. API 31+; older phones keep the dim only.
+    val home = rememberGraphicsLayer()
+    var frozen by remember { mutableStateOf<ImageBitmap?>(null) }
+    LaunchedEffect(model.pick) {
+        frozen = null
+        if (model.pick == null) veil.snapTo(0f) // also when a game took the pick away
+        else if (Build.VERSION.SDK_INT >= 31) { withFrameNanos {}; frozen = home.toImageBitmap() } // a frame on: its slot is empty
+    }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().drawWithContent { backdrop.record { this@drawWithContent.drawContent() }; drawLayer(backdrop) }.sky { sky }) {
-            SkyLife(sky)
-            if (tab == Tab.Games) Home(model, sky, list, model.pick?.game?.id) { model.pick = it } else ProfilePage { settings = true }
+        Box(Modifier.fillMaxSize().drawWithContent { home.record { this@drawWithContent.drawContent() }; drawLayer(home) }) {
+            Box(Modifier.fillMaxSize().drawWithContent { backdrop.record { this@drawWithContent.drawContent() }; drawLayer(backdrop) }.sky { sky }) {
+                SkyLife(sky)
+                if (tab == Tab.Games) Home(model, sky, list, model.pick?.game?.id) { model.pick = it } else ProfilePage { settings = true }
+            }
+            TabBar(tab, sky, backdrop) { tab = it }
         }
-        TabBar(tab, sky, backdrop) { tab = it }
-        model.pick?.let { Picked(model, it) { model.pick = null } }
+        frozen?.let {
+            Image(it, null, Modifier.fillMaxSize().graphicsLayer { alpha = veil.value }
+                .graphicsLayer { renderEffect = BlurEffect(24f, 24f, TileMode.Clamp) }, contentScale = ContentScale.FillBounds)
+        }
+        model.pick?.let { Picked(model, it, veil) { model.pick = null } }
         Sheets(model, version, sky, settings) { settings = false }
     }
 }

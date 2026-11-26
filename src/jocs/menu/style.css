@@ -64,7 +64,7 @@ html.ready #games-menu { animation: games-in .6s ease-in-out both; }
 /* each game's own colour, the same as the second word of its logo; the new ones are provisional */
 /* a card's and, by the same attribute, the hero's (carousel.js): never copied by script, which read it before this file had
    arrived on a first visit in Safari (a white name, «Juga» without its shadow) */
-[data-game="tap"] { --game: #ffd23f; } [data-game="pop"] { --game: #ff7ac6; } [data-game="aviat-1"] { --game: #6ec8ff; } [data-game="aviat-2"] { --game: #8be04e; } [data-game="aviat-3"] { --game: #ff7a1a; } /* the next games' own colours: Memory, Crush, Drop */
+[data-game="tap"] { --game: #ffd23f; } [data-game="pop"] { --game: #ff7ac6; } [data-game="campanar"] { --game: #3fd3b8; } [data-game="aviat-1"] { --game: #6ec8ff; } [data-game="aviat-2"] { --game: #8be04e; } [data-game="aviat-3"] { --game: #ff7a1a; } /* the next games' own colours: Memory, Crush, Drop */
 #games-hero.soon .game-play { visibility: hidden; }
 #games-grid .game-card[data-soon] .por img { object-position: top; } /* its «?» floats at the top of the picture */
 

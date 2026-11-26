@@ -1,0 +1,24 @@
+{
+  "tots": {
+    "center": 328,
+    "span": 120,
+    "ex": 2,
+    "near": 12,
+    "base": 3,
+    "antenna": 1.0,
+    "antennaW": 0.1,
+    "nearColor": "#8a7399",
+    "farColor": "#c4b2c9",
+    "raise": 20,
+    "width": 100,
+    "tilt": 0.35,
+    "lens": 1.8,
+    "groundColor": "#b8a2bd",
+    "smooth": 1
+  },
+  "mobil": {
+    "width": 200
+  },
+  "tauleta": {},
+  "escriptori": {}
+}

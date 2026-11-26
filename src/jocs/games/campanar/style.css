@@ -1,0 +1,61 @@
+/* Campanar's own screens: the sky behind, the tower's canvas, the HUD and the home's title. The look is the base
+   (packages/plassa/src/base.css, game.css); this file sets the game's colour tokens: stone, terracotta and a morning sky. */
+:root { --accent: #e0703a; --button-gold-bg: linear-gradient(180deg, #ffb27a 0%, #e0703a 55%, #c25a28 100%); --button-bg: #4a2f22e8; --ink: #3a2016; --sheet-color: #4a2f22; --sheet-bg: linear-gradient(#5e3d2c, #4a2f22); --sheet-radius: 24px; --page-edge: #8fdcd8; --page-bg: #8fdcd8; --game: #e0703a; --game-word: #3fd3b8; }
+/* the sky and the hills far away: taller than the screen, its bottom on the screen's; sky.js slides it down as the tower climbs */
+#sky { position: fixed; left: 0; right: 0; bottom: 0; height: 135dvh; background: linear-gradient(#77a3b3, #93b7c0 55%, #e7b2a2 90%, #efbba3); } /* its hills per device: sky.js */
+#sky > div { position: absolute; inset: 0; pointer-events: none; }
+
+canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
+
+#hud { position: fixed; z-index: 2; top: calc(var(--sat) + 12px); left: 16px; right: 16px; display: grid; grid-template-columns: var(--round-size) 1fr var(--round-size); align-items: center; pointer-events: none; }
+#hud button { pointer-events: auto; }
+#hud-mid { justify-self: center; display: flex; align-items: baseline; gap: 12px; padding: 4px 20px; border-radius: 40px; background: var(--sheet-color); }
+#score { font: 800 34px/1 'Baloo 2', system-ui, sans-serif; color: var(--accent); min-width: 40px; text-align: center; }
+
+/* the end: the sheet low, the tower whole in sight above it */
+#end-menu { justify-content: flex-end; padding: calc(var(--sat) + 16px) 16px calc(var(--sab) + 24px); box-sizing: border-box; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* The home, as Pop's (shortcut: copied from pop/style.css .home, .c-hero, .pop-title… until it moves into Plassa): the
+   logo on top, the pitch, Juga and the record at the bottom, the tower's foot (the 3D behind) in sight between them */
+.home { --m: 16px; position: fixed; z-index: 3; inset: 0; box-sizing: border-box; display: grid; grid-template-rows: 1fr;
+  padding: calc(var(--sat) + var(--m)) 0 calc(var(--sab) + var(--m)); background: linear-gradient(#0000 55%, #2a1a1066); }
+.home[hidden] { display: none; }
+:root:not(.ready) #menu { visibility: hidden; }
+.corner-l { position: absolute; z-index: 1; top: calc(var(--sat) + var(--m)); left: var(--m); }
+.c-hero { position: relative; min-height: 0; display: flex; flex-direction: column; align-items: center; padding: calc(44px + 12px) var(--m) 0; }
+.c-text { display: contents; }
+.tower-title { order: 0; flex: none; display: grid; justify-items: center; width: min(300px, 100vw - 2 * var(--m) - 40px, 40dvh); margin: 0; container-type: inline-size; }
+.tower-title .logo-box, .tower-title .logo { display: block; width: 100%; height: auto; overflow: visible; }
+.tower-word { margin-top: -1cqi; font: 800 15cqi/1 'Baloo 2', system-ui, sans-serif; letter-spacing: 2cqi; color: var(--game-word); -webkit-text-stroke: 2.3cqi #2a1a10; paint-order: stroke fill; }
+.tower-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
+@media (prefers-reduced-motion: reduce) { .tower-word i { animation: none; } }
+.c-art { order: 1; flex: 1 1 0; min-height: 72px; }
+.c-pitch { order: 2; margin: 0 0 12px; max-width: 320px; text-align: center; font-size: clamp(16px, 2.4dvh, 20px); line-height: 1.2; color: #fff; text-wrap: balance; text-shadow: 0 1px 3px #000, 0 0 12px #2a1a10; }
+.c-play-row { order: 3; align-self: stretch; display: grid; gap: 8px; width: min(100%, 380px); margin: 0 auto; }
+.c-play-row > * { margin: 0; }
+.c-best { text-align: center; font: 800 16px/1.3 'Baloo 2', system-ui, sans-serif; color: #fff3d6; text-shadow: 0 1px 3px #000; }
+.c-best:empty { display: none; }
+/* wide: the logo, pitch and Juga in a column on the left; the tower (scene.js aside) on the right */
+@media (orientation: landscape) {
+  .c-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; padding: calc(52px + 12px) max(32px, 5vw); }
+  :root { --round-size: clamp(52px, 5dvh, 72px); }
+  .c-text { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.6dvh, 32px); }
+  .tower-title { width: clamp(220px, min(32vw, 50dvh), 680px); }
+  .c-pitch { margin: 0; max-width: 24ch; font-size: clamp(18px, min(1.7vw, 3dvh), 36px); }
+  .c-play-row { width: min(100%, clamp(380px, min(30vw, 56dvh), 620px)); }
+  .home { background: linear-gradient(90deg, #2a1a10a0, #2a1a1060 40%, #0000 60%); }
+}
+
+/* the end's first look: the metres over the sky, a tap hint at the bottom; nothing over the tower */
+#end-banner { position: fixed; z-index: 2; top: calc(var(--sat) + 16px); left: 16px; right: 16px; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; animation: end-in .5s ease-out both; }
+#banner-m { font: 800 56px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; -webkit-text-stroke: 7px var(--sheet-color); paint-order: stroke fill; }
+#banner-real, #banner-best { padding: 4px 14px; border-radius: 20px; background: var(--sheet-color); font: 700 16px/1.3 'Baloo 2', system-ui, sans-serif; color: var(--button-text); }
+#end-tap { position: fixed; z-index: 2; left: 0; right: 0; bottom: calc(var(--sab) + 28px); margin: 0; text-align: center; font: 800 20px/1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; -webkit-text-stroke: 5px var(--sheet-color); paint-order: stroke fill; pointer-events: none; animation: end-in .4s ease-out both, tap-pulse 1.6s ease-in-out .4s infinite; }
+@keyframes end-in { from { opacity: 0; translate: 0 -8px; } }
+@keyframes tap-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { #end-banner, #end-tap { animation: none; } }
+/* after the look: the end cover shows only its buttons, low, the tower whole above them (its words are in the banner) */
+#end-menu .sheet { background: none; box-shadow: none; border: 0; padding: 0; }
+#end-menu .sheet > :not(.sheet-actions) { display: none; }
+#banner-best:not([hidden]) { color: var(--accent); }
+#end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* as Pop: line icons (to move into game.css with the end sheet, docs plan) */

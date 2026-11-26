@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carena de Tower</title>
+<!-- Dev tool: tune Tower's background mountains and end camera for all devices («Tots») and then per kind of device, on the real game at several
+     sizes. Open it from the dev server (/tools/jocs/campanar-carena/); «Copia» gives src/jocs/games/campanar/carena.json,
+     then bake.mjs writes the SVGs. Nothing here ships. -->
+<style>
+  :root { color-scheme: dark; --bg: #16141a; --panel: #221f28; --line: #3a3542; --text: #eee8f2; --muted: #a99fb3; --on: #6b4fa0; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; display: grid; grid-template-columns: 300px 1fr; min-height: 100vh; }
+  aside { padding: 16px; background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 12px; }
+  h1 { font-size: 16px; margin: 0; }
+  label { display: grid; grid-template-columns: 1fr 64px; gap: 4px 8px; align-items: center; color: var(--muted); }
+  label input[type=range] { grid-column: 1 / -1; width: 100%; }
+  label input[type=number], label input[type=color] { width: 64px; box-sizing: border-box; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; }
+  button { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: #2e2936; color: var(--text); cursor: pointer; }
+  button.on { background: var(--on); border-color: var(--on); }
+  textarea { width: 100%; height: 150px; box-sizing: border-box; background: #121015; color: var(--text); border: 1px solid var(--line); border-radius: 8px; font: 12px ui-monospace, monospace; }
+  main { padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+  section { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+  section h2 { width: 100%; margin: 0; font-size: 14px; color: var(--muted); }
+  section.on h2 { color: var(--text); }
+  figure { margin: 0; }
+  figcaption { color: var(--muted); margin-bottom: 6px; }
+  .frame { overflow: hidden; border-radius: 10px; border: 1px solid var(--line); }
+  section.on .frame { border-color: var(--on); }
+  .frame iframe { border: 0; transform-origin: 0 0; display: block; }
+</style>
+</head>
+<body>
+<aside>
+  <h1>Carena de Tower</h1>
+  <div class="row" id="tabs"></div>
+  <div id="controls"></div>
+  <div class="row">
+    <button id="end">Final de partida</button>
+    <button id="home">Inici</button>
+    <button id="reset">Valors del joc</button>
+  </div>
+  <textarea id="out" readonly></textarea>
+  <div class="row"><button id="copy">Copia</button><span id="copied"></span></div>
+</aside>
+<main id="views"></main>
+<script type="module">
+import { carenaSvg } from './carena.mjs';
+import { SKY_DEVICES } from '/src/jocs/games/campanar/sky.js';
+const NAMES = { tots: 'Tots', mobil: 'Mòbil (vertical)', tauleta: 'Tauleta (apaïsada)', escriptori: 'Escriptori' };
+const VIEWS = { mobil: [[375, 667, 0.55], [320, 568, 0.55], [430, 932, 0.45]], tauleta: [[1024, 768, 0.4]], escriptori: [[1440, 900, 0.34], [1440, 700, 0.34], [1920, 1080, 0.26]] };
+const FIELDS = [
+  ['center', 'Orientació del centre (°, 0 = nord)', 0, 359.5, 0.5],
+  ['span', 'Camp de visió (°)', 30, 200, 1],
+  ['ex', 'Exageració de l’alçada', 0.5, 4, 0.05],
+  ['near', 'Pla de davant fins a (km)', 2, 30, 1],
+  ['smooth', 'Suavitzat de la carena (°)', 0, 4, 0.5],
+  ['base', 'Terra sota l’horitzó', 0, 8, 0.1],
+  ['antenna', 'Antena: alçada', 0, 4, 0.05],
+  ['antennaW', 'Antena: amplada', 0, 0.6, 0.01],
+  ['raise', 'Peu de la carena sobre la vora (dvh)', 0, 40, 0.5],
+  ['width', 'Amplada mínima (vw)', 100, 500, 5],
+  ['nearColor', 'Color de davant', 0, 0, 0, 'color'],
+  ['farColor', 'Color del fons', 0, 0, 0, 'color'],
+  ['groundColor', 'Color de la vall (degradat cap a terra)', 0, 0, 0, 'color'],
+  ['tilt', 'Càmera final: alçada (1 = la del joc, 0 = de cara)', 0, 1, 0.05, null, true],
+  ['lens', 'Càmera final: lent (× la del joc)', 1, 4, 0.1, null, true],
+];
+const game = await (await fetch('/src/jocs/games/campanar/carena.json')).json();
+let all;
+try { all = { ...game, ...JSON.parse(localStorage.getItem('carena-tots') ?? '{}') }; } catch { all = game; }
+const merged = d => ({ ...all.tots, ...all[d] }); // a device: its own values over «tots»
+const pano = await (await fetch('./pano.json')).json();
+let device = 'tots', replay;
+
+// one section per kind of device, its game frames inside
+const frames = [];
+for (const [d, sizes] of Object.entries(VIEWS)) {
+  const sec = document.createElement('section');
+  sec.dataset.device = d;
+  sec.innerHTML = `<h2>${NAMES[d]}</h2>`;
+  for (const [w, h, s] of sizes) {
+    const fig = document.createElement('figure');
+    fig.innerHTML = `<figcaption>${w}×${h}</figcaption><div class="frame" style="width:${w * s}px;height:${h * s}px"><iframe width="${w}" height="${h}" style="transform:scale(${s})" src="/jocs/campanar/?mute"></iframe></div>`;
+    sec.append(fig);
+    const f = fig.querySelector('iframe');
+    f.addEventListener('load', () => { apply(); setTimeout(() => toEnd(f), 2500); });
+    frames.push(f);
+  }
+  document.getElementById('views').append(sec);
+}
+const deviceOf = f => Object.keys(SKY_DEVICES).find(k => f.contentWindow.matchMedia(SKY_DEVICES[k]).matches);
+
+const tabs = document.getElementById('tabs'), controls = document.getElementById('controls');
+for (const d of Object.keys(NAMES)) {
+  const b = Object.assign(document.createElement('button'), { textContent: NAMES[d].split(' ')[0] });
+  b.onclick = () => { device = d; build(); };
+  b.dataset.tab = d;
+  tabs.append(b);
+}
+function build() {
+  for (const el of document.querySelectorAll('[data-device]')) el.classList.toggle('on', device === 'tots' || el.dataset.device === device);
+  for (const b of tabs.children) b.classList.toggle('on', b.dataset.tab === device);
+  controls.replaceChildren();
+  const o = device === 'tots' ? all.tots : merged(device), own = all[device];
+  for (const [key, text, min, max, step, type, camera] of FIELDS) {
+    const l = document.createElement('label');
+    l.innerHTML = `<span>${text}</span>`;
+    let marked = false;
+    const markOwn = () => { // this device's own value, not the common one: bold, and ↺ to drop it (not a button: a label would click it)
+      marked = true;
+      const sp = l.querySelector('span'), back = Object.assign(document.createElement('a'), { href: '#', textContent: ' ↺', title: 'Torna al valor de Tots' });
+      sp.style.cssText = 'color:#fff;font-weight:600';
+      back.onclick = e => { e.preventDefault(); delete own[key]; build(); apply(); if (camera) replayEnd(); };
+      sp.append(back);
+    };
+    if (device !== 'tots' && key in own) markOwn();
+    const num = Object.assign(document.createElement('input'), type ? { type } : { type: 'number', min, max, step });
+    num.value = o[key];
+    l.append(num);
+    let range;
+    if (!type) { range = Object.assign(document.createElement('input'), { type: 'range', min, max, step, value: o[key] }); l.append(range); }
+    const set = v => {
+      own[key] = type ? v : +v; num.value = v; if (range) range.value = v; apply();
+      if (device !== 'tots' && !marked) markOwn();
+      if (camera) replayEnd();
+    };
+    num.addEventListener('input', () => set(num.value));
+    range?.addEventListener('input', () => set(range.value));
+    controls.append(l);
+  }
+  apply();
+}
+function replayEnd() { // the camera moves at the end: replay the devices it touches
+  clearTimeout(replay);
+  replay = setTimeout(() => frames.filter(f => device === 'tots' || deviceOf(f) === device).forEach(toEnd), 600);
+}
+async function toEnd(f) {
+  const c = f.contentWindow.__campanar;
+  if (!c) return;
+  c.start();
+  for (let i = 0; i < 22; i++) { c.perfect(); await new Promise(r => setTimeout(r, 60)); }
+  c.miss();
+}
+function apply() {
+  const urls = {};
+  for (const f of frames) {
+    const d = deviceOf(f), c = f.contentWindow.__campanar;
+    if (!d || !c) continue;
+    urls[d] ??= `"data:image/svg+xml,${encodeURIComponent(carenaSvg(pano, merged(d)))}"`;
+    c.tuneSky(merged(d), urls[d]);
+  }
+  document.getElementById('out').value = JSON.stringify(all, null, 2);
+  try { localStorage.setItem('carena-tots', JSON.stringify(all)); } catch {}
+}
+document.getElementById('end').onclick = () => frames.forEach(toEnd);
+document.getElementById('home').onclick = () => frames.forEach(f => f.contentWindow.location.reload());
+document.getElementById('reset').onclick = () => { localStorage.removeItem('carena-tots'); location.reload(); };
+document.getElementById('copy').onclick = async () => {
+  try { await navigator.clipboard.writeText(document.getElementById('out').value); document.getElementById('copied').textContent = 'Copiat'; }
+  catch { document.getElementById('out').select(); document.getElementById('copied').textContent = 'Selecciona i copia'; }
+};
+build();
+</script>
+</body>
+</html>

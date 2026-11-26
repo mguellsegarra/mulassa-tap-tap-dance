@@ -11,6 +11,7 @@ export const MIN_BRIDGE = 1;
 const LAUNCHER = {
   tap: { path: '/index.html', short: 'Tap Tap', color: '#f5c518', ink: '#3a2208', category: 'ritme' },
   pop: { path: '/pop/index.html', short: 'Pop', color: '#ff7ac8', ink: '#3d0f2a', category: 'accio' },
+  campanar: { path: '/jocs/campanar/index.html', short: 'Tower', color: '#3fd3b8', ink: '#0d3a33', category: 'accio' }, // the launcher knows ritme, accio, enginy, puzles; colour (the game's sky) provisional
 };
 const SOON = { short: null, color: '#ff9d3b', ink: '#4a2400', category: null };
 const PROPER = { tap: 'Mulassa Tap Tap Dance' }; // a name with no translation key stays as it is

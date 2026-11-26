@@ -1,0 +1,26 @@
+diff --git a/node_modules/@capgo/capacitor-updater/ios/Sources/CapacitorUpdaterPlugin/CapacitorUpdaterPlugin.swift b/node_modules/@capgo/capacitor-updater/ios/Sources/CapacitorUpdaterPlugin/CapacitorUpdaterPlugin.swift
+index 6a51d1f..7fa665d 100644
+--- a/node_modules/@capgo/capacitor-updater/ios/Sources/CapacitorUpdaterPlugin/CapacitorUpdaterPlugin.swift
++++ b/node_modules/@capgo/capacitor-updater/ios/Sources/CapacitorUpdaterPlugin/CapacitorUpdaterPlugin.swift
+@@ -3868,16 +3868,17 @@ public class CapacitorUpdaterPlugin: CAPPlugin, CAPBridgedPlugin {
+             guard let self = self, requestToken == self.splashscreenInvocationToken else {
+                 return
+             }
+-            webView.callAsyncJavaScript(
++            // ObjC form: the Swift overlay links /usr/lib/swift/libswiftWebKit.dylib, which iOS 18.4+ simulators can't load.
++            webView.__callAsyncJavaScript(
+                 script,
+                 arguments: [:],
+-                in: nil,
++                inFrame: nil,
+                 in: .page
+-            ) { [weak self] (result: Result<Any, Error>) in
++            ) { [weak self] (_: Any?, error: Error?) in
+                 guard let self = self, requestToken == self.splashscreenInvocationToken else {
+                     return
+                 }
+-                if case .failure(let error) = result {
++                if let error {
+                     self.retrySplashscreenAction(
+                         action,
+                         retriesRemaining: retriesRemaining,

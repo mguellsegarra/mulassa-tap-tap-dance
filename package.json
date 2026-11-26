@@ -23,7 +23,8 @@
     "check": "node tests/run.mjs",
     "check:gpu": "node tests/run.mjs --gpu",
     "check:full": "node tests/run.mjs --full",
-    "check:leaderboard": "node tests/run.mjs --group=leaderboard"
+    "check:leaderboard": "node tests/run.mjs --group=leaderboard",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@capacitor/android": "8.6.0",
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@capacitor/cli": "8.6.0",
     "@electric-sql/pglite": "^0.5.8",
+    "patch-package": "8.0.1",
     "vite": "^7.1.0"
   }
 }

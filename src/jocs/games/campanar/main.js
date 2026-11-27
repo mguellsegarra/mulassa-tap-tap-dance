@@ -136,7 +136,6 @@ function toMenu() {
   scene.reset();
   looking = 0;
   $('end-banner').hidden = $('end-tap').hidden = true;
-  $('menu-best').textContent = record.best() ? `Rècord: ${metresOf(record.best())} m` : ''; // i18n-ok: POC, provisional words until Codex writes the catalogue
   show('menu');
   homeAside();
 }

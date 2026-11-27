@@ -36,19 +36,22 @@ canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; tou
 .tower-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
 @media (prefers-reduced-motion: reduce) { .tower-word i { animation: none; } }
 .c-art { display: none; }
+/* the logo up in the sky, Juga low over the valley, under the hills on every screen (the owner's call) */
 .c-hero { justify-content: center; gap: clamp(16px, 4dvh, 40px); }
-.c-pitch { order: 2; margin: 0 0 12px; max-width: 320px; text-align: center; font-size: clamp(16px, 2.4dvh, 20px); line-height: 1.2; color: #fff; text-wrap: balance; text-shadow: 0 1px 3px #000, 0 0 12px #2a1a10; }
-.c-play-row { order: 3; align-self: stretch; display: grid; gap: 8px; width: min(100%, 380px); margin: 0 auto; }
+.tower-title { margin-block: auto; }
+.c-play-row { order: 3; align-self: stretch; display: grid; gap: 8px; width: min(100%, 380px); margin: 0 auto 4dvh; }
 .c-play-row > * { margin: 0; }
-.c-best { text-align: center; font: 800 16px/1.3 'Baloo 2', system-ui, sans-serif; color: #fff3d6; text-shadow: 0 1px 3px #000; }
-.c-best:empty { display: none; }
+/* Juga beats instead of the base's glint and sway (the owner's call): two quick swells, then a rest */
+#play.btn-invite { animation: play-beat 1.4s ease-in-out infinite; }
+#play.btn-invite::after { display: none; }
+@keyframes play-beat { 0%, 45%, 100% { scale: 1; } 12% { scale: 1.05; } 24% { scale: 1; } 34% { scale: 1.03; } }
+@media (prefers-reduced-motion: reduce) { #play.btn-invite { animation: none; } }
 /* wide: the same column, in the middle */
 @media (orientation: landscape) {
   .c-hero { padding: calc(52px + 12px) max(32px, 5vw); }
   :root { --round-size: clamp(52px, 5dvh, 72px); }
-  .c-text { display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.6dvh, 32px); }
-  .tower-title { width: clamp(220px, min(32vw, 50dvh), 680px); }
-  .c-pitch { margin: 0; max-width: 24ch; font-size: clamp(18px, min(1.7vw, 3dvh), 36px); }
+  .c-text { flex: 1; align-self: stretch; display: flex; flex-direction: column; align-items: center; gap: clamp(10px, 2.6dvh, 32px); }
+  .tower-title { width: clamp(220px, min(46vw, 68dvh), 900px); }
   .c-play-row { width: min(100%, clamp(380px, min(30vw, 56dvh), 620px)); }
 }
 

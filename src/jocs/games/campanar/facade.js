@@ -80,11 +80,11 @@ export function createFacade() {
     }
     else if (cap !== null && i < cap && i >= cap - 4) { // the bell chamber under the parapet: the biggest bells that reach it whole
       const set = Object.keys(campanarWidths).find(k => share(at(cap - 1)) >= campanarWidths[k] && i === cap - LEN.bells[k] && flat(cap - 1));
-      if (set) motif('bells', set, null, 'campanes');
-      else if (i === cap - 1) { put('XS/campanes-master'); f.found = ['campanes']; } // one complete opening on a shallow bay
+      if (set) motif('bells', set);
+      else if (i === cap - 1) put('XS/campanes-master'); // one complete opening on a shallow bay
     } else if (i === 0) {
       const portal = known[2] && share(at(2)) >= 0.65 && flat(2) ? 'A' : known[1] && share(at(1)) >= 0.4 && flat(1) ? 'C' : null;
-      if (portal) { motif('portal', portal, null, 'portal'); baseUntil += LEN.portal[portal]; }
+      if (portal) { motif('portal', portal); baseUntil += LEN.portal[portal]; }
     }
     if (!f.key) {
       const set = known[i + 1] && sizeOf(share(at(i + 1))), cset = sizeOf(share(rect));
@@ -95,14 +95,20 @@ export function createFacade() {
       if (i < baseUntil) put(courseOf('base', i));
       else if (i === baseUntil) { put('A/imposta'); line = i; }
       else if (clockSet && room && known[i + LEN.clock[clockSet]] && flat(i + LEN.clock[clockSet])) {
-        motif('clock', clockSet, 'A/arquets', 'rellotge');
+        motif('clock', clockSet, 'A/arquets');
         clock = true;
         line = lastOpen = i + LEN.clock[clockSet];
       } else if ((i === body.lo + 2 || bay === 3) && spaced && set && clear(i + 1) && flat(i + 2)) { // a plain floor over it
         const big = i - lastWindow >= WINDOW_GAP, pick = orn.slot(i, known, set, n => clear(i + n - 1) && flat(i + n), clock);
-        if (pick) lastOpen = i + motif(pick.name, pick.set, null, pick.id) - 2; // as far from the next as a window's
+        if (pick?.floors) { // on the wall, no opening (ornament-plan.js wall): built whole with this floor, plain over it
+          put(courseOf('fust', i));
+          f.orn = f.found = [pick.id];
+          for (let j = 1; j < pick.floors; j++) pending.set(i + j, { key: courseOf('fust', i + j), group: i + pick.floors - 1 });
+          f.group = i + pick.floors - 1;
+          lastOpen = i + pick.floors - 2;
+        } else if (pick) lastOpen = i + motif(pick.name, pick.set, null, pick.id) - 2; // as far from the next as a window's
         else {
-          motif('window', big ? set : 'XS', null, big ? 'finestral' : 'espitllera');
+          motif('window', big ? set : 'XS'); // the campanar's own: no find, so no name chosen apart from its stone (Astra's «Finestral» on an arrow slit)
           if (big) lastWindow = i;
           lastOpen = i;
         }
@@ -110,7 +116,7 @@ export function createFacade() {
         put('A/faixa');
         line = i;
         f.orn = ['lombard', ...orn.corners(i, known)]; // the Lombard arches under it, the gargoyles over it
-        f.found = ['faixa', ...f.orn.filter(o => o !== 'lombard')];
+        f.found = f.orn.slice(1); // its gargoyles
       } else if (orn.filler() && clear(i) && flat(i + 1)) {
         if (orn.filler() === 'ocul') motif('ocul', cset, null, 'A1');
         else { put('A/serra'); f.found = ['B2']; }

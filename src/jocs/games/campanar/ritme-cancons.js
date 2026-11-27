@@ -1,4 +1,4 @@
-// ?ritme=fable&canco=mulassa|drac|bou: the music of ?ritme (ritme-loop.js) on the three figures' own tunes. The notes are
+// Three of the rhythm's songs (ritme-loop.js; &canco=mulassa|drac|bou pins one): the three figures' own tunes. The notes are
 // the main game's scores (music/: the Mulassa's score.json, drac-score.json, the Bou's Gralla I); the chords are its
 // generators' (tools/music/build_taiko.py, build_drac.py) and, for the Bou, what its Gralla baixa and Gralla II spell.
 // A slab is a bar of four beats. Each bar's first note is a tone of its chord: it is the perfect's.

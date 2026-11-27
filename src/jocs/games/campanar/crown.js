@@ -13,9 +13,8 @@ const iron = new MeshLambertMaterial({ color: '#8a5a35' }), gold = new MeshLambe
 // chamber's parapet or a stone needle's last floor), its size taken from that floor's width; on a thin needle it keeps
 // a spire's height and a cross that read from afar.
 // The iron is a small cage at the top (Fable's R1): warm bronze, the hours bell gold inside it, a gold cross on top.
-// cable: D6's lightning cable under the parapet (lightningCable), or null: its rod over the cross, in gold, and its cable
-// in the bronze, down the cage and the roof to it (no mesh more)
-export function buildCampanarHead(base, y, cable = null) {
+// lightning: D6, its rod over the cross, in gold (no mesh more; Marc: the rod alone, nothing down the tower)
+export function buildCampanarHead(base, y, lightning = false) {
   const g = new Group();
   g.position.y = y;
   const height = Math.max(Math.min(base.w, base.d) * 1.15, SIZE * 0.5), shoulder = 0.60;
@@ -63,13 +62,12 @@ export function buildCampanarHead(base, y, cable = null) {
   const platform = new BufferGeometry().setAttribute('position', new Float32BufferAttribute(deck, 3));
   platform.computeVertexNormals();
   g.add(new Mesh(platform, iron));
-  const arch = Array.from({ length: 6 }, (_, i) => shoulder + (1 - shoulder) * (i + 1) / 6), rib = [ring(0, 1)[1], lower[1]];
+  const arch = Array.from({ length: 6 }, (_, i) => shoulder + (1 - shoulder) * (i + 1) / 6);
   for (const t of arch) {
     const u = (t - shoulder) / (1 - shoulder);
     const upper = ring(t, 0.42 * (1 - u * u));
     for (let i = 0; i < 8; i++) rod(lower[i], upper[i]);
     lower = upper;
-    rib.unshift(upper[1]); // the cable's way down: the cage's rib towards the front corner, then the roof's arris
   }
 
   // the hours bell, gold, hanging in the cage over the terrace
@@ -78,12 +76,11 @@ export function buildCampanarHead(base, y, cable = null) {
   g.add(bell);
   const finial = Math.max(metalScale * 0.17, SIZE * 0.16), thick = Math.max(bar, SIZE * 0.014); // the cross reads from afar
   const at = (x, h) => new Vector3(base.x + x, height + h, base.z);
-  if (cable) wire(rod, [...rib.map(v => v.clone().lerp(at(0, v.y - height), -0.04)), ...cable.map(v => v.clone().setY(v.y - y))], Math.max(bar * 0.7, SIZE * 0.01));
   g.add(new Mesh(mergeGeometries(metal), iron));
   metal.length = 0; // the cross on its own, in gold
   rod(at(0, 0), at(0, finial), thick);
   rod(at(-finial * 0.3, finial * 0.62), at(finial * 0.3, finial * 0.62), thick);
-  if (cable) rodTip(rod, at(0, finial), finial * 0.7, thick * 0.6);
+  if (lightning) rodTip(rod, at(0, finial), finial * 0.7, thick * 0.6);
   g.add(new Mesh(mergeGeometries(metal), gold));
   return g;
 }
@@ -93,7 +90,7 @@ export function buildCampanarHead(base, y, cable = null) {
 // small bronze cage with the gold bell and the gold cross. Never shorter than a spire reads.
 // → the group, and the square it stands on (for its weathering)
 export const spireHeight = (base, h) => Math.max(h, Math.min(base.w, base.d) * 1.2);
-export function makeStoneSpire(base, y, h, cable = null) { // cable: as buildCampanarHead's
+export function makeStoneSpire(base, y, h, lightning = false) { // lightning: as buildCampanarHead's
   const g = new Group(), r0 = Math.min(base.w, base.d) * 0.3, H = spireHeight(base, h), cage = H - Math.min(H * 0.2, r0 * 1.8);
   g.position.set(base.x, y, base.z);
   const radius = t => r0 * (1 - t / H); // the cone's radius at height t
@@ -118,10 +115,6 @@ export function makeStoneSpire(base, y, h, cable = null) { // cable: as buildCam
     rod(foot, knee);
     rod(knee, tip);
   }
-  if (cable) { // down the rib and the arris towards the front corner, out of the weathering round the spire's foot
-    const a = 1.5 * Math.PI / 4, on = (r, t) => new Vector3(Math.cos(a) * r, t, Math.sin(a) * r), hW = Math.min(FLOOR * 0.4, (Math.min(base.w, base.d) / 2 - r0) * 0.7);
-    wire(rod, [tip, on(rc * 1.2, cage + (H - cage) * 0.45), on(rc * 1.05, cage), on(radius(hW) * 1.05, hW), ...cable.map(v => v.clone().sub(g.position))], Math.max(bar * 0.8, SIZE * 0.01));
-  }
   g.add(new Mesh(mergeGeometries(metal), iron));
   const bell = new Mesh(new CylinderGeometry(rc * 0.35, rc * 0.6, (H - cage) * 0.3, 8), gold);
   bell.position.y = cage + (H - cage) * 0.3;
@@ -129,34 +122,19 @@ export function makeStoneSpire(base, y, h, cable = null) { // cable: as buildCam
   const cross = Math.max(r0 * 0.9, SIZE * 0.16), thick = Math.max(bar * 1.4, SIZE * 0.014);
   rod(tip, new Vector3(0, H + cross, 0), thick);
   rod(new Vector3(-cross * 0.3, H + cross * 0.62, 0), new Vector3(cross * 0.3, H + cross * 0.62, 0), thick);
-  if (cable) rodTip(rod, new Vector3(0, H + cross, 0), cross * 0.7, thick * 0.6);
+  if (lightning) rodTip(rod, new Vector3(0, H + cross, 0), cross * 0.7, thick * 0.6);
   g.add(bell, new Mesh(mergeGeometries(metal), gold));
   return { g, foot: { x: base.x, z: base.z, w: r0 * 2, d: r0 * 2 } };
 }
 // D6, the lightning rod: a gold spike `len` tall from the cross's top `foot`, with two prongs at its tip (rod: a builder's
-// bar maker); its cable through the points of `path`, each bar into the next
+// bar maker)
 function rodTip(rod, foot, len, w) {
   const top = foot.clone().setY(foot.y + len);
   rod(foot, top, w);
   for (const s of [-1, 1]) rod(top.clone().setY(top.y - len * 0.25), top.clone().add(new Vector3(s * len * 0.14, len * 0.05, 0)), w * 0.8);
 }
-const wire = (rod, path, w) => path.slice(1).forEach((p, k) => rod(path[k], p, w));
-// its cable from parapet `cap`'s top down the tower's front corner (the one nearest the camera), out over each setback's
-// weathering, to below the foot (stone.js's, out of sight): world points, top down. rects: the floors' plans, batters:
-// each floor's glacis top plan, if it has one (facade.js)
-export function lightningCable(rects, batters, cap, out = SIZE * 0.012) {
-  const pt = (r, y) => new Vector3(r.x + r.w / 2 + out, y, r.z + r.d / 2 + out), pts = [];
-  for (let i = cap; i >= 0; i--) {
-    const below = i > 0 && (batters[i - 1] ?? rects[i - 1]), ledge = below ? (below.w - rects[i].w) / 2 : 0;
-    pts.push(pt(batters[i] ?? rects[i], (i + 1) * FLOOR), pt(rects[i], i * FLOOR + (ledge > 1e-4 ? Math.min(FLOOR * 0.6, ledge * 0.7) : 0)));
-  }
-  pts.push(pt(rects[0], -2 * SIZE));
-  const path = pts.filter((p, k) => !k || p.distanceTo(pts[k - 1]) > 1e-6); // a glacis' top is the next floor's foot
-  return path.filter((p, k) => !(path[k - 1]?.x === p.x && path[k - 1].z === p.z && path[k + 1]?.x === p.x && path[k + 1].z === p.z)); // no joint on a straight run
-}
-// D6 on a tower of FROM.rod floors or more (of them, `floors`): the lightning rod over the cross, its cable down to the
-// foot; null on a shorter tower
-export const towerCable = (floors, rects, batters, cap) => (floors >= FROM.rod && cap >= 0 ? lightningCable(rects, batters, cap) : null);
+// D6 on a tower of FROM.rod floors or more (of them, `floors`) with a parapet: the lightning rod over the cross
+export const towerRod = (floors, cap) => floors >= FROM.rod && cap >= 0;
 // a stone weathering where the floor above leaves a floor's top bare, so no ledge holds water (coping.js)
 export const makeWeathering = hipWeathering;
 // the bell chamber's pinnacles, grown from the parapet at y (coping.js)

@@ -8,10 +8,19 @@ const DEMO = typeof location !== 'undefined' && import.meta.env?.DEV && new URLS
 // floors from which (1 floor = 1.77 m): the drain gargoyles from 74 m, the rose from 100 m, the moon from 350 m (300 m
 // by night); the rose wants width A kept ROSE_KEEP floors under it, the dragon gargoyle a streak of STREAK perfects, the
 // Virgin's window XS_RUN floors survived in XS; after FILLER_AFTER plain floors in a row, a one-floor piece. The stork's
-// nest on a parapet from 74 m (the tower still A or C wide at 74 m), the lightning rod on a tower of 150 m (85 floors)
-export const FROM = DEMO ? { gargoyle: 8, rose: 16, moon: 44, moonNight: 44, nest: 16, rod: 40 }
-  : { gargoyle: 42, rose: 57, moon: 198, moonNight: 170, nest: 42, rod: 85 };
+// nest on a parapet from 74 m (the tower still A or C wide at 74 m), the lightning rod on a tower of 150 m (85 floors).
+// The stretch from 100 to 400 m (Marc, 27 Nov 2026: long runs were empty from 124 to 372 m): the bell-ringer's house from
+// 100 m on a tower still C wide, where a cottage has a wall to hang from (rare: most towers are thinner by then); the
+// gallery once WIDE_RUN floors from 120 m have all stayed A (a cut never widens: an A tower at 145 m, harder than the
+// rose's at 100 m, so epic); the sundial after SUN_STREAK perfects in a row above 150 m (two more than the dragon's six,
+// that high up: epic); the lantern on the first string course from 250 m (rare: few runs get there). Device time decides
+// no find (a run rebuilt from its taps must find the same ones), so the lantern is earned by height alone and lit always:
+// the game's sky is always night. ?vitrina's gallery from 14: a string course of its own, not the dragon's (a piece as rare
+// takes the toast)
+export const FROM = DEMO ? { gargoyle: 8, rose: 16, moon: 44, moonNight: 44, nest: 16, rod: 40, house: 30, gallery: 14, sundial: 12, lantern: 24 }
+  : { gargoyle: 42, rose: 57, moon: 198, moonNight: 170, nest: 42, rod: 85, house: 57, gallery: 68, sundial: 85, lantern: 141 };
 const ROSE_KEEP = 8, STREAK = 6, XS_RUN = 8, FILLER_AFTER = DEMO ? 2 : 4; // the study said 6: the shaft's windows and string courses rarely leave that many
+const WIDE_RUN = 15, SUN_STREAK = 8;
 const A = 0.65, C = 0.4, XS = 0.22; // facade.js's width classes, as shares of the full side
 const shareOf = known => j => Math.min(known[j].w, known[j].d) / SIZE; // floor j's width, a share of the full side
 const night = () => { const h = new Date().getHours(); return h >= 21 || h < 7; };
@@ -26,25 +35,35 @@ export function createOrnamentPlan(isNight = night()) {
   const earned = {
     F1: known => best(known, j => perfect(known, j)) >= STREAK,
     F8: known => { const share = shareOf(known); return best(known, j => share(j) >= XS && share(j) < C) >= XS_RUN; },
+    H3: known => best(known, j => j >= FROM.sundial && perfect(known, j)) >= SUN_STREAK,
   };
   const once = id => done.add(id); // truthy
+  // a piece carved or hung on the wall, no opening: plain courses under it, floors of them, none of them plain for the
+  // fillers (an oculus would open behind it)
+  const wall = (id, floors) => { once(id); plain = -floors; return { id, floors }; };
   return {
     // a window's slot at floor i (its set, room(n): n floors there flat and clear, clock: the clock is laid) → the piece
-    // that takes it { name, set, id } or null for the plain window. Rarest first; each once a run
+    // that takes it, an opening { name, set, id } or one on the wall { id, floors }, or null for the plain window. Rarest
+    // first; each once a run
     slot(i, known, set, room, clock) {
       const share = shareOf(known), s = share(i);
       if (!done.has('G6') && i >= (isNight ? FROM.moonNight : FROM.moon) && room(2)) return once('G6') && { name: 'lluna', set, id: 'G6' };
       if (!done.has('A6') && i >= FROM.rose && set === 'A' && run(i - 1, j => share(j) >= A) >= ROSE_KEEP && room(3)) return once('A6') && { name: 'rosassa', set, id: 'A6' };
       if (!done.has('F8') && earned.F8(known) && room(2)) return once('F8') && { name: 'candela', set, id: 'F8' };
       if (!done.has('A10') && clock && s >= C && set !== 'XS' && room(4)) return once('A10') && { name: 'escala', set, id: 'A10' };
+      if (!done.has('H3') && earned.H3(known) && room(2)) return wall('H3', 2);
+      if (!done.has('H1') && i >= FROM.house && s >= C && room(3)) return wall('H1', 3);
       return null;
     },
     // a string course's floor i: its corner pieces, the dragon gargoyle once it is earned (A or C), the drain
-    // gargoyles from FROM.gargoyle; one set a bay (a string course comes every BAY floors)
+    // gargoyles from FROM.gargoyle, the lantern from FROM.lantern (at the right corner, instead of a drain gargoyle); the
+    // gallery round it; one set a bay (a string course comes every BAY floors)
     corners(i, known) {
       const share = shareOf(known), out = [];
       if (!done.has('F1') && earned.F1(known) && share(i) >= C && once('F1')) out.push('F1');
       if (i >= FROM.gargoyle) out.push('B5');
+      if (!done.has('H4') && i >= FROM.lantern && once('H4')) out.push('H4');
+      if (!done.has('H2') && run(i, j => j >= FROM.gallery && share(j) >= A) >= WIDE_RUN && once('H2')) out.push('H2');
       return out;
     },
     // the parapet's floor i (facade.js's remat, the topmost cornice): E1's stork nests on its gable on the camera's wall

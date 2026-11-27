@@ -1,13 +1,15 @@
-// The music of ?ritme (ritme.js): sixteen bars of C major, a bar a slab, all of it the campanar's own bubbles (audio.js),
-// no samples. Two sections take turns every eight bars: ours (C Am F G twice, an arpeggio under a calm tune) and Neon's
-// (its eight chords, bouncing bass, chord stabs and toy-marimba hook). Always: a kick on the "one" (where the slab crosses
-// the middle) and three woodblock ticks climbing to it, the count that says when to tap.
+// The music of Tower's rhythm (ritme.js): a song a run, a bar a slab, all of it the campanar's own bubbles (audio.js), no
+// samples. Five songs take turns run after run: Fable's (C Am F G twice, an arpeggio under a calm tune), Neon's (its eight
+// chords, bouncing bass, chord stabs and toy-marimba hook), then the Mulassa's, the Drac's and the Bou's (ritme-cancons.js).
+// Always: a kick on the "one" (where the slab crosses the middle) and three woodblock ticks climbing to it, the count that
+// says when to tap.
 // The lead voice is the player's: each bar's tune starts on its "one", and that note is never played by the band, only by
 // a perfect (ritmePerfect). Perfects in a row bring the band in: a bass from the first; hats, kicks and the rest of the
 // bar's tune (the band answering the player's note) from the second; arpeggio or stabs from the fourth. A cut sends it
 // back to the bare count.
 import { bubble } from './audio.js';
 import { RITME_CANCONS } from './ritme-cancons.js';
+import { store } from '#plassa/storage.js';
 
 const ritmeHz = m => 440 * 2 ** ((m - 69) / 12);
 // a bar: the bass's root, fifth and walk-up (C3-G3: an octave a phone's speaker still gives), the chord, the chord of its second half
@@ -25,10 +27,22 @@ const RITME_TUNE = [
   76, 0, 79, 81, 84, 0, 81, 79, 79, 0, 76, 0, 74, 76, 79, 0, 81, 0, 77, 79, 83, 0, 79, 83, 84, 0, 79, 0, 76, 0, 74, 76,
 ];
 const RITME_TICKS = [0, 784, 880, 988];
-// &canco=mulassa|drac|bou: a figure's own tune in its place (ritme-cancons.js). bounce: the bar Neon's kind of band starts at
-const ritmeSong = RITME_CANCONS[new URLSearchParams(location.search).get('canco')] ?? { bpm: 138, per: 8, bounce: 8, bars: RITME_BARS, tune: RITME_TUNE };
-export const ritmeTempo = ritmeSong.bpm;
-export const ritmeScore = import.meta.env.DEV && ritmeSong; // dev: the proof run's plot
+// bounce: the bar Neon's kind of band starts at. Fable's at 138, the game's own first speed; Neon's at 138 too (Marc: as it sounded in the shared song; its prototype ran at 104)
+const RITME_SONGS = {
+  fable: { bpm: 138, per: 8, bounce: Infinity, bars: RITME_BARS.slice(0, 8), tune: RITME_TUNE.slice(0, 64) },
+  neon: { bpm: 138, per: 8, bounce: 0, bars: RITME_BARS.slice(8), tune: RITME_TUNE.slice(64) },
+  ...RITME_CANCONS,
+};
+const RITME_ORDER = ['fable', 'neon', 'mulassa', 'drac', 'bou'];
+const RITME_PIN = new URLSearchParams(location.search).get('canco'); // &canco=<id>: that song every run (dev)
+export let ritmeSong = RITME_SONGS.fable;
+// at each run's start: the next song in the order, where the last run left it (on this device, across sessions)
+export function ritmeNextSong() {
+  if (Object.hasOwn(RITME_SONGS, RITME_PIN ?? '')) return (ritmeSong = RITME_SONGS[RITME_PIN]);
+  const i = (Number(store.get('campanar-canco')) || 0) % RITME_ORDER.length;
+  store.set('campanar-canco', String(i + 1));
+  return (ritmeSong = RITME_SONGS[RITME_ORDER[i]]);
+}
 
 const ritmeNote = (m, when, len, peak, type = 'triangle') => bubble(ritmeHz(m), ritmeHz(m), { when, type, glide: 0.001, len, peak, attack: 0.005 });
 function ritmeBass(m, when, len, peak) {

@@ -13,12 +13,12 @@ import { createFacade } from './facade.js';
 import { box, campanarFoot } from './stone.js';
 import { setCopingInner, terraceRail } from './coping.js';
 import { createOpenings } from './openings.js';
-import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments, towerCable } from './crown.js';
+import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments, towerRod } from './crown.js';
 import { sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings, skyPan } from './sky.js';
 import { createTowerTurn } from './turn.js';
-import { endShot, stepEndShot, widenEndShot, zoomEndShot, panEndShot } from './end-camera.js';
+import { endShot, stepEndShot, widenEndShot, zoomEndShot, panEndShot, focusEndShot } from './end-camera.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
 import { STACK_TRY, STACK_LENS, STACK_ZOOM } from './stack.js';
@@ -31,7 +31,7 @@ const ZOOM = +new URLSearchParams(location.search).get('zoom') || (STACK_TRY ? S
 const VIEW = new Vector3(2.3, 2.3, 2.3).multiplyScalar(SIZE * ZOOM); // the camera's offset from the top
 const easeOut = t => 1 - (1 - t) ** 3;
 
-// found(ids): ornaments completed as a floor turns to stone, or as the spire grows (ornament-plan.js)
+// found(ids, y): special pieces (ornament-plan.js) completed as a floor turns to stone or the spire grows, at height y
 export function createScene(canvas, { found = () => {} } = {}) {
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
@@ -106,7 +106,7 @@ export function createScene(canvas, { found = () => {} } = {}) {
     m.userData.stone = id;
     for (const x of [m.material].flat()) x.dispose();
     const mats = m.material = openings.dress(m, key, batter, orn); // its geometry and faces, the bell chamber's pierced
-    const glow = [...mats, ...openings.flashing(key)];
+    const glow = [...mats, ...openings.flashing(key, orn)];
     fx.push({ m, tick: t => { // a white flash fading into the stone, and a small swell
       const k = Math.min(1, t / 0.35);
       for (const x of glow) x.emissiveIntensity = 0.9 * (1 - k) ** 2;
@@ -124,7 +124,7 @@ export function createScene(canvas, { found = () => {} } = {}) {
     m.scale.set(r.w, m.scale.y, r.d);
     m.position.set(r.x, m.position.y, r.z);
     const glow = turn(m, c.key, c.batter, c.orn);
-    if (c.found?.length) found(c.found);
+    if (c.found?.length) found(c.found, m.position.y);
     // the floors still in colour that will wear this body's plan, or the next one's it slopes in to, take it now: no
     // colour over narrower stone
     for (const [j, p] of c.ahead ?? []) {
@@ -142,7 +142,6 @@ export function createScene(canvas, { found = () => {} } = {}) {
   }
   const freeHalf = () => innerHeight * (1 - lifted[0] - lifted[1]) / 2; // the half height of the view the tower is framed in (px)
   const gone = m => { scene.remove(m); for (const x of [m.material].flat()) x.dispose(); if (m.userData.stone) m.geometry.dispose(); };
-
   function resize() {
     const w = innerWidth, h = innerHeight;
     renderer.setPixelRatio(pixelRatio(w, h));
@@ -207,14 +206,14 @@ export function createScene(canvas, { found = () => {} } = {}) {
         if (crown || outro === null) return; // a new run already
         crown = new Group();
         const tops = slabs.map(m => m.position.y + FLOOR / 2), parapet = rects[cap] ?? rects[0] ?? rect;
-        const thin = courses.filter(c => c.key === 'agulla').length, parts = [], cable = towerCable(slabs.length, rects, courses.map(c => c.batter), cap);
+        const thin = courses.filter(c => c.key === 'agulla').length, parts = [], lightning = towerRod(slabs.length, cap);
         if (thin) { // the floors too thin for bells go under an octagonal spire as tall as them (crown.js), centred on the parapet
           for (let i = cap + 1; i < slabs.length; i++) slabs[i].visible = false;
-          const spire = makeStoneSpire(parapet, tops[cap], thin * FLOOR, cable), slope = makeWeathering(parapet, spire.foot, tops[cap], FLOOR * 0.4);
+          const spire = makeStoneSpire(parapet, tops[cap], thin * FLOOR, lightning), slope = makeWeathering(parapet, spire.foot, tops[cap], FLOOR * 0.4);
           parts.push(spire.g, makePinnacles(parapet, tops[cap]));
           if (slope) crown.add(slope);
-        } else parts.push(buildCampanarHead(parapet, tops[cap] ?? 0, cable), makePinnacles(parapet, tops[cap]));
-        found([thin ? 'D1' : 'coberta', 'creu', 'pinacles', ...(cable ? ['D6'] : [])]); // the spire's crockets and rings or the tiled head, its cross, the pinnacles (collection.js)
+        } else parts.push(buildCampanarHead(parapet, tops[cap] ?? 0, lightning), makePinnacles(parapet, tops[cap]));
+        found([...(thin ? ['D1'] : []), ...(lightning ? ['D6'] : [])], tops[cap] + (thin ? thin * FLOOR * 0.5 : SIZE)); // the spire's crockets, the rod on its cross (collection.js)
         crown.add(...parts);
         scene.add(crown);
         done();
@@ -254,9 +253,10 @@ export function createScene(canvas, { found = () => {} } = {}) {
       outro = endShot(camY, aimY, half => Math.max(1, half / Math.tan(camera.fov * Math.PI / 360) / VIEW.length()), skySettings(),
         matchMedia('(prefers-reduced-motion: reduce)').matches);
     },
-    // the player's zoom on the whole tower, by times closer round the screen's y (px); along: a drag of dy px down
+    // the player's zoom on the whole tower, by times closer round the screen's y (px); along: a drag of dy px down; focus: to a piece at y
     zoom(by, y) { if (outro) zoomEndShot(outro, by, (innerHeight * (1 + lifted[0] - lifted[1]) / 2 - y) / freeHalf()); },
     along(dy) { if (outro) panEndShot(outro, dy / freeHalf()); },
+    focus(y) { if (outro && Number.isFinite(y)) { focusEndShot(outro, y); freeLook.front(); fx.push({ tick: openings.glow(slabs, y, crown, () => outro) }); } },
     // keep the top and bottom shares of the screen clear: the whole tower is framed in the space between
     lift(top, bottom) { lift = [top, bottom]; },
     aside(share) { aside = share; },

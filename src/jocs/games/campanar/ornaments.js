@@ -12,7 +12,8 @@ import { arcade } from './mouldings.js';
 const C = c => new Color(c);
 const GLASS = { amber: [C('#ffe6a0'), C('#d97a26')], blue: [C('#5d8bd6'), C('#1b2f6b')], night: [C('#2f3d6e'), C('#151a33')] };
 const MANTLE = [C('#f6f3ff'), C('#9fb6e8')], HALO = C('#ffd76a'), FACE = C('#f3dcbf'); // F8's Virgin, in the blue glass
-const MOON = [C('#fbf3d8'), C('#d9cca4')], IRON = C('#24170f'), SHADE = C('#5a3a24');
+const MOON = [C('#fbf3d8'), C('#d9cca4')];
+export const IRON = C('#24170f');
 // an opening's glass at height y over its foot: the rose lightest in its middle, the Virgin's blue darkest at the foot
 export function glassAt(s, y) {
   const [hi, lo] = GLASS[s.glass], mid = (s.ySill + s.yApex) / 2, h = (s.yApex - s.ySill) / 2;
@@ -44,7 +45,7 @@ function fan(t, P, poly, z, a, c, col) {
     for (let i = 1; i < cl.length - 1; i++) { const tri = [cl[0], cl[i], cl[i + 1]]; t.tri(tri.map(p => P(p[0], p[1], z)), tri.map(p => col(p[0], p[1]))); }
   }
 }
-const box = (t, P, u0, u1, y0, y1, z0, z1, a, c, k, kSide = k) => prism(t, P, [[u0, y0, true], [u1, y0, true], [u1, y1, true], [u0, y1, true]], z0, z1, a, c, k, kSide);
+export const box = (t, P, u0, u1, y0, y1, z0, z1, a, c, k, kSide = k) => prism(t, P, [[u0, y0, true], [u1, y0, true], [u1, y1, true], [u0, y1, true]], z0, z1, a, c, k, kSide);
 
 // an opening's own parts (s.kind) on one wall, cut to a..c: lit stone in `lit`, glass, the Virgin, moon and iron in `dark`
 export function pieceSlice(s, lit, dark, P, a, c, tWall, roomD) {
@@ -84,20 +85,44 @@ export function pieceSlice(s, lit, dark, P, a, c, tWall, roomD) {
     }
     box(dark, P, -R, R, s.ySpring - 0.008, s.ySpring + 0.008, -tWall * 0.5, -tWall * 0.3, a, c, IRON);
   }
-  if (s.kind === 'escala') for (let k = 0; k < 3; k++) { // its steps climbing across, in the shade behind the window
-    const u0 = -R + k * R * 0.66;
-    box(dark, P, u0, u0 + R * 0.7, s.ySill, s.ySill + 0.04 + k * 0.05, -roomD, -roomD + 0.09, a, c, SHADE, SHADE.clone().multiplyScalar(0.7));
-  }
-  if (s.kind === 'replà') { // i18n-ok: a piece kind, never shown; the landing's floor and its iron railing
-    box(dark, P, -R, R, s.ySill, s.ySill + 0.04, -roomD, -tWall, a, c, SHADE);
-    box(dark, P, -R, R, s.ySill + 0.17, s.ySill + 0.185, -tWall - 0.05, -tWall - 0.035, a, c, IRON);
-    for (let k = 0; k < 6; k++) { const u = -R + (k + 0.5) * R / 3; box(dark, P, u - 0.005, u + 0.005, s.ySill + 0.04, s.ySill + 0.17, -tWall - 0.05, -tWall - 0.04, a, c, IRON); }
-  }
+  if (s.kind === 'escala' || s.kind === 'replà') splayedReveal(lit, P, s, tWall); // i18n-ok: a piece kind, never shown
+  if (s.kind === 'escala') stairInside(dark, P, s, a, c, tWall, roomD, { y0: s.ySill + 0.02, n: 5, lamp: [-R * 0.3, s.ySill + 0.2, 0.4] });
+  if (s.kind === 'replà') stairInside(dark, P, s, a, c, tWall, roomD, { y0: s.ySill + 0.06, flat: 0.55, n: 3, lamp: [-R * 0.2, s.ySill + 0.2, 0.45], front: true }); // i18n-ok
+}
+// A10's light: the reveal splayed from the wall's face in to a narrower round-headed light, its sill sloping up into it.
+// Its floor holds the whole opening (arches.js STAIR), so nothing is cut to the floor's heights
+function splayedReveal(lit, P, s, tWall, d = s.hw * 0.18) {
+  const rim = (hw, y0) => [[-hw, y0], ...Array.from({ length: 17 }, (_, j) => [-Math.cos(Math.PI * j / 16) * hw, s.ySpring + Math.sin(Math.PI * j / 16) * hw]), [hw, y0]];
+  const o = rim(s.hw, s.ySill), i = rim(s.hw - d, s.ySill + d * 0.7), zi = -tWall * 0.92;
+  o.forEach((p, j) => {
+    const q = o[(j + 1) % o.length], pi = i[j], qi = i[(j + 1) % i.length];
+    lit.quad(P(p[0], p[1], 0), P(q[0], q[1], 0), P(qi[0], qi[1], zi), P(pi[0], pi[1], zi), ARCH, ARCH, JAMB, JAMB);
+  });
+}
+const TREAD = [C('#e6a862'), C('#6b4426')], STRINGER = C('#2a190d'), HANDRAIL = C('#3b2414'), LAMP = [C('#fff3cf'), C('#ffb257'), C('#22130a')];
+// A10's stair seen through its light: a landing (`flat` of the span, its floor at y0) and n steps climbing to the right,
+// a dark band against a lamp's warm light on the back wall (lamp: [u, y, its glow's radius]), their treads catching it:
+// the play camera looks down through the light, so the wall under the flight shows lit too; a handrail over the walk
+// line on iron balusters, along the back wall or along the front (a landing's)
+function stairInside(dark, P, s, a, c, tWall, roomD, { y0, flat = 0, n, lamp, front = false }) {
+  const w = s.hw * 1.25, uF = -w + 2 * w * flat, run = (w - uF) / n, rise = Math.min(0.06, run), zB = -roomD, zF = -tWall - 0.01;
+  const disc = (u, y, r, m) => [[u, y], ...Array.from({ length: m + 1 }, (_, j) => [u + Math.cos(j * 2 * Math.PI / m) * r, y + Math.sin(j * 2 * Math.PI / m) * r])];
+  const [lu, ly, lr] = lamp;
+  fan(dark, P, disc(lu, ly, lr, 16), zB + 0.002, a, c, (u, y) => LAMP[1].clone().lerp(LAMP[2], Math.min(1, Math.hypot(u - lu, y - ly) / lr)));
+  fan(dark, P, disc(lu, ly, 0.014, 8), zB + 0.004, a, c, () => LAMP[0]); // the lamp itself
+  const warm = u => TREAD[0].clone().lerp(TREAD[1], Math.min(1, Math.abs(u - lu) / (w * 1.5)));
+  if (flat) box(dark, P, -w, uF, y0 - 0.04, y0, zB, zF, a, c, STRINGER, warm((uF - w) / 2));
+  for (let k = 0; k < n; k++) { const u = uF + k * run; box(dark, P, u, u + run, y0 + k * rise - 0.03, y0 + (k + 1) * rise, zB, zF, a, c, STRINGER, warm(u + run / 2)); }
+  const h = 0.1, top = u => y0 + (u < uF ? 0 : (Math.floor((u - uF) / run) + 1) * rise), rail = u => y0 + h + Math.max(0, u - uF) / run * rise;
+  const [z0, z1] = front ? [zF - 0.025, zF - 0.01] : [zB + 0.02, zB + 0.035];
+  const bar = (u0, u1) => [[u0, rail(u0), true], [u1, rail(u1), true], [u1, rail(u1) + 0.014, true], [u0, rail(u0) + 0.014, true]];
+  for (const [u0, u1] of [[-w, uF], [uF, w]]) if (u1 - u0 > 1e-4) prism(dark, P, bar(u0, u1), z0, z1, a, c, HANDRAIL);
+  for (let u = -w + run / 2; u < w; u += front ? run / 2 : run) box(dark, P, u - 0.004, u + 0.004, top(u), rail(u), z0 + 0.003, z1 - 0.003, a, c, IRON);
 }
 
 // a block along a corner's diagonal: from s0 to s1 out of the corner c (dir out, side across), w0..w1 wide, its bottom
 // y0 and top y1 level, or sloping as [y at s0, y at s1]
-function beam(t, c, dir, side, s0, s1, w0, w1, y0, y1, k, kSide = STEP) {
+export function beam(t, c, dir, side, s0, s1, w0, w1, y0, y1, k, kSide = STEP) {
   const p = (s, sw, y, e) => new Vector3(c.x + dir.x * s + side.x * sw, y[e] ?? y, c.z + dir.z * s + side.z * sw);
   const face = y => [p(s0, -w0, y, 0), p(s1, -w1, y, 1), p(s1, w1, y, 1), p(s0, w0, y, 0)], A = face(y0), T = face(y1);
   t.quad(T[0], T[3], T[2], T[1], k); // its top, its two sides, its end and its underside
@@ -113,32 +138,64 @@ function gargoyle(t, c, dir, side, y) {
   beam(t, c, dir, side, 0.26, 0.38, 0.05, 0.04, y - 0.01, y + 0.025, ARCH); // the lower jaw, the mouth between
   for (const sw of [-0.045, 0.045]) beam(t, { x: c.x + side.x * sw, z: c.z + side.z * sw }, dir, side, 0.24, 0.29, 0.015, 0.01, y + 0.14, y + 0.17, STEP);
 }
-// F1: a gothic dragon out of corner c, read in profile: clawed forelegs gripping the cornice, bat wings folded against
-// the corner, a scaled neck with a spiked crest, a horned head whose open jaws show the dark throat, the spout
-function dragon(t, c, dir, side, y, k = 1.5) {
-  const Y = v => (Array.isArray(v) ? v.map(e => y + e * k) : y + v * k);
-  const B = (s0, s1, w0, w1, ya, yb, col, sw = 0, colSide = STEP) => beam(t, { x: c.x + side.x * sw * k, z: c.z + side.z * sw * k }, dir, side,
-    s0 * k, s1 * k, w0 * k, w1 * k, Y(ya), Y(yb), col, colSide);
-  B(-0.04, 0.07, 0.055, 0.05, [0, 0.01], 0.12, ARCH); // its shoulders
-  for (const sw of [-1, 1]) {
-    B(-0.03, 0.04, 0.004, 0.004, [0.085, 0.12], [0.21, 0.16], ARCH, sw * 0.06); // a wing's membrane, scalloped between its fingers
-    B(0.04, 0.1, 0.004, 0.004, [0.1, 0.115], [0.16, 0.12], ARCH, sw * 0.06);
-    B(-0.03, 0.1, 0.008, 0.006, [0.2, 0.115], [0.225, 0.13], SILL, sw * 0.062); // its leading bone
-    B(-0.05, -0.02, 0.006, 0.002, [0.22, 0.22], [0.25, 0.23], STEP, sw * 0.062); // the claw at its elbow
-    B(0.02, 0.06, 0.012, 0.01, [0.06, 0.005], [0.1, 0.035], ARCH, sw * 0.062); // a foreleg down the string course's face, under the wing
-    for (const toe of [-0.008, 0.008]) B(0.045, 0.075, 0.006, 0.002, [0.005, -0.03], [0.03, -0.015], STEP, sw * 0.062 + toe); // its claws under its edge
-    B(0.24, 0.255, 0.008, 0.008, 0.12, 0.135, JAMB, sw * 0.042, JAMB); // an eye
-    B(0.17, 0.28, 0.003, 0.012, [0.22, 0.15], [0.235, 0.17], STEP, sw * 0.026); // a horn sweeping back
+// F1: a gothic dragon out of corner c, read in profile: clawed forelegs gripping the cornice, bat wings folded up over its
+// shoulders, a scaled neck with a spiked crest, a horned head whose open jaws show the dark throat, the spout. Its masses
+// are sleeves round a run, lit on top and dark beneath; over the floor's top (y over FLOOR) every part keeps out of both
+// walls' lines (s > |sw|), where the next slab slides and a cut's overhang falls.
+function dragon(t, c, dir, side, y, k = 1.7) {
+  const DEEP = new Color('#5c3e24'), MOUTH = new Color('#2b1a0f');
+  const P = (s, sw, h) => new Vector3(c.x + (dir.x * s + side.x * sw) * k, y + h * k, c.z + (dir.z * s + side.z * sw) * k);
+  const shade = (lit, f) => DEEP.clone().lerp(lit, f);
+  // a sleeve through rings [s, y, sw, half width, half height, its stone] square to the run, n-sided, capped at both ends
+  const tube = (pts, lit = ARCH, n = 6, under = 0.12) => {
+    const rings = pts.map(([s, h, sw, rw, rh, k1 = lit], i) => {
+      const [s0, h0] = pts[Math.max(0, i - 1)], [s1, h1] = pts[Math.min(pts.length - 1, i + 1)], l = Math.hypot(s1 - s0, h1 - h0) || 1;
+      return Array.from({ length: n }, (_, j) => {
+        const u = Math.cos(j * 2 * Math.PI / n), v = Math.sin(j * 2 * Math.PI / n);
+        return [P(s - (h1 - h0) / l * rh * u, sw + rw * v, h + (s1 - s0) / l * rh * u), shade(k1, under + (1 - under) * (0.5 + 0.5 * u))];
+      });
+    });
+    rings.slice(1).forEach((r, i) => r.forEach((e, j) => {
+      const a = rings[i][j], b = rings[i][(j + 1) % n], d = r[(j + 1) % n];
+      t.quad(a[0], b[0], d[0], e[0], a[1], b[1], d[1], e[1]);
+    }));
+    for (const end of [rings[0], rings.at(-1)]) for (let j = 1; j < n - 1; j++) t.tri([end[0][0], end[j][0], end[j + 1][0]], [end[0][1], end[j][1], end[j + 1][1]]);
+  };
+  // a flat fan [s, y, sw, its colour] from its first point
+  const fan = pts => pts.slice(2).forEach((p, j) => t.tri([pts[0], pts[j + 1], p].map(([s, h, sw]) => P(s, sw, h)), [pts[0][3], pts[j + 1][3], p[3]]));
+  tube([[-0.03, 0.07, 0, 0.055, 0.055], [0.04, 0.085, 0, 0.072, 0.066], [0.11, 0.1, 0, 0.062, 0.056]]); // its crouching body
+  // the neck in scale collars, the skull, the upper jaw down to the snout
+  tube([[0.1, 0.1, 0, 0.056, 0.056], [0.15, 0.15, 0, 0.05, 0.05, SILL], [0.2, 0.187, 0, 0.044, 0.042], [0.25, 0.207, 0, 0.04, 0.038, SILL],
+    [0.3, 0.222, 0, 0.044, 0.04, SILL], [0.345, 0.215, 0, 0.036, 0.03], [0.39, 0.2, 0, 0.026, 0.022], [0.43, 0.19, 0, 0.02, 0.016], [0.45, 0.186, 0, 0.012, 0.01]], ARCH, 6, 0.08);
+  tube([[0.29, 0.185, 0, 0.03, 0.018], [0.35, 0.15, 0, 0.024, 0.013], [0.405, 0.125, 0, 0.016, 0.01], [0.42, 0.123, 0, 0.008, 0.006]], ARCH, 6, 0.05); // the lower jaw, open
+  for (const sw of [-0.016, 0.016]) fan([[0.28, 0.2, sw, MOUTH], [0.34, 0.186, sw, MOUTH], [0.42, 0.176, sw, MOUTH], [0.4, 0.134, sw, MOUTH], [0.34, 0.16, sw, MOUTH]]); // the throat
+  for (const sw of [-0.014, 0.014]) {
+    for (const s of [0.375, 0.4]) fan([[s - 0.007, 0.182, sw, SILL], [s + 0.007, 0.18, sw, SILL], [s, 0.162, sw, ARCH]]); // its teeth
+    for (const s of [0.36, 0.385]) fan([[s - 0.007, 0.156, sw, SILL], [s + 0.007, 0.15, sw, SILL], [s - 0.002, 0.172, sw, ARCH]]);
+    fan([[0.42, 0.178, sw, SILL], [0.436, 0.176, sw, SILL], [0.432, 0.142, sw, ARCH]]); // a fang over the lip
   }
-  // the neck in scale collars, each a little narrower than the one behind it, rising to the head
-  [[0.07, 0.14, 0.045, 0.04, [0.03, 0.045], [0.12, 0.13]], [0.14, 0.2, 0.04, 0.036, [0.045, 0.06], [0.13, 0.14]],
-    [0.2, 0.25, 0.036, 0.034, [0.06, 0.07], [0.14, 0.15]]].forEach(([s0, s1, w0, w1, ya, yb], j) => B(s0, s1, w0, w1, ya, yb, j % 2 ? ARCH : SILL));
-  for (const [s, top] of [[0, 0.12], [0.07, 0.125], [0.14, 0.135], [0.2, 0.145]]) B(s, s + 0.05, 0.006, 0.002, top, [top + 0.05, top], STEP); // its crest
-  B(0.23, 0.3, 0.045, 0.04, [0.07, 0.075], [0.165, 0.15], ARCH); // the skull
-  B(0.29, 0.4, 0.035, 0.022, 0.085, [0.15, 0.11], SILL); // the upper jaw
-  B(0.28, 0.38, 0.03, 0.018, [0.06, 0.02], [0.08, 0.04], ARCH); // the lower jaw, open
-  B(0.27, 0.37, 0.016, 0.016, [0.065, 0.042], [0.09, 0.085], JAMB, 0, JAMB); // the throat between them: the spout
-  for (const sw of [-0.015, 0.015]) B(0.37, 0.39, 0.005, 0.003, [0.06, 0.065], 0.085, SILL, sw); // its fangs
+  for (const sg of [-1, 1]) {
+    fan([[0.293, 0.222, sg * 0.041, MOUTH], [0.322, 0.222, sg * 0.04, MOUTH], [0.322, 0.238, sg * 0.04, MOUTH], [0.293, 0.236, sg * 0.041, MOUTH]]); // an eye socket
+    tube([[0.285, 0.245, sg * 0.03, 0.014, 0.01], [0.335, 0.237, sg * 0.03, 0.01, 0.008]], SILL, 4); // its brow
+    // a horn sweeping back
+    tube([[0.29, 0.25, sg * 0.024, 0.017, 0.017], [0.275, 0.3, sg * 0.03, 0.013, 0.013],
+      [0.24, 0.345, sg * 0.034, 0.008, 0.008], [0.195, 0.372, sg * 0.03, 0.001, 0.001]], SILL, 5);
+    // a foreleg: shoulder, elbow back, wrist forward on the cornice, three claws hooked over its edge
+    tube([[0.07, 0.11, sg * 0.05, 0.028, 0.028], [0.035, 0.05, sg * 0.055, 0.022, 0.022], [0.1, 0.005, sg * 0.05, 0.018, 0.018], [0.118, -0.005, sg * 0.05, 0.02, 0.013]], ARCH, 5);
+    for (const o of [-0.016, 0, 0.016]) tube([[0.11, 0, sg * 0.05 + o, 0.008, 0.008], [0.145, -0.012, sg * 0.05 + o * 1.3, 0.006, 0.006], [0.16, -0.04, sg * 0.05 + o * 1.4, 0.001, 0.001]], SILL, 4);
+    // a wing folded up over the shoulder: its arm to the wrist, a finger to the tip, the membrane between its fingers
+    // scalloped, in shade where it folds against the body
+    const W = [0.2, 0.32, sg * 0.078], tip = [0.15, 0.43, sg * 0.08], F = [[0.09, 0.36, sg * 0.07], [0.075, 0.26, sg * 0.064]];
+    tube([[0.05, 0.13, sg * 0.05, 0.016, 0.016], W.concat(0.012, 0.012), tip.concat(0.002, 0.002)], SILL, 4);
+    for (const f of F) tube([W.concat(0.008, 0.008), f.concat(0.002, 0.002)], SILL, 4);
+    const wk = ARCH.clone().lerp(DEEP, 0.45);
+    fan([[...W, ARCH], [...tip, SILL], [0.13, 0.375, sg * 0.074, wk], [...F[0], wk], [0.11, 0.29, sg * 0.068, wk], [...F[1], wk],
+      [0.085, 0.19, sg * 0.058, DEEP], [0.05, 0.13, sg * 0.05, DEEP]]);
+  }
+  // its crest: spikes down its back and neck
+  for (const [s, top] of [[0.02, 0.15], [0.08, 0.16], [0.15, 0.2], [0.2, 0.229], [0.25, 0.245]]) {
+    fan([[s - 0.02, top - 0.006, 0, STEP], [s + 0.015, top - 0.006, 0, STEP], [s - 0.025, top + 0.03, 0, SILL]]);
+  }
 }
 
 // what floor y0 in plan r wears over its course (orn: 'lesenes', 'lombard', 'B5', 'F1') → its lit geometry
@@ -154,7 +211,7 @@ export function ornamentSlice(r, y0, orn) {
     const c = { x: r.x + sx * r.w / 2, z: r.z + sz * r.d / 2 }, dir = new Vector3(sx, 0, sz).normalize(), side = new Vector3(-sz, 0, sx).normalize();
     // the dragon at the corner the camera sees in profile (on the screen's left), the drain gargoyles at the others
     if (sx < 0 && sz > 0 && corners.includes('F1')) dragon(t, c, dir, side, y0 + 0.15);
-    else if (corners.includes('B5')) gargoyle(t, c, dir, side, y0 + 0.3);
+    else if (corners.includes('B5') && !(sx > 0 && sz < 0 && orn.includes('H4'))) gargoyle(t, c, dir, side, y0 + 0.3); // H4's lantern there (upper-pieces.js)
   }
   if (orn.includes('E1')) storkNest(t, walls(r, y0).find(b => b.mat === 4)); // the camera's wall (arches.js CAM)
   return t.geo();

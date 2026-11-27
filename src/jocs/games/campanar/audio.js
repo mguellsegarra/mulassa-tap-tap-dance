@@ -1,17 +1,28 @@
 // The campanar's sounds, synthesised after the reference game's two: pure sine "bubbles", a pitch that leaps up in a few
 // ms and dies in tens of ms. A slab set down is one high bubble; a perfect drop two, a fifth then an octave, a semitone
 // higher for each perfect in a row (up to six). The fall is a bubble going down; the tower turning into the campanar a
-// run of bubbles climbing. One AudioContext, unlocked by the first tap (gesture.js).
+// run of bubbles climbing. One AudioContext, unlocked by the first tap (gesture.js); its life is Plassa's page-audio.js.
 import { blipOn } from '#plassa/ui-sound.js';
+import { createPageAudio } from '#plassa/page-audio.js';
 import { STACK_TRY } from './stack.js';
 
 const ctx = new (window.AudioContext || window.webkitAudioContext)();
 export { ctx as audioCtx }; // ritme.js: the slab on the audio clock
+const fade = ctx.createGain(); // page-audio.js fades this one out and back to 1 (leaving, a stall); out keeps ?mute's 0
+fade.connect(ctx.destination);
+export { fade as audioDest }; // ritme.js: its master chain ends here
 const out = ctx.createGain();
 out.gain.value = new URLSearchParams(location.search).has('mute') ? 0 : 0.9; // ?mute: the clock still runs, silent
-out.connect(ctx.destination);
+out.connect(fade);
 export { out as audioOut };
-export const unlock = () => { if (ctx.state !== 'running') ctx.resume().catch(() => {}); };
+let hooks = {};
+const life = createPageAudio(ctx, fade, { hearing: () => !!hooks.hearing?.(), stall: () => !!hooks.stall?.() });
+// main.js: when something should sound, and what a run does when the clock stands still (page-audio.js)
+export const audioPage = h => { hooks = h; };
+export const watchAudio = now => life.watch(now); // each frame
+export const unlock = () => life.gesture(); // every tap: the first one lets the context run; a stalled one wakes on it
+export const hushAudio = () => life.hush();
+export const resumeAudio = () => life.resume(); // inside the tap that resumes a run: iOS only lets it run again then
 export const uiBlip = blipOn(ctx, out);
 
 // from → to Hz in `glide` s; a 2 ms attack, then an exponential decay that is silent by `len`. LEAD: scheduled a little
@@ -27,10 +38,14 @@ export function bubble(from, to, { at = 0, when, type = 'sine', glide = 0.01, le
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(peak, t + attack);
   g.gain.setTargetAtTime(0, t + attack + 0.002, len / 4);
-  o.connect(g).connect(out);
+  o.connect(g).connect(bus);
   o.start(t);
   o.stop(t + len + 0.03);
 }
+const newBus = () => { const g = ctx.createGain(); g.connect(out); return g; };
+let bus = newBus(); // the bubbles' way out, dropped with what it still has queued (dropQueued)
+// a run resumed on a context that stood still: the music it had queued ahead would sound at once, off the beat
+export function dropQueued() { bus.disconnect(); bus = newBus(); }
 const SCALE = [0, 2, 4, 7, 9, 12, 14, 16];
 
 export const SFX = {

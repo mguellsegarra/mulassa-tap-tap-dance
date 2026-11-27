@@ -233,3 +233,19 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
 @keyframes discovery-fade { from { opacity: 0; } }
 @keyframes discovery-rise { from { opacity: 0; transform: scale(.5); } }
 @media (prefers-reduced-motion: reduce) { .discovery-rays, .discovery-art, .discovery b, .discovery span { animation: none; } }
+/* A find's toast (discovery.js toastDiscovery): one line low on the left in the HUD's pill (--sheet-color), its art in a
+   disc, the name and, in the find's colour (--tint), why; a first find's art wears a badge and small rays. It keeps
+   clear of a game's bands with --toast-left / --toast-right and takes no tap */
+.discovery-toast { position: fixed; z-index: 2; left: calc(var(--sal, 0px) + var(--toast-left, 16px)); bottom: calc(var(--sab) + 16px); max-width: calc(100% - var(--sal, 0px) - var(--sar, 0px) - var(--toast-left, 16px) - var(--toast-right, 16px)); box-sizing: border-box; display: flex; align-items: center; gap: 12px; padding: 6px 20px 6px 6px; border-radius: 40px; background: var(--sheet-color); box-shadow: inset 0 0 0 2px var(--tint), 0 6px 18px #0006; pointer-events: none; animation: toast-in .3s cubic-bezier(.2, 1.3, .5, 1) both; }
+.discovery-toast.leaving { opacity: 0; translate: 0 8px; transition: opacity .3s, translate .3s; }
+.discovery-toast-art { position: relative; flex: none; display: grid; place-items: center; }
+.discovery-toast-art > :not(i, em) { position: relative; }
+.discovery-toast .discovery-rays { width: 176px; height: 176px; margin: -88px 0 0 -88px; top: 50%; animation: discovery-spin 12s linear infinite, discovery-fade .35s ease-out both; /* bright enough for a dusk sky, low on the left: off the slab in play */
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--tint) 70%, #fff) 18%, transparent 46%), repeating-conic-gradient(color-mix(in srgb, var(--tint) 65%, #fff) 0 9deg, transparent 9deg 22deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 30%, #0000); mask-image: radial-gradient(closest-side, #000 30%, #0000); }
+.discovery-toast em { position: absolute; top: -8px; left: 50%; translate: -50% 0; padding: 0 6px; border-radius: 10px; font: 800 11px/18px 'Baloo 2', system-ui, sans-serif; font-style: normal; letter-spacing: .04em; color: #3a2008; background: linear-gradient(#ffe07a, #e9a92c); box-shadow: 0 1px 0 #94610f, 0 2px 4px #0008; }
+.discovery-toast-text { position: relative; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.discovery-toast b { font: 800 18px/1.1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; }
+.discovery-toast span { font: 700 13px/1.2 'Baloo 2', system-ui, sans-serif; color: var(--tint); text-wrap: balance; }
+@keyframes toast-in { from { opacity: 0; translate: 0 16px; } }
+@media (prefers-reduced-motion: reduce) { .discovery-toast, .discovery-toast .discovery-rays { animation: none; } }

@@ -55,14 +55,15 @@ export function clockSlice(r, y0, o) {
 }
 
 // the hands: one mesh drawn from the first frame (empty), filled once the clock's last floor settles and again only
-// when the minute changes. → { show(faces), tick(), reset(), mat }
+// when the minute changes; also(draw): more drawn with them at the device's time, draw(tris, date) (H3's sundial shadow,
+// upper-pieces.js). → { show(faces), also(draw), tick(), reset(), mat }
 export function createClockHands(scene) {
   const mat = new MeshLambertMaterial({ vertexColors: true, side: DoubleSide, emissive: '#ffffff', emissiveIntensity: 0 });
   const hands = pool(scene, mat);
-  let faces = null, minute = -1;
+  let faces = null, extra = [], minute = -1;
   const draw = () => {
     const d = new Date(), { hour, minute: mn } = handAngles(d.getHours(), d.getMinutes()), t = tris();
-    for (const { b, cy, R } of faces) {
+    for (const { b, cy, R } of faces ?? []) {
       const P = (u, y, n) => at(b, u, y, n), ri = R * 0.84;
       const hand = (th, len, w, z) => { // tapered, a short tail past the boss, a point at the tip
         const s = Math.sin(th), co = Math.cos(th), pt = (x, y) => [x * co + y * s, cy - x * s + y * co, true];
@@ -71,17 +72,19 @@ export function createClockHands(scene) {
       hand(hour, ri * 0.55, ri * 0.085, Z.hour);
       hand(mn, ri * 0.8, ri * 0.055, Z.minute);
     }
+    for (const f of extra) f(t, d);
     hands.reset();
     hands.add(t.geo());
   };
   return {
     mat,
     show(f) { faces = f; minute = -1; },
+    also(f) { extra.push(f); minute = -1; },
     tick() { // nothing to do but a division until the minute turns
-      if (!faces) return;
+      if (!faces && !extra.length) return;
       const m = Math.floor(Date.now() / 60000);
       if (m !== minute) { minute = m; draw(); }
     },
-    reset() { faces = null; hands.reset(); mat.emissiveIntensity = 0; },
+    reset() { faces = null; extra = []; hands.reset(); mat.emissiveIntensity = 0; },
   };
 }

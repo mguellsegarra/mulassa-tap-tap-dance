@@ -19,6 +19,7 @@ import { tris, pool, tone, ARCH, STEP, SILL, JAMB } from './relief.js';
 import { portalSlice } from './portal.js';
 import { clockOf, clockSlice, clockFaces, createClockHands } from './clock.js';
 import { COURSES } from './mouldings.js';
+import { upperPieceSlice } from './upper-pieces.js';
 
 const DEEP = new Color('#110a06'), BACK = new Color('#160d08'), LIT_CHEEK = new Color('#2b1a10'), SHADE_CHEEK = new Color('#1c110b');
 const DARK_SILL = new Color('#3e2718'), TYMPANUM = ARCH; // the tympanum a shade under the sill: the old #c08d55 read as a brown stain
@@ -217,6 +218,8 @@ export function createOpenings(scene) {
       '#include <emissivemap_fragment>\ntotalEmissiveRadiance *= vFlash;');
   };
   const dark = pool(scene, new MeshBasicMaterial({ vertexColors: true })), hands = createClockHands(scene);
+  let glowing = null; // [material, emissive, intensity] of the piece glowing at the end, to put back
+  const unglow = () => { for (const [x, c, k] of glowing ?? []) { x.emissive.setHex(c); x.emissiveIntensity = k; } glowing = null; };
   return {
     // slab m (cut to its plan) wears course `key`, its glacis `batter`, its ornaments `orn`: its geometry is set
     // and its faces returned (the flash of scene.js's turn fades on them)
@@ -244,10 +247,13 @@ export function createOpenings(scene) {
       }
       if (course) lit.add(course(r, y0));
       if (orn?.length) lit.add(ornamentSlice(r, y0, orn)); // lesenes, Lombard arches, gargoyles (ornaments.js)
+      const up = orn?.length && upperPieceSlice(r, y0, orn); // the house, gallery, sundial, lantern (upper-pieces.js)
+      if (up) { lit.add(up.lit); dark.add(up.dark); if (up.shadow) hands.also(up.shadow); }
       return mats;
     },
     // what flashes with a floor wearing `key` besides its own faces: its slice of the opening's frames (and bells)
-    flashing: key => (clockOf(key, 0) ? [litMat, hands.mat] : chamberOf(key, 0) || COURSES[key] ? [litMat] : []),
+    // (and with a floor wearing a piece, orn: it flashes with it; a plain floor's lesenes and Lombard arches do not, Marc)
+    flashing: (key, orn) => (clockOf(key, 0) ? [litMat, hands.mat] : chamberOf(key, 0) || COURSES[key] || orn?.some(o => o !== 'lesenes' && o !== 'lombard') ? [litMat] : []),
     // a wide terrace's balustrade (coping.js terraceRail), built as the floor over it settles: it flashes with
     // that floor's turn → what flashes
     terrace(g) {
@@ -255,6 +261,30 @@ export function createOpenings(scene) {
       return [litMat];
     },
     tick: hands.tick, // the clock's hands, when the minute turns
-    reset() { lit.reset(); dark.reset(); hands.reset(); litMat.emissiveIntensity = 0; from.value = 0; },
+    // the end: the piece the camera went to glows warm three times once the camera is there (Marc: «which one is it?»):
+    // the stone of its floors, the one that completed it at height y and the motif's floors under it (slabs: the tower's,
+    // bottom up), or the crown's when no floor stands there. Only the emissive the turn's flash uses: no new material nor
+    // program. view(): the end's camera (end-camera.js), still on its way while it has a focus → scene.js's fx tick
+    glow(slabs, y, crown, view) {
+      unglow();
+      const key = j => slabs[j]?.userData.stone?.split('|')[0] ?? '', step = j => +(/-0(\d)$/.exec(key(j))?.[1] ?? 0);
+      const motif = j => key(j).replace(/-0\d$/, '');
+      let j = slabs.findIndex(m => m.visible && Math.abs(m.position.y - y) < 1e-3); // not a thin floor hidden under the spire
+      const objs = j < 0 ? [crown].filter(Boolean) : [slabs[j]];
+      for (; j > 0 && step(j) && motif(j - 1) === motif(j) && step(j - 1) === step(j) + 1; j--) objs.push(slabs[j - 1]); // a motif's floors count down to -01 at its top (facade.js)
+      const mats = new Set();
+      for (const o of objs) o.traverse(c => { for (const x of [c.material ?? []].flat()) if (x.emissive) mats.add(x); });
+      const mine = glowing = [...mats].map(x => [x, x.emissive.getHex(), x.emissiveIntensity]);
+      for (const [x] of mine) x.emissive.set('#ffd890');
+      let from = null;
+      return t => {
+        if (glowing !== mine) return false; // another piece, a new run
+        if (view()?.focus) return true; // still on its way
+        const s = t - (from ??= t), k = view()?.still ? 0.4 : 0.6 * Math.sin(Math.PI * s / 0.8) ** 2; // reduced motion: a steady glow
+        for (const [x] of mine) x.emissiveIntensity = k;
+        return s < 2.4 || (unglow(), false);
+      };
+    },
+    reset() { lit.reset(); dark.reset(); hands.reset(); litMat.emissiveIntensity = 0; from.value = 0; glowing = null; },
   };
 }

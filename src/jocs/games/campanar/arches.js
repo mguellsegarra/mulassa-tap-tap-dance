@@ -43,10 +43,12 @@ const ROSES = { A: round(0.46, 0.72, { band: 0.05, tWall: 0.135, roomD: 0.2, kin
 const lancet = (hw, more) => ({ hw, ySill: 0.1, ySpring: 0.62, yApex: 0.62 + hw * 1.6, band: 0.04, tWall: 0.09, roomD: 0.14, faces: CAM, ...more });
 const CANDELES = { A: lancet(0.16, { kind: 'candela', glass: 'blue' }), C: lancet(0.14, { kind: 'candela', glass: 'blue' }), XS: lancet(0.1, { kind: 'candela', glass: 'blue' }) };
 const LLUNES = { A: lancet(0.17, { kind: 'lluna', glass: 'night' }), C: lancet(0.15, { kind: 'lluna', glass: 'night' }), XS: lancet(0.11, { kind: 'lluna', glass: 'night' }) };
-// the stair's floors bottom up: three small square-headed windows, then the landing's
-const step = (off, hw, ySill, yApex, kind) => ({ off, hw, ySill, ySpring: yApex, yApex, band: 0.025, tWall: 0.1, roomD: 0.26, faces: CAM, kind });
-const STAIR = [step(-0.24, 0.07, 0.12, 0.34, 'escala'), step(-0.08, 0.07, 0.12, 0.34, 'escala'), step(0.08, 0.07, 0.12, 0.34, 'escala'),
-  step(0.16, 0.13, 0.08, 0.4, 'replà')]; // i18n-ok: a piece kind, never shown
+// the stair's floors bottom up: three narrow round-headed lights climbing across the wall, then the landing's wider one;
+// a thin reveal splayed in to each light (ornaments.js), so the play camera, looking down from one side, still sees the
+// stair behind it
+const step = (off, hw, ySill, yApex, kind) => ({ off, hw, ySill, ySpring: yApex - hw, yApex, band: 0.03, sillH: 0.035, tWall: 0.07, roomD: 0.17, faces: CAM, kind });
+const STAIR = [step(-0.27, 0.1, 0.08, 0.42, 'escala'), step(-0.11, 0.1, 0.08, 0.42, 'escala'), step(0.05, 0.1, 0.08, 0.42, 'escala'),
+  step(0.2, 0.16, 0.06, 0.43, 'replà')]; // i18n-ok: a piece kind, never shown
 const SETS = { campanes: BELLS, mainell: WINDOW_SETS, espitllera: WINDOW_SETS, portal: PORTALS, ocul: OCULI, rosassa: ROSES, candela: CANDELES, lluna: LLUNES };
 const MOTIF = { campanes: 'bells', mainell: 'window', espitllera: 'window', portal: 'portal', ocul: 'ocul', rosassa: 'rosassa', candela: 'candela', lluna: 'lluna' };
 // the opening's piece floor i wears (facade.js: `<set>/campanes-0<n>`, a window's `<set>/mainell-0<n>`,

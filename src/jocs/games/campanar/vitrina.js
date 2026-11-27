@@ -2,7 +2,7 @@
 // (ornament-plan.js lowers its heights): perfects in A (the clock, the stair, the dragon gargoyle, the drain
 // gargoyles, the rose, the fillers), a cut to C, one to XS held for the Virgin's window and the moon, thin floors for the
 // spire's crockets, then a miss. Every find gets its moment each time (bands.js remembers nothing). ?vitrina=<id>
-// (A1, B2, A10, B5, A6, F8, F1, G6, E1) misses as soon as that ornament has settled: the end's close shot of the top
+// (A1, B2, A10, B5, A6, F8, F1, G6, E1, H1…H4) misses as soon as that ornament has settled: the end's close shot of the top
 // shows it; D6, the lightning rod, grows with the crown, so ?vitrina=D6 misses once the tower is tall enough for it
 // (a wide one: the tiled head, where the whole run shows it on the spire).
 import { SIZE } from './rules.js';
@@ -12,7 +12,9 @@ export const VITRINA = import.meta.env.DEV && new URLSearchParams(location.searc
 const UNTIL = new URLSearchParams(location.search).get('vitrina');
 let stop = false;
 export const vitrinaFound = ids => { stop ||= ids.includes(UNTIL); }; // ornaments settled (scene.js found)
-const PLAN = [[36, 1], [44, 0.52], [62, 0.3], [70, 0.17]]; // up to floor n, the share of the full side it holds
+// up to floor n, the share of the full side it holds; ?vitrina=H1 keeps C on (its cottage wants a C wall, and the run's one
+// C bay goes to the stair)
+const PLAN = UNTIL === 'H1' ? [[36, 1], [70, 0.52]] : [[36, 1], [44, 0.52], [62, 0.3], [70, 0.17]];
 // floor n's drop on the floor below `top` → how far off its middle, in sides: 0 a perfect, a cut to the share planned
 export function vitrinaDrop(n, top) {
   if (n === 1) stop = false; // a new run

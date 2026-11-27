@@ -32,7 +32,10 @@ canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; tou
 .c-text { display: contents; }
 .tower-title { order: 0; flex: none; display: grid; justify-items: center; width: min(340px, 100vw - 2 * var(--m) - 24px, 46dvh); margin: 0; container-type: inline-size; }
 .tower-title .logo-box, .tower-title .logo { display: block; width: 100%; height: auto; overflow: visible; }
-.tower-word { margin-top: -1cqi; font: 800 15cqi/1 'Baloo 2', system-ui, sans-serif; letter-spacing: 2cqi; color: var(--game-word); -webkit-text-stroke: 2.3cqi #2a1a10; paint-order: stroke fill; }
+/* its outline round as MULASSA's (an SVG stroke with round joins): -webkit-text-stroke can only mitre, which put spikes
+   on the E's inner corners (Marc); sixteen shadows on a circle draw the same 1.15cqi outline with round corners */
+.tower-word { --o: 1.15cqi; margin-top: -1cqi; font: 800 15cqi/1 'Baloo 2', system-ui, sans-serif; letter-spacing: 2cqi; color: var(--game-word);
+  text-shadow: calc(var(--o) ) calc(var(--o) * 0.000) 0 #2a1a10, calc(var(--o) * 0.924) calc(var(--o) * 0.383) 0 #2a1a10, calc(var(--o) * 0.707) calc(var(--o) * 0.707) 0 #2a1a10, calc(var(--o) * 0.383) calc(var(--o) * 0.924) 0 #2a1a10, calc(var(--o) * 0.000) calc(var(--o) ) 0 #2a1a10, calc(var(--o) * -0.383) calc(var(--o) * 0.924) 0 #2a1a10, calc(var(--o) * -0.707) calc(var(--o) * 0.707) 0 #2a1a10, calc(var(--o) * -0.924) calc(var(--o) * 0.383) 0 #2a1a10, calc(var(--o) * -1) calc(var(--o) * 0.000) 0 #2a1a10, calc(var(--o) * -0.924) calc(var(--o) * -0.383) 0 #2a1a10, calc(var(--o) * -0.707) calc(var(--o) * -0.707) 0 #2a1a10, calc(var(--o) * -0.383) calc(var(--o) * -0.924) 0 #2a1a10, calc(var(--o) * -0.000) calc(var(--o) * -1) 0 #2a1a10, calc(var(--o) * 0.383) calc(var(--o) * -0.924) 0 #2a1a10, calc(var(--o) * 0.707) calc(var(--o) * -0.707) 0 #2a1a10, calc(var(--o) * 0.924) calc(var(--o) * -0.383) 0 #2a1a10; }
 .tower-word i { display: inline-block; font-style: normal; animation: games-pop 2.4s ease-in-out infinite; animation-delay: calc(var(--i) * .07s); }
 @media (prefers-reduced-motion: reduce) { .tower-word i { animation: none; } }
 .c-art { display: none; }
@@ -70,18 +73,28 @@ canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; tou
 #banner-best:not([hidden]) { color: var(--accent); }
 #end-menu .btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; } /* as Pop: line icons (to move into game.css with the end sheet, docs plan) */
 
-/* The side bands (bands.js), no taps. Left: an altimeter's white ticks, shown as a famous height comes near,
-   its own bolder tick sliding to the middle arrow, then faded; right, low: the ornaments found, a green tick on each */
+/* The side bands (bands.js), no taps, gone once the run is over. Left: an altimeter's white ticks, a famous height's own
+   tick sliding to the middle arrow as the tower nears it; right, low: this run's special pieces as icons only, the
+   newest at the bottom; the last four show, so the column never climbs to the slab in play (Fable's review) */
+:root { --toast-right: calc(var(--orb) + 24px); --orb: 48px; } /* the find's toast keeps clear of the icons (#plassa/discovery.js) */
 .band { position: fixed; z-index: 2; bottom: calc(var(--sab) + 16px); display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; }
-#finds { right: calc(var(--sar, 0px) + 8px); max-height: 62dvh; flex-direction: column; align-items: flex-end; gap: 6px; overflow-y: auto; scrollbar-width: none; -webkit-mask: linear-gradient(transparent, #000 28px); mask: linear-gradient(transparent, #000 28px); } /* every find of the run, one column (Marc), the newest at the bottom; it scrolls once full */
-#finds > :first-child { margin-top: auto; } /* held low while few, still scrollable once many */
-.find-row { display: flex; align-items: center; gap: 8px; }
-.find-row > span { max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 3px 9px; border-radius: 10px; background: #2a1a10a6; color: #fff3d6; font: 700 13px/1.2 'Baloo 2', system-ui, sans-serif; }
-.find-row.waiting { visibility: hidden; }
-@media (max-width: 380px) { .find:not(.big) { width: 36px; height: 36px; } .find:not(.big) svg { width: 21px; height: 21px; } .find:not(.big) img { width: 28px; height: 28px; } .find-row > span { font-size: 12px; } } /* narrow phones: clear of the tower */
-#finds.browse { pointer-events: auto; bottom: calc(var(--sab) + 60px); } /* over «Toca per continuar»; scrolls */ #finds.browse .find-row { cursor: pointer; } /* the end: a tap presents one again (bands.js) */
+#finds { right: calc(var(--sar, 0px) + 12px); flex-direction: column; gap: 8px; }
+#finds > :nth-last-child(n + 5) { display: none; }
+/* a piece's disc (pieces.js orb), as Alchemy's: a dark bead in a gold ring, its drawn icon inside */
+.orb { width: var(--orb); height: var(--orb); flex: none; box-sizing: border-box; display: grid; place-items: center; padding: calc(var(--orb) * .1); border-radius: 50%; color: #fbe7b5;
+  background: radial-gradient(circle at 35% 28%, #6b4a36, #2a1a10 72%); box-shadow: 0 0 0 2px #8a6a2c, 0 0 0 3.5px #e3bf62, 0 3px 6px #0009; }
+.orb img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 1px 1px #0006); }
+.orb svg { width: 62%; height: 62%; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.discovery-toast .orb { --orb: 52px; }
 #marks { --px: 5px; left: calc(var(--sal, 0px) + 10px); top: 30%; bottom: 30%; width: 180px; display: block; } /* the ruler shows from the start (Marc); only a famous height comes and goes */
 #marks .fita { opacity: 0; transition: top .3s ease-out, opacity .6s; }
+/* A phone (Marc): the ruler in the screen's top third, over the sky, fading at both ends; a long name on two lines.
+   A name rides its own tick, so it is gone, faded, before it could reach the tower under that third */
+@media (max-width: 500px) {
+  #marks { --px: 3px; width: 220px; top: calc(var(--sat) + 76px); bottom: auto; height: calc(33dvh - var(--sat) - 76px);
+    -webkit-mask: linear-gradient(transparent, #000 22%, #000 78%, transparent); mask: linear-gradient(transparent, #000 22%, #000 78%, transparent); }
+  #marks.band .fita b { white-space: normal; width: 9.5em; text-wrap: balance; }
+}
 #marks.on .fita { opacity: 1; transition-duration: .3s, .25s; }
 #marks .ruler { position: absolute; inset: 0 auto 0 0; width: 22px; -webkit-mask: linear-gradient(transparent, #000 25%, #000 75%, transparent); mask: linear-gradient(transparent, #000 25%, #000 75%, transparent);
   background: linear-gradient(#fff 0 2px, transparent 2px) 0 0 / 22px calc(var(--px) * 10) repeat-y,
@@ -93,12 +106,29 @@ canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; tou
 /* the famous height's own tick, bolder and longer, at its metres: it slides down to the middle arrow as the tower nears it */
 #marks .fita { position: absolute; left: 0; top: calc(50% + (var(--m, 0) - var(--at, 0)) * var(--px)); }
 #marks .fita::before { content: ''; position: absolute; left: 0; top: -2px; width: 34px; height: 4px; border-radius: 2px; background: #fff; box-shadow: 0 0 6px #fff9; }
-#marks .fita b, #marks .fita span { position: absolute; left: 50px; white-space: nowrap; color: #fff; font: 700 15px/1.1 'Baloo 2', system-ui, sans-serif; text-shadow: 0 1px 3px #0008; }
-#marks .fita b { bottom: 2px; }
-#marks .fita span { top: 2px; font-size: 22px; font-variant-numeric: tabular-nums; }
-.find { position: relative; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fbe7b5; background: #2a1a10c7; box-shadow: inset 0 0 0 2px var(--tint); }
-.find svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.find img { width: 34px; height: 34px; object-fit: contain; filter: drop-shadow(0 1px 1px #0006); } .find.big img { width: 72%; height: 72%; } /* the drawn icons (collection.js DRAWN) */
-.find.big { width: 100%; height: 100%; box-shadow: inset 0 0 0 3px var(--tint), 0 0 28px 6px color-mix(in srgb, var(--tint) 45%, transparent); }
-.find.big svg { width: 60%; height: 60%; stroke-width: 1.4; }
+#marks .fita b { position: absolute; left: 44px; top: 0; translate: 0 -50%; white-space: nowrap; color: #fff; font: 700 16px/1.1 'Baloo 2', system-ui, sans-serif; text-shadow: 0 1px 3px #0008; } /* centred on its tick (Marc) */
 @media (prefers-reduced-motion: reduce) { #marks .ruler, #marks .fita { transition: none; } }
+
+/* the collection (pieces.js): a sheet low over the tower, as the end's buttons, the tower whole above it at the end */
+#pieces.over-tower { justify-content: flex-end; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; } /* at the home: the base's cover */
+#pieces .sheet { width: min(448px, 100%); }
+#pieces.over-tower .sheet { max-height: min(600px, 70dvh); } /* the end's tower keeps the top of the screen */
+/* a wide screen: the sheet as big as it reads on a phone (Marc, 27 Nov: too small in the middle of a desktop), by the
+   window's height, never the ×1.6 that was giant on a 27" display (game.css) */
+@media (min-width: 900px) and (min-height: 680px) { #pieces .sheet { zoom: 1.2; } }
+@media (min-width: 900px) and (min-height: 760px) { #pieces .sheet { zoom: 1.3; } }
+@media (min-width: 900px) and (min-height: 960px) { #pieces .sheet { zoom: 1.7; } } /* ~70% of a 1080 window, half of a 27" one */
+#pieces .sheet-actions { position: sticky; bottom: -16px; margin: 8px -16px -16px; padding: 12px 16px 16px; background: var(--sheet-color); } /* Tanca in reach while the grid scrolls */
+#pieces h2 { font-size: 24px; } /* one line on a 320 phone, with its count */
+#pieces-count { color: var(--button-text); font-size: .7em; vertical-align: .12em; }
+#pieces-run { margin: 0 0 12px; text-align: center; font-size: 15px; line-height: 1.3; }
+#pieces-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); grid-auto-rows: 1fr; /* one row pitch, whatever a name's lines */ gap: 16px 8px; padding: 8px 4px 4px; }
+.piece { position: relative; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; gap: 8px; min-width: 0; min-height: 0; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: 700 13px/1.15 'Baloo 2', system-ui, sans-serif; text-align: center; }
+button.piece { cursor: pointer; } button.piece:active .orb { scale: .94; }
+.piece b { font: inherit; overflow-wrap: anywhere; }
+.piece.missing b { font-size: 12px; font-weight: 600; color: #fff3d6a6; }
+.piece .orb.empty { background: #2a1a1080; box-shadow: inset 0 0 0 2px #e3bf6266; color: #e3bf62a6; font: 800 22px/1 'Baloo 2', system-ui, sans-serif; }
+.piece em { position: absolute; top: -6px; left: calc(50% + 10px); padding: 0 6px; border-radius: 10px; font: 800 11px/18px 'Baloo 2', system-ui, sans-serif; font-style: normal; letter-spacing: .04em; color: #3a2008; background: linear-gradient(#ffe07a, #e9a92c); box-shadow: 0 1px 0 #94610f, 0 2px 4px #0008; }
+/* its way in: the home's under Juga, the end's beside Torna-hi; a line icon and the count */
+.pieces-btn > svg { fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pieces-btn .count { margin-left: .3em; opacity: .75; font-variant-numeric: tabular-nums; }

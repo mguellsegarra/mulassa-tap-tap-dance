@@ -63,7 +63,7 @@ selector or a page that skips the base.
 | A board's row and a player's name with its badge (the badge's tap tip) | `board.js`, `badge-tip.js` |
 | Best score on this device | `best.js` |
 | A run's 3, 2, 1 | `countdown.js` |
-| A find's first moment (Alchemy's good mix): rays, art, name, then into its place; no tap | `discovery.js` |
+| A find's first moment (Alchemy's good mix): rays, art, name, then into its place; no tap. A find's toast in play (Tower's), one at a time | `discovery.js` |
 | Storage, haptics, double-tap zoom guard, shader warmup | `storage.js`, `haptics.js`, `double-tap.js`, `boot.js` |
 | ⚙ Configuració, Perfil, Bústia, idioma, Privadesa (mulassa.cat's sheets and code; Pop's `settings.js` is the model) | `sheets.css`, `scoped-css.js`, `<!-- mulassa-sheets: … -->` |
 

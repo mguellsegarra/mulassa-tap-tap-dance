@@ -1,20 +1,21 @@
-// ?ritme=fable, a trial: Tower to the beat. The slab's travel is a musical clock: it leaves the edge on a downbeat and
-// crosses the middle of the tower on the next one (a bar of four beats later), so a tap on the "one" is a perfect. Its
-// place comes from the audio clock, never from frame time: a dropped frame cannot put the slab off the music.
+// Tower to the beat, by default (?ritme=0: the old free speed; ?vitrina plays itself without it). The slab's travel is a
+// musical clock: it leaves the edge on a downbeat and crosses the middle of the tower on the next one (a bar of four beats
+// later), so a tap on the "one" is a perfect. Its place comes from the audio clock, never from frame time: a dropped frame
+// cannot put the slab off the music.
 // The band follows the player: a cut tells how early or late the tap was, and the tempo bends that way from that tap on
 // (late: slower, early: faster); each perfect raises it one beat a minute. The music and its tune are ritme-loop.js:
 // a perfect sings the tune's note for its bar, on the beat. A cut leaves that bar's note unsung and the tune goes on with
 // the chords (held back a bar, its next note would be out of the chord by then).
-import { audioCtx, audioOut, bubble } from './audio.js';
-import { ritmeLoopStep, ritmePerfect, ritmeScore, ritmeTempo, ritmeCut } from './ritme-loop.js';
+import { audioCtx, audioOut, audioDest, bubble, dropQueued } from './audio.js';
+import { ritmeLoopStep, ritmePerfect, ritmeNextSong, ritmeSong, ritmeCut } from './ritme-loop.js';
+import { VITRINA } from './vitrina.js';
 
-export const RITME = new URLSearchParams(location.search).get('ritme') === 'fable';
-const RITME_BPM = ritmeTempo; // 138 for our song, the game's own first speed: its reach in one bar
+export const RITME = !VITRINA && new URLSearchParams(location.search).get('ritme') !== '0';
 const RITME_MIN = 100, RITME_MAX = 184;
 const RITME_BEND = 0.16; // a tap a whole beat late slows the music this much (early: speeds it), a tap at most 15%
 const RITME_AHEAD = 0.2; // seconds of music scheduled ahead of the clock: a long frame on a phone leaves no hole
 
-let bpm = RITME_BPM, b0 = 0, t0 = 0; // the tempo map: beat b0 at clock time t0, bpm from there
+let bpm = 138, b0 = 0, t0 = 0; // the tempo map: beat b0 at clock time t0, bpm from there
 let origin = null; // the downbeat the slab in play leaves the edge on (null: the run's first slab still to come)
 let held = null; // the beat a pause froze the clock at
 let playing = false, nextStep = 0, level = 0;
@@ -25,11 +26,12 @@ function ritmeMaster() {
   const hp = new BiquadFilterNode(audioCtx, { type: 'highpass', frequency: 125 }), lp = new BiquadFilterNode(audioCtx, { type: 'lowpass', frequency: 3400, Q: 0.5 });
   const limit = new DynamicsCompressorNode(audioCtx, { threshold: -10, knee: 6, ratio: 12, attack: 0.002, release: 0.08 }), trim = new GainNode(audioCtx, { gain: 0.6 });
   audioOut.disconnect();
-  audioOut.connect(hp).connect(lp).connect(limit).connect(trim).connect(audioCtx.destination);
+  audioOut.connect(hp).connect(lp).connect(limit).connect(trim).connect(audioDest);
   return trim;
 }
 const ritmeEnd = RITME ? ritmeMaster() : audioOut;
-export const ritmeAudio = import.meta.env.DEV && { ctx: audioCtx, out: ritmeEnd, score: ritmeScore, beat: () => ritmeBeat(), origin: () => origin }; // dev: the proof run's recorder, taps and plot
+// dev: the proof run's recorder, taps and plot
+export const ritmeAudio = import.meta.env.DEV && { ctx: audioCtx, out: ritmeEnd, get score() { return ritmeSong; }, beat: () => ritmeBeat(), origin: () => origin };
 
 // The audio clock, as heard, on the page's timeline. currentTime moves in blocks (up to tens of ms on a phone), so the
 // slab would stutter on it: the true clock is the highest (currentTime - page time) seen, let fall slowly so a slower
@@ -50,15 +52,19 @@ const beatAt = t => b0 + (t - t0) * bpm / 60;
 const ritmeBeat = ms => held ?? beatAt(clock(ms));
 const whenBeat = b => t0 + (b - b0) * 60 / bpm + ritmeLag; // the context's time to schedule beat b at
 
+// a run's start: its song's first speed (each song's own: its reach in one bar)
 export function ritmeStart() {
-  bpm = RITME_BPM; b0 = -1; t0 = clock(); // a beat of air before the first sound
+  bpm = ritmeNextSong().bpm; b0 = -1; t0 = clock(); // a beat of air before the first sound
   origin = held = null; level = 0; nextStep = 0; playing = true;
   if (ritmeLog) ritmeLog.length = 0;
 }
 export function ritmeStop() { playing = false; }
 export function ritmeHold(on) {
   if (on) held ??= ritmeBeat();
-  else if (held !== null) { b0 = held; t0 = clock(); held = null; }
+  else if (held !== null) {
+    if (audioCtx.state !== 'running') dropQueued(); // stopped by a stall or a page left: its queued bar is stale now
+    b0 = held; t0 = clock(); held = null;
+  }
 }
 
 // each frame: schedules the music a little ahead. → whether the next slab may come out (its downbeat has come)

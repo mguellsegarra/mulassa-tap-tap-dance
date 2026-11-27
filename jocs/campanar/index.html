@@ -45,6 +45,8 @@
         </svg><span class="logo-glint" aria-hidden="true"><svg viewBox="0 -4 308.6 80" text-anchor="middle" focusable="false"><text x="154.3" y="60" textLength="300" lengthAdjust="spacingAndGlyphs" font-family="'Baloo 2'" font-weight="800" font-size="77" letter-spacing="-5.5" fill="#fff">MULASSA</text></svg></span></span><span class="tower-word" aria-hidden="true"><i style="--i:0">T</i><i style="--i:1">O</i><i style="--i:2">W</i><i style="--i:3">E</i><i style="--i:4">R</i></span></h1>
         <div class="c-play-row">
           <button id="play" class="btn btn-primary btn-big btn-invite" data-keys-first><svg viewBox="0 0 24 24"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.8l-12-7.5A1 1 0 0 0 7 4.5z"/></svg><span>Juga</span></button>
+          <!-- the collection of special pieces (pieces.js), as Pop's board under Juga; provisional words (i18n-ok: POC placeholder) -->
+          <button id="home-pieces" class="btn btn-secondary btn-big pieces-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.6 13.8 7 21l5-2.6 5 2.6-1.6-7.2"/></svg><span>Peces</span><span class="count"></span></button>
         </div>
       </div>
       <div class="c-art" aria-hidden="true"></div>
@@ -66,8 +68,19 @@
       <p class="result-sub" id="end-best"></p>
       <div class="sheet-actions">
         <button id="again" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg><span>Torna-hi</span></button>
+        <button id="pieces-open" class="btn pieces-btn" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.6 13.8 7 21l5-2.6 5 2.6-1.6-7.2"/></svg><span>Peces</span><span class="count"></span></button>
         <button id="to-menu" class="btn"><span>Menú</span></button>
       </div>
+    </div>
+  </div>
+  <!-- The collection (pieces.js): every special piece, this run's new ones marked, the missing ones as «?» with how to earn
+       them; at the end a tap on one of this run's sends the camera to it. Provisional words (i18n-ok: POC placeholder) -->
+  <div id="pieces" class="cover" hidden>
+    <div class="sheet" role="dialog" aria-labelledby="pieces-title">
+      <h2 id="pieces-title">Peces del campanar <span id="pieces-count"></span></h2>
+      <p id="pieces-run"></p>
+      <div id="pieces-grid"></div>
+      <div class="sheet-actions"><button id="pieces-close" class="btn">Tanca</button></div>
     </div>
   </div>
   <div id="boot" class="cover"><div class="boot-card"><div class="art" id="boot-art"><!-- mula-load --></div><p class="boot-line" id="boot-line" aria-live="polite"></p></div></div><!-- boot-first-line -->

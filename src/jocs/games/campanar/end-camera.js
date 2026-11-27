@@ -6,6 +6,7 @@ import { SIZE, FLOOR } from './rules.js';
 const CLOSE = { below: 2 * SIZE, margin: 0.5 * SIZE, worth: 2 }; // what the close shot shows under the top; only when the whole is this much farther
 const IN = 0.8, OUT = 1.5, HOLD = 0.5, LATEST = 2.4; // s: to the first shot, to the whole, the look at the grown crown, the ease out's start at the latest
 const TIGHT = 1.5 * FLOOR, EASE = 12; // the closest zoom: this much above and below the aim (a floor or two); /s
+const FOCUS = 1.4; // s to go to a piece
 const inOut = t => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
 
 // fromY: the camera's aim now; aimY: the top floor's top; fit(half): the distance factor framing half that height
@@ -31,6 +32,7 @@ const clampAim = o => {
 // by: how many times closer; v: the point kept still, in the free view's half heights above its middle (+1: its top)
 export function zoomEndShot(o, by, v) {
   if (o.out < 1 || o.r > 0.9) return; // still easing out, or a tower that already shows its floors whole
+  o.focus = null; // the player's fingers rule
   const off = v * o.span - UNDER, at = o.py + off * o.r ** o.z;
   o.z = Math.min(1, Math.max(0, o.z + Math.log(by) / -Math.log(o.r)));
   o.py = at - off * o.r ** o.z;
@@ -39,8 +41,18 @@ export function zoomEndShot(o, by, v) {
 // share: a drag down, in the free view's half heights: the tower follows the finger
 export function panEndShot(o, share) {
   if (o.out < 1) return;
+  o.focus = null;
   o.py += share * o.span * o.r ** o.z;
   clampAim(o);
+}
+
+// a piece at height y (the collection sheet's tap, pieces.js): in to it and over to it as one move, the piece gliding
+// to the middle of the view while the view closes in, so it never leaves the frame on the way (a zoom and a pan eased
+// apart would swing it out). The view's middle is UNDER·f under the aim; s0, the piece's offset from it at the start
+export function focusEndShot(o, y) {
+  if (o.out < 1) return;
+  const f0 = o.r ** o.ez; // to the closest zoom: as near as the play camera was when the piece was found
+  o.focus = { t: 0, y, z0: o.ez, z1: o.r > 0.9 ? o.ez : 1, s0: (y - (o.ey - UNDER * f0)) / f0 };
 }
 
 // the crown has grown, its cross at that height: a moment on it, then out
@@ -58,6 +70,15 @@ export function stepEndShot(o, dt) {
   o.k = k * (wk / nk) ** u * o.zoom;
   o.y = o.fromY + (ny - o.fromY) * s + (wy - ny) * u;
   o.out = u;
+  if (o.focus) { // going to a piece: z and the aim from one eased share, the piece's offset shrinking as the view does
+    const q = o.focus, p = inOut(q.t = o.still ? 1 : Math.min(1, q.t + dt / FOCUS));
+    o.z = q.z0 + (q.z1 - q.z0) * p;
+    const f = o.r ** o.z;
+    o.py = q.y - q.s0 * (1 - p) * f + UNDER * f;
+    clampAim(o);
+    o.ez = o.z; o.ey = o.py;
+    if (q.t === 1) o.focus = null;
+  }
   const e = o.still ? 1 : 1 - Math.exp(-EASE * dt); // the player's zoom, eased (at once with reduced motion)
   o.ez += (o.z - o.ez) * e;
   o.ey += (o.py - o.ey) * e;

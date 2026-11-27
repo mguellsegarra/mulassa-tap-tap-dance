@@ -15,6 +15,7 @@ for (const id of PLAYABLE_IDS) {
   assert(['balloon', 'carretilles', 'esquellot'].includes(t.drumroll), `${id}: a drumroll the HUD draws`);
   assert(['fem', 'masc'].includes(t.article) && ['mula', 'drac'].includes(t.playCam) && [null, 'sparks'].includes(t.photoE), `${id}: known values`);
   assert.equal(typeof t.novelty, 'boolean', `${id}: novelty is a yes or no`);
+  assert.equal(typeof t.anySong, 'boolean', `${id}: anySong is a yes or no`);
   assert.equal(traitsByKey(t.key), t); assert.equal(idOfKey(t.key), id); assert.equal(traitsOf(id), t);
 }
 assert(PLAYABLE_IDS.filter(id => FIGURE_TRAITS[id].novelty).length <= 1, 'one new figure at a time leads the selector');

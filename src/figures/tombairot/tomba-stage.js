@@ -10,7 +10,7 @@ import { tombaToWorld } from './tomba-colla.js';
 import { TOMBA_JAW } from './tomba-head.js';
 import { G, clock } from '../../game/state.js';
 import { REEL, REEL_STILL } from '../../game/showreel.js';
-import { figureSong, songTimeAtBeat } from '../../game/figure-song.js';
+import { danceSong, songTimeAtBeat } from '../../game/figure-song.js';
 import { TOMBA_ID } from '../../game/figures.js';
 import { PHOTO } from '../../game/photo-control.js';
 import { CALM, LETTERS } from '../../core/env.js';
@@ -21,13 +21,17 @@ import { lensShrink } from '../../scene/framing.js';
 import { stepManualJump, beginManualFlight, manualContact } from '../../scene/manual-jump.js';
 
 export const TOMBA_DANCE = { t: 0 }; // the song second shown
-let tombaDance = null;
-const tombaDanceNow = () => (tombaDance ??= createTombaDance(figureSong(TOMBA_ID)));
+let tombaDance = null, tombaStillDance = null, tombaDanceSong = null;
+// planned once per song it dances (game/choreo/: any song, its own or another's); under the selector's held shot, its
+// still loop (tomba-dance.js: its bow on its spot) on that song's beat grid
+const tombaDanceNow = () => {
+  const s = danceSong(TOMBA_ID);
+  if (s !== tombaDanceSong) { tombaDance = createTombaDance(s); tombaStillDance = createTombaDance(s, { still: true }); tombaDanceSong = s; }
+  return REEL_STILL.on ? tombaStillDance : tombaDance;
+};
 export const prepareTombaMotion = () => { tombaDanceNow(); };
 export const tombaEnd = () => tombaDanceNow().duration;
 const TP = newTombaPose(), TP_LAG = newTombaPose(), TOMBA_FOOT = {};
-// Under the selector's held shot: its first sway and bow phrases on a loop, on its spot (s of song, from its first phrase)
-const tombaStillLoop = () => { const d = tombaDanceNow(), at = d.phrases.indexOf('bow'), b = d.first + Math.max(0, at) * 8; return [songTimeAtBeat(b), songTimeAtBeat(b + 8)]; };
 
 // The model's own sway, bob and loose parts on the song's beat (a sway every two beats), the dance's pose on top.
 // acc: { roll, pitch, neck, neckYaw, tail, col } the shared springs' accents and the collapse (0-1).
@@ -58,7 +62,7 @@ export function danceTomba(beat, dt, acc, pos) {
   if (TOMBA_LIVE.parked && !dancing && G.state === 'select') return driveTomba(dt, TOMBA_LIVE.at, 0, 0, pos); // free play, just looking: it stays where it was driven
   if (TOMBA_LIVE.parked) { TOMBA_LIVE.parked = false; TOMBA_JUMP.air = TOMBA_JUMP.airV = 0; tombaFeetHome = false; }
   tomba.frame.rotation.y = TOMBA_YAW; tomba.frame.position.set(0, 0, 0);
-  if (REEL_STILL.on) { const [a, b] = tombaStillLoop(); TOMBA_DANCE.t = a + clock % (b - a); }
+  if (REEL_STILL.on) TOMBA_DANCE.t = clock; // its still loop: no end to wrap
   else if (G.practice || !dancing && G.state !== 'results') TOMBA_DANCE.t = 0; // the practice and the menus: its stance
   else if (reel || dancing && !G.collapseT && !G.paused) TOMBA_DANCE.t = Math.max(0, songTimeAtBeat(beat));
   const P = poseTombaAt(TOMBA_DANCE.t, acc), s = Math.sin(P.yaw), c = Math.cos(P.yaw);

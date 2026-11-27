@@ -25,19 +25,20 @@ export const FIGURE_TRAITS = Object.freeze({
     landing: 0.98, // the manual jump's landing shake (scene/manual-jump.js)
     reelCalm: false,
     novelty: false, // the selector's newest figure: first in the strip, its card shining, until it is played (ui/select-ui.js)
+    anySong: false, // true: no dance of its own, the generic engine (game/choreo/) dances it to any song (dev: ?canco)
     frameLength: true, // the selector and showreel frame her by her length, whatever her heading (scene/cameras.js): turned side on at once she outgrew a phone's frame
   }),
   'drac-valls': Object.freeze({
     sceneScale: 6.0 * 0.492 / 4.03, sceneReach: 6.0 * 0.492 / 4.03, domTheme: 'fig-drac',
     key: 'drac', drumroll: 'carretilles', article: 'masc', cardFile: 'drac-de-valls.jpg', cardAlt: 'hud.card.altDrac',
     shareKey: null, shareLines: 'services.share.drac.', shareEmoji: '🐉', challenge: true, playCam: 'drac', wideClearance: true, photoE: 'sparks',
-    photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, splashSolo: false, landing: 0.9, frameLength: false, reelCalm: false, novelty: false,
+    photoBody: 'drac', springs: false, splashHost: false, splashPartner: true, splashSolo: false, landing: 0.9, frameLength: false, reelCalm: false, novelty: false, anySong: false,
   }),
   'bou-tradicional-valls': Object.freeze({
     sceneScale: 0.8, sceneReach: 0.9, domTheme: 'fig-bou',
     key: 'bou', drumroll: 'esquellot', article: 'masc', cardFile: 'bou-tradicional-de-valls.jpg', cardAlt: 'hud.card.altBou',
     shareKey: 'services.share.bou', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoE: null,
-    photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, splashSolo: true, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
+    photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, splashSolo: true, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, anySong: false, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
   }),
   // The Escola Candela's school dragon: 3.96 m to the horn's tip (the Mulassa's height) and 4.8 m long, so framed by its length.
   'tombairot-valls': Object.freeze({
@@ -45,6 +46,7 @@ export const FIGURE_TRAITS = Object.freeze({
     key: 'tombairot', drumroll: 'balloon', article: 'masc', cardFile: null, cardAlt: 'hud.card.altTomba',
     shareKey: 'services.share.tombairot', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoE: null,
     photoBody: 'tombairot', springs: false, splashHost: false, splashPartner: false, splashSolo: false, landing: 0.95, frameLength: true, reelCalm: false, novelty: false,
+    anySong: true,
   }),
 });
 // The Tombairot is in review: no build ships it. While the set holds a figure, a build leaves its modules and song out

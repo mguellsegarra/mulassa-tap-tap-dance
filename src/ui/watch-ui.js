@@ -2,6 +2,7 @@
 // sheet that offers to play it. The run is game/flow.js's (startWatch): the same song, plaça and camera as a game, played by itself, never scored.
 import { G, clock, setSelectedFigure } from '../game/state.js';
 import { startWatch, toTitle } from '../game/flow.js';
+import { songCredit } from '../game/figure-song.js';
 import { hide } from './handles.js';
 import { focusIn } from './focus.js';
 import { tr } from '../i18n/messages.js';
@@ -14,8 +15,9 @@ export function setupWatch({ select, busy, walk }) {
   function start() { // from the song row, which only a playable figure's panel shows
     const figure = select.figure;
     if (G.state !== 'select' || busy() || !figure || select.pending || !setSelectedFigure(figure)) return;
-    $('watch-song').textContent = figure.song;
-    $('watch-text').textContent = tr('ui.watch.text', { song: figure.song });
+    const { song } = songCredit(figure); // the song it dances (its own, or a dev ?canco)
+    $('watch-song').textContent = song;
+    $('watch-text').textContent = tr('ui.watch.text', { song });
     startWatch();
   }
   function leave(levels) { // back to the selector: its figure step, or straight to the levels with the remembered one

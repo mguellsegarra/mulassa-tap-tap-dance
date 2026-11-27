@@ -7,7 +7,8 @@
 // the cut: every shot is held or moves slowly (≤ 0.05 rad a beat), every cut dissolves (ui/reel-fade.js), every angle is on the
 // camera's side of the action (180° rule). Pure: main.js feeds it the menu beat, the figures pose the dance at REEL.beat,
 // cameras.js frames REEL.shot inside the free band (a hard edge keeps her in it).
-import { menuSong } from './figure-song.js';
+import { menuSong, danceSong } from './figure-song.js';
+import { beatAtTime } from '../core/beat-grid.js';
 import { MULASSA, DRAC, BOU, TOMBA_ID } from './figures.js';
 
 // The menu loop's tempo, for when it is silent (Silenci, still loading): its loop's beats over its length
@@ -88,11 +89,13 @@ export const SHOWREELS = {
     [192, 'left', 'cut'], [224, 'high', 'glide'], [256, 'right', 'glide'], // the start; the festive turns
     [288, 'front', 'glide'], // the ending and the settle (a glide: a cut there read as a jolt)
   ] },
-  // on its 8-beat phrases (figures/tombairot/tomba-dance.js, from beat 8): A its walks, bows and turns, B (beat 104) the
-  // turns, A again (beat 144), the finale's hops round (beat 192); a shot every three or four phrases (it dances on its spot)
-  [TOMBA_ID]: { start: 8, loop: 212, fill: 0.85, shots: [
-    [0, 'wide', 'cut'], [8, 'left', 'glide'], [40, 'front', 'glide'], [72, 'close', 'cut'], [80, 'right', 'cut'],
-    [104, 'high', 'cut'], [128, 'side', 'cut'], [152, 'left', 'cut'], [176, 'vast', 'glide'],
+  // on its own song's plan (figures/tombairot/tomba-dance.js, game/choreo/, from beat 8): A its clock, the long one then
+  // the short one (beat 72), B (beat 104) a turn and its unturn, A again (beat 146) its own moves, the close-up on its bow
+  // (beat 162: it stands still), the plaça widening into the finale's turns (beat 186). Another song (dev ?canco) keeps these cuts; its loop
+  // follows the song it dances, two beats after the last hit
+  [TOMBA_ID]: { start: 8, get loop() { const s = danceSong(TOMBA_ID); return Math.round(beatAtTime(s.beats, s.end)) + 2; }, fill: 0.85, shots: [
+    [0, 'wide', 'cut'], [8, 'left', 'glide'], [40, 'front', 'glide'], [72, 'right', 'cut'],
+    [104, 'high', 'cut'], [128, 'side', 'cut'], [146, 'left', 'cut'], [162, 'close', 'cut'], [170, 'right', 'cut'], [186, 'vast', 'glide'],
   ] },
 };
 

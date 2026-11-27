@@ -2,7 +2,7 @@
 // game (game-context.mjs; render-quality.mjs runs the files in order).
 import assert from 'node:assert/strict';
 import { profileAt } from '../../src/platform/render-quality.js';
-import { THREE, stars, practice, energy, dance, shareLogic, errors, nodes, keyHandlers, drawnText, document, context, run } from './game-context.mjs';
+import { THREE, stars, practice, energy, dance, shareLogic, leaderboardResult, errors, nodes, keyHandlers, drawnText, document, context, run } from './game-context.mjs';
 const settingsSheet = nodes.get('settings-menu');
 // Classificacions: Configuració → the sheet (closing it goes back); an open board sheet swallows the title and results
 // keys (typing an alias never plays or leaves); its results row appears with TOCA PER TORNAR and the card makes room.
@@ -91,8 +91,19 @@ run(`G.state = 'play'; G.diff = 2; G.counts = { perfect: 200, good: 40, miss: 0 
   G.previous = { quality: quality({ perfect: 265, good: 53, miss: 0 }), score: 182972 };
   G.score = 139572; finish('end');`);
 assert.equal(run('G.newRecord'), false, 'equal quality with fewer points cannot announce a record');
+// A figure dancing another figure's song (?canco, game/figure-song.js) leaves nothing that claims to be its own: no
+// record, no statistics, no board result, nothing to share. (songSwapped and stats' `live` are set here directly: this
+// harness's page has no ?canco and no Tombairot, so the public setFigureSong cannot swap; tests/game/song-swap.mjs does.)
+run(`G.state = 'play'; G.score = 183000; songSwapped = true; finish('end'); songSwapped = false;`);
+assert.equal(run('G.newRecord'), false, 'another figure\'s song: no record, even with more points');
+assert.equal(run('G.shareRun'), null, '... no share card or brag with its score');
+assert.equal(run('G.challenge'), null, '... no challenge result');
+assert.equal(leaderboardResult.getLeaderboardResult(), null, '... and no board result to publish');
+assert.deepEqual(JSON.parse(run(`(() => { const r = []; for (const swap of [true, false]) { songSwapped = swap; beginRun(1, []); r.push(live); live = false; } songSwapped = false; G.state = 'results'; return JSON.stringify(r); })()`)),
+  [false, true], 'its run is not armed for the statistics; the same run on its own song is');
 run(`G.state = 'play'; G.score = 183000; finish('end');`);
 assert.equal(run('G.newRecord'), true, 'equal quality with more points earns a record');
+assert(run('G.shareRun'), 'the same run on its own song can be shared');
 run(`G.state = 'play'; G.counts = { perfect: 240, good: 0, miss: 0 }; G.score = 139572; finish('end');`);
 assert.equal(run('G.newRecord'), false, 'a higher % with fewer points is no record');
 run(`G.state = 'play'; G.counts = { perfect: 150, good: 50, miss: 40 }; G.score = 190000; finish('end');`);
@@ -100,6 +111,11 @@ assert.equal(run('G.newRecord'), true, 'more points with a lower % is a record (
 run(`G.state = 'play'; toTitle();`);
 assert.equal(boardSheet.verifyStarts, 0, 'a finished or left run asks Cloudflare nothing');
 run('chip = savedChip; G.state = savedState;');
+run(`var realRead = readFigureRecord; readFigureRecord = () => ({ quality: 80, score: 1000, combo: 9 }); // (this harness's storage keeps nothing)
+  songSwapped = true; startGame(2); var swappedPrev = G.previous; songSwapped = false; startGame(2); var ownPrev = G.previous;
+  readFigureRecord = realRead; toTitle();`);
+assert.equal(run('swappedPrev'), null, 'another figure\'s song: the results show no record of its own song to beat');
+assert.equal(run('ownPrev.score'), 1000, '(its own song does)');
 run(`G.state = 'play';`); assert(!boardSheet.opts.canVerify(), 'no tick box during a song or the practice');
 run(`G.state = 'results';`); assert(boardSheet.opts.canVerify(), 'on the results it may show');
 run(`G.state = 'select';`); assert(boardSheet.opts.canVerify(), 'on the title too');

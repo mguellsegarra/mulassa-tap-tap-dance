@@ -5,7 +5,7 @@ import { makeDanceChart } from './chart.js';
 import { recordKey, readFigureRecord, saveFigureRecord, markSeen } from './figures.js';
 import { comparableScore } from './score-scale.js';
 import { beatsRecord } from './records.js';
-import { song, selectedFigure, countInAt, startCueAt, BEATS, beatAt, FINALE_T } from './figure-song.js';
+import { song, selectedFigure, countInAt, startCueAt, BEATS, beatAt, FINALE_T, songSwapped } from './figure-song.js';
 import { store } from '../platform/storage.js';
 import { errors } from '../services/errors.js';
 import { WINDOWS, quality, starsFor } from './progress.js';
@@ -78,7 +78,7 @@ export function startGame(diff) {
   beginRun(diff, makeDanceChart(song, diff).filter(n => n.t >= playFrom));
   warmStart(); // already painted on the menu unless the screen changed since (sprites are per size)
   G.recordKey = recordKey(selectedFigure, diff);
-  G.previous = readFigureRecord(store, selectedFigure, diff);
+  G.previous = songSwapped ? null : readFigureRecord(store, selectedFigure, diff); // another figure's song: no record to beat
   const chart = G.chart;
   const wait = songWait = chip.buf ? null : loader.wait(musicLine());
   const waited = () => { loader.done(wait); if (songWait === wait) songWait = null; };
@@ -140,7 +140,7 @@ function beginRun(diff, chart) { // shared by the song and the practice: a clean
   crowd.forEach(p => placeHome(p));
   sweepConfetti();
   G.audioError = null;
-  armRun(!AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed);
+  armRun(!AUTOPLAY && !FROM && STARS < 0 && !FINAL && !debugUsed && !songSwapped);
 }
 // ------------------------------------------------------------------ practice (first game)
 // Five short steps (practice.js) on the real lane with the real judge and FX, over a click track on the song's
@@ -231,19 +231,21 @@ export function previewResults(stars) { // ?stars=0-3: a fake run (never a recor
 export function finish(reason) {
   if (G.watch) return watched();
   leaveRun(reason);
-  captureLeaderboardResult(G, reason, Q); // a frozen run for optional publication; no network during play
+  if (songSwapped) clearLeaderboardResult(); // another figure's song is on no board
+  else captureLeaderboardResult(G, reason, Q); // a frozen run for optional publication; no network during play
   chip.stop();
   const value = quality(G.counts);
   G.stars = starsFor(value);
   G.reason = reason === 'collapse' ? 'collapse' : value >= 70 ? 'clear' : 'fail';
   const recordScore = comparableScore(G.score, G.diff, G.figureVersion);
-  G.newRecord = !AUTOPLAY && !FROM && STARS < 0 && reason !== 'collapse' && beatsRecord(value, recordScore, G.previous);
+  G.newRecord = !AUTOPLAY && !FROM && !songSwapped && STARS < 0 && reason !== 'collapse' && beatsRecord(value, recordScore, G.previous);
   if (G.newRecord && !FINAL) saveFigureRecord(store, selectedFigure, G.diff, value, G.score, G.maxCombo);
   G.state = 'results';
   G.resT = clock;
   const run = { figureId: selectedFigure.id, score: recordScore, pct: Math.round(value), diff: G.diff, reason: G.reason, stars: G.stars, newRecord: G.newRecord, maxCombo: G.maxCombo, t: G.resT, practice: false };
-  G.challenge = challengeResult(CHALLENGE, run); // null unless it was the challenge's level
-  G.shareRun = run; // what «Comparteix» shows (share-ui.js); the leaderboard's snapshot above is untouched
+  G.challenge = songSwapped ? null : challengeResult(CHALLENGE, run); // null unless it was the challenge's level (and song)
+  // what «Comparteix» shows (share-ui.js), never another song's score as the figure's; the board's snapshot above is untouched
+  G.shareRun = songSwapped ? null : run;
   if (G.reason === 'clear') { G.chantT = clock; burst(M.pos.x, M.pos.y); chip.sfx('ovation'); }
   else chip.sfx(G.diff === 2 ? 'laugh' : 'menu');
 }

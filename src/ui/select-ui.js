@@ -27,7 +27,7 @@ const TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10V9
 // ranked: a board is configured (the ranking line shows); onBoard(figure): the line opens Classificacions on that figure;
 // onCard(p): a name on the desktop card opens that player's card (player-card.js)
 
-export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false,
+export function setupSelect({ doc = document, win = globalThis, store, keyboard = () => false, busy = () => false, reduced = () => false, credit = f => f,
   firstLevel = null, firstFigure = null, demo = false, getError = () => null, standing = () => Promise.resolve(null), levelPodium = null, ranked = false, onBoard = () => {}, onCard = () => {}, sfx = () => {}, onPlay, onSelect = () => {}, onHowto, onWrite, hearts, onPanel = () => {} }) {
   const DEMO = demo && Boolean((import.meta.env ?? {}).DEV); // ?demo: made-up facts on show only, never stored or sent; gone from production builds
   const $ = id => doc.getElementById(id), cardOf = p => onCard({ ...p, from: { ...p.from, figure: figure.id } }), facts = setupStandings({ doc, win, $, onBoard: () => onBoard(figure), onCard: cardOf, busy, levels: () => step === 'level', onSwapped: () => { if (shown) { levelStats(); if (layout.stale()) measure(); } } }); // the new card resized nothing: no second measure // facts: desktops' medals and board card (select-standings.js)
@@ -86,8 +86,8 @@ export function setupSelect({ doc = document, win = globalThis, store, keyboard 
     if (ok) {
       $('select-entity').innerHTML = entityHtml(figure);
       $('select-name').textContent = figure.fullName || figure.name || tr('ui.select.aviat');
-      $('select-song-name').textContent = figure.song || '';
-      $('select-song-credit').textContent = [figure.composer, figure.year].filter(Boolean).join(' · ');
+      $('select-song-name').textContent = credit(figure).song || ''; // credit: the song it dances (its own, or a dev ?canco)
+      $('select-song-credit').textContent = [credit(figure).composer, credit(figure).year].filter(Boolean).join(' · ');
     }
     // every write first, then one fit and one measure: fitting after each (the step, the medals, the board) cost ~80 ms a figure change
     const back = setStep('figures', false);

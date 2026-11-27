@@ -24,7 +24,7 @@ import { hasPlayed } from '../game/records.js';
 import { setupInstall } from './install-app.js';
 import { softwareGl } from '../scene/stage.js';
 import { makeDanceChart } from '../game/chart.js';
-import { song, FINALE_T } from '../game/figure-song.js';
+import { song, FINALE_T, songCredit } from '../game/figure-song.js';
 import { setupShare } from './share-ui.js';
 import { setupProfile } from './profile-ui.js';
 import { setupBadges } from './badge-picker.js';
@@ -232,7 +232,7 @@ const gamesTip = setupGamesTip();
 const heartTip = setupHeartTip({ store, hearts, figure: () => (select.pending ? null : select.figure), busy: () => sheetUp() || viewMode || !greeting.answered });
 const writeToBox = (request, back) => needConfirmed(request.kind === 'general' ? 'feedback' : request.kind, () => feedback.show(back, request));
 sheets.feedback = feedback;
-const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches,
+const select = setupSelect({ store, keyboard: () => keyboardNav, busy: () => sheetUp() || viewMode, reduced: () => CALM.matches, credit: songCredit,
   firstLevel: CHALLENGE?.diff ?? null, firstFigure: idOfKey(Q.get('figura')) ?? CHALLENGE?.figure ?? null, // ?figura (debug), else a challenge's figure: the selector opens on it
   demo: DEMO, getError: () => G.audioError, standing: f => board.standing(f), levelPodium: (f, l) => board.levelPodium(f, l), ranked: board.configured, onBoard: f => board.openBoard(() => select.refocus(), { figure: f.id }), onCard: p => card.open(p, () => select.refocus()),
   sfx: k => chip?.sfx(k), onSelect: f => { setSelectedFigure(f); greeting.greet(); },

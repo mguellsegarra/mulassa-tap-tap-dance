@@ -7,10 +7,19 @@ import { beatAtTime, timeAtBeat } from '../core/beat-grid.js';
 import { FIGURES, MULASSA, DRAC, BOU, TOMBA_ID } from './figures.js';
 import { setFigureTheme } from './figure-theme.js';
 import { traitsOf } from '../figures/index.js';
+import { Q } from '../core/flags.js';
 
 const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong, [BOU.id]: bouSong, [TOMBA_ID]: tombaSong }; // (null in a build while unreleased: tools/deploy/unreleased-figure.mjs)
+// Dev: ?canco=<key> (mulassa, drac, bou, tombairot) gives a figure that can dance any song (its trait anySong: the
+// generic engine, game/choreo/) that song instead of its own, until the selector has its song step.
+const DEV_SONGS = { mulassa: mulassaSong, drac: dracSong, bou: bouSong, tombairot: tombaSong }, DEV_KEY = Q.get('canco');
+const DEV_SONG = (Object.hasOwn(DEV_SONGS, DEV_KEY) && DEV_SONGS[DEV_KEY]) || null;
 export const menuSong = mulassaSong; // the menu loop, whoever is selected
-export const figureSong = id => FIGURE_SONGS[id]; // any figure's song, selected or not (free mode's radio)
+export const figureSong = id => FIGURE_SONGS[id]; // a figure's own recording, selected or not (free mode's radio)
+export const danceSong = id => (traitsOf(id).anySong && DEV_SONG) || FIGURE_SONGS[id]; // the song it dances
+// The title and credits of the song a figure dances: its own, or those of the figure the song belongs to
+export const songCredit = figure => FIGURES.find(f => FIGURE_SONGS[f.id] && FIGURE_SONGS[f.id] === danceSong(figure.id)) ?? figure;
+export let songSwapped = false; // the selected figure dances another figure's song: no record, statistics, board or challenge
 export let selectedFigure = MULASSA;
 export let song = mulassaSong;
 export let BEATS = song.beats;
@@ -24,7 +33,7 @@ export function setFigureSong(value) {
   if (!figure || !FIGURE_SONGS[figure.id]) return false;
   selectedFigure = figure;
   setFigureTheme(traitsOf(figure.id).key); // buttons, words and colours follow the figure
-  song = FIGURE_SONGS[figure.id];
+  song = danceSong(figure.id); songSwapped = song !== FIGURE_SONGS[figure.id];
   BEATS = song.beats;
   BEAT = (BEATS.at(-1) - BEATS[0]) / (BEATS.length - 1);
   FINALE_T = song.finale;

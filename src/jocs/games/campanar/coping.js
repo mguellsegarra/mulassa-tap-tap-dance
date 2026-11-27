@@ -76,7 +76,9 @@ export function copingMat(outer, inner, y0 = 0, rise = FLOOR, scale = 1) {
 }
 // a floor's faces (stone.js courseMats): its top in coping stones; with a glacis, the sides that slope too
 export function copeSlab(mats, r, batter, y0) {
-  mats[2] = mats[3] = copingMat(r, null, y0);
+  // the top only: the coping is double-sided, and a bottom in it showed from above through an opening, on the very
+  // plane of the floor under it's top, and blinked
+  mats[2] = copingMat(r, null, y0);
   if (batter) {
     const glacis = copingMat(r, batter, y0, FLOOR);
     if (ledgesOf(r, batter)[0] >= EPS) for (const f of SIDE_FACE) mats[f] = glacis; // the same ledge all round

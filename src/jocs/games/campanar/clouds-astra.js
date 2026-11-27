@@ -82,11 +82,10 @@ function astraCloudAtlas() {
 }
 
 export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
-  // Position each bank by its shore of the screen. The long lens at the end can then
-  // reframe the tower without pulling a cloud across the crown.
+  // each bank: where along its crossing it starts, its height, size, shape and nearness
   const banks = [
-    [-0.80, 0.39, 0.61, 0, 0.86], [0.86, 0.58, 0.48, 1, 0.72],
-    [-0.50, 0.72, 0.31, 2, 0.43], [0.72, 0.21, 0.36, 2, 0.49],
+    [0.39, 0.39, 0.61, 0, 0.86], [0.58, 0.58, 0.48, 1, 0.72],
+    [0.72, 0.72, 0.31, 2, 0.43], [0.21, 0.21, 0.36, 2, 0.49],
   ];
   const vertices = [], anchors = [], texcoords = [], indices = [];
   for (const [i, [x, y, span, bank, distance]] of banks.entries()) {
@@ -114,10 +113,11 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
       varying float mist, fade;
       void main() {
         float layer = bankAnchor.z;
-        // the far banks crawl, the near ones drift a little faster (speed by the square of nearness: 1 to 4 minutes a crossing)
-        float passage = fract(seconds * 0.022 * layer * layer + bankAnchor.y);
-        // a long drift across a good part of the screen, and they sink as the tower climbs
-        vec2 center = bankAnchor.xy + vec2((passage - 0.5) * 1.2, -height * layer * 0.02);
+        // the far banks crawl, the near ones drift faster: about 30 s to 1 min across the screen
+        float passage = fract(seconds * 0.02 * layer + bankAnchor.x);
+        // the whole way across, from off one side to off the other (the widest bank is 0.51 half-wide on a phone), so a
+        // bank never forms or thins out in sight; they sink as the tower climbs
+        vec2 center = vec2((passage - 0.5) * 3.5, bankAnchor.y - height * layer * 0.02);
         // the end's turn takes them round with the mountains: over a band wider than the screen and a bank, so the jump
         // back is out of sight
         center.x = mod(center.x + pan + 2.2, 4.4) - 2.2;
@@ -125,8 +125,8 @@ export function createClouds(scene, camera, renderer, { night = 0 } = {}) {
         gl_Position = vec4(center + position.xy * size, 0.99998, 1.0);
         sampleAt = uv;
         mist = layer * (0.79 - height * 0.009);
-        // a bank forms and thins out slowly, over a third of its passage at each end (no pop)
-        fade = smoothstep(0.0, 0.3, passage) * (1.0 - smoothstep(0.7, 1.0, passage));
+        // only off screen (|x| over 1.6): the wrap back to the start is never seen
+        fade = smoothstep(0.0, 0.03, passage) * (1.0 - smoothstep(0.97, 1.0, passage));
       }`,
     fragmentShader: `
       uniform sampler2D atlas;

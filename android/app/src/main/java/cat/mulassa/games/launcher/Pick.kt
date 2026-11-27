@@ -81,7 +81,7 @@ private const val DEPTH = 0.075f // the side's depth, of the face's width
 // Ronda 18's intermediate screen («més senzill»): the cartridge lifts out of its slot and grows to the middle over the
 // dimmed, blurred home (`veil`, owned by LauncherRoot); under it, «Juga» starts the iris. Outside or back takes it back to
 // its slot. An «Aviat» one has no button. It turns once round its vertical axis on the way (ronda 30: back, quicker,
-// 500 ms), and on its way into the console it tips into the bay, flat again as it seats.
+// 500 ms); it goes into the console straight, face on (ronda 35: the owner found the tipped one crooked).
 // Ronda 26: then the console (Console.kt) slides up from the bottom edge and the
 // cartridge is dragged down into its bay, under the panel, or «Juga» (or a tap on the console) inserts it; seated, the
 // LED lights and the iris opens. Short of the threshold it springs back; an «Aviat» one is refused at the bay's mouth. Laid out at its final size and scaled down at the start, so the art stays
@@ -232,8 +232,6 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
             lift()
             translationX = side.tx + side.shift(size.width / 2, size.height / 2); translationY = side.ty
             scaleX = side.scale; scaleY = side.scale; rotationY = side.turn; cameraDistance = side.camera; alpha = fade.value
-            // into the bay: its bottom tips away as it enters, flat again once seated
-            rotationX = if (still) 0f else 16f * sin(Math.PI * p.coerceIn(0f, 1f)).toFloat()
         }.clickable(null, null) {}.draggable(drag, Orientation.Vertical, enabled = armed,
             onDragStarted = { job?.cancel(); scope.launch { mark("drag") } },
             onDragStopped = { velocity ->

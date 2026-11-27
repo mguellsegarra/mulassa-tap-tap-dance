@@ -49,7 +49,7 @@ struct SkyBackground: View {
             LinearGradient(stops: [.init(color: Color(sky.top), location: 0), .init(color: Color(sky.middle), location: 0.55),
                                    .init(color: Color(sky.bottom), location: 1)], startPoint: .top, endPoint: .bottom)
                 .overlay { Stars().opacity(sky.stars) }
-                .overlay { SkyLife(sky: sky, top: g.safeAreaInsets.top, still: still) }
+                .overlay { SkyLife(sky: sky, top: g.safeAreaInsets.top, still: still).modifier(Drifting()) }
                 .ignoresSafeArea()
         }
         .allowsHitTesting(false)

@@ -2,6 +2,9 @@
 
 package cat.mulassa.games.launcher
 
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.EaseOut
 import android.content.Context
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -72,6 +75,7 @@ import cat.mulassa.games.R
 class Launcher(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("launcher", Context.MODE_PRIVATE)
     var games by mutableStateOf<List<Game>>(emptyList()); private set
+    var arrived by mutableStateOf(false) // the splash has lifted (or there was none): the cartridges come in
     fun number(game: Game) = games.indexOf(game).takeIf { it >= 0 }?.plus(1) // engraved in its grip
     var images by mutableStateOf<Map<String, ImageBitmap>>(emptyMap()); private set
     var last by mutableStateOf(prefs.getString("last", null)); private set
@@ -144,7 +148,8 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
         }) {
             // under a picked cartridge the home leaves the accessibility tree, as iOS's modal lift
             Box(Modifier.fillMaxSize().sky { sky }.then(if (model.pick != null) Modifier.clearAndSetSemantics {} else Modifier)) {
-                SkyLife(sky)
+                // the clouds drift a little against the lean: the sky sits further back than the cartridges
+                Box(Modifier.matchParentSize().graphicsLayer { translationX = -Tilt.x * 10.dp.toPx(); translationY = Tilt.y * 7.dp.toPx() }) { SkyLife(sky) }
                 Home(model, sky, list, model.pick?.game?.id, { account = true }) { model.pick = it }
             }
         }
@@ -172,6 +177,14 @@ private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?
     val label = stringResource(R.string.html_accountTitle)
     // an odd count leaves one cartridge alone: an «Aviat» one fills the row (not a game: no tap)
     val rows = (model.games.map<Game, Game?> { it } + if (model.games.size % 2 == 1) listOf(null) else emptyList()).chunked(2)
+    // Ronda 36: the cartridges come in one after another once the splash has lifted, 60 ms apart, 400 ms each (a plain
+    // fade when the system's animations are off); one clock, each cell reads its own part of it in its layer
+    val ctx = LocalContext.current
+    val still = remember { android.provider.Settings.Global.getFloat(ctx.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
+    val clock = remember { Animatable(if (model.arrived) 1e4f else 0f) } // ms since they began to arrive
+    LaunchedEffect(model.arrived) { if (model.arrived && clock.value < 1e4f) { clock.animateTo(400f + 60f * rows.size * 2, tween(400 + 60 * rows.size * 2, easing = LinearEasing)); clock.snapTo(1e4f) } }
+    LaunchedEffect(picked) { Tilt.level = picked != null }
+    fun enter(k: Int): () -> Float = { EaseOut.transform(((clock.value - if (still) 0f else 60f * k) / 400f).coerceIn(0f, 1f)) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
         // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
         val (gap, scrolls) = rowGap(maxHeight, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(), top + 8.dp + 56.dp + M, u * CART_H, rows.size)
@@ -187,7 +200,7 @@ private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?
             }
             itemsIndexed(rows, key = { _, row -> row.joinToString { it?.id ?: "aviat" } }) { k, row ->
                 Row(Modifier.fillMaxWidth().padding(top = if (k > 0) gap - M else 0.dp), horizontalArrangement = Arrangement.spacedBy(M)) {
-                    row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.number(g), model.images[g.id], u, g.id == picked, pick) else Placeholder(u) } }
+                    row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.number(g), model.images[g.id], u, g.id == picked, still, enter(k * 2 + row.indexOf(g)), pick) else Placeholder(u, still, enter(k * 2 + 1)) } }
                 }
             }
         }
@@ -219,13 +232,26 @@ private fun peek(view: Dp, top: Dp, row: Dp, rows: Int): Dp {
     return M
 }
 
+// A cartridge in the grid (ronda 36): its shadow on the sky, sliding against the lean; the cartridge leaning up to 7° with
+// the phone (Motion.kt) and coming in with the others (`enter`: 0 to 1), and the shine crossing its face. Transforms, an
+// alpha and two small draws over the cartridge's own layer.
+private fun Modifier.leaning(u: Dp, still: Boolean, enter: () -> Float, shown: () -> Boolean) = this
+    .drawBehind { if (shown()) cartridgeShadow(u.toPx(), Tilt.x, Tilt.y, enter()) }
+    .graphicsLayer {
+        val p = enter()
+        alpha = if (shown()) p else 0f
+        if (!still) { translationY = (1 - p) * 28.dp.toPx(); scaleX = 0.94f + 0.06f * p; scaleY = scaleX }
+        rotationY = -Tilt.LEAN * Tilt.x; rotationX = Tilt.LEAN * Tilt.y; cameraDistance = 6 * density // the signs that match SwiftUI's rotation3DEffect
+    }
+    .drawWithContent { drawContent(); shine(u.toPx(), Tilt.x, Tilt.y) }
+
 // A tap lifts it out (Pick.kt); while it is out, its slot stays empty.
 @Composable
-private fun Cell(game: Game, number: Int?, image: ImageBitmap?, u: Dp, out: Boolean, pick: (Pick) -> Unit) {
+private fun Cell(game: Game, number: Int?, image: ImageBitmap?, u: Dp, out: Boolean, still: Boolean, enter: () -> Float, pick: (Pick) -> Unit) {
     var at by remember { mutableStateOf(Offset.Zero) }
     val aviat = stringResource(R.string.ui_select_aviat)
     val playIt = stringResource(R.string.launcher_play, game.title)
-    Box(Modifier.graphicsLayer { alpha = if (out) 0f else 1f }
+    Box(Modifier.leaning(u, still, enter) { !out }
         .onGloballyPositioned { at = it.centre() }
         .semantics { contentDescription = if (game.soon) aviat else playIt }
         .squash(u * 0.3f) { pick(Pick(game, at, u)) }) {
@@ -234,5 +260,5 @@ private fun Cell(game: Game, number: Int?, image: ImageBitmap?, u: Dp, out: Bool
 }
 
 @Composable
-private fun Placeholder(u: Dp) =
-    Box(Modifier.clearAndSetSemantics {}) { Cartridge(hex("#7a5a44"), stringResource(R.string.ui_select_aviat), null, u, locked = false, placeholder = true) }
+private fun Placeholder(u: Dp, still: Boolean, enter: () -> Float) =
+    Box(Modifier.leaning(u, still, enter) { true }.clearAndSetSemantics {}) { Cartridge(hex("#7a5a44"), stringResource(R.string.ui_select_aviat), null, u, locked = false, placeholder = true) }

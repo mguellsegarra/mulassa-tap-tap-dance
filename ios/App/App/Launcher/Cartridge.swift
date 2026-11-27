@@ -46,6 +46,10 @@ struct Cartridge: View, Equatable {
                     .overlay { if locked { Color(red: 28 / 255, green: 17 / 255, blue: 10 / 255).opacity(0.55).overlay(Lock().frame(width: 2.4 * u, height: 2.4 * u)) } }
                 }
             }
+            .overlay { // the label's gloss: a soft light from the top left corner
+                LinearGradient(stops: [.init(color: .white.opacity(0.26), location: 0), .init(color: .white.opacity(0), location: 0.46)],
+                               startPoint: .topLeading, endPoint: .bottomTrailing)
+            }
             .frame(width: art.width, height: art.height)
             .clipShape(RoundedRectangle(cornerRadius: 0.3 * u))
             .offset(x: art.minX, y: art.minY)
@@ -84,6 +88,9 @@ struct Cartridge: View, Equatable {
         shell.fill(shape, with: .linearGradient(Gradient(stops: [.init(color: Color(c.mix(.white, 0.18)), location: 0), .init(color: Color(c), location: 0.52),
                                                                .init(color: Color(c.mix(UIColor(hex: "#251008"), 0.12)), location: 1)]),
                                               startPoint: .zero, endPoint: CGPoint(x: 0, y: 12.05 * u)))
+        // volume (ronda 36): the light catches the top and left edges of the moulded shell, the right one falls in shade
+        r(0.5, 0.07, 9.32, 0.09, 0.045, c.mix(.white, 0.55)); r(0.23, 0.34, 0.09, 11.4, 0.045, c.mix(.white, 0.38))
+        r(10.0, 0.34, 0.09, 10.5, 0.045, c.mix(ink, 0.22))
         if back { return engrave(ctx, color: c, u: u) }
         // the grip (ronda 28, the owner): a recessed pill engraved with the cartridge's number, «#01», between three ridges
         // a side (the word «Mulassa» stays in the logo); each mark twice, the shell's light 1 pt lower, then its darker cut
@@ -103,6 +110,22 @@ struct Cartridge: View, Equatable {
 }
 
 extension Cartridge {
+    // the face's outline (draw's SHAPE), for the grid's shine to stay inside it
+    static func outline(u: CGFloat) -> Path {
+        Path { p in
+            p.addLines([(0.16, 0.25), (0.41, 0), (9.91, 0), (10.16, 0.25), (10.16, 10.95), (9.06, 12.05), (0.41, 12.05), (0.16, 11.8)].map { CGPoint(x: $0.0 * u, y: $0.1 * u) })
+            p.closeSubpath()
+        }
+    }
+    // its shadow on the sky, under the grid's cartridges: two soft steps, no blur (a blur is redrawn as the cartridge leans)
+    static func shadow(u: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 0.6 * u).fill(.black.opacity(0.1)).frame(width: 9.6 * u, height: 11.6 * u).offset(x: 0.36 * u, y: 1.25 * u)
+            RoundedRectangle(cornerRadius: 0.8 * u).fill(.black.opacity(0.07)).frame(width: 10.2 * u, height: 11.9 * u).offset(x: 0.06 * u, y: 1.35 * u)
+        }
+        .frame(width: size.width * u, height: size.height * u, alignment: .topLeading)
+    }
+
     // The back's engraving: each mark twice, the shell's light 1 pt lower, then its darker inset on top.
     fileprivate static func engrave(_ ctx: GraphicsContext, color c: UIColor, u: CGFloat) {
         let ink = UIColor(hex: "#1d100a"), cut = Color(c.mix(ink, 0.3)), lit = Color(c.mix(UIColor(hex: "#fff3d6"), 0.45))

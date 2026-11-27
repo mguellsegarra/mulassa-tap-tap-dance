@@ -2,7 +2,7 @@ import SwiftUI
 
 // ronda-18's in-between step: the tapped cartridge lifts out of its slot and grows to the middle; the home dims and «Juga»
 // comes in under it, turning once round its vertical axis on the way (ronda 30: back, quicker, 500 ms). Outside (or back)
-// takes it home again. On its way into the console it tips into the bay and lies flat again as it seats.
+// takes it home again. It goes into the console straight, face on (ronda 35: the owner found the tipped one crooked).
 // Ronda 26: the console (Console.swift) then slides up from the bottom edge, and the player drags the cartridge down into
 // its bay, under the panel: past 40 % of the way in (or flung) it seats, with a tick at the bay's edge, a thunk and the LED,
 // and the iris opens from it; short of that it springs back. «Juga», or a tap on the cartridge or the console, pushes it in
@@ -64,8 +64,6 @@ struct LiftView: View {
                 Image(uiImage: face.front).resizable().frame(width: width, height: height)
                     .modifier(Turn(angle: angle, color: game.tint, u: u, back: face.back))
                     .modifier(Shake(t: shake))
-                    // into the bay: its bottom tips away as it enters, flat again once seated
-                    .rotation3DEffect(.degrees(tilt), axis: (x: 1, y: 0, z: 0), perspective: 0.5)
                     .scaleEffect(up ? 1 + min(1, max(0, p) / bay.edge) * (seatScale - 1) : still ? 0.92 : k)
                     .opacity(still && !up || faded ? 0 : 1)
                     .contentShape(Rectangle())
@@ -110,8 +108,6 @@ struct LiftView: View {
             }
         }
     }
-
-    private var tilt: Double { still ? 0 : 16 * sin(.pi * Double(min(1, max(0, p)))) }
 
     private static func inOut(_ d: Double) -> Animation { .timingCurve(0.42, 0, 0.58, 1, duration: d) }
     private static func out(_ d: Double) -> Animation { .timingCurve(0.33, 0, 0.2, 1, duration: d) }

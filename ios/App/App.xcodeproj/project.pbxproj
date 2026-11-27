@@ -21,6 +21,7 @@
 		A1C0DE020100000000000002 /* Cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020100000000000001 /* Cartridge.swift */; };
 		A1C0DE020A00000000000002 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020A00000000000001 /* Lift.swift */; };
 		A1C0DE020B00000000000002 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020B00000000000001 /* Console.swift */; };
+		A1C0DE020D00000000000002 /* Motion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020D00000000000001 /* Motion.swift */; };
 		A1C0DE020C00000000000002 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = A1C0DE020C00000000000001 /* Sounds */; };
 		A1C0DE020200000000000002 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020200000000000001 /* LauncherView.swift */; };
 		A1C0DE020300000000000002 /* Logo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020300000000000001 /* Logo.swift */; };
@@ -51,6 +52,7 @@
 		A1C0DE020100000000000001 /* Cartridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cartridge.swift; sourceTree = "<group>"; };
 		A1C0DE020A00000000000001 /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
 		A1C0DE020B00000000000001 /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
+		A1C0DE020D00000000000001 /* Motion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Motion.swift; sourceTree = "<group>"; };
 		A1C0DE020C00000000000001 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = "<group>"; };
 		A1C0DE020200000000000001 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
 		A1C0DE020300000000000001 /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
@@ -121,6 +123,7 @@
 				A1C0DE020200000000000001 /* LauncherView.swift */,
 				A1C0DE020A00000000000001 /* Lift.swift */,
 				A1C0DE020B00000000000001 /* Console.swift */,
+				A1C0DE020D00000000000001 /* Motion.swift */,
 				A1C0DE020300000000000001 /* Logo.swift */,
 				A1C0DE020400000000000001 /* Iris.swift */,
 				A1C0DE020500000000000001 /* GameHost.swift */,
@@ -239,6 +242,7 @@
 				A1C0DE020200000000000002 /* LauncherView.swift in Sources */,
 				A1C0DE020A00000000000002 /* Lift.swift in Sources */,
 				A1C0DE020B00000000000002 /* Console.swift in Sources */,
+				A1C0DE020D00000000000002 /* Motion.swift in Sources */,
 				A1C0DE020300000000000002 /* Logo.swift in Sources */,
 				A1C0DE020400000000000002 /* Iris.swift in Sources */,
 				A1C0DE020500000000000002 /* GameHost.swift in Sources */,

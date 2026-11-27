@@ -11,6 +11,7 @@ typealias ViewState = SwiftUI.State
     func number(_ game: Game) -> Int? { games.firstIndex(of: game).map { $0 + 1 } } // engraved in its grip
     @Published private(set) var images: [String: UIImage] = [:]
     @Published private(set) var icon: UIImage?
+    @Published var arrived = false // the splash is lifting: the cartridges come in
     var play: (Game, CGPoint, _ covered: @escaping () -> Void) -> Void = { _, _, _ in } // `covered`: the iris is over the launcher
     private var root: URL?
 
@@ -92,6 +93,8 @@ private struct Home: View {
             }
         }
         .background(SkyBackground(sky: sky))
+        .onAppear { Tilt.shared.set(home: lifted == nil) }
+        .onChange(of: lifted) { _, out in Tilt.shared.set(home: out == nil) } // level under a lift
     }
 
     // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
@@ -135,11 +138,13 @@ struct Cartridges: View {
     var body: some View {
         let u = (width - 3 * M) / 2 / Cartridge.size.width
         LazyVGrid(columns: [GridItem(.flexible(), spacing: M), GridItem(.flexible(), spacing: M)], spacing: gap) {
-            ForEach(model.games) { game in
+            ForEach(Array(model.games.enumerated()), id: \.element.id) { k, game in
                 CartridgeCell(model: model, game: game, u: u, lift: lift).opacity(lifted == game.id ? 0 : 1) // its slot stays empty while it is out
+                    .modifier(Arriving(k: k, arrived: model.arrived))
             }
             if model.games.count % 2 == 1 {
-                Cartridge.filler(u: u).equatable().accessibilityHidden(true)
+                Cartridge.filler(u: u).equatable().modifier(Leaning(u: u)).modifier(Arriving(k: model.games.count, arrived: model.arrived))
+                    .accessibilityHidden(true)
             }
         }
     }
@@ -158,6 +163,18 @@ struct CartridgeCell: View {
                 .accessibilityLabel(game.soon ? Text("ui.select.aviat") : Text(verbatim: game.title))
         }
         .frame(width: Cartridge.size.width * u, height: Cartridge.size.height * u)
+        .modifier(Leaning(u: u))
+    }
+}
+
+// The cartridges come in one after another as the splash lifts (ronda 36): up 28 pt and in, 60 ms apart.
+private struct Arriving: ViewModifier {
+    let k: Int
+    let arrived: Bool
+    @Environment(\.accessibilityReduceMotion) private var still
+    func body(content: Content) -> some View {
+        content.opacity(arrived ? 1 : 0).offset(y: arrived || still ? 0 : 28).scaleEffect(arrived || still ? 1 : 0.94)
+            .animation(.timingCurve(0.33, 0, 0.2, 1, duration: still ? 0.2 : 0.4).delay(still ? 0 : 0.06 * Double(k)), value: arrived)
     }
 }
 

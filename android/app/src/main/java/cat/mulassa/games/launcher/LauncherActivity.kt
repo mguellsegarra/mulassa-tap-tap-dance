@@ -58,15 +58,22 @@ class LauncherActivity : ComponentActivity() {
         val version = packageManager.getPackageInfo(packageName, 0).versionName ?: ""
         // debug builds only: `--ef hour 21.5` fixes the sky to preview an hour
         val hour = intent.getFloatExtra("hour", -1f).takeIf { it >= 0 && applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 }
+        // debug builds only: `--es tilt 0.9,-0.6` holds a lean (Motion.kt), for captures on an emulator
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) intent.getStringExtra("tilt")?.split(",")?.mapNotNull { it.toFloatOrNull() }?.takeIf { it.size == 2 }?.let { Tilt.hold(it[0], it[1]) }
+        model.arrived = !splash
         setContent {
             Box(Modifier.fillMaxSize()) {
                 LauncherRoot(model, version, hour)
                 // LanguagePrompt(ready = !splash) { recreate() } waits for the first-run onboarding (owner, 25 Nov 2026)
                 IrisView(iris)
-                if (splash) Splash(still = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f) { splash = false }
+                if (splash) Splash(still = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f) { splash = false; model.arrived = true }
             }
         }
     }
+
+    // the phone's lean (Motion.kt), only while the launcher is in front: a game on top pauses it
+    override fun onResume() { super.onResume(); Tilt.start(this) }
+    override fun onPause() { Tilt.stop(this); super.onPause() }
 
     private fun play(game: Game, from: Offset) {
         val path = game.path

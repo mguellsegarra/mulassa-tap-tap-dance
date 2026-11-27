@@ -28,6 +28,9 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -71,7 +74,11 @@ fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Bo
     Box(Modifier.size(u * CART_W, u * CART_H).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
         val measure = rememberTextMeasurer()
         Canvas(Modifier.size(u * CART_W, u * CART_H)) { scale(u.toPx(), Offset.Zero) { body(color) }; if (number != null) engraved(color, "#%02d".format(number), measure, u.toPx()) }
-        val art = Modifier.offset(u * ART_X, u * ART_Y).size(u * ART_W, u * ART_H).clip(RoundedCornerShape(u * 0.3f))
+        // the label's gloss, drawn over the art: a soft light from the top left corner
+        val art = Modifier.offset(u * ART_X, u * ART_Y).size(u * ART_W, u * ART_H).clip(RoundedCornerShape(u * 0.3f)).drawWithContent {
+            drawContent()
+            drawRect(Brush.linearGradient(0f to Color.White.copy(alpha = 0.26f), 0.46f to Color.Transparent, start = Offset.Zero, end = Offset(size.width, size.height)))
+        }
         if (placeholder) {
             Box(art.background(hex("#59402e")), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(u * 2.6f).drawBehind { icon24(PLUS, Palette.cream.copy(alpha = 0.8f), 2.6f) })
@@ -121,11 +128,39 @@ fun CartridgeBack(color: Color, u: Dp) {
     }
 }
 
+// The grid's shine (ronda 36): a band of light across the face, inside its outline, that crosses it as the phone leans
+// (x, y: Motion.kt's Tilt) and is gone when it is level. Drawn over the cartridge's own layer: that is not drawn again.
+fun DrawScope.shine(u: Float, x: Float, y: Float) {
+    val lean = minOf(1f, kotlin.math.hypot(x, y))
+    if (lean < 0.02f) return
+    val at = Offset(CART_W / 2 + x * CART_W * 0.7f, CART_H / 2 - y * CART_H * 0.5f); val half = Offset(CART_W * 0.4f, CART_H * 0.4f)
+    scale(u, Offset.Zero) {
+        clipPath(SHAPE) {
+            drawRect(Brush.linearGradient(0f to Color.Transparent, 0.5f to Color.White.copy(alpha = 0.34f * minOf(1f, lean * 2.2f)), 1f to Color.Transparent,
+                start = at - half, end = at + half), size = Size(CART_W, CART_H), blendMode = BlendMode.Plus)
+        }
+    }
+}
+
+// Its shadow on the sky, under the grid's cartridges: two soft steps, no blur; it slides against the lean.
+fun DrawScope.cartridgeShadow(u: Float, x: Float, y: Float, alpha: Float) {
+    if (alpha <= 0f) return
+    translate(-x * 0.3f * u, y * 0.25f * u) {
+        scale(u, Offset.Zero) {
+            drawRoundRect(Color.Black.copy(alpha = 0.1f * alpha), Offset(0.36f, 1.25f), Size(9.6f, 11.6f), CornerRadius(0.6f))
+            drawRoundRect(Color.Black.copy(alpha = 0.07f * alpha), Offset(0.06f, 1.35f), Size(10.2f, 11.9f), CornerRadius(0.8f))
+        }
+    }
+}
+
 private fun DrawScope.body(c: Color) {
     val dark = c.mix(hex("#1d100a"), 0.62f); val shadow = c.mix(hex("#1d100a"), 0.34f); val light = c.mix(Palette.cream, 0.55f)
     fun rect(x: Float, y: Float, w: Float, h: Float, r: Float, fill: Color) = drawRoundRect(fill, Offset(x, y), Size(w, h), CornerRadius(r))
     translate(top = 0.34f) { drawPath(SHAPE, dark) }
     drawPath(SHAPE, Brush.verticalGradient(0f to c.mix(Color.White, 0.18f), 0.52f to c, 1f to c.mix(hex("#251008"), 0.12f), startY = 0f, endY = 12.05f))
+    // volume (ronda 36): the light catches the top and left edges of the moulded shell, the right one falls in shade
+    rect(0.5f, 0.07f, 9.32f, 0.09f, 0.045f, c.mix(Color.White, 0.55f)); rect(0.23f, 0.34f, 0.09f, 11.4f, 0.045f, c.mix(Color.White, 0.38f))
+    rect(10.0f, 0.34f, 0.09f, 10.5f, 0.045f, c.mix(hex("#1d100a"), 0.22f))
     // the grip (ronda 28, the owner): three ridges a side round a recessed pill, the cartridge's number engraved in it
     for (y in floatArrayOf(0.6f, 0.96f, 1.32f)) for (x in floatArrayOf(1.12f, 6.86f)) { rect(x, y, 2.34f, 0.14f, 0.07f, shadow); rect(x, y + 0.14f, 2.34f, 0.07f, 0.035f, light) }
     translate(top = 0.06f) { rect(3.86f, 0.4f, 2.6f, 1.2f, 0.6f, light) }; rect(3.86f, 0.4f, 2.6f, 1.2f, 0.6f, c.mix(hex("#1d100a"), 0.12f))

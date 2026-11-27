@@ -39,6 +39,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         let w = UIWindow(windowScene: scene)
         w.windowLevel = .normal + 2 // over the iris's window too
         w.rootViewController = SplashHost(still: UIAccessibility.isReduceMotionEnabled) { [weak self] in
+            self?.model.arrived = true // the cartridges come in under the fading splash
             UIView.animate(withDuration: Splash.fade, animations: { self?.splashWindow?.alpha = 0 }) { _ in
                 self?.splashWindow?.isHidden = true
                 self?.splashWindow = nil
@@ -67,6 +68,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         iris.forward { [weak self] in
             guard let self else { return }
             covered()
+            Tilt.shared.set(game: true) // no sensor under a game
             bridgeVC.webView?.load(URLRequest(url: url))
             present(bridgeVC, animated: false) { self.liftIrisWhenLoaded() }
         }
@@ -101,6 +103,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         }
         dismiss(animated: false) { [weak self] in
             guard let self else { return }
+            Tilt.shared.set(game: false)
             // the page is stopped (its music, its frames) by loading the bundle's catalogue, a page with no script
             if let server = bridgeVC.bridge?.config.serverURL, let quiet = URL(string: "/catalogue.json", relativeTo: server) {
                 bridgeVC.webView?.load(URLRequest(url: quiet))

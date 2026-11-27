@@ -16,9 +16,9 @@ export const skySettings = () => (current ??= settingsOf(skyDevice()));
 // at o.raise over the bottom, the tuned span across max(100vw, o.width vw) and centred (in vw: a background's % would
 // be of the room left beside the image), the rest of the round on either side, shifted by --pan (the end's turn,
 // skyPan); the ground's colour under them (the sky's slide shows that strip; on top, 2 px into the SVG, so its soft
-// bottom edge shows no seam)
+// bottom edge shows no seam); the SVG's empty pad under its foot sunk below raise, under that strip
 export const skyBackground = (o, svgUrl) => `linear-gradient(${o.groundColor}, ${o.groundColor}) bottom / 100% calc(${o.raise}dvh + 2px) no-repeat, ` +
-  `url(${svgUrl}) left calc(50vw - max(50vw, ${o.width / 2}vw) + var(--pan, 0px)) bottom ${o.raise}dvh / calc(max(100%, ${o.width}vw) * ${360 / o.span}) auto repeat-x`;
+  `url(${svgUrl}) left calc(50vw - max(50vw, ${o.width / 2}vw) + var(--pan, 0px)) bottom calc(${o.raise}dvh - max(100vw, ${o.width}vw) * ${(o.pad ?? 0) / o.span}) / calc(max(100%, ${o.width}vw) * ${360 / o.span}) auto repeat-x`;
 // px the round moves for the camera turned by spin (rad): as far as the mountains it shows turn (left turn, they go right)
 export function skyPan(spin) {
   const o = skySettings();

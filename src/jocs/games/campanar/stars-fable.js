@@ -4,6 +4,7 @@
 // (clouds-astra.js) and the tower: the colours are premultiplied, so one blend lays the night and the stars' light on it.
 import { BufferGeometry, Float32BufferAttribute, Mesh, ShaderMaterial, Vector2 } from 'three';
 import { FLOOR } from './rules.js';
+import { skySettings } from './sky.js';
 
 // the climb (world units) the night takes: from a couple of floors up to the real campanar's 42
 const fableNightFrom = 1, fableNightFull = 42 * FLOOR;
@@ -53,7 +54,7 @@ const fableNightBase = 0.8; // the night already there at the home screen
 export function createStars(scene, camera, renderer) {
   const canvas = renderer.domElement;
   const uniforms = { frame: { value: new Vector2(canvas.width, canvas.height) }, ratio: { value: 1 },
-    night: { value: 0 }, seconds: { value: 0 }, pan: { value: 0 } };
+    night: { value: 0 }, seconds: { value: 0 }, pan: { value: 0 }, sunView: { value: new Vector2() } };
   const material = new ShaderMaterial({
     uniforms, transparent: true, depthWrite: false, premultipliedAlpha: true,
     vertexShader: `
@@ -102,6 +103,7 @@ export function createStars(scene, camera, renderer) {
       }`,
     fragmentShader: `
       uniform float night;
+      uniform vec2 sunView; // the screen's left edge from the set sun (°), and degrees per drawing-buffer px
       varying vec4 light;
       varying vec2 disc;
       varying float halo, sky, up, rays, grow;
@@ -117,7 +119,12 @@ export function createStars(scene, camera, renderer) {
         vec3 tone = mix(mix(vec3(0.47, 0.36, 0.56), vec3(0.23, 0.22, 0.47), smoothstep(0.2, 0.55, up)),
           vec3(0.1, 0.13, 0.31), smoothstep(0.5, 1.0, up));
         // the last light over the ridge, warmer as the rest goes dark
-        float ember = 0.3 * night * sky * smoothstep(0.16, 0.3, up) * (1.0 - smoothstep(0.3, 0.6, up));
+        // only towards the set sun (carena.json's sun, 0 under it, 1 opposite): the other way the earth's shadow rises,
+        // a cold dark over the horizon and the hills (sky.js's round turns with the end's camera, so does this)
+        float away = 0.5 - 0.5 * cos(radians(sunView.x + gl_FragCoord.x * sunView.y));
+        float ember = 0.42 * (1.0 - away) * (1.0 - away) * night * sky * smoothstep(0.16, 0.3, up) * (1.0 - smoothstep(0.3, 0.6, up));
+        float shadow = 0.5 * away * night * sky * (1.0 - smoothstep(0.2, 0.6, up));
+        colour = colour * (1.0 - shadow) + vec4(0.13, 0.14, 0.27, 1.0) * shadow;
         colour += vec4(tone * dark, dark) * (1.0 - ember) + vec4(1.0, 0.52, 0.42, 1.0) * ember;
         // a grain under one step of the screen's colour: no bands in so slow a gradient
         float grain = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) - 0.5;
@@ -143,6 +150,10 @@ export function createStars(scene, camera, renderer) {
     if (!reduced.matches) uniforms.seconds.value += dt; // no twinkle
     const ratio = renderer.getPixelRatio();
     uniforms.frame.value.set(canvas.width, canvas.height);
+    // the view's azimuths as sky.js lays the round: span degrees over max(100vw, width vw), the tuned centre in the
+    // middle, the pan (px) turning it
+    const o = skySettings(), pxPerDeg = Math.max(innerWidth, innerWidth * o.width / 100) / o.span;
+    uniforms.sunView.value.set(o.center - pan / pxPerDeg - innerWidth / 2 / pxPerDeg - o.sun, innerWidth / canvas.width / pxPerDeg);
     uniforms.ratio.value = ratio * Math.min(1.4, Math.max(1, canvas.height / ratio / 720)); // a big window: a little bigger
   } };
 }

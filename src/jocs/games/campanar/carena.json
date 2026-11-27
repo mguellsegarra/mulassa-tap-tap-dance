@@ -17,7 +17,9 @@
     "lens": 1.8,
     "groundColor": "#b8a2bd",
     "smooth": 1,
-    "antennaShift": 0.15
+    "antennaShift": 0.15,
+    "pad": 0.5,
+    "sun": 238
   },
   "mobil": {
     "width": 200

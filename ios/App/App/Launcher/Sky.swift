@@ -36,8 +36,6 @@ struct Sky: Equatable {
 
     // the colour just under the header, for its fade (--skyTop)
     var headerTint: Color { Color(top.mix(middle, 0.22)) }
-    // the sheets' surface: the sky's top, darkened towards night blue (--bg2)
-    var sheet: Color { Color(top.mix(UIColor(hex: "#0b0f22"), 0.55)) }
 
     static func == (a: Sky, b: Sky) -> Bool { a.top == b.top && a.middle == b.middle && a.bottom == b.bottom && a.stars == b.stars && a.clouds == b.clouds && a.hour == b.hour }
 }

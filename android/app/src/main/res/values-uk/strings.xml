@@ -4,7 +4,6 @@
     <string name="ui_select_aviat">Незабаром</string>
     <string name="launcher_settings_rateApp">Оцінити застосунок</string>
     <string name="launcher_settings_shareApp">Поділитися застосунком</string>
-    <string name="launcher_settings_backToProfile">Повернутися до профілю</string>
     <string name="html_settings_aria">Налаштування</string>
     <string name="html_profile_aria">Профіль</string>
     <string name="html_attr_close">Закрити</string>
@@ -24,5 +23,4 @@
     <string name="launcher_play">Грати в %1$s</string>
     <string name="launcher_opening_game">Гра відкривається…</string>
     <string name="jocs_menu_play">Грати</string>
-    <string name="launcher_tab_games">Ігри</string>
 </resources>

@@ -32,6 +32,7 @@ import java.io.File
 import org.json.JSONObject
 import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
+import androidx.activity.enableEdgeToEdge
 
 // The game's side of the bridge activity (MainActivity.java delegates to it): which page it opens, the iris kept over the
 // page while it loads, and the way back to the launcher.
@@ -50,9 +51,29 @@ class GameSession(private val activity: BridgeActivity) {
         json.optJSONObject("server")?.put("appStartPath", path) ?: json.put("server", JSONObject().put("appStartPath", path))
         val plugins = json.optJSONObject("plugins") ?: JSONObject().also { json.put("plugins", it) }
         (plugins.optJSONObject("SplashScreen") ?: JSONObject().also { plugins.put("SplashScreen", it) }).put("launchShowDuration", 0)
+        // Ronda 34: on a WebView that reads the window's insets itself (140+, with the pages' viewport-fit=cover), Capacitor's
+        // SystemBars padded the decor view until the page had loaded and then dropped the padding: the page and the iris over
+        // it jumped by the bars' height. Untouched insets from the first frame instead; older WebViews keep the padding.
+        if (webViewMajor() >= 140) (plugins.optJSONObject("SystemBars") ?: JSONObject().also { plugins.put("SystemBars", it) }).put("insetsHandling", "disable")
         val dir = File(activity.noBackupFilesDir, "bridge").apply { mkdirs() }
         File(dir, "capacitor.config.json").writeText(json.toString())
         return CapConfig.loadFromFile(activity, dir.path)
+    }
+
+    private fun webViewMajor() = WebViewCompat.getCurrentWebViewPackage(activity)?.versionName?.substringBefore('.')?.toIntOrNull() ?: 0
+
+    // Before the bridge draws anything: edge to edge as the launcher, and the status bar hidden for good, as the launcher's
+    // iris left it and as the page asks (plassa native.js); showing it again under the game moved the page by its height.
+    fun window() {
+        activity.enableEdgeToEdge(androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT), androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
+        hideStatusBar()
+    }
+
+    private fun hideStatusBar() {
+        androidx.core.view.WindowCompat.getInsetsController(activity.window, activity.window.decorView).run {
+            systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(androidx.core.view.WindowInsetsCompat.Type.statusBars())
+        }
     }
 
     private fun read(extras: Bundle?) {
@@ -63,6 +84,9 @@ class GameSession(private val activity: BridgeActivity) {
     }
 
     fun attach() {
+        // Capacitor's SystemBars shows every bar as it loads (its `hidden` config, false, posted to the main thread): hidden
+        // again right after it, before the first frame, or the status bar blinked over the iris
+        activity.window.decorView.post { hideStatusBar() }
         tellLanguage()
         activity.bridge?.addWebViewListener(object : WebViewListener() {
             override fun onPageLoaded(webView: WebView?) { loaded++ }
@@ -99,7 +123,7 @@ class GameSession(private val activity: BridgeActivity) {
     private fun showCover() {
         val (bundle, games) = WebBundle.games(activity, WebBundle.active(activity))
         val game = games.firstOrNull { it.id == id } ?: return
-        val state = IrisState().apply { this.game = game; image = bundle.image(activity, game.art); this.origin = this@GameSession.origin }
+        val state = IrisState(opened = true).apply { this.game = game; image = bundle.image(activity, game.art); this.origin = this@GameSession.origin }
         cover?.let { (it.parent as? ViewGroup)?.removeView(it) }
         val from = loaded
         val view = ComposeView(activity)
@@ -109,23 +133,14 @@ class GameSession(private val activity: BridgeActivity) {
             val at = IntArray(2).also { view.getLocationOnScreen(it) }
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }) { IrisView(state, Offset(at[0].toFloat(), at[1].toFloat())) }
             LaunchedEffect(Unit) {
-                state.open.snapTo(1f); state.plate.snapTo(1f); state.hop = true
-                statusBar(false)
+                state.hop = true
                 withTimeoutOrNull(3000) { snapshotFlow { loaded }.first { it > from }; delay(200) }
                 fade.animateTo(0f, tween(250))
-                statusBar(true)
                 (view.parent as? ViewGroup)?.removeView(view)
                 if (cover === view) cover = null
             }
         }
         activity.addContentView(view, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-    }
-
-    // hidden while the iris covers the page, as on iOS
-    private fun statusBar(show: Boolean) = androidx.core.view.WindowCompat.getInsetsController(activity.window, activity.window.decorView).run {
-        systemBarsBehavior = androidx.core.view.WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        val t = androidx.core.view.WindowInsetsCompat.Type.statusBars()
-        if (show) show(t) else hide(t)
     }
 
     companion object {

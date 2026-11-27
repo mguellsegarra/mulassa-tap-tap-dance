@@ -61,13 +61,13 @@ import kotlin.math.roundToInt
 // its name comes in on a dark plate; it stays over the game while the page loads (GameCover.kt). Reversed when the player comes
 // back. The circle is the clip of a graphics layer and the rest are layer transforms: nothing is drawn again per frame.
 @Stable
-class IrisState {
+class IrisState(opened: Boolean = false) { // opened: the game's cover, fully open from its first frame
     var game by mutableStateOf<Game?>(null)
     var image by mutableStateOf<ImageBitmap?>(null)
     var origin by mutableStateOf(Offset.Zero) // in the window, px
     var hop by mutableStateOf(false)
-    val open = Animatable(0f)
-    val plate = Animatable(0f)
+    val open = Animatable(if (opened) 1f else 0f)
+    val plate = Animatable(if (opened) 1f else 0f)
 
     suspend fun forward() = coroutineScope {
         hop = false; open.snapTo(0f); plate.snapTo(0f)

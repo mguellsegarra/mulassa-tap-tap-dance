@@ -1,23 +1,26 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package cat.mulassa.games.launcher
 
 import android.content.Context
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.foundation.Image
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,38 +30,29 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -68,18 +62,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import cat.mulassa.games.R
-import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 
 // The launcher's state: the catalogue, the art, the last game played and the settings' toggles.
 @Stable
 class Launcher(private val ctx: Context) {
     private val prefs = ctx.getSharedPreferences("launcher", Context.MODE_PRIVATE)
     var games by mutableStateOf<List<Game>>(emptyList()); private set
+    fun number(game: Game) = games.indexOf(game).takeIf { it >= 0 }?.plus(1) // engraved in its grip
     var images by mutableStateOf<Map<String, ImageBitmap>>(emptyMap()); private set
     var last by mutableStateOf(prefs.getString("last", null)); private set
     var bundle: WebBundle = WebBundle(null); private set
@@ -121,62 +114,80 @@ val REJECT = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT els
 
 private fun LayoutCoordinates.centre() = boundsInWindow().center
 
-// Ronda 18: two tabs over the hour's sky. Jocs is the logo and every game as a cartridge, two columns, all scrolling
-// together; Perfil is a page whose gear opens Ajustos. A cartridge tapped lifts out into Picked (Pick.kt).
-enum class Tab { Games, Profile }
+// Ronda 31: no tab bar (the owner). The home over the hour's sky: the logo on the left and the avatar on the right, as the
+// App Store's, then every game as a cartridge, two columns, all scrolling together. The avatar opens the account sheet
+// (Sheets.kt); a cartridge tapped lifts out into Picked (Pick.kt).
 
 @Composable
 fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
     val sky = rememberSky(hour)
-    var tab by rememberSaveable { mutableStateOf(Tab.Games) }
-    var settings by remember { mutableStateOf(false) }
-    val list = rememberLazyListState() // kept across tabs
-    val backdrop = rememberGraphicsLayer() // the page, recorded once more for the tab bar's blur
-    BackHandler(tab == Tab.Profile) { tab = Tab.Games }
+    var account by rememberSaveable { mutableStateOf(false) }
+    val list = rememberLazyListState()
     val veil = remember { Animatable(0f) } // Picked's blur and dim over the home, 0 to 1
     // While a cartridge is picked the home shows blurred: a snapshot taken once, blurred once (a fixed radius on a still
-    // image, so HWUI keeps the filtered result) and faded in over the live home. A live blur would refilter the whole
-    // screen every frame, since the clouds keep moving under it. API 31+; older phones keep the dim only.
+    // image, so HWUI keeps the filtered result) and faded in over the live home, which stops being drawn once it is covered.
+    // A live blur would refilter the whole screen every frame, since the clouds keep moving under it (ronda 23 measured
+    // a quarter-size live one at 40-50 ms of RenderThread a frame). API 31+; older phones keep the dim only.
     val home = rememberGraphicsLayer()
     var frozen by remember { mutableStateOf<ImageBitmap?>(null) }
     LaunchedEffect(model.pick) {
         frozen = null
         if (model.pick == null) veil.snapTo(0f) // also when a game took the pick away
-        else if (Build.VERSION.SDK_INT >= 31) { withFrameNanos {}; frozen = home.toImageBitmap() } // a frame on: its slot is empty
+        // a frame on, its slot is empty; Picked waits for it: the capture waits on the GPU (ronda 23: 50-80 ms on the
+        // emulator), better before the cartridge moves than as a hitch in its lift
+        else if (Build.VERSION.SDK_INT >= 31) { withFrameNanos {}; frozen = home.toImageBitmap() }
     }
     Box(Modifier.fillMaxSize()) {
-        Box(Modifier.fillMaxSize().drawWithContent { home.record { this@drawWithContent.drawContent() }; drawLayer(home) }) {
-            Box(Modifier.fillMaxSize().drawWithContent { backdrop.record { this@drawWithContent.drawContent() }; drawLayer(backdrop) }.sky { sky }) {
+        // once the blur fully covers it, the live home (its clouds keep moving) is not recorded or drawn under it
+        Box(Modifier.fillMaxSize().drawWithContent {
+            if (frozen == null || veil.value < 1f) { home.record { this@drawWithContent.drawContent() }; drawLayer(home) }
+        }) {
+            // under a picked cartridge the home leaves the accessibility tree, as iOS's modal lift
+            Box(Modifier.fillMaxSize().sky { sky }.then(if (model.pick != null) Modifier.clearAndSetSemantics {} else Modifier)) {
                 SkyLife(sky)
-                if (tab == Tab.Games) Home(model, sky, list, model.pick?.game?.id) { model.pick = it } else ProfilePage { settings = true }
+                Home(model, sky, list, model.pick?.game?.id, { account = true }) { model.pick = it }
             }
-            TabBar(tab, sky, backdrop) { tab = it }
         }
         frozen?.let {
-            Image(it, null, Modifier.fillMaxSize().graphicsLayer { alpha = veil.value }
-                .graphicsLayer { renderEffect = BlurEffect(24f, 24f, TileMode.Clamp) }, contentScale = ContentScale.FillBounds)
+            // drawn into a layer a quarter of its size, blurred there and that layer scaled back up: the same look for a
+            // sixteenth of the pixels to filter (ronda 23: the full-size blur's first frame took 50-80 ms of RenderThread)
+            val d = LocalDensity.current
+            Image(it, null, Modifier.size(with(d) { (it.width / 4).toDp() }, with(d) { (it.height / 4).toDp() }).graphicsLayer {
+                transformOrigin = TransformOrigin(0f, 0f); scaleX = it.width / size.width; scaleY = it.height / size.height
+                alpha = veil.value; renderEffect = BlurEffect(6f, 6f, TileMode.Clamp)
+            }, contentScale = ContentScale.FillBounds)
         }
-        model.pick?.let { Picked(model, it, veil) { model.pick = null } }
-        Sheets(model, version, sky, settings) { settings = false }
+        model.pick?.let { Picked(model, it, veil, { frozen != null || Build.VERSION.SDK_INT < 31 }) { model.pick = null } }
+        Sheets(model, version, sky, account) { account = false }
     }
 }
 
 @Composable
-private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?, pick: (Pick) -> Unit) {
+private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?, account: () -> Unit, pick: (Pick) -> Unit) {
     val scrolled by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 4 } }
     val fade by animateFloatAsState(if (scrolled) 1f else 0f, tween(200), label = "fade")
     val u = (LocalConfiguration.current.screenWidthDp.dp - M * 3) / 2 / CART_W
-    val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + BAR_GAP + BAR_H + M
+    val top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding() // the bar's room even while the iris hides it: no jump on return
+    val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + M
+    val label = stringResource(R.string.html_accountTitle)
     // an odd count leaves one cartridge alone: an «Aviat» one fills the row (not a game: no tap)
     val rows = (model.games.map<Game, Game?> { it } + if (model.games.size % 2 == 1) listOf(null) else emptyList()).chunked(2)
-    Box(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M)) {
-            // the logo scrolls with the cartridges (owner, ronda 18)
-            item(key = "logo") { Box(Modifier.fillMaxWidth().padding(top = top + 8.dp).height(56.dp), contentAlignment = Alignment.Center) { Logo() } }
-            items(rows, key = { row -> row.joinToString { it?.id ?: "aviat" } }) { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(M)) {
-                    row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.images[g.id], u, g.id == picked, pick) else Placeholder(u) } }
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
+        val (gap, scrolls) = rowGap(maxHeight, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(), top + 8.dp + 56.dp + M, u * CART_H, rows.size)
+        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M), userScrollEnabled = scrolls) {
+            // the logo and the avatar scroll with the cartridges (owner, ronda 18 and 31)
+            item(key = "logo") {
+                Row(Modifier.fillMaxWidth().padding(top = top + 8.dp).height(56.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Logo(Modifier.semantics { heading() })
+                    Spacer(Modifier.weight(1f))
+                    // a 48 dp target, inside the row, with the 36 dp circle against its end, on the margin
+                    Box(Modifier.size(48.dp).semantics { contentDescription = label }.squash(1.dp, onClick = account), contentAlignment = Alignment.CenterEnd) { Avatar(36.dp) }
+                }
+            }
+            itemsIndexed(rows, key = { _, row -> row.joinToString { it?.id ?: "aviat" } }) { k, row ->
+                Row(Modifier.fillMaxWidth().padding(top = if (k > 0) gap - M else 0.dp), horizontalArrangement = Arrangement.spacedBy(M)) {
+                    row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.number(g), model.images[g.id], u, g.id == picked, pick) else Placeholder(u) } }
                 }
             }
         }
@@ -189,9 +200,28 @@ private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?
     }
 }
 
+// Ronda 32-33, the owner: rows that all fit spread over the screen down to the navigation bar, and the page does not
+// scroll; rows that overflow it («que la gent sàpiga que hi ha scroll») get a gap that grows from M up to 2M until the
+// screen's bottom edge cuts a row between 30 and 70 % of its height, as near the middle as it can (a thin sliver, or a
+// row cut at its very bottom, hides that the grid scrolls). Same rule on iOS (LauncherView.swift).
+fun rowGap(view: Dp, bottom: Dp, top: Dp, row: Dp, rows: Int): Pair<Dp, Boolean> {
+    val room = view - bottom - M - top // down to the navigation bar, with a margin
+    if (row * rows + M * maxOf(rows - 1, 0) <= room) return (if (rows > 1) (room - row * rows) / (rows - 1) else M) to false
+    return peek(view, top, row, rows) to true
+}
+
+private fun peek(view: Dp, top: Dp, row: Dp, rows: Int): Dp {
+    for (i in rows - 1 downTo 1) { // i rows above the cut one; the most first, so the gap stays small
+        fun gap(f: Float) = (view - top - row * f) / i - row // the gap that cuts row i at fraction f
+        val lo = maxOf(gap(0.7f), M); val hi = minOf(gap(0.3f), M * 2)
+        if (lo <= hi) return gap(0.5f).coerceIn(lo, hi)
+    }
+    return M
+}
+
 // A tap lifts it out (Pick.kt); while it is out, its slot stays empty.
 @Composable
-private fun Cell(game: Game, image: ImageBitmap?, u: Dp, out: Boolean, pick: (Pick) -> Unit) {
+private fun Cell(game: Game, number: Int?, image: ImageBitmap?, u: Dp, out: Boolean, pick: (Pick) -> Unit) {
     var at by remember { mutableStateOf(Offset.Zero) }
     val aviat = stringResource(R.string.ui_select_aviat)
     val playIt = stringResource(R.string.launcher_play, game.title)
@@ -199,7 +229,7 @@ private fun Cell(game: Game, image: ImageBitmap?, u: Dp, out: Boolean, pick: (Pi
         .onGloballyPositioned { at = it.centre() }
         .semantics { contentDescription = if (game.soon) aviat else playIt }
         .squash(u * 0.3f) { pick(Pick(game, at, u)) }) {
-        Cartridge(game.tint, game.short ?: aviat, image, u, locked = game.soon)
+        Cartridge(game.tint, game.short ?: aviat, image, u, locked = game.soon, number = number)
     }
 }
 

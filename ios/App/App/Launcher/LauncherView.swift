@@ -8,6 +8,7 @@ typealias ViewState = SwiftUI.State
 // The launcher's state: the catalogue and its art.
 @MainActor final class Launcher: ObservableObject {
     @Published private(set) var games: [Game] = []
+    func number(_ game: Game) -> Int? { games.firstIndex(of: game).map { $0 + 1 } } // engraved in its grip
     @Published private(set) var images: [String: UIImage] = [:]
     @Published private(set) var icon: UIImage?
     var play: (Game, CGPoint, _ covered: @escaping () -> Void) -> Void = { _, _, _ in } // `covered`: the iris is over the launcher
@@ -26,29 +27,27 @@ typealias ViewState = SwiftUI.State
 
 let M: CGFloat = 16 // one spacing unit: side margin = column gap = row gap = logo-to-grid gap
 
-enum LauncherTab: Hashable { case games, profile }
-
-// ronda-18: two tabs in the system's bar (Liquid Glass on iOS 26), «Jocs» (the cartridges) and «Perfil». Settings is a
-// bottom sheet over both; a tapped cartridge lifts over everything (Lift.swift).
+// Ronda 31: no tab bar (the owner); the home only, the avatar at its top right opening the account sheet (Sheets.swift), a
+// tapped cartridge lifting over everything (Lift.swift).
 struct LauncherRoot: View {
     @ObservedObject var model: Launcher
-    @ViewState private var tab: LauncherTab = LauncherSheet.atLaunch == nil ? .games : .profile
-    @ViewState private var settings = LauncherSheet.atLaunch == .settings
+    @ViewState private var account = LauncherSheet.atLaunch
     @ViewState private var lifted: Lifted?
+    @ViewState private var covered = false // a lift's blurred snapshot covers the home: hidden, so its clouds stop drawing
     @ObservedObject private var language = AppLanguage.shared
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 300)) { t in // the sky moves on every 5 minutes, nothing in between
             let sky = Sky.now(t.date)
-            TabView(selection: $tab) {
-                Home(model: model, sky: sky, lifted: lifted?.game.id) { lifted = $0 }
-                    .tabItem { Label("launcher.tab.games", systemImage: "gamecontroller") }.tag(LauncherTab.games)
-                ProfilePage(model: model, surface: sky.sheet) { settings = true }
-                    .tabItem { Label("html.accountTitle", systemImage: "person.crop.circle") }.tag(LauncherTab.profile)
+            // shortcut: a one-tab TabView with its bar hidden, only so the home is its own UIKit child that Lift's Frozen
+            // snapshot draws without the lift over it; host Home in its own UIHostingController if this ever gets in the way
+            TabView {
+                Home(model: model, sky: sky, lifted: lifted?.game.id, account: { account = true }) { FrameLog.begin(); lifted = $0 }
+                    .toolbar(.hidden, for: .tabBar)
             }
-            .tint(Palette.yellowHi)
-            .overlay { if let lifted { LiftView(model: model, lifted: lifted) { self.lifted = nil } } }
-            .overlay { SettingsSheet(surface: sky.sheet, shown: $settings) }
+            .opacity(covered ? 0 : 1)
+            .overlay { if let lifted { LiftView(model: model, lifted: lifted, covered: $covered) { self.lifted = nil; covered = false; FrameLog.end() } } }
+            .sheet(isPresented: $account) { AccountSheet(model: model) }
         }
         .environment(\.locale, Locale(identifier: language.code))
         .id(language.code) // a new language redraws every string, the ones read outside Text included
@@ -57,24 +56,35 @@ struct LauncherRoot: View {
     }
 }
 
-// «Jocs»: the logo, centred, scrolls away with the cartridges; under the status bar a veil in the sky's own top colour
-// keeps the clock readable over them (a plain fade, no blur: S10 cost).
+// The home, as the App Store's: the logo on the left and the avatar on the right in one row, scrolling away with the
+// cartridges; under the status bar a veil in the sky's own top colour keeps the clock readable over them (a plain fade,
+// no blur: S10 cost).
 private struct Home: View {
     @ObservedObject var model: Launcher
     let sky: Sky
     let lifted: String?
+    let account: () -> Void
     let lift: (Lifted) -> Void
 
     var body: some View {
         GeometryReader { g in
             ScrollView {
                 VStack(spacing: M) {
-                    Logo().padding(.top, 8)
-                    Cartridges(model: model, width: g.size.width, lifted: lifted, lift: lift)
+                    HStack {
+                        Logo().padding(.leading, 1.5).accessibilityAddTraits(.isHeader) // its outer stroke's ink, on the margin
+                        Spacer()
+                        Button(action: account) { Avatar().frame(width: 44, height: 44).contentShape(Rectangle()) } // a 44 pt target
+                            .buttonStyle(Squash(depth: 1))
+                            .padding(.trailing, -4) // the 36 pt circle's edge on the margin
+                            .accessibilityLabel(Text("html.accountTitle"))
+                    }
+                    .padding(.top, 8)
+                    Cartridges(model: model, width: g.size.width, gap: gap(g).gap, lifted: lifted, lift: lift)
                 }
                 .padding(M)
             }
             .scrollIndicators(.hidden)
+            .scrollDisabled(!gap(g).scrolls) // every row fits: the page stands still
             .overlay(alignment: .top) {
                 LinearGradient(stops: [.init(color: Color(sky.top), location: 0), .init(color: Color(sky.top).opacity(0.75), location: 0.55),
                                        .init(color: Color(sky.top).opacity(0), location: 1)], startPoint: .top, endPoint: .bottom)
@@ -83,18 +93,48 @@ private struct Home: View {
         }
         .background(SkyBackground(sky: sky))
     }
+
+    // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
+    private func gap(_ g: GeometryProxy) -> (gap: CGFloat, scrolls: Bool) {
+        let u = (g.size.width - 3 * M) / 2 / Cartridge.size.width, rows = (model.games.count + 1) / 2
+        let top = g.safeAreaInsets.top + M + 8 + 48 + M // the scroll's padding, the header row, the stack's spacing
+        return rowGap(view: g.safeAreaInsets.top + g.size.height + g.safeAreaInsets.bottom, bottom: g.safeAreaInsets.bottom, top: top, row: Cartridge.size.height * u, rows: rows)
+    }
+}
+
+// Ronda 32-33, the owner: rows that all fit spread over the screen down to the home indicator, and the page does not
+// scroll; rows that overflow it («que la gent sàpiga que hi ha scroll») get a gap that grows from M up to 2M until the
+// screen's bottom edge cuts a row between 30 and 70 % of its height, as near the middle as it can (a thin sliver, or a
+// row cut at its very bottom, hides that the grid scrolls). `view`: the screen's height; `bottom`: the home indicator's.
+// Same rule on Android (LauncherScreens.kt).
+func rowGap(view: CGFloat, bottom: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> (gap: CGFloat, scrolls: Bool) {
+    let room = view - bottom - M - top // down to the home indicator, with a margin
+    if CGFloat(rows) * row + CGFloat(max(rows - 1, 0)) * M <= room {
+        return (rows > 1 ? (room - CGFloat(rows) * row) / CGFloat(rows - 1) : M, false)
+    }
+    return (peek(view: view, top: top, row: row, rows: rows), true)
+}
+
+private func peek(view: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> CGFloat {
+    for i in stride(from: rows - 1, through: 1, by: -1) { // i rows above the cut one; the most first, so the gap stays small
+        let gap = { (f: CGFloat) in (view - top - f * row) / CGFloat(i) - row } // the gap that cuts row i at fraction f
+        let lo = max(gap(0.7), M), hi = min(gap(0.3), 2 * M)
+        if lo <= hi { return min(max(gap(0.5), lo), hi) }
+    }
+    return M
 }
 
 // Every game, two a row; an odd count gets a filler cartridge in the lone last slot.
 struct Cartridges: View {
     @ObservedObject var model: Launcher
     let width: CGFloat
+    let gap: CGFloat // between rows; M between columns
     let lifted: String?
     let lift: (Lifted) -> Void
 
     var body: some View {
         let u = (width - 3 * M) / 2 / Cartridge.size.width
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: M), GridItem(.flexible(), spacing: M)], spacing: M) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: M), GridItem(.flexible(), spacing: M)], spacing: gap) {
             ForEach(model.games) { game in
                 CartridgeCell(model: model, game: game, u: u, lift: lift).opacity(lifted == game.id ? 0 : 1) // its slot stays empty while it is out
             }
@@ -113,7 +153,7 @@ struct CartridgeCell: View {
 
     var body: some View {
         GeometryReader { p in
-            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { Cartridge(game: game, image: model.images[game.id], u: u).equatable() }
+            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { Cartridge(game: game, number: model.number(game), image: model.images[game.id], u: u).equatable() }
                 .buttonStyle(Squash(depth: 0.3 * u))
                 .accessibilityLabel(game.soon ? Text("ui.select.aviat") : Text(verbatim: game.title))
         }

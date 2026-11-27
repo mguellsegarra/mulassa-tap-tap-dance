@@ -4,7 +4,6 @@
     <string name="ui_select_aviat">곧 만나요</string>
     <string name="launcher_settings_rateApp">앱 평가하기</string>
     <string name="launcher_settings_shareApp">앱 공유하기</string>
-    <string name="launcher_settings_backToProfile">프로필로 돌아가기</string>
     <string name="html_settings_aria">설정</string>
     <string name="html_profile_aria">프로필</string>
     <string name="html_attr_close">닫기</string>
@@ -24,5 +23,4 @@
     <string name="launcher_play">%1$s 플레이</string>
     <string name="launcher_opening_game">게임 여는 중…</string>
     <string name="jocs_menu_play">시작</string>
-    <string name="launcher_tab_games">게임</string>
 </resources>

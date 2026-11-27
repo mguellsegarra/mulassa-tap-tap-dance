@@ -20,6 +20,8 @@
 		A1C0DE020000000000000002 /* Catalogue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020000000000000001 /* Catalogue.swift */; };
 		A1C0DE020100000000000002 /* Cartridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020100000000000001 /* Cartridge.swift */; };
 		A1C0DE020A00000000000002 /* Lift.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020A00000000000001 /* Lift.swift */; };
+		A1C0DE020B00000000000002 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020B00000000000001 /* Console.swift */; };
+		A1C0DE020C00000000000002 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = A1C0DE020C00000000000001 /* Sounds */; };
 		A1C0DE020200000000000002 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020200000000000001 /* LauncherView.swift */; };
 		A1C0DE020300000000000002 /* Logo.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020300000000000001 /* Logo.swift */; };
 		A1C0DE020400000000000002 /* Iris.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1C0DE020400000000000001 /* Iris.swift */; };
@@ -48,6 +50,8 @@
 		A1C0DE020000000000000001 /* Catalogue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Catalogue.swift; sourceTree = "<group>"; };
 		A1C0DE020100000000000001 /* Cartridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cartridge.swift; sourceTree = "<group>"; };
 		A1C0DE020A00000000000001 /* Lift.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Lift.swift; sourceTree = "<group>"; };
+		A1C0DE020B00000000000001 /* Console.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
+		A1C0DE020C00000000000001 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sounds; sourceTree = "<group>"; };
 		A1C0DE020200000000000001 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
 		A1C0DE020300000000000001 /* Logo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logo.swift; sourceTree = "<group>"; };
 		A1C0DE020400000000000001 /* Iris.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Iris.swift; sourceTree = "<group>"; };
@@ -104,6 +108,7 @@
 				A1C0DE020800000000000001 /* Localizable.xcstrings */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				A1C0DE020C00000000000001 /* Sounds */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -115,6 +120,7 @@
 				A1C0DE020100000000000001 /* Cartridge.swift */,
 				A1C0DE020200000000000001 /* LauncherView.swift */,
 				A1C0DE020A00000000000001 /* Lift.swift */,
+				A1C0DE020B00000000000001 /* Console.swift */,
 				A1C0DE020300000000000001 /* Logo.swift */,
 				A1C0DE020400000000000001 /* Iris.swift */,
 				A1C0DE020500000000000001 /* GameHost.swift */,
@@ -209,6 +215,7 @@
 			files = (
 				504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */,
 				50B271D11FEDC1A000F3C39B /* public in Resources */,
+				A1C0DE020C00000000000002 /* Sounds in Resources */,
 				504EC30F1FED79650016851F /* Assets.xcassets in Resources */,
 				A1C0DE012F00000000000001 /* AppIcon.icon in Resources */,
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
@@ -231,6 +238,7 @@
 				A1C0DE020100000000000002 /* Cartridge.swift in Sources */,
 				A1C0DE020200000000000002 /* LauncherView.swift in Sources */,
 				A1C0DE020A00000000000002 /* Lift.swift in Sources */,
+				A1C0DE020B00000000000002 /* Console.swift in Sources */,
 				A1C0DE020300000000000002 /* Logo.swift in Sources */,
 				A1C0DE020400000000000002 /* Iris.swift in Sources */,
 				A1C0DE020500000000000002 /* GameHost.swift in Sources */,

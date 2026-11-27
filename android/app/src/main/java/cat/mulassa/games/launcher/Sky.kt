@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+
 package cat.mulassa.games.launcher
 
 import android.provider.Settings
@@ -24,7 +26,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -149,7 +151,7 @@ private fun InfiniteTransition.loop(still: Boolean, ms: Int, at: Float = 0f, eas
 fun BoxScope.SkyLife(sky: Sky) {
     val res = LocalContext.current.contentResolver
     val still = remember { Settings.Global.getFloat(res, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
-    val top = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding() // the bar's room even while the iris hides it: no jump on return
     val t = rememberInfiniteTransition(label = "sky")
     BoxWithConstraints(Modifier.matchParentSize()) {
         val w = maxWidth; val h = maxHeight

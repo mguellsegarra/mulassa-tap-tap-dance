@@ -4,7 +4,6 @@
     <string name="ui_select_aviat">Presto</string>
     <string name="launcher_settings_rateApp">Valuta l’app</string>
     <string name="launcher_settings_shareApp">Condividi l’app</string>
-    <string name="launcher_settings_backToProfile">Torna al profilo</string>
     <string name="html_settings_aria">Impostazioni</string>
     <string name="html_profile_aria">Profilo</string>
     <string name="html_attr_close">Chiudi</string>
@@ -24,5 +23,4 @@
     <string name="launcher_play">Gioca a %1$s</string>
     <string name="launcher_opening_game">Apertura del gioco…</string>
     <string name="jocs_menu_play">Gioca</string>
-    <string name="launcher_tab_games">Giochi</string>
 </resources>

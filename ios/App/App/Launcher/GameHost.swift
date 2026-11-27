@@ -23,8 +23,8 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         bridgeVC.loadViewIfNeeded()
         WebBundle.registerFonts(from: bundleRoot)
         model.load(root: bundleRoot)
-        // the tab bar's titles in Baloo, as everything else (the fonts are registered just above)
-        UITabBarItem.appearance().setTitleTextAttributes([.font: UIFont(name: "Baloo2-Bold", size: 11) ?? .systemFont(ofSize: 11)], for: .normal)
+        // the account sheet's title in Baloo, as everything else (the fonts are registered just above)
+        UINavigationBar.appearance().titleTextAttributes = [.font: UIFont(name: "Baloo2-ExtraBold", size: 18) ?? .boldSystemFont(ofSize: 18)]
         model.play = { [weak self] game, from, covered in self?.play(game, from: from, covered: covered) }
     }
 

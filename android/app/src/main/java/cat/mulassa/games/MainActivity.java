@@ -1,6 +1,8 @@
 package cat.mulassa.games;
 
+import android.content.Context;
 import android.os.Bundle;
+import cat.mulassa.games.launcher.AppLanguage;
 import cat.mulassa.games.launcher.GameSession;
 import cat.mulassa.games.launcher.MulassaPlugin;
 import com.getcapacitor.BridgeActivity;
@@ -14,9 +16,14 @@ public class MainActivity extends BridgeActivity implements MulassaPlugin.Host {
         registerPlugin(PowerPlugin.class); // the app's own plugins, before the bridge starts
         registerPlugin(MulassaPlugin.class);
         config = game.config(getIntent(), savedInstanceState);
+        game.window();
         super.onCreate(savedInstanceState);
         game.attach();
     }
+
+    // the launcher's language (Catalan unless chosen), so the cover over the loading page reads as the launcher's iris did
+    @Override
+    protected void attachBaseContext(Context base) { super.attachBaseContext(AppLanguage.INSTANCE.wrap(base)); }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {

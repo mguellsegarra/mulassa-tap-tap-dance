@@ -275,7 +275,10 @@ export function createScene(canvas) {
         const w = renderer.domElement.width, h = renderer.domElement.height;
         camera.setViewOffset(w, h, -w * asided, h * (lb - lt) / 2, w, h);
       } else camera.clearViewOffset();
-      freeLook.place(camera, Math.hypot(VIEW.x, VIEW.z) * k, VIEW.y * k * tilt, camY, dt);
+      const across = Math.hypot(VIEW.x, VIEW.z) * k;
+      // near a quarter of the way in, not 0.1: the clocks' and windows' millimetres off the wall stop blinking from afar
+      if (Math.abs(camera.near - across / 4) > camera.near * 0.01) { camera.near = across / 4; camera.updateProjectionMatrix(); }
+      freeLook.place(camera, across, VIEW.y * k * tilt, camY, dt);
       camera.lookAt(0, camY - 0.3 * SIZE, 0);
       clouds.tick(dt, camY, skyPan(freeLook.spin)); // the end's turn: the sky's round, its clouds and stars go with it
       stars.tick(dt, camY, skyPan(freeLook.spin));

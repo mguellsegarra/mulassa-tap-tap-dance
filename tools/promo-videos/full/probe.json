@@ -1,0 +1,4 @@
+{ "fps": 30, "width": 1280, "height": 720, "scale": 1.5, "outW": 1920, "outH": 1080, "out": "out/probe", "shots": [
+  { "name": "play", "beat": 20, "beats": 6, "play": true },
+  { "name": "stumble", "beat": 148, "beats": 10, "play": true, "events": [{ "beat": 151.8, "js": "window.__dbg.press('L')" }] }
+] }

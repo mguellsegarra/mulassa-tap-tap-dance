@@ -1,0 +1,166 @@
+{
+ "fps": 60,
+ "frames": 2039,
+ "beatFrames": 23.68421052631579,
+ "segs": [
+  {
+   "vb": 0,
+   "song": 0,
+   "to": 4
+  },
+  {
+   "vb": 4,
+   "song": 0,
+   "to": 40
+  },
+  {
+   "vb": 44,
+   "song": 136,
+   "to": 151
+  },
+  {
+   "vb": 59,
+   "song": 291,
+   "to": 317.82666666666665
+  }
+ ],
+ "open": [
+  6.415789,
+  7.994737
+ ],
+ "lead": 1.678947,
+ "fadeOut": 2,
+ "shots": [
+  {
+   "name": "01-ull",
+   "from": 101,
+   "dur": 106,
+   "fadeIn": 71,
+   "fadeOut": 24,
+   "grade": "dusk"
+  },
+  {
+   "name": "02-potes",
+   "from": 314,
+   "dur": 71,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": "dusk"
+  },
+  {
+   "name": "03-boca",
+   "from": 385,
+   "dur": 95,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": "dusk-open"
+  },
+  {
+   "name": "04-entra",
+   "from": 480,
+   "dur": 94,
+   "fadeIn": 0,
+   "fadeOut": 12,
+   "grade": null
+  },
+  {
+   "name": "05-joc",
+   "from": 669,
+   "dur": 284,
+   "fadeIn": 0,
+   "fadeOut": 12,
+   "grade": null
+  },
+  {
+   "name": "08-cap",
+   "from": 1048,
+   "dur": 95,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "09-globus",
+   "from": 1143,
+   "dur": 95,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "10-entrebanc",
+   "from": 1238,
+   "dur": 94,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "11-plaça",
+   "from": 1332,
+   "dur": 71,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "14-focs",
+   "from": 1403,
+   "dur": 119,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "15-voltes",
+   "from": 1522,
+   "dur": 95,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "16-joc-guapa",
+   "from": 1617,
+   "dur": 189,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  },
+  {
+   "name": "17-plaça-final",
+   "from": 1806,
+   "dur": 233,
+   "fadeIn": 0,
+   "fadeOut": 0,
+   "grade": null
+  }
+ ],
+ "cards": [
+  {
+   "text": "Ja arriba.",
+   "gold": 1,
+   "from": 219,
+   "dur": 83
+  },
+  {
+   "text": "Segueix-li el ritme.",
+   "gold": 1,
+   "from": 574,
+   "dur": 95
+  },
+  {
+   "text": "Que tremoli la plaça!",
+   "gold": 1,
+   "from": 953,
+   "dur": 95
+  }
+ ],
+ "close": {
+  "from": 1806,
+  "hit": 95,
+  "beat": 308,
+  "line": "Fes ballar la Mulassa.",
+  "url": "mulassa.cat"
+ }
+}

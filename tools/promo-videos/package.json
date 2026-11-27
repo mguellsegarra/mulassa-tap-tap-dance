@@ -1,0 +1,31 @@
+{
+  "name": "mulassa-promo",
+  "private": true,
+  "type": "module",
+  "description": "Promo video capture + edit. Separate from the game: its own dependencies.",
+  "devDependencies": {
+    "@remotion/cli": "4.0.530",
+    "@remotion/fonts": "4.0.530",
+    "@remotion/media": "4.0.530",
+    "@types/react": "^19.3.0",
+    "playwright-core": "^1.63.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "4.0.530",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "prep": "mkdir -p public/fonts && cp ../../public/fonts/baloo-2-latin*.woff2 public/fonts/",
+    "plan": "node plan.mjs",
+    "logo": "node logo.mjs",
+    "capture": "node capture.mjs full/shots.json",
+    "music": "uv run --python 3.11 --with numpy --with scipy --with soundfile --with mido python music.py",
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts Promo16x9 out/master-16x9.mp4 --codec=h264 --crf=14",
+    "all": "npm run prep && npm run plan && npm run logo && npm run capture && npm run capture-v && npm run music && npm run render && npm run deliver && npm run render-v && npm run deliver-v",
+    "deliver": "ffmpeg -y -v error -i out/master-16x9.mp4 -i public/music-edit.wav -map 0:v -map 1:a -c:v libx264 -preset slow -crf 20 -maxrate 12M -bufsize 24M -profile:v high -vf scale=out_range=tv,format=yuv420p -color_range tv -af volume=-1dB -c:a aac -b:a 256k -ar 48000 -movflags +faststart -shortest out/mulassa-promo-16x9.mp4",
+    "capture-v": "node capture.mjs full/shots-v.json",
+    "render-v": "remotion render src/index.ts Promo9x16 out/master-9x16.mp4 --codec=h264 --crf=14",
+    "deliver-v": "ffmpeg -y -v error -i out/master-9x16.mp4 -i public/music-edit.wav -map 0:v -map 1:a -c:v libx264 -preset slow -crf 20 -maxrate 12M -bufsize 24M -profile:v high -vf scale=out_range=tv,format=yuv420p -color_range tv -af volume=-1dB -c:a aac -b:a 256k -ar 48000 -movflags +faststart -shortest out/mulassa-promo-9x16.mp4"
+  }
+}

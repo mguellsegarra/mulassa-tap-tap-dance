@@ -1,0 +1,4 @@
+{ "fps": 30, "out": "out/probe", "shots": [
+  { "name": "head", "beat": 134, "beats": 4, "cam": { "target": "head", "azFrom": "heading", "az": [35, 20], "el": [5, 8], "dist": [2.6, 2.2], "fov": 35 } },
+  { "name": "wide", "beat": 146, "beats": 4, "cam": { "target": "body", "azFrom": "world", "az": -60, "el": 14, "dist": 10, "fov": 40, "up": 0.6 } }
+] }

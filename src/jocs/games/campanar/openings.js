@@ -10,8 +10,8 @@
 import { BufferGeometry, Float32BufferAttribute, MeshLambertMaterial, MeshBasicMaterial, Color, Vector2, Vector3, Matrix4,
   DoubleSide } from 'three';
 import { SIZE, FLOOR } from './rules.js';
-import { chamberOf, halfWidth, holes, cuts, walls, wallsOf, shift, at, inset } from './arches.js';
-import { glassAt, pieceSlice, ornamentSlice } from './ornaments.js';
+import { chamberOf, halfWidth, holes, cuts, walls, wallsOf, shift, at, inset, stairFit } from './arches.js';
+import { glassAt, pieceSlice, ornamentSlice, clearOf } from './ornaments.js';
 import { stoneGeo, courseMats } from './stone.js';
 import { copeSlab } from './coping.js';
 import { chamberBell, BELL_H, BELL_YOKE } from './bells.js';
@@ -111,7 +111,7 @@ function openingSlice(r, y0, o) {
     return k.clone().lerp(DEEP, up * 0.58 + deep * 0.25).lerp(DARK_SILL, bounce * 0.55);
   };
   for (const b of wallsOf(r, o.y0, s)) {
-    const P = (u, y, n) => at(b, u, y, n), span = (b.u1 - b.u0) * 0.46;
+    const P = (u, y, n) => at(b, u, y, n), span = clearOf(b.u1 - b.u0, o.les) - Math.abs(b.off ?? 0); // the sill and band short of the quoins and lesenes
     const sillH = s.sillH ?? Math.min(0.055, s.hw * 0.24), sy0 = Math.max(a, s.ySill - sillH), sy1 = Math.min(c, s.ySill);
     if (sy1 > sy0 + 1e-4) { // the sill, proud of the wall, its top sloping in to the jambs' foot
       const sw = Math.min(s.hw + band * 1.12, span), sp = SIZE * 0.024;
@@ -226,7 +226,7 @@ export function createOpenings(scene) {
     dress(m, key, batter, orn) {
       const i = Math.round((m.position.y - FLOOR / 2) / FLOOR), y0 = i * FLOOR, odd = i % 2 === 1;
       const r = { x: m.position.x, z: m.position.z, w: m.scale.x, d: m.scale.z }, ch = chamberOf(key, i);
-      const o = ch && { ...ch, y0: ch.lo * FLOOR };
+      const les = !!orn?.includes('lesenes'), o = ch && { ...ch, s: stairFit(ch.s, clearOf(r.w, les)), y0: ch.lo * FLOOR, les }; // the stair on the camera's wall, r.w long
       const clock = clockOf(key, i), course = !batter && COURSES[key]; // a string course on a glacis stays painted
       const { g, edges } = o ? piercedGeo(r, y0, o) : stoneGeo(m, FLOOR, batter);
       m.geometry = g;

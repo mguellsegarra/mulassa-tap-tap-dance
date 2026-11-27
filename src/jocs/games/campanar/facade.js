@@ -105,7 +105,7 @@ export function createFacade() {
         line = i + LEN.clock[clockSet];
         lastTop = line + 1; // a plain floor more over its arches: no opening in the bay right over it
       } else if ((i === body.lo + 2 || bay === 3) && spaced && set && clear(i + 1) && flat(i + 2)) { // a plain floor over it
-        const big = i - lastWindow >= WINDOW_GAP, pick = orn.slot(i, known, set, n => clear(i + n - 1) && flat(i + n), clock);
+        const big = i - lastWindow >= WINDOW_GAP, pick = orn.slot(i, known, set, n => clear(i + n - 1) && flat(i + n), clock, rect);
         if (pick?.floors) { // on the wall, no opening (ornament-plan.js wall): built whole with this floor, plain over it
           put(courseOf('fust', i));
           f.orn = f.found = [pick.id];

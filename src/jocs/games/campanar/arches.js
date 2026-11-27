@@ -49,6 +49,13 @@ const LLUNES = { A: lancet(0.17, { kind: 'lluna', glass: 'night' }), C: lancet(0
 const step = (off, hw, ySill, yApex, kind) => ({ off, hw, ySill, ySpring: yApex - hw, yApex, band: 0.03, sillH: 0.035, tWall: 0.07, roomD: 0.17, faces: CAM, kind });
 const STAIR = [step(-0.27, 0.1, 0.08, 0.42, 'escala'), step(-0.11, 0.1, 0.08, 0.42, 'escala'), step(0.05, 0.1, 0.08, 0.42, 'escala'),
   step(0.2, 0.16, 0.06, 0.43, 'replà')]; // i18n-ok: a piece kind, never shown
+// opening s on a face whose frames may reach `clear` from its middle (ornaments.js clearOf): the stair's lights drawn in
+// towards it, all their offsets scaled alike so the climb stays even, till the outermost band is inside; any other as it is
+export function stairFit(s, clear) {
+  if (!STAIR.includes(s)) return s;
+  const f = Math.min(1, ...STAIR.map(t => (clear - t.hw - t.band) / Math.abs(t.off)));
+  return f < 1 ? { ...s, off: s.off * f } : s;
+}
 const SETS = { campanes: BELLS, mainell: WINDOW_SETS, espitllera: WINDOW_SETS, portal: PORTALS, ocul: OCULI, rosassa: ROSES, candela: CANDELES, lluna: LLUNES };
 const MOTIF = { campanes: 'bells', mainell: 'window', espitllera: 'window', portal: 'portal', ocul: 'ocul', rosassa: 'rosassa', candela: 'candela', lluna: 'lluna' };
 // the opening's piece floor i wears (facade.js: `<set>/campanes-0<n>`, a window's `<set>/mainell-0<n>`,

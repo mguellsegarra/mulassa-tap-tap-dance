@@ -39,9 +39,9 @@ function bellRingerHouse(t, dark, b) {
   B(-0.022, 0.022, E + 0.225, E + 0.26, 0, D + 0.065, ROOF_TILE[0], ROOF_TILE[2]);
   B(0.08, 0.14, E + 0.08, E + 0.34, 0.04, 0.11, ARCH); // the chimney and its cap
   B(0.07, 0.15, E + 0.34, E + 0.37, 0.03, 0.12, SILL);
-  for (let k = 0; k < 8; k++) { // the smoke, a thin wisp swaying up and fading into the night
+  for (let k = 0; k < 5; k++) { // the smoke, a thin wisp swaying up and fading into the night, under the floors it was given
     const c = j => [0.11 + 0.035 * Math.sin(j * 0.9), E + 0.37 + j * 0.05, 0.006 + j * 0.0016], [ua, ya, wa] = c(k), [ub, yb, wb] = c(k + 1);
-    prism(dark, P, [[ua - wa, ya, true], [ua + wa, ya, true], [ub + wb, yb, true], [ub - wb, yb, true]], 0.07, 0.082, ...ALL, SMOKE[0].clone().lerp(SMOKE[1], k / 7));
+    prism(dark, P, [[ua - wa, ya, true], [ua + wa, ya, true], [ub + wb, yb, true], [ub - wb, yb, true]], 0.07, 0.082, ...ALL, SMOKE[0].clone().lerp(SMOKE[1], k / 4));
   }
   B(-0.07, 0.07, 0.64, 0.72, D - 0.01, D + 0.004, LIT_WINDOW[0], LIT_WINDOW[0], dark); // the lit window, warmer low
   B(-0.07, 0.07, 0.56, 0.64, D - 0.01, D + 0.004, LIT_WINDOW[1], LIT_WINDOW[1], dark);

@@ -2,7 +2,7 @@
 // grown, then eased out to the whole tower; a short one goes straight to the whole, with no pointless second move.
 import assert from 'node:assert/strict';
 import { SIZE, FLOOR } from '../../src/jocs/games/campanar/rules.js';
-import { endShot, stepEndShot, widenEndShot, focusEndShot, zoomEndShot } from '../../src/jocs/games/campanar/end-camera.js';
+import { endShot, stepEndShot, widenEndShot, focusEndShot, zoomEndShot, clipPlanes } from '../../src/jocs/games/campanar/end-camera.js';
 import { createTowerTurn } from '../../src/jocs/games/campanar/turn.js';
 
 const fit = half => Math.max(1, half / Math.tan(25 * Math.PI / 180) / (2.3 * Math.sqrt(3) * SIZE)); // as scene.js's
@@ -60,6 +60,22 @@ focusEndShot(user, 10 * FLOOR);
 run(user, 0.3);
 zoomEndShot(user, 0.5, 0);
 assert.equal(user.focus, null, "the player's pinch stops the move");
+
+// a tall tower's end, framed whole and lifted clear of the end's words and the pieces sheet (the most main.js lifts: 0.62
+// of the screen under it): the far plane past the tower's foot and its cross, all round (a fixed 2000 hid a 450 m tower)
+globalThis.location = { search: '' }; // stack.js reads its flag off the page's address
+const { STACK_ZOOM } = await import('../../src/jocs/games/campanar/stack.js');
+for (const floors of [300, 500]) {
+  const o = run(endShot(floors * FLOOR, floors * FLOOR, fit, look), 4), V = 2.3 * SIZE * STACK_ZOOM; // scene.js's VIEW
+  const k = o.k / (1 - 0.2 - 0.62), across = Math.hypot(V, V) * k, cy = o.y + V * k * o.tilt;
+  const camera = { near: 0.1, far: 2000, updateProjectionMatrix() {} }; // scene.js's, 2000 at the least
+  clipPlanes(camera, across, cy, o.cross, 2000);
+  const { far } = camera;
+  for (const y of [0, o.cross]) for (const a of [0, Math.PI / 2, Math.PI]) {
+    const d = Math.hypot(across - Math.cos(a) * SIZE / 2, Math.sin(a) * SIZE / 2, cy - y);
+    assert(d < far, `${floors} floors: the tower at ${y.toFixed(0)} is ${d.toFixed(0)} away, inside the far plane (${far.toFixed(0)})`);
+  }
+}
 
 // the free look goes back round to the front (where the special pieces are) the shorter way, never faster than the
 // camera skill's 0.55 rad/s

@@ -24,6 +24,7 @@ export const FROM = DEMO ? { gargoyle: 8, rose: 16, moon: 44, moonNight: 44, nes
 const ROSE_KEEP = 8, STREAK = 6, XS_RUN = 8, FILLER_AFTER = DEMO ? 2 : 3;
 const WIDE_RUN = 15, SUN_STREAK = 8;
 const A = 0.65, C = 0.4, XS = 0.22; // facade.js's width classes, as shares of the full side
+const ROSE = 0.69; // the rose's floors' plan at least this wide: its dentil ring clears the lesenes (ornaments.js clearOf)
 const shareOf = known => j => Math.min(known[j].w, known[j].d) / SIZE; // floor j's width, a share of the full side
 const night = () => { const h = new Date().getHours(); return h >= 21 || h < 7; };
 
@@ -44,13 +45,13 @@ export function createOrnamentPlan(isNight = night()) {
   // fillers (an oculus would open behind it)
   const wall = (id, floors) => { once(id); plain = -floors; return { id, floors }; };
   return {
-    // a window's slot at floor i (its set, room(n): n floors there flat and clear, clock: the clock is laid) → the piece
-    // that takes it, an opening { name, set, id } or one on the wall { id, floors }, or null for the plain window. Rarest
-    // first; each once a run
-    slot(i, known, set, room, clock) {
-      const share = shareOf(known), s = share(i);
+    // a window's slot at floor i (its set, room(n): n floors there flat and clear, clock: the clock is laid, plan: the
+    // plan it wears, its body's, narrower than its slab at times) → the piece that takes it, an opening { name, set, id }
+    // or one on the wall { id, floors }, or null for the plain window. Rarest first; each once a run
+    slot(i, known, set, room, clock, plan = known[i]) {
+      const share = shareOf(known), s = share(i), worn = Math.min(plan.w, plan.d) / SIZE;
       if (!done.has('G6') && i >= (isNight ? FROM.moonNight : FROM.moon) && room(2)) return once('G6') && { name: 'lluna', set, id: 'G6' };
-      if (!done.has('A6') && i >= FROM.rose && set === 'A' && run(i - 1, j => share(j) >= A) >= ROSE_KEEP && room(3)) return once('A6') && { name: 'rosassa', set, id: 'A6' };
+      if (!done.has('A6') && i >= FROM.rose && set === 'A' && worn >= ROSE && run(i - 1, j => share(j) >= A) >= ROSE_KEEP && room(3)) return once('A6') && { name: 'rosassa', set, id: 'A6' };
       if (!done.has('F8') && earned.F8(known) && room(2)) return once('F8') && { name: 'candela', set, id: 'F8' };
       if (!done.has('A10') && clock && s >= C && set !== 'XS' && room(4)) return once('A10') && { name: 'escala', set, id: 'A10' };
       if (!done.has('H3') && earned.H3(known) && room(2)) return wall('H3', 2);

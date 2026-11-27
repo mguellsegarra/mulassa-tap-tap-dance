@@ -50,7 +50,7 @@ export const TOWERS = [ // the 46-60 m band: one of them a run, so every comarca
   { name: 'Campanar de la Seu Vella de Lleida', m: 60 }, // i18n-ok: POC placeholder
 ];
 const FIXED = [
-  { name: 'Més alt que un 3 de 10', m: 11 }, // i18n-ok: POC placeholder
+  { name: '3d10fm', m: 11 }, // Marc: the castellers' own notation (3 de 10 amb folre i manilles) — i18n-ok: POC placeholder
   { name: 'Campanar de la catedral de Tortosa', m: 28.66 }, // i18n-ok: POC placeholder
   { name: 'Campanar de Valls', m: 74 }, // i18n-ok: POC placeholder
   { name: 'Big Ben', m: 96 }, // i18n-ok: POC placeholder

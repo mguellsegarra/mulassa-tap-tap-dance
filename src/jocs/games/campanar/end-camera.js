@@ -8,6 +8,17 @@ const IN = 0.8, OUT = 1.5, HOLD = 0.5, LATEST = 2.4; // s: to the first shot, to
 const TIGHT = 1.5 * FLOOR, EASE = 12; // the closest zoom: this much above and below the aim (a floor or two); /s
 const FOCUS = 1.4; // s to go to a piece
 const inOut = t => (t < 0.5 ? 4 * t ** 3 : 1 - (-2 * t + 2) ** 3 / 2);
+// a camera `across` off the tower's axis at height cy, its clip planes (scene.js): near a quarter of the way in, not 0.1
+// (the clocks' and windows' millimetres off the wall stop blinking from afar); far past the tower's farthest point from
+// it, its foot or its cross at height top, a side round, and never under least (a tall tower's end, lifted clear of the
+// menu, goes far off: a fixed far lost the whole tower behind the pieces sheet)
+export function clipPlanes(camera, across, cy, top, least) {
+  const near = across / 4, far = Math.max(least, Math.hypot(across + SIZE, Math.max(cy, top - cy)) * 1.05);
+  if (Math.abs(camera.near - near) <= camera.near * 0.01 && Math.abs(camera.far - far) <= camera.far * 0.01) return;
+  camera.near = near;
+  camera.far = far;
+  camera.updateProjectionMatrix();
+}
 
 // fromY: the camera's aim now; aimY: the top floor's top; fit(half): the distance factor framing half that height
 // above and below the aim. Out: y, k, tilt and zoom, stepped each frame (stepEndShot), no allocation.

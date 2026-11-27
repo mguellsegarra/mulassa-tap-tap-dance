@@ -27,18 +27,18 @@ const ring = (t, P, u, y, r0, r1, z0, z1, a, c, k, n = 20, ends = false, gap = 0
     prism(t, P, sector(u, y, r0, r1, t0, t1, ends), z0, z1, a, c, Array.isArray(k) ? k[j % k.length] : k, STEP);
   }
 };
-// a polygon [u, y] (convex, or star-shaped about its first point) in colours col(u, y), cut to a..c, flat at z
-function fan(t, P, poly, z, a, c, col) {
+// a polygon [u, y] (convex, or star-shaped about its first point) in colours col(u, y), cut to a..c, flat at z, and
+// across to u0..u1 (a niche's width)
+function fan(t, P, poly, z, a, c, col, u0 = -Infinity, u1 = Infinity) {
   for (let j = 1; j < poly.length - 1; j++) {
-    const q = [poly[0], poly[j], poly[j + 1]].map(p => [...p, false]);
-    const lo = [a, y => y >= a - 1e-6], hi = [c, y => y <= c + 1e-6];
-    let cl = q;
-    for (const [lim, keep] of [lo, hi]) { // Sutherland-Hodgman on the triangle, as relief.js clipY
-      const out = [];
+    let cl = [poly[0], poly[j], poly[j + 1]];
+    for (const [ax, lim, sg] of [[1, a, 1], [1, c, -1], [0, u0, 1], [0, u1, -1]]) { // Sutherland-Hodgman on the triangle, as relief.js clipY
+      if (!Number.isFinite(lim)) continue;
+      const out = [], keep = p => sg * (p[ax] - lim) >= -1e-6;
       cl.forEach((p, i) => {
-        const n = cl[(i + 1) % cl.length], pin = keep(p[1]), nin = keep(n[1]);
+        const n = cl[(i + 1) % cl.length], pin = keep(p), nin = keep(n), k = (lim - p[ax]) / (n[ax] - p[ax]);
         if (pin) out.push(p);
-        if (pin !== nin) out.push([p[0] + (n[0] - p[0]) * (lim - p[1]) / (n[1] - p[1]), lim]);
+        if (pin !== nin) out.push([p[0] + (n[0] - p[0]) * k, p[1] + (n[1] - p[1]) * k]);
       });
       cl = out;
     }
@@ -107,8 +107,8 @@ const TREAD = [C('#e6a862'), C('#6b4426')], STRINGER = C('#2a190d'), HANDRAIL = 
 function stairInside(dark, P, s, a, c, tWall, roomD, { y0, flat = 0, n, lamp, front = false }) {
   const w = s.hw * 1.25, uF = -w + 2 * w * flat, run = (w - uF) / n, rise = Math.min(0.06, run), zB = -roomD, zF = -tWall - 0.01;
   const disc = (u, y, r, m) => [[u, y], ...Array.from({ length: m + 1 }, (_, j) => [u + Math.cos(j * 2 * Math.PI / m) * r, y + Math.sin(j * 2 * Math.PI / m) * r])];
-  const [lu, ly, lr] = lamp;
-  fan(dark, P, disc(lu, ly, lr, 16), zB + 0.002, a, c, (u, y) => LAMP[1].clone().lerp(LAMP[2], Math.min(1, Math.hypot(u - lu, y - ly) / lr)));
+  const [lu, ly, lr] = lamp; // its glow cut to the flight's width: wider, it poked out of a thin tower's side
+  fan(dark, P, disc(lu, ly, lr, 16), zB + 0.002, a, c, (u, y) => LAMP[1].clone().lerp(LAMP[2], Math.min(1, Math.hypot(u - lu, y - ly) / lr)), -w, w);
   fan(dark, P, disc(lu, ly, 0.014, 8), zB + 0.004, a, c, () => LAMP[0]); // the lamp itself
   const warm = u => TREAD[0].clone().lerp(TREAD[1], Math.min(1, Math.abs(u - lu) / (w * 1.5)));
   if (flat) box(dark, P, -w, uF, y0 - 0.04, y0, zB, zF, a, c, STRINGER, warm((uF - w) / 2));
@@ -198,6 +198,10 @@ function dragon(t, c, dir, side, y, k = 1.7) {
   }
 }
 
+const lesenaOf = face => Math.min(0.06, face * 0.09); // B1's lesene on a face that long
+// how far from a face's middle an opening's frame (its sill, its band) may reach: a hair inside the quoins, and inside
+// the lesenes on a floor wearing them
+export const clearOf = (face, lesenes) => face / 2 - quoinOf(face) - (lesenes ? lesenaOf(face) : 0) - 0.01;
 // plan r's four corners, each with the way out along its diagonal and the way across it
 export const cornersOf = r => [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([sx, sz]) => ({ c: { x: r.x + sx * r.w / 2, z: r.z + sz * r.d / 2 },
   dir: new Vector3(sx, 0, sz).normalize(), side: new Vector3(-sz, 0, sx).normalize() }));
@@ -205,7 +209,7 @@ export const cornersOf = r => [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([sx, sz]
 export function ornamentSlice(r, y0, orn) {
   const t = tris(), top = orn.includes('lombard') ? 0.16 : FLOOR; // under a string course the lesenes stop at it
   for (const b of walls(r, y0)) {
-    const P = (u, y, n) => at(b, u, y, n), half = (b.u1 - b.u0) / 2, q = quoinOf(b.u1 - b.u0), lw = Math.min(0.06, half * 0.18);
+    const P = (u, y, n) => at(b, u, y, n), half = (b.u1 - b.u0) / 2, q = quoinOf(b.u1 - b.u0), lw = lesenaOf(b.u1 - b.u0);
     if (orn.includes('lesenes')) for (const sg of [-1, 1]) box(t, P, sg > 0 ? half - q - lw : -half + q, sg > 0 ? half - q : -half + q + lw, 0, top, 0, 0.018, -9, 9, ARCH, STEP);
     if (orn.includes('lombard')) arcade(t, P, b, 0.02, 0.07, 0.16, 0.018, 0, q + lw);
   }

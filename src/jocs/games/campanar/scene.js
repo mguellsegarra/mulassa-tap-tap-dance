@@ -18,7 +18,7 @@ import { sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings, skyPan } from './sky.js';
 import { createTowerTurn } from './turn.js';
-import { endShot, stepEndShot, widenEndShot, zoomEndShot, panEndShot, focusEndShot } from './end-camera.js';
+import { endShot, stepEndShot, widenEndShot, zoomEndShot, panEndShot, focusEndShot, clipPlanes } from './end-camera.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
 import { STACK_TRY, STACK_LENS, STACK_ZOOM } from './stack.js';
@@ -36,7 +36,7 @@ export function createScene(canvas, { found = () => {} } = {}) {
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
   const scene = new Scene();
-  const camera = new PerspectiveCamera(46, 1, 0.1, STACK_TRY ? 2000 : 400);
+  const FAR = STACK_TRY ? 2000 : 400, camera = new PerspectiveCamera(46, 1, 0.1, FAR); // farther when a tall tower's end needs it (clipPlanes)
   // the sky behind the tower: a night's clouds (Astra's) under Fable's stars
   const clouds = createClouds(scene, camera, renderer, { night: 0.8 }), stars = createStars(scene, camera, renderer);
   // light from above and a fixed sun: from the end's first view the top, the left and the right faces in three tones
@@ -284,9 +284,9 @@ export function createScene(canvas, { found = () => {} } = {}) {
         camera.setViewOffset(w, h, -w * asided, h * (lb - lt) / 2, w, h);
       } else camera.clearViewOffset();
       const across = Math.hypot(VIEW.x, VIEW.z) * k;
-      // near a quarter of the way in, not 0.1: the clocks' and windows' millimetres off the wall stop blinking from afar
-      if (Math.abs(camera.near - across / 4) > camera.near * 0.01) { camera.near = across / 4; camera.updateProjectionMatrix(); }
-      freeLook.place(camera, across, VIEW.y * k * tilt, camY, dt);
+      const up = VIEW.y * k * tilt;
+      clipPlanes(camera, across, camY + up, aimY + 2 * SIZE, FAR); // the crown's cross 1.8 sides over the top, and a little
+      freeLook.place(camera, across, up, camY, dt);
       camera.lookAt(0, camY - 0.3 * SIZE * (outro?.f ?? 1), 0); // the end's zoom scales the whole view round this point
       clouds.tick(dt, camY, skyPan(freeLook.spin)); // the end's turn: the sky's round, its clouds and stars go with it
       stars.tick(dt, camY, skyPan(freeLook.spin));

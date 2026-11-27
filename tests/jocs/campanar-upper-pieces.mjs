@@ -48,7 +48,12 @@ const plainOver = (i, n, id) => {
   assert(i + n - 1 < wide.cap - 4, `${id}: clear of the bell chamber`);
 };
 plainOver(h1, 3, 'H1');
-assert.match(wide.courses[h1 + 3].key, /fust/, 'nothing opens behind the house\'s smoke, the floor over it');
+// a tower ending at any height over a house: the floors it and its smoke take stay plain, never the bell chamber's (the
+// smoke stays inside them: 'within' below)
+for (let n = 70; n <= 90; n++) {
+  const t = finds([...plan(8, 1), ...plan(n - 8, 0.7)]);
+  for (const i of t.at.H1 ?? []) for (let j = i + 1; j < i + 3; j++) assert.match(t.courses[j].key, /fust/, `${n} floors: floor ${j} over the house at ${i} plain`);
+}
 plainOver(h3, 2, 'H3');
 // the gallery and the lantern go round a string course: the first one past their heights
 const faixes = wide.courses.map((c, i) => (c.key === 'A/faixa' ? i : -1)).filter(i => i >= 0);
@@ -82,7 +87,7 @@ const tris = g => g.attributes.position.count / 3;
 const y0 = 60 * FLOOR, C = { x: 0, z: 0, w: SIZE * 0.45, d: SIZE * 0.45 }, A = { x: 0, z: 0, w: SIZE * 0.7, d: SIZE * 0.7 };
 const within = (vs, floors, what) => vs.forEach(([, y]) => assert(y >= y0 - 1e-6 && y < y0 + floors * FLOOR, `${what}: within its ${floors} floors (y ${(y - y0).toFixed(2)})`));
 const house = upperPieceSlice(C, y0, ['lesenes', 'H1']), hv = [...verts(house.lit), ...verts(house.dark)];
-within(hv, 4, 'the house, its smoke and all');
+within(hv, 3, 'the house, its smoke and all'); // the 3 floors it takes (ornament-plan.js wall): the smoke once rose to the bell chamber's sill
 assert(hv.some(([x, , z]) => z > C.d / 2 + 0.3), 'the house stands out of the camera\'s wall');
 // by the left quoin, so it reads from afar: an eighth of the full side past the tower's profile on the screen's left
 assert(hv.some(([x, , z]) => x - z < -(C.w + C.d) / 2 - SIZE / 8), 'and past the tower\'s profile on the screen\'s left');

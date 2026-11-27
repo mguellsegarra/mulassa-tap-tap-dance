@@ -59,11 +59,19 @@ export function ritmeLoopStep(step, when, level) {
   else if (i === 4 || i === 12) for (const m of i === 12 && half || chord) ritmeNote(m, when, 0.18, 0.055, 'sine');
 }
 
-// A perfect on the "one" of `bar`: the tune's note there, so always a tone of the chord sounding under it. Stack's voice:
-// a soft sine an octave under the tune and its octave (the tune's own pitch) behind it, here a sixteenth later, on the grid
-export function ritmePerfect(bar, when, sixteenth) {
-  const m = ritmeSong.tune[(bar % ritmeSong.bars.length) * ritmeSong.per], f = ritmeHz(m - 12);
-  bubble(f, f, { when, glide: 0.001, len: 0.6, peak: 0.4, attack: 0.01 });
-  bubble(2 * f, 2 * f, { when: when + sixteenth, glide: 0.001, len: 0.5, peak: 0.26, attack: 0.01 });
+// A perfect on the "one" of `bar`: the tune's note there, so always a tone of the chord sounding under it. A marimba
+// (Marc chose it over a glockenspiel and a celesta, 27 Nov 2026): the note, its tuned fourth partial and a knock, soft
+// enough that the kick and bass on the same instant leave the limiter alone (Stack's sine and octave, 0.4 + 0.26, drove it)
+const RITME_MARIMBA = [[1, 0.24, 0.32], [4, 0.05, 0.06], [10, 0.015, 0.02]]; // [partial ratio, peak, length s]
+export function ritmePerfect(bar, when) {
+  const m = ritmeSong.tune[(bar % ritmeSong.bars.length) * ritmeSong.per], f = ritmeHz(m);
+  for (const [k, peak, len] of RITME_MARIMBA) bubble(f * k, f * k, { when, glide: 0.001, len, peak, attack: 0.003 });
   return m;
+}
+// A slab set down off the beat, at the tap: a short muted pluck on a tone of `bar`'s chord, its lowest when late, its
+// highest when early, so it never sounds out of key
+export function ritmeCut(bar, late) {
+  const chord = ritmeSong.bars[bar % ritmeSong.bars.length][3], f = ritmeHz(late ? chord[0] : chord.at(-1));
+  bubble(f, f, { at: 0.01, type: 'triangle', glide: 0.001, len: 0.09, peak: 0.2, attack: 0.002 });
+  bubble(2 * f, 2 * f, { at: 0.01, glide: 0.001, len: 0.04, peak: 0.06, attack: 0.002 });
 }

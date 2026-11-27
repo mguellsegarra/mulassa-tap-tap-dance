@@ -116,7 +116,8 @@ function tap(ms) { // ms: the event's own time (?ritme judges the tap where the 
   top = r.placed;
   scene.place(top, axis, dir * (RITME ? ritmeSpeed(RANGE) : speedAt(n)), r.landed); // its speed: a perfect's snap settles from it
   y += FLOOR;
-  if (r.perfect) { streak++; RITME || SFX.perfect(streak); haptic('hit'); scene.ripple(n, top, y, streak); } else { streak = 0; SFX.place(); haptic('tap'); }
+  if (r.perfect) { streak++; RITME || SFX.perfect(streak); haptic('hit'); scene.ripple(n, top, y, streak); }
+  else { streak = 0; RITME || SFX.place(); haptic('tap'); } // the rhythm's cut plays its own pluck (ritmeDrop)
   score++;
   n++;
   hud();

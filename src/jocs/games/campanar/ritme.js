@@ -6,7 +6,7 @@
 // a perfect sings the tune's note for its bar, on the beat. A cut leaves that bar's note unsung and the tune goes on with
 // the chords (held back a bar, its next note would be out of the chord by then).
 import { audioCtx, audioOut, bubble } from './audio.js';
-import { ritmeLoopStep, ritmePerfect, ritmeScore, ritmeTempo } from './ritme-loop.js';
+import { ritmeLoopStep, ritmePerfect, ritmeScore, ritmeTempo, ritmeCut } from './ritme-loop.js';
 
 export const RITME = new URLSearchParams(location.search).get('ritme') === 'fable';
 const RITME_BPM = ritmeTempo; // 138 for our song, the game's own first speed: its reach in one bar
@@ -96,12 +96,11 @@ export function ritmeDrop(ms, streak) {
   if (streak) bpm += 1;
   else {
     bpm *= Math.min(1.15, Math.max(0.85, 1 - RITME_BEND * off));
-    // the cut's own word: a short glide down (late, slowing) or up (early, rushing)
-    bubble(620, off > 0 ? 410 : 930, { at: 0.03, glide: 0.09, len: 0.14, peak: 0.3 });
+    ritmeCut(cross / 4, off > 0); // the cut's own word: a chord tone, low when late (slowing), high when early (rushing)
   }
   bpm = Math.min(RITME_MAX, Math.max(RITME_MIN, bpm));
   origin = Math.round(b / 4) * 4; // the next slab leaves on the downbeat nearest the tap
   if (!streak) return;
-  const midi = ritmePerfect(cross / 4, audioCtx.currentTime + 0.015 + lead, 15 / bpm);
+  const midi = ritmePerfect(cross / 4, audioCtx.currentTime + 0.015 + lead);
   ritmeLog?.push({ k: 'note', t: audioCtx.currentTime + lead, beat: cross, midi });
 }

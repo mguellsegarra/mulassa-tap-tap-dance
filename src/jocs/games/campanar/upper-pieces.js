@@ -2,14 +2,14 @@
 // H1, the bell-ringer's cottage hung on corbels off the camera's wall by its left quoin, so it sticks out of the tower's
 // profile; H2, a gallery of little arches on a corbelled ledge round a string course; H3, a sundial painted on the
 // camera's wall, its gnomon in iron (its shadow is the clock's hands' mesh, clock.js); H4, a wrought-iron lantern on a
-// bracket off the right corner. Stone, tiles and geraniums go in the lit mesh; the lit window, the smoke and the lantern's
+// bracket off each corner. Stone, tiles and geraniums go in the lit mesh; the lit window, the smoke and the lantern's
 // glass in the unlit one, so they read as light. Each is built whole with the floor it settles on and stays within the
 // flat floors over it (facade.js).
-import { Color, Vector3 } from 'three';
+import { Color } from 'three';
 import { walls, at } from './arches.js';
 import { quoinOf } from './stone.js';
 import { tris, prism, sector, ARCH, STEP, SILL } from './relief.js';
-import { box, beam, IRON } from './ornaments.js';
+import { box, beam, IRON, cornersOf } from './ornaments.js';
 
 const C = c => new Color(c);
 const ROOF_TILE = [C('#a34a2a'), C('#c9623a'), C('#dc7d52')], LIT_WINDOW = [C('#ffe39a'), C('#f59a35')];
@@ -135,9 +135,6 @@ export function upperPieceSlice(r, y0, orn) {
     const hw = Math.min(0.3, -cam.u0 - quoinOf(cam.u1 - cam.u0) - 0.06);
     shadow = sundialShadow(cam, hw, 0.16 + hw * 2.3 - 0.12);
   }
-  if (orn.includes('H4')) { // the corner the camera sees in profile on the screen's right
-    const c = { x: r.x + r.w / 2, z: r.z - r.d / 2 };
-    wallLantern(t, dark, c, new Vector3(1, 0, -1).normalize(), new Vector3(1, 0, 1).normalize(), y0 + 0.3);
-  }
+  if (orn.includes('H4')) for (const { c, dir, side } of cornersOf(r)) wallLantern(t, dark, c, dir, side, y0 + 0.3); // all four, as the gargoyles
   return { lit: t.geo(), dark: dark.geo(), shadow };
 }

@@ -1,6 +1,6 @@
 // The prototype's ornaments in 3D (ornament-plan.js picks them, openings.js pools them; no new material): the face
 // pieces' own parts inside their openings (arches.js), and what a floor wears over its course: B1's Lombard lesenes and
-// the arches under a string course, B5's drain gargoyles and F1's dragon at the corners. Each floor builds only its
+// the arches under a string course, B5's drain gargoyles or F1's dragons at the corners. Each floor builds only its
 // own heights. The glass is the dark mesh's vertex colour, unlit: it reads as light in the night over 74 m.
 import { Color, Vector3 } from 'three';
 import { FLOOR } from './rules.js';
@@ -198,6 +198,9 @@ function dragon(t, c, dir, side, y, k = 1.7) {
   }
 }
 
+// plan r's four corners, each with the way out along its diagonal and the way across it
+export const cornersOf = r => [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(([sx, sz]) => ({ c: { x: r.x + sx * r.w / 2, z: r.z + sz * r.d / 2 },
+  dir: new Vector3(sx, 0, sz).normalize(), side: new Vector3(-sz, 0, sx).normalize() }));
 // what floor y0 in plan r wears over its course (orn: 'lesenes', 'lombard', 'B5', 'F1') → its lit geometry
 export function ornamentSlice(r, y0, orn) {
   const t = tris(), top = orn.includes('lombard') ? 0.16 : FLOOR; // under a string course the lesenes stop at it
@@ -206,13 +209,10 @@ export function ornamentSlice(r, y0, orn) {
     if (orn.includes('lesenes')) for (const sg of [-1, 1]) box(t, P, sg > 0 ? half - q - lw : -half + q, sg > 0 ? half - q : -half + q + lw, 0, top, 0, 0.018, -9, 9, ARCH, STEP);
     if (orn.includes('lombard')) arcade(t, P, b, 0.02, 0.07, 0.16, 0.018, 0, q + lw);
   }
-  const corners = orn.filter(o => o === 'B5' || o === 'F1');
-  if (corners.length) for (const [sx, sz] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) {
-    const c = { x: r.x + sx * r.w / 2, z: r.z + sz * r.d / 2 }, dir = new Vector3(sx, 0, sz).normalize(), side = new Vector3(-sz, 0, sx).normalize();
-    // the dragon at the corner the camera sees in profile (on the screen's left), the drain gargoyles at the others
-    if (sx < 0 && sz > 0 && corners.includes('F1')) dragon(t, c, dir, side, y0 + 0.15);
-    else if (corners.includes('B5') && !(sx > 0 && sz < 0 && orn.includes('H4'))) gargoyle(t, c, dir, side, y0 + 0.3); // H4's lantern there (upper-pieces.js)
-  }
+  // every corner wears the same piece, out along its own diagonal (each is symmetric about it, so the pair the camera sees
+  // in profile mirror each other): the dragons, or H4's lanterns (upper-pieces.js), or the drain gargoyles
+  const corner = orn.includes('F1') ? dragon : orn.includes('H4') ? null : orn.includes('B5') ? gargoyle : null;
+  if (corner) for (const { c, dir, side } of cornersOf(r)) corner(t, c, dir, side, y0 + (corner === dragon ? 0.15 : 0.3));
   if (orn.includes('E1')) storkNest(t, walls(r, y0).find(b => b.mat === 4)); // the camera's wall (arches.js CAM)
   return t.geo();
 }

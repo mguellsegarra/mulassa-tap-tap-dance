@@ -25,8 +25,10 @@ const BASE_FLOORS = 6, CLOCK_FROM = 12, WINDOW_GAP = 10;
 // a body's opening two floors over its foot: a window, or an arrow slit when the last window is nearer than WINDOW_GAP.
 // A long body is parted in bays, as Valls' thin string courses part its shaft: a string course BAY floors over the last
 // line across the wall (the body's foot, the imposta, the arches over the clock, a string course), and in its bay an
-// opening two floors clear of it; none in the bay right over the clock, so its stage reads
-export const BAY = 7;
+// opening two floors clear of it; none in the bay right over the clock, so its stage reads. Every face piece (an
+// opening, a filler, the clock with its arches, a piece on the wall) keeps GAP plain floors from the one under it (Marc,
+// 27 Nov 2026: an oculus glued under the clock)
+export const BAY = 7, GAP = 2;
 const share = r => Math.min(r.w, r.d) / SIZE;
 const courseOf = (kind, i) => `A/${kind}-${i % 2 ? 'senar' : 'parell'}`;
 
@@ -38,7 +40,8 @@ const courseOf = (kind, i) => `A/${kind}-${i % 2 ? 'senar' : 'parell'}`;
 export function createFacade() {
   const floors = [], pending = new Map(); // pending: a motif's upper pieces, chosen with its first floor
   const orn = createOrnamentPlan();
-  let baseUntil = BASE_FLOORS, clock = false, lastWindow = -Infinity, lastOpen = -Infinity;
+  // lastTop: the last face piece's top floor
+  let baseUntil = BASE_FLOORS, clock = false, lastWindow = -Infinity, lastTop = -Infinity;
   let line = -Infinity; // the last floor a band crosses (the imposta, the arches, a string course)
 
   // the parapet's floor: under the first slab too thin for bells, or the last one when the run has ended
@@ -91,35 +94,37 @@ export function createFacade() {
       const clockSet = !clock && i >= CLOCK_FROM && (cset === 'A' ? 'A' : cset === 'C' ? 'C' : null);
       const room = cap === null || i + 5 < cap - 4; // the clock and its arches stay clear of the bell chamber
       const bay = i - Math.max(body.lo - 1, line), clear = j => cap === null || j < cap - 4; // so do the bays' pieces
-      const spaced = i === body.lo + 2 || i - lastOpen >= 4; // two plain floors over the last opening (or the clock) in a body
+      const spaced = i - lastTop > GAP;
+      // the oculus or the sawtooth frieze (ornament-plan.js filler)
+      const filler = () => { if (orn.filler() === 'ocul') motif('ocul', cset, null, 'A1'); else { put('A/serra'); f.found = ['B2']; } lastTop = i; };
       if (i < baseUntil) put(courseOf('base', i));
       else if (i === baseUntil) { put('A/imposta'); line = i; }
-      else if (clockSet && room && known[i + LEN.clock[clockSet]] && flat(i + LEN.clock[clockSet])) {
+      else if (clockSet && spaced && room && known[i + LEN.clock[clockSet]] && flat(i + LEN.clock[clockSet])) {
         motif('clock', clockSet, 'A/arquets');
         clock = true;
-        line = lastOpen = i + LEN.clock[clockSet];
+        line = i + LEN.clock[clockSet];
+        lastTop = line + 1; // a plain floor more over its arches: no opening in the bay right over it
       } else if ((i === body.lo + 2 || bay === 3) && spaced && set && clear(i + 1) && flat(i + 2)) { // a plain floor over it
         const big = i - lastWindow >= WINDOW_GAP, pick = orn.slot(i, known, set, n => clear(i + n - 1) && flat(i + n), clock);
         if (pick?.floors) { // on the wall, no opening (ornament-plan.js wall): built whole with this floor, plain over it
           put(courseOf('fust', i));
           f.orn = f.found = [pick.id];
           for (let j = 1; j < pick.floors; j++) pending.set(i + j, { key: courseOf('fust', i + j), group: i + pick.floors - 1 });
-          f.group = i + pick.floors - 1;
-          lastOpen = i + pick.floors - 2;
-        } else if (pick) lastOpen = i + motif(pick.name, pick.set, null, pick.id) - 2; // as far from the next as a window's
+          f.group = lastTop = i + pick.floors - 1;
+        } else if (pick) lastTop = i + motif(pick.name, pick.set, null, pick.id) - 1;
+        else if ((!big || set === 'XS') && orn.filler()) filler(); // a slit hardly shows from afar: a filler instead
         else {
           motif('window', big ? set : 'XS'); // the campanar's own: no find, so no name chosen apart from its stone (Astra's «Finestral» on an arrow slit)
           if (big) lastWindow = i;
-          lastOpen = i;
+          lastTop = i + 1;
         }
       } else if (bay >= BAY && spaced && clear(i) && flat(i + 2)) { // never just under a glacis
         put('A/faixa');
         line = i;
         f.orn = ['lombard', ...orn.corners(i, known)]; // the Lombard arches under it, the gargoyles over it
         f.found = f.orn.slice(1); // its gargoyles
-      } else if (orn.filler() && clear(i) && flat(i + 1)) {
-        if (orn.filler() === 'ocul') motif('ocul', cset, null, 'A1');
-        else { put('A/serra'); f.found = ['B2']; }
+      } else if (orn.filler() && spaced && bay >= 3 && bay !== BAY - 1 && clear(i) && flat(i + 1)) {
+        filler(); // not where the bay's opening or its string course is due
       }
     }
     // the top floor of a body under a narrower one: a glacis, sloping in to that plan

@@ -54,7 +54,7 @@ plainOver(h3, 2, 'H3');
 const faixes = wide.courses.map((c, i) => (c.key === 'A/faixa' ? i : -1)).filter(i => i >= 0);
 assert.equal(h2, faixes.find(i => i >= floorAt(120) + 14), 'the gallery on the first string course it can have');
 assert.equal(h4, faixes.find(i => i >= floorAt(250)), 'the lantern on the first string course from 250 m');
-assert(wide.courses[h4].orn.includes('B5'), 'the other corners keep their drain gargoyles');
+assert.deepEqual(wide.courses[h4].orn.filter(o => /^(B5|F1|H4)$/.test(o)), ['H4'], 'the lanterns alone at its corners');
 
 // skill, not luck: each wants what its hint says
 assert.equal(finds([...plan(10, 1), ...plan(190, 0.3)]).at.H1, undefined, 'no house on a thin tower: no wall to hang from');
@@ -101,9 +101,10 @@ assert(verts(sundial.lit).every(([x, , z]) => z > A.d / 2 - 1e-6 && Math.abs(x) 
 assert(tris(sundial.lit) < 400, `the sundial: ${tris(sundial.lit)} triangles`);
 const lantern = upperPieceSlice(A, y0, ['H4']), lv = [...verts(lantern.lit), ...verts(lantern.dark)];
 within(lv, 2, 'the lantern');
-assert(lv.every(([x, , z]) => x > A.w / 2 - 0.1 && z < -A.d / 2 + 0.1), 'the lantern at the right corner');
-assert(tris(lantern.lit) + tris(lantern.dark) < 200, `the lantern: ${tris(lantern.lit) + tris(lantern.dark)} triangles`);
-assert.equal(tris(ornamentSlice(A, y0, ['B5', 'H4'])), tris(ornamentSlice(A, y0, ['B5'])) * 3 / 4, 'the lantern takes a drain gargoyle\'s corner');
+assert(lv.every(([x, , z]) => Math.abs(x) > A.w / 2 - 0.1 && Math.abs(z) > A.d / 2 - 0.1), 'the lanterns at the corners');
+for (const [sx, sz] of [[1, 1], [1, -1], [-1, -1], [-1, 1]]) assert(lv.some(([x, , z]) => x * sx > 0 && z * sz > 0), `a lantern at corner ${sx}, ${sz}`);
+assert(tris(lantern.lit) + tris(lantern.dark) < 800, `the four lanterns: ${tris(lantern.lit) + tris(lantern.dark)} triangles`);
+assert.equal(tris(ornamentSlice(A, y0, ['B5', 'H4'])), tris(ornamentSlice(A, y0, [])), 'the lanterns take the drain gargoyles\' corners');
 assert.equal(upperPieceSlice(A, y0, ['lesenes', 'lombard', 'B5']), null, 'nothing for the other floors');
 
 // no draw call more: the openings' three pooled meshes take them all (the sundial's shadow with the clock's hands), and

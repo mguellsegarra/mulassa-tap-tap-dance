@@ -57,9 +57,8 @@ struct LauncherRoot: View {
     }
 }
 
-// The home, as the App Store's: the logo on the left and the avatar on the right in one row, scrolling away with the
-// cartridges; under the status bar a veil in the sky's own top colour keeps the clock readable over them (a plain fade,
-// no blur: S10 cost).
+// The home: the logo on the left and the avatar on the right on the Faldó, a header fixed to the screen's top edge that
+// the cartridges scroll under (owner, 27 Nov 2026; it replaces the row that scrolled away and its status-bar veil).
 private struct Home: View {
     @ObservedObject var model: Launcher
     let sky: Sky
@@ -70,7 +69,15 @@ private struct Home: View {
     var body: some View {
         GeometryReader { g in
             ScrollView {
-                VStack(spacing: M) {
+                Cartridges(model: model, width: g.size.width, gap: gap(g).gap, lifted: lifted, lift: lift)
+                    .padding([.horizontal, .bottom], M)
+                    .padding(.top, Faldo.below + Faldo.fringe + M) // the grid starts a margin under the fringe
+            }
+            .scrollIndicators(.hidden)
+            .scrollDisabled(!gap(g).scrolls) // every row fits: the page stands still
+            .overlay(alignment: .top) {
+                ZStack(alignment: .top) {
+                    Faldo(cloth: g.safeAreaInsets.top + Faldo.below)
                     HStack {
                         Logo().padding(.leading, 1.5).accessibilityAddTraits(.isHeader) // its outer stroke's ink, on the margin
                         Spacer()
@@ -79,17 +86,12 @@ private struct Home: View {
                             .padding(.trailing, -4) // the 36 pt circle's edge on the margin
                             .accessibilityLabel(Text("html.accountTitle"))
                     }
-                    .padding(.top, 8)
-                    Cartridges(model: model, width: g.size.width, gap: gap(g).gap, lifted: lifted, lift: lift)
+                    .frame(height: 44)
+                    .padding(.horizontal, M)
+                    .padding(.top, g.safeAreaInsets.top + Faldo.row)
+                    .accessibilitySortPriority(1) // an overlay reads after its base: the heading and the account come first
                 }
-                .padding(M)
-            }
-            .scrollIndicators(.hidden)
-            .scrollDisabled(!gap(g).scrolls) // every row fits: the page stands still
-            .overlay(alignment: .top) {
-                LinearGradient(stops: [.init(color: Color(sky.top), location: 0), .init(color: Color(sky.top).opacity(0.75), location: 0.55),
-                                       .init(color: Color(sky.top).opacity(0), location: 1)], startPoint: .top, endPoint: .bottom)
-                    .frame(height: g.safeAreaInsets.top + 16).offset(y: -g.safeAreaInsets.top).allowsHitTesting(false)
+                .ignoresSafeArea(edges: .top)
             }
         }
         .background(SkyBackground(sky: sky))
@@ -100,7 +102,7 @@ private struct Home: View {
     // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
     private func gap(_ g: GeometryProxy) -> (gap: CGFloat, scrolls: Bool) {
         let u = (g.size.width - 3 * M) / 2 / Cartridge.size.width, rows = (model.games.count + 1) / 2
-        let top = g.safeAreaInsets.top + M + 8 + 48 + M // the scroll's padding, the header row, the stack's spacing
+        let top = g.safeAreaInsets.top + Faldo.below + Faldo.fringe + M // the grid's first row, under the Faldó
         return rowGap(view: g.safeAreaInsets.top + g.size.height + g.safeAreaInsets.bottom, bottom: g.safeAreaInsets.bottom, top: top, row: Cartridge.size.height * u, rows: rows)
     }
 }
@@ -110,6 +112,49 @@ private struct Home: View {
 // screen's bottom edge cuts a row between 30 and 70 % of its height, as near the middle as it can (a thin sliver, or a
 // row cut at its very bottom, hides that the grid scrolls). `view`: the screen's height; `bottom`: the home indicator's.
 // Same rule on Android (LauncherScreens.kt).
+// The Faldó (header ronda 3, owner's pick C1): the Mulassa's cloth in granat, hung from the screen's top edge with soft
+// folds, a gold line and a dense gold fringe whose strands touch, so they read as hair without the sky showing through.
+// One static Canvas (no blur, no animation); the whole piece is drawn into one layer and shadowed once. It takes the taps
+// down to the fringe's tips, so a cartridge hidden under it cannot be lifted and one showing below it still can.
+// Same drawing on Android (LauncherScreens.kt, Faldo).
+struct Faldo: View {
+    static let below: CGFloat = 59  // the cloth under the status bar's inset
+    static let row: CGFloat = 3     // the logo row's top under that inset (44 tall)
+    static let fringe: CGFloat = 16 // how far the longest strand hangs under the cloth (they start 3 above its edge)
+    let cloth: CGFloat              // the cloth's height from the screen's top edge
+
+    private static let ink = Color(UIColor(hex: "#150a05")).opacity(0.42), granat = Color(UIColor(hex: "#7d1f35"))
+    private static let gold = Color(UIColor(hex: "#f2c230")), shine = Color(UIColor(hex: "#fff0b0")).opacity(0.55)
+    private static let strands: [(dx: CGFloat, h: CGFloat, c: Color)] = [(0, 19, gold), (2.8, 16.5, Color(UIColor(hex: "#d9a521"))), (5.6, 18, Color(UIColor(hex: "#e9b62a")))]
+    private static let fold = Gradient(stops: [.init(color: .clear, location: 0), .init(color: Color(UIColor(hex: "#3d0a18")).opacity(0.38), location: 0.5), .init(color: .clear, location: 1)])
+
+    var body: some View {
+        Canvas { c, size in
+            let w = size.width, k = w / 393 // the folds keep the mock-up's rhythm at any width
+            c.addFilter(.shadow(color: Faldo.ink, radius: 3.5, y: 3))
+            c.drawLayer { s in // one layer, so the shadow filters its silhouette once, not every strand
+                var x: CGFloat = 0 // strands 3.4 wide every 2.8 (the last overlaps the next group's first): three golds
+                while x < w {
+                    for t in Faldo.strands { s.fill(Path(roundedRect: CGRect(x: x + t.dx, y: cloth - 3, width: 3.4, height: t.h), cornerRadius: 1.7), with: .color(t.c)) }
+                    s.fill(Path(CGRect(x: x + 1.4, y: cloth - 3, width: 0.9, height: 14)), with: .color(Faldo.shine))
+                    x += 9
+                }
+                // the cloth over the strands' rounded tops, as the mock-up: they come out flat under the gold line
+                s.fill(Path(CGRect(x: 0, y: 0, width: w, height: cloth)), with: .color(Faldo.granat))
+                s.fill(Path(CGRect(x: 0, y: cloth - 2, width: w, height: 2)), with: .color(Faldo.gold))
+                for i in 0..<7 {
+                    let r = CGRect(x: (CGFloat(i) * 65.5 - 12) * k, y: 0, width: 24 * k, height: cloth)
+                    s.fill(Path(r), with: .linearGradient(Faldo.fold, startPoint: CGPoint(x: r.minX, y: 0), endPoint: CGPoint(x: r.maxX, y: 0)))
+                }
+            }
+        }
+        .frame(height: cloth + Faldo.fringe + 11) // room for the shadow
+        .contentShape(Path(CGRect(x: 0, y: 0, width: 4096, height: cloth + Faldo.fringe))) // the shadow's band stays tappable
+        .ignoresSafeArea(edges: .horizontal) // edge to edge in landscape too; the logo row keeps the side insets
+        .accessibilityHidden(true)
+    }
+}
+
 func rowGap(view: CGFloat, bottom: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> (gap: CGFloat, scrolls: Bool) {
     let room = view - bottom - M - top // down to the home indicator, with a margin
     if CGFloat(rows) * row + CGFloat(max(rows - 1, 0)) * M <= room {

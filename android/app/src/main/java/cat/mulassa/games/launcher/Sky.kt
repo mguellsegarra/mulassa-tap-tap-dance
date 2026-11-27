@@ -58,7 +58,6 @@ import kotlinx.coroutines.delay
 // calma» (SkyLife): drifting clouds (ronda-15: five soft shapes) and twinkling stars, on layer translation and alpha only (no sun or moon: the owner wants the header clear).
 @Immutable
 data class Sky(val top: Color, val mid: Color, val bottom: Color, val stars: Float, val clouds: Float, val hour: Float = 12f) {
-    val header get() = top.mix(mid, 0.22f) // the colour behind the sticky header, for its fade
     val sheet get() = top.mix(hex("#0b0f22"), 0.55f)
 }
 

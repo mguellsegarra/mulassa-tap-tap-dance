@@ -34,9 +34,6 @@ struct Sky: Equatable {
         return Sky(hour: Double(c.hour ?? 12) + Double(c.minute ?? 0) / 60)
     }
 
-    // the colour just under the header, for its fade (--skyTop)
-    var headerTint: Color { Color(top.mix(middle, 0.22)) }
-
     static func == (a: Sky, b: Sky) -> Bool { a.top == b.top && a.middle == b.middle && a.bottom == b.bottom && a.stars == b.stars && a.clouds == b.clouds && a.hour == b.hour }
 }
 

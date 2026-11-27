@@ -3,6 +3,19 @@
 package cat.mulassa.games.launcher
 
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.EaseOut
 import android.content.Context
@@ -19,7 +32,6 @@ import androidx.compose.ui.platform.LocalDensity
 import android.os.Build
 import android.view.HapticFeedbackConstants
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -42,7 +54,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -118,8 +129,8 @@ val REJECT = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT els
 
 private fun LayoutCoordinates.centre() = boundsInWindow().center
 
-// Ronda 31: no tab bar (the owner). The home over the hour's sky: the logo on the left and the avatar on the right, as the
-// App Store's, then every game as a cartridge, two columns, all scrolling together. The avatar opens the account sheet
+// Ronda 31: no tab bar (the owner). The home over the hour's sky: the logo on the left and the avatar on the right on the
+// fixed Faldó, then every game as a cartridge, two columns, scrolling under it. The avatar opens the account sheet
 // (Sheets.kt); a cartridge tapped lifts out into Picked (Pick.kt).
 
 @Composable
@@ -150,7 +161,7 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
             Box(Modifier.fillMaxSize().sky { sky }.then(if (model.pick != null) Modifier.clearAndSetSemantics {} else Modifier)) {
                 // the clouds drift a little against the lean: the sky sits further back than the cartridges
                 Box(Modifier.matchParentSize().graphicsLayer { translationX = -Tilt.x * 10.dp.toPx(); translationY = Tilt.y * 7.dp.toPx() }) { SkyLife(sky) }
-                Home(model, sky, list, model.pick?.game?.id, { account = true }) { model.pick = it }
+                Home(model, list, model.pick?.game?.id, { account = true }) { model.pick = it }
             }
         }
         frozen?.let {
@@ -168,9 +179,7 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
 }
 
 @Composable
-private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?, account: () -> Unit, pick: (Pick) -> Unit) {
-    val scrolled by remember { derivedStateOf { list.firstVisibleItemIndex > 0 || list.firstVisibleItemScrollOffset > 4 } }
-    val fade by animateFloatAsState(if (scrolled) 1f else 0f, tween(200), label = "fade")
+private fun Home(model: Launcher, list: LazyListState, picked: String?, account: () -> Unit, pick: (Pick) -> Unit) {
     val u = (LocalConfiguration.current.screenWidthDp.dp - M * 3) / 2 / CART_W
     val top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding() // the bar's room even while the iris hides it: no jump on return
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + M
@@ -185,31 +194,63 @@ private fun Home(model: Launcher, sky: Sky, list: LazyListState, picked: String?
     LaunchedEffect(model.arrived) { if (model.arrived && clock.value < 1e4f) { clock.animateTo(400f + 60f * rows.size * 2, tween(400 + 60 * rows.size * 2, easing = LinearEasing)); clock.snapTo(1e4f) } }
     LaunchedEffect(picked) { Tilt.level = picked != null }
     fun enter(k: Int): () -> Float = { EaseOut.transform(((clock.value - if (still) 0f else 60f * k) / 400f).coerceIn(0f, 1f)) }
-    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val gridTop = top + FALDO_BELOW + FALDO_FRINGE + M // the grid starts a margin under the Faldó's fringe and scrolls under it
+    BoxWithConstraints(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
         // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
-        val (gap, scrolls) = rowGap(maxHeight, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(), top + 8.dp + 56.dp + M, u * CART_H, rows.size)
-        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M), userScrollEnabled = scrolls) {
-            // the logo and the avatar scroll with the cartridges (owner, ronda 18 and 31)
-            item(key = "logo") {
-                Row(Modifier.fillMaxWidth().padding(top = top + 8.dp).height(56.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Logo(Modifier.semantics { heading() })
-                    Spacer(Modifier.weight(1f))
-                    // a 48 dp target, inside the row, with the 36 dp circle against its end, on the margin
-                    Box(Modifier.size(48.dp).semantics { contentDescription = label }.squash(1.dp, onClick = account), contentAlignment = Alignment.CenterEnd) { Avatar(36.dp) }
-                }
-            }
+        val (gap, scrolls) = rowGap(maxHeight, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(), gridTop, u * CART_H, rows.size)
+        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, top = gridTop, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M), userScrollEnabled = scrolls) {
             itemsIndexed(rows, key = { _, row -> row.joinToString { it?.id ?: "aviat" } }) { k, row ->
                 Row(Modifier.fillMaxWidth().padding(top = if (k > 0) gap - M else 0.dp), horizontalArrangement = Arrangement.spacedBy(M)) {
                     row.forEach { g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.number(g), model.images[g.id], u, g.id == picked, still, enter(k * 2 + row.indexOf(g)), pick) else Placeholder(u, still, enter(k * 2 + 1)) } }
                 }
             }
         }
-        // scrolled: a veil in the sky's colour behind the status bar, so the clock reads over the cartridges sliding under
-        // it; solid under the icons, then fading out (a plain gradient: no mask or blur, S10 cost)
-        Box(Modifier.fillMaxWidth().height(top + 28.dp).graphicsLayer { alpha = fade }.drawBehind {
-            val solid = top.toPx() / size.height
-            drawRect(Brush.verticalGradient(0f to sky.header, solid * 0.7f to sky.header, 1f to sky.header.copy(alpha = 0f)))
-        })
+        // the logo and the avatar on the Faldó, fixed to the screen's top edge (owner, 27 Nov 2026)
+        Faldo(top + FALDO_BELOW)
+        // read first (the grid is declared before it and starts higher), and clear of a side cutout or navigation bar
+        Row(Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = -1f }
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+            .padding(start = M, end = M, top = top + FALDO_ROW - 2.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically) {
+            Logo(Modifier.semantics { heading() })
+            Spacer(Modifier.weight(1f))
+            // a 48 dp target, inside the row, with the 36 dp circle against its end, on the margin
+            Box(Modifier.size(48.dp).semantics { contentDescription = label }.squash(1.dp, onClick = account), contentAlignment = Alignment.CenterEnd) { Avatar(36.dp) }
+        }
+    }
+}
+
+// The Faldó (header ronda 3, owner's pick C1): the Mulassa's cloth in granat, hung from the screen's top edge with soft
+// folds, a gold line and a dense gold fringe whose strands touch, so they read as hair without the sky showing through.
+// One static draw in its own offscreen layer (no blur, no animation), cached apart from the grid scrolling under it. It
+// takes the taps down to the fringe's tips, so a cartridge hidden under it cannot be picked and one showing below it
+// still can. Same drawing on iOS (LauncherView.swift, Faldo).
+private val FALDO_BELOW = 59.dp  // the cloth under the status bar's inset
+private val FALDO_ROW = 3.dp     // the logo row's top under that inset (44 tall; Android's 48 dp target sits 2 dp higher)
+private val FALDO_FRINGE = 16.dp // how far the longest strand hangs under the cloth (they start 3 above its edge)
+private val CLOTH = Color(0xFF7D1F35)
+private val FOLD = Color(0xFF3D0A18)
+private val GOLDS = listOf(Triple(0f, 19f, Color(0xFFF2C230)), Triple(2.8f, 16.5f, Color(0xFFD9A521)), Triple(5.6f, 18f, Color(0xFFE9B62A)))
+
+@Composable
+private fun Faldo(cloth: Dp) {
+    Box(Modifier.fillMaxWidth().height(cloth + FALDO_FRINGE).pointerInput(Unit) { detectTapGestures {} })
+    Canvas(Modifier.fillMaxWidth().height(cloth + FALDO_FRINGE + 11.dp).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
+        val c = cloth.toPx(); val d = density; val k = size.width / (393 * d)
+        // its shadow: a short dark fade behind the fringe's tips (iOS's shadow of radius 3.5, 3 down)
+        drawRect(Brush.verticalGradient(0f to Color(0x6B150A05), 1f to Color.Transparent, startY = c + 13 * d, endY = c + 22 * d), Offset(0f, c + 13 * d))
+        var x = 0f // strands 3.4 wide every 2.8 (the last overlaps the next group's first): three golds, uneven tips
+        while (x < size.width) {
+            for ((dx, h, gold) in GOLDS) drawRoundRect(gold, Offset(x + dx * d, c - 3 * d), Size(3.4f * d, h * d), CornerRadius(1.7f * d))
+            drawRect(Color(0x8CFFF0B0), Offset(x + 1.4f * d, c - 3 * d), Size(0.9f * d, 14 * d))
+            x += 9 * d
+        }
+        // the cloth over the strands' rounded tops, as the mock-up: they come out flat under the gold line
+        drawRect(CLOTH, size = Size(size.width, c))
+        drawRect(Color(0xFFF2C230), Offset(0f, c - 2 * d), Size(size.width, 2 * d))
+        for (i in 0 until 7) { // the folds keep the mock-up's rhythm at any width
+            val l = (i * 65.5f - 12) * k * d; val w = 24 * k * d
+            drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.5f to FOLD.copy(alpha = 0.38f), 1f to Color.Transparent, startX = l, endX = l + w), Offset(l, 0f), Size(w, c))
+        }
     }
 }
 

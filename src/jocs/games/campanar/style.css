@@ -10,6 +10,7 @@
 #edge { display: none; position: fixed; z-index: 1; inset: 0; pointer-events: none;
   background: linear-gradient(#354364, #35436400 7%), linear-gradient(#1e182000 70%, #1e182014 80%, #1e182059 90%, #1e1820b3 96%, #1e1820); }
 @media (pointer: coarse) { #edge { display: block; } }
+@media not (pointer: coarse) { :root { --boot-bg: #3d4a6c; } } /* no Safari bars to blend into: a plain splash */
 canvas#game { position: fixed; left: 0; top: 0; width: 100%; height: 100dvh; touch-action: none; }
 
 #hud { position: fixed; z-index: 2; top: calc(var(--sat) + 12px); left: 16px; right: 16px; display: grid; grid-template-columns: var(--round-size) 1fr var(--round-size); align-items: center; pointer-events: none; }

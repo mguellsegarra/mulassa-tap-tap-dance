@@ -162,19 +162,18 @@ fun DrawScope.icon24(path: Path, color: Color, width: Float) {
     }
 }
 
-// The Mulassa Games lockup, ronda-10's #logo (2.0.0's, deaadc4b): MULASSA in Baloo 2 800 at 77, letter-spacing -5.5,
-// stretched to 300; a thin dark #2a1a10 line, the #d8bf8f extrusion 4 below, red #e8382f on a cream outline; GAMES in
-// yellow at 40 with a dark stroke. The SVG's viewBox is 0 2 308.6 110, shown 48 dp high. Glyph outlines, so the strokes
-// are real strokes.
+// The Mulassa lockup, ronda-10's #logo (2.0.0's, deaadc4b) without its GAMES line (the owner, 27 Nov 2026): MULASSA in
+// Baloo 2 800 at 77, letter-spacing -5.5, stretched to 300; a thin dark #2a1a10 line, the #d8bf8f extrusion 4 below, red
+// #e8382f on a cream outline. The SVG's viewBox, cut to the word, is 0 2 308.6 72, at the 48/110 scale the lockup had.
+// Glyph outlines, so the strokes are real strokes.
 @Composable
 fun Logo(modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     val baloo = remember { ResourcesCompat.getFont(ctx, R.font.baloo_extrabold) }
-    Canvas(modifier.size(48.dp * 308.6f / 110, 48.dp).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-        .semantics { contentDescription = "Mulassa Games" }) {
-        val s = size.height / 110
+    Canvas(modifier.size(48.dp * 308.6f / 110, 48.dp * 72 / 110).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .semantics { contentDescription = "Mulassa" }) {
+        val s = size.height / 72
         val mulassa = glyphs("MULASSA", baloo, 77 * s, -5.5f * s, 300 * s, 154.3f * s)
-        val games = glyphs("GAMES", baloo, 40 * s, 3 * s, null, 154.3f * s)
         fun line(p: Path, y: Float, edge: Color, width: Float, fill: Color) = translate(top = (y - 2) * s) {
             drawPath(p, edge, style = Stroke(width, join = StrokeJoin.Round)); drawPath(p, fill)
         }
@@ -182,7 +181,6 @@ fun Logo(modifier: Modifier = Modifier) {
         line(mulassa, 64f, ink, 15 * s, ink); line(mulassa, 60f, ink, 15 * s, ink)
         line(mulassa, 64f, ext, 11 * s, ext)
         line(mulassa, 60f, Palette.cream, 11 * s, hex("#e8382f"))
-        line(games, 104f, ink, 7 * s, Palette.yellow)
     }
 }
 

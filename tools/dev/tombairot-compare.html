@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>El Tombairot · les quatre versions</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#b8c7c9;font:14px system-ui;color:#2b2114}
+body{display:flex;flex-direction:column;height:100dvh}
+#stage{position:relative;flex:1;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+/* one cell a version, over the canvas: its name, and the lines between the four */
+#cells{position:absolute;inset:0;display:grid;grid-template:1fr 1fr/1fr 1fr;pointer-events:none}
+#cells div{padding:8px;border:0 solid #2b211440}
+#cells div:nth-child(odd){border-right-width:1px}
+#cells div:nth-child(-n+2){border-bottom-width:1px}
+#cells span{display:inline-block;padding:4px 8px;border-radius:8px;background:#fff8e8e0;font-weight:600}
+#cells .final span{background:#f4d930}
+#cells small{display:block;font-weight:400}
+nav{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;width:100%;max-width:760px;margin:0 auto;padding:8px 8px max(8px,env(safe-area-inset-bottom))}
+nav button{font:inherit;color:inherit;min-height:44px;padding:0 4px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}
+nav button[aria-pressed=true]{background:#f4d930;font-weight:600}
+@media (max-width:560px){nav{grid-template-columns:repeat(4,1fr)}#anim{grid-column:span 2}}
+body.bare nav{display:none}
+</style></head>
+<body>
+<div id="stage"><canvas id="c"></canvas>
+<div id="cells"><div><span>Fable v1 <small></small></span></div><div><span>Astra <small></small></span></div><div><span>Neon <small></small></span></div><div class="final"><span>FINAL <small></small></span></div></div></div>
+<nav aria-label="Vistes"><button data-v="front">Davant</button><button data-v="q">3/4</button><button data-v="side">Costat</button><button data-v="back">Darrere</button>
+<button data-v="low">Baix</button><button data-v="head">Cap</button><button id="anim" aria-pressed="false">Mou</button></nav>
+<script type="module">
+// The Tombairot's four versions side by side (dev only): Fable's first one, Astra's, Neon's and the final. One canvas
+// and one camera for the four: drag, pinch or wheel in any cell moves them all, and a view button frames the final
+// (the longest) in a cell of this size. «Mou» plays each one's own idle pose.
+// URL: ?v=front|q|side|back|low|head, ?t=<s> a frozen second, ?bare no buttons (captures).
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildTombairotV1, poseTombairotV1 } from '/src/figures/tombairot-v1/tombairot.js';
+import { buildTombairotAstra, poseTombairotAstra } from '/src/figures/tombairot-astra/tombairot-astra.js';
+import { buildTombairotNeon, poseTombairotNeon } from '/src/figures/tombairot-neon/tombairot-neon.js';
+import { buildTombairot, poseTombairot } from '/src/figures/tombairot/tombairot.js';
+const q = new URLSearchParams(location.search), stage = document.getElementById('stage');
+document.body.classList.toggle('bare', q.has('bare'));
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: q.has('bare') });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setScissorTest(true);
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#b8c7c9');
+scene.add(new THREE.HemisphereLight('#fff4df', '#867253', 2.3));
+const sun = new THREE.DirectionalLight('#fff0cf', 2.2); sun.position.set(-4, 8, 4); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(8, 48), new THREE.MeshLambertMaterial({ color: '#d5c69f' }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -.015; scene.add(floor); // below every version's soles
+// In the cells' order. Every one faces +z and stands on y 0.
+const models = [[buildTombairotV1(), poseTombairotV1], [buildTombairotAstra(), poseTombairotAstra], [buildTombairotNeon(), poseTombairotNeon], [buildTombairot(), poseTombairot]];
+document.querySelectorAll('#cells small').forEach((el, i) => {
+  let n = 0; models[i][0].root.traverse(o => { if (o.isMesh) n += o.geometry.index.count / 3; });
+  el.textContent = `${n.toLocaleString('ca')} triangles`; scene.add(models[i][0].root);
+});
+const camera = new THREE.PerspectiveCamera(40, 1, .05, 80), controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = .5; controls.maxDistance = 30; controls.maxPolarAngle = Math.PI * .52;
+// A view: where the camera looks from, at what, and the width and height (m) that must fit in a cell.
+const VIEWS = { front: [[0, .05, 1], [0, 1.95, 0], 2.2, 4.6], q: [[.72, .22, .66], [0, 1.9, -1.1], 5.2, 5], side: [[1, .03, 0], [0, 1.95, -1.15], 5.6, 4.6],
+  back: [[0, .08, -1], [0, 1.95, -1], 2.2, 4.6], low: [[.55, -.17, .82], [0, 1.9, -.9], 4.8, 4.8], head: [[.42, .1, .9], [0, 3.2, .6], 2.4, 2.4] };
+let view = VIEWS[q.get('v')] ? q.get('v') : 'q';
+function look(name) {
+  const [dir, at, w, h] = VIEWS[view = name], d = 1.06 * Math.max(h / 2, w / 2 / camera.aspect) / Math.tan(camera.fov * Math.PI / 360);
+  controls.target.set(...at); camera.position.set(...dir).setLength(d).add(controls.target);
+}
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => look(b.dataset.v));
+let paused = true, t = q.has('t') ? +q.get('t') : 0, last = performance.now(), size = '';
+const anim = document.getElementById('anim');
+anim.onclick = () => { paused = !paused; anim.setAttribute('aria-pressed', String(!paused)); };
+function draw() {
+  const w = stage.clientWidth, h = stage.clientHeight, cw = w / 2, ch = h / 2;
+  if (size !== w + 'x' + h) { size = w + 'x' + h; renderer.setSize(w, h, false); camera.aspect = cw / ch; camera.updateProjectionMatrix(); look(view); }
+  controls.update();
+  models.forEach(([rig, pose], i) => {
+    pose(rig, t);
+    for (const m of models) m[0].root.visible = m[0] === rig;
+    const x = (i % 2) * cw, y = i < 2 ? ch : 0; // (WebGL counts from the bottom)
+    renderer.setViewport(x, y, cw, ch); renderer.setScissor(x, y, cw, ch); renderer.render(scene, camera);
+  });
+}
+function frame(now) {
+  if (!paused) t += Math.min(.1, (now - last) / 1000);
+  last = now; draw(); requestAnimationFrame(frame);
+}
+// For captures: a render of a given second.
+window.__orbit = { models, camera, controls, look, render: s => { t = s; draw(); } };
+requestAnimationFrame(frame);
+</script></body></html>

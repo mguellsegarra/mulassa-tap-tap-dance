@@ -239,6 +239,19 @@
       "attributionNote": "Bou Tradicional recuperat per la UAF el 2012; no identifica altres bous de Valls."
     },
     {
+      "id": "tombairot-valls",
+      "name": "Tombairot",
+      "fullName": "Tombairot de l’Escola Candela",
+      "town": "valls",
+      "entity": "Escola Candela",
+      "entityName": "Escola Mare de Déu de la Candela",
+      "music": "Manel Sederra",
+      "sources": [
+        "https://youtu.be/jsqlt_Qxmgg?t=177"
+      ],
+      "attributionNote": "Bestiari escolar vist a la Mostra de Bestiari Escolar i Infantil de la Fira de Santa Úrsula (Valls)."
+    },
+    {
       "id": "os-trabucaires-valls",
       "name": "Ós",
       "fullName": "Ós de Valls",

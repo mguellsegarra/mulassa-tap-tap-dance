@@ -8,7 +8,7 @@
 // camera's side of the action (180° rule). Pure: main.js feeds it the menu beat, the figures pose the dance at REEL.beat,
 // cameras.js frames REEL.shot inside the free band (a hard edge keeps her in it).
 import { menuSong } from './figure-song.js';
-import { MULASSA, DRAC, BOU } from './figures.js';
+import { MULASSA, DRAC, BOU, TOMBA_ID } from './figures.js';
 
 // The menu loop's tempo, for when it is silent (Silenci, still loading): its loop's beats over its length
 const REEL_LOOP = menuSong.ambientLoop, REEL_LOOP_BEATS = REEL_LOOP.beats, REEL_BPM = REEL_LOOP_BEATS * 60 / (REEL_LOOP.end - REEL_LOOP.start);
@@ -87,6 +87,12 @@ export const SHOWREELS = {
     [80, 'high', 'cut'], [112, 'right', 'glide'], [144, 'wide', 'glide'], [172, 'front', 'glide'], // the lateral pass; the turns
     [192, 'left', 'cut'], [224, 'high', 'glide'], [256, 'right', 'glide'], // the start; the festive turns
     [288, 'front', 'glide'], // the ending and the settle (a glide: a cut there read as a jolt)
+  ] },
+  // on its 8-beat phrases (figures/tombairot/tomba-dance.js, from beat 8): A its walks, bows and turns, B (beat 104) the
+  // turns, A again (beat 144), the finale's hops round (beat 192); a shot every three or four phrases (it dances on its spot)
+  [TOMBA_ID]: { start: 8, loop: 212, fill: 0.85, shots: [
+    [0, 'wide', 'cut'], [8, 'left', 'glide'], [40, 'front', 'glide'], [72, 'close', 'cut'], [80, 'right', 'cut'],
+    [104, 'high', 'cut'], [128, 'side', 'cut'], [152, 'left', 'cut'], [176, 'vast', 'glide'],
   ] },
 };
 

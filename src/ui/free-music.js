@@ -4,7 +4,7 @@
 // No music follows the speaker preference; manual figure effects remain available. Sound: chip.radio* (platform/audio.js).
 import { chip, menuMusic, setMenuSound } from '../game/state.js';
 import { figureSong } from '../game/figure-song.js';
-import { MULASSA, DRAC, BOU, playable, portraitArt, portraitPalette } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, FIGURES, TOMBA_ID, playable, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-ui.js';
 import { mulaSpinner } from './loader.js';
 import { PHOTO, clearPhotoKeys } from '../game/photo-control.js';
@@ -21,15 +21,15 @@ const FM_NO_MUSIC = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V
 const RADIO_TIP_KEY = 'radio-tip-seen', RADIO_TIP_MS = 6000, RADIO_TIP_LEAVE_MS = 260, RADIO_TIP_RETRY_MS = 800; // LEAVE: sel-tip-out's length
 const RADIO_TIP_GAP = 22; // the tail (9 px) and the bob (5 px) stay clear of the button and its dot (2 px past its edge)
 const FM_NOW_MS = 2600, FM_PRELOAD = 15; // the next song starts loading FM_PRELOAD s before this one ends
-export const nextTrack = (i, off) => (i + 1) % off; // Mulassa → Drac → (Bou) → the menu loop; `off`, the last row, is never next
+export const nextTrack = (i, off) => (i + 1) % off; // Mulassa → Drac → Bou → (Tombairot) → the menu loop; `off`, the last row, is never next
 
 // onSound: the speaker button shows the preference again (ui/sheets-setup.js).
 export function setupFreeMusic({ eye, onSound }) {
   const mmss = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
   const tracks = [{ title: tr('ui.radio.menu'), sub: tr('ui.radio.menuSub'), art: FM_NOTE, kind: 'menu' },
-    ...[MULASSA, DRAC, BOU].filter(playable).map(f => {
+    ...[MULASSA, DRAC, BOU, FIGURES.find(f => f.id === TOMBA_ID)].filter(f => f && playable(f)).map(f => {
       const song = figureSong(f.id);
-      return { title: f.song, sub: `${f.composer.replace(/^(\S)\S* (\S+).*/, '$1. $2')} · ${f.year} · ${mmss(song.tail)}`, song, art: pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'), kind: f.id };
+      return { title: f.song, sub: [f.composer.replace(/^(\S)\S* (\S+).*/, '$1. $2'), f.year, mmss(song.tail)].filter(Boolean).join(' · '), song, art: pixelSvg(portraitArt(f), portraitPalette(f), '#2a1a10'), kind: f.id };
     }),
     { title: tr('ui.radio.off'), sub: tr('ui.radio.offSub'), art: FM_NO_MUSIC, kind: 'off' }];
   const FM_OFF = tracks.length - 1; // the last row: an unreleased figure is not on the list, so it is not always 4

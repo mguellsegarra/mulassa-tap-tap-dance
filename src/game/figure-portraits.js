@@ -93,6 +93,28 @@ export const FIGURE_PORTRAITS = {
     ],
     palette: { b: '#8f4124', k: '#4d5a26', y: '#d4a62a', r: '#c8283a', w: '#f4efe4', h: '#dccfb2', c: '#6f2f19', e: '#15100e', p: '#3b3532', s: '#3e2718', d: '#36303a', t: '#6f2f19' },
   },
+  // The Tombairot (Escola Candela), side on like its selector drawing: green head with its yellow-ringed eye and red
+  // tongue, the yellow ring neck and cone with the red bow, the scaled back and its pompoms, the tail down to the paving,
+  // the gold skirt and the carriers' sneakers.
+  'tombairot-valls': {
+    art: [
+      '..........e.h.',
+      '.........gggg.',
+      '.........gywkg',
+      '..........gggg',
+      '..p.p.p...yy.t',
+      '.ssssssssbyy..',
+      '.sstsstsfyyyy.',
+      'dssssssssfyyy.',
+      'dsstsstsyykyy.',
+      'dssssssyyyyyy.',
+      'doooooooooooo.',
+      'd.ononononono.',
+      '...n.n...n.n..',
+    ],
+    palette: { e: '#b0627a', h: '#dc4c60', g: '#3fb244', y: '#f6d31c', w: '#ffffff', k: '#15120f', t: '#27958a', p: '#d3202e', b: '#d3202e',
+      s: '#36a865', f: '#2a8046', d: '#1d6a38', o: '#efc024', n: '#2b3a67' },
+  },
   // The bear dominates: open red mouth, collar and medal; a smaller trabucaire with barretina and trabuc.
   'os-trabucaires-valls': {
     art: [

@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula} {pct} d’encerts a {diff}… El Drac em demana la revenja. I tu, com ho faries? 💃",
   "services.share.drac.record": "{mula}🔥 Nou rècord de punts: {score} a {diff} ({pct} d’encerts) fent ballar el Drac de Valls! 🎉",
   "services.share.bou": "He fet ballar el Bou Tradicional de Valls amb un {pct} d'encerts a {diff}. #Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} d’encerts a {diff}… La Mulassa em demana la revenja. I tu, com ho faries? 💃",
   "services.share.record": "{mula}🔥 Nou rècord de punts: {score} a {diff} ({pct} d’encerts) fent ballar la Mulassa de Valls! 🎉",
   "services.feedback.daily_limit": "Avui ja has fet 3 enviaments. Podràs tornar a escriure a partir de les {time}."

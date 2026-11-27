@@ -1,5 +1,5 @@
 // Scene adapter for manual walking. Existing crowd steering reads the same M/PAIR footprints afterwards.
-import { PHOTO, photoBody, movePhoto, clearPhotoKeys } from '../game/photo-control.js';
+import { PHOTO, PHOTO_BODIES, photoBody, movePhoto, clearPhotoKeys } from '../game/photo-control.js';
 import { camera, camFocus } from './stage.js';
 import { activeCrowd } from './quality.js';
 import { photoClearance } from './photo-collision.js';
@@ -23,7 +23,7 @@ function photoSafe(x, z, yaw, dragon = traitsOf(PHOTO.id).wideClearance) {
 }
 function beginPhoto(m) { // every body starts where the figure on show stands: Tab swaps them in place
   PHOTO.ready = true;
-  for (const p of [PHOTO.mula, PHOTO.drac, PHOTO.bou]) Object.assign(p, { x: m.pos.x, z: m.pos.y, yaw: m.yaw });
+  for (const p of PHOTO_BODIES) Object.assign(p, { x: m.pos.x, z: m.pos.y, yaw: m.yaw });
 }
 export function tickPhoto(dt, m, pivot) {
   if (!PHOTO.ready) beginPhoto(m);

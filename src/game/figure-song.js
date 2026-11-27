@@ -2,12 +2,13 @@
 import mulassaSong from '../song-mulassa.json' with { type: 'json' };
 import dracSong from '../song-drac.json' with { type: 'json' };
 import bouSong from '../song-bou.json' with { type: 'json' };
+import tombaSong from '../song-tombairot.json' with { type: 'json' };
 import { beatAtTime, timeAtBeat } from '../core/beat-grid.js';
-import { FIGURES, MULASSA, DRAC, BOU } from './figures.js';
+import { FIGURES, MULASSA, DRAC, BOU, TOMBA_ID } from './figures.js';
 import { setFigureTheme } from './figure-theme.js';
 import { traitsOf } from '../figures/index.js';
 
-const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
+const FIGURE_SONGS = { [MULASSA.id]: mulassaSong, [DRAC.id]: dracSong, [BOU.id]: bouSong, [TOMBA_ID]: tombaSong }; // (null in a build while unreleased: tools/deploy/unreleased-figure.mjs)
 export const menuSong = mulassaSong; // the menu loop, whoever is selected
 export const figureSong = id => FIGURE_SONGS[id]; // any figure's song, selected or not (free mode's radio)
 export let selectedFigure = MULASSA;

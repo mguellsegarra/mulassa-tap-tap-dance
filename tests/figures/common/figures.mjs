@@ -337,7 +337,7 @@ assert(!$('select-towns').innerHTML.includes('sel-soon'), 'no «Pròximament» p
   const rank = f => TOWNS.findIndex(t => t.id === f.town);
   const real = FIGURES.filter(f => f !== catalogFixture);
   assert(real.every((f, i) => !i || rank(real[i - 1]) <= rank(f) || playable(real[i - 1]) !== playable(f)), 'figures follow the town order');
-  for (const t of TOWNS) assert.deepEqual(FIGURES.filter(f => f.town === t.id && !playable(f) && f !== catalogFixture).map(f => f.id), sourceCatalog.figures.filter(f => f.town === t.id && f.selectorVisible !== false && !playable(FIGURES.find(g => g.id === f.id))).map(f => f.id), `${t.id}: its own order`);
+  for (const t of TOWNS) assert.deepEqual(FIGURES.filter(f => f.town === t.id && !playable(f) && f !== catalogFixture).map(f => f.id), sourceCatalog.figures.filter(f => f.town === t.id && f.selectorVisible !== false && FIGURES.some(g => g.id === f.id) && !playable(FIGURES.find(g => g.id === f.id))).map(f => f.id), `${t.id}: its own order`);
   const strip = $('select-strip'), banners = strip.banners.map(b => b.dataset.town);
   assert.equal(banners.at(-1), INVITE_TOWN.id, 'the invitation stays last');
   assert.deepEqual(banners.filter(t => t !== 'valls' && t !== INVITE_TOWN.id), TOWNS.slice(1).filter(t => FIGURES.some(f => f.town === t.id)).map(t => t.id), 'the strip groups follow the pills');

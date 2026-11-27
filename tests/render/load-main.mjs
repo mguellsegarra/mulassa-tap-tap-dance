@@ -15,7 +15,7 @@ const PROVIDED = new Set(`song-mulassa.json song-drac.json platform/polyfills.js
   game/bubble-rules.js figures/drac/dance-drac.js figures/drac/drac-feet.js figures/drac/drac-motion.js hud/stars.js hud/logo-motion.js scene/models.js scene/models/colla.js figures/drac/drac.js scene/balloon3d.js scene/framing.js scene/orbit.js
   hud/share-card.js scene/crowd-fx.js ui/select-ui.js ui/board-ui.js ui/publish-ui.js ui/profile-ui.js ui/share-ui.js ui/feedback-ui.js ui/sync-sheet.js ui/loader.js ui/sheet-fade.js ui/curtain.js
   ui/account-ui.js ui/seasons-ui.js ui/season-end-ui.js ui/player-card.js services/stats-sync.js
-  figures/bou/bou-dance.js figures/bou/bou-feet.js figures/bou/bou-rig.js figures/bou/bou-motion.js figures/bou/bou.js
+  figures/bou/bou-dance.js figures/bou/bou-feet.js figures/bou/bou-rig.js figures/bou/bou-motion.js figures/bou/bou.js figures/tombairot/tombairot.js figures/tombairot/tomba-head.js
   figures/drac/drac-path.js figures/drac/drac-steps.js figures/drac/drac-pose.js figures/drac/drac-time.js figures/drac/drac-layout.js figures/drac/drac-rig.js figures/drac/drac-groove.js figures/drac/drac-legs.js figures/drac/drac-colla.js figures/common/colla.js figures/mulassa/mula-colla.js figures/bou/bou-colla.js
   core/mock-board.js dev/cam-edit.js dev/final-test.js i18n/load-locale.js i18n/preload.js`.split(/\s+/));
 const IMPORT = /^import .*;\n/gm, LOCAL = /^(?:import|export) (?:.* from )?'(\.[^']+|#plassa\/[^']+)';/gm;

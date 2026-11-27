@@ -39,11 +39,19 @@ export const FIGURE_TRAITS = Object.freeze({
     shareKey: 'services.share.bou', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoE: null,
     photoBody: 'bou', springs: false, splashHost: false, splashPartner: false, splashSolo: true, landing: 0.9, frameLength: false, reelCalm: true, novelty: true, // reelCalm: the selector's showreel camera follows it slowly (scene/cameras.js)
   }),
+  // The Escola Candela's school dragon: 3.96 m to the horn's tip (the Mulassa's height) and 4.8 m long, so framed by its length.
+  'tombairot-valls': Object.freeze({
+    sceneScale: 1, sceneReach: 1.05, domTheme: 'fig-tombairot',
+    key: 'tombairot', drumroll: 'balloon', article: 'masc', cardFile: null, cardAlt: 'hud.card.altTomba',
+    shareKey: 'services.share.tombairot', shareLines: null, shareEmoji: null, challenge: false, playCam: 'mula', wideClearance: false, photoE: null,
+    photoBody: 'tombairot', springs: false, splashHost: false, splashPartner: false, splashSolo: false, landing: 0.95, frameLength: true, reelCalm: false, novelty: false,
+  }),
 });
-// The Bou and its online board ship in 1.4.0; apply the board migration before the client.
-// While the set holds it, a build also leaves its modules and song out (tools/deploy/unreleased-figure.mjs); empty it to ship it.
-export const UNRELEASED_IDS = Object.freeze(new Set([]));
-export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id => !UNRELEASED_IDS.has(id))); // in the order free play's Tab goes round
+// The Tombairot is in review: no build ships it. While the set holds a figure, a build leaves its modules and song out
+// (tools/deploy/unreleased-figure.mjs) and the selector hides it; the dev server plays it (vite.config.js __DEV_FIGURES__).
+export const UNRELEASED_IDS = Object.freeze(new Set(['tombairot-valls']));
+const DEV_FIGURES = typeof __DEV_FIGURES__ !== 'undefined' && __DEV_FIGURES__ === true;
+export const PLAYABLE_IDS = Object.freeze(Object.keys(FIGURE_TRAITS).filter(id => DEV_FIGURES || !UNRELEASED_IDS.has(id))); // in the order free play's Tab goes round
 export const traitsOf = id => FIGURE_TRAITS[id] ?? FIGURE_TRAITS['mulassa-valls'];
 export const traitsByKey = key => PLAYABLE_IDS.map(id => FIGURE_TRAITS[id]).find(t => t.key === key) ?? FIGURE_TRAITS['mulassa-valls'];
 export const SPLASH_HOST_ID = Object.keys(FIGURE_TRAITS).find(id => FIGURE_TRAITS[id].splashHost);

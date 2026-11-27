@@ -1,0 +1,36 @@
+$ node tools/qa/tombairot-probe.mjs fable
+fable triangles 8820 W/H/D [ 1.344, 3.37584, 1.83105 ] W/H 0.39812
+foam width/H; panel width/H, height/H, centre/H [ 0.33769, 0.07109, 0.07731, 0.30997 ]
+mesh components; wholly buried source box indices [{"mesh":"rings","components":1,"buried":[]},{"mesh":"skirt","components":1,"buried":[]},{"mesh":"shell","components":1,"buried":[]},{"mesh":"neck","components":1,"buried":[]},{"mesh":"head","components":1,"buried":[]},{"mesh":"jaw","components":1,"buried":[]},{"mesh":"tongue","components":1,"buried":[]},{"mesh":"ears0","components":1,"buried":[]},{"mesh":"ears1","components":1,"buried":[]},{"mesh":"pupils0","components":1,"buried":[]},{"mesh":"pupils1","components":1,"buried":[]},{"mesh":"feet0","components":1,"buried":[]},{"mesh":"feet1","components":1,"buried":[]}]
+same-normal face pairs <=3mm (rest pose) {"counts":{"same":536,"different":205,"exposedDifferent":24,"exposedExact":13,"orbitVisible":24,"orbitExact":13},"examples":[["rings","rings",[-0.23522,0.90099,0.54669],21.15,0.2,176,11,true],["rings","rings",[0.23522,0.90099,0.54669],21.15,0.2,178,11,true],["rings","rings",[-0.66202,1.06388,0.21442],16.80012,1.99997,138,136,true],["rings","rings",[0.66202,1.06388,0.21442],16.80012,1.99997,139,137,true]]}
+other poses [s, exposed different-colour pairs] [[1.2,24],[2.4,24],[3.6,24]]
+pose samples 577 seconds 4.8 minimum Y 0 below floor []
+joints [parts, disconnected poses, worst gap lower bound in m, time in s] [["rings/neck",0,0,0],["rings/shell",0,0,0],["rings/skirt",0,0,0],["neck/head",0,0,0],["head/jaw",0,0,0],["jaw/tongue",0,0,0],["head/ears0",0,0,0],["head/ears1",0,0,0],["head/pupils0",0,0,0],["head/pupils1",0,0,0],["skirt/feet0",0,0,0],["skirt/feet1",0,0,0]]
+
+$ node tools/qa/tombairot-probe.mjs astra
+astra triangles 19020 W/H/D [ 1.23, 3.3131, 1.96225 ] W/H 0.37125
+foam width/H; panel width/H, height/H, centre/H [ 0.32175, 0.07425, 0.08502, 0.31718 ]
+mesh components; wholly buried source box indices [{"mesh":"mantell-Astra","components":1,"buried":[]},{"mesh":"cap-Astra","components":1,"buried":[]},{"mesh":"portador-Astra","components":1,"buried":[]}]
+same-normal face pairs <=3mm (rest pose) {"counts":{"same":0,"different":0,"exposedDifferent":0,"exposedExact":0,"orbitVisible":0,"orbitExact":0},"examples":[]}
+other poses [s, exposed different-colour pairs] [[1,0],[2,0],[3,0]]
+pose samples 481 seconds 4 minimum Y 0 below floor []
+joints [parts, disconnected poses, worst gap lower bound in m, time in s] [["mantell-Astra/cap-Astra",0,0,0],["mantell-Astra/portador-Astra",0,0,0]]
+
+$ node tools/qa/tombairot-probe.mjs neon
+neon triangles 6876 W/H/D [ 1.27, 3.0132, 1.68803 ] W/H 0.42148
+foam width/H; panel width/H, height/H, centre/H [ 0.36072, 0.07965, 0.06948, 0.31631 ]
+mesh components; wholly buried source box indices [{"mesh":"body","components":1,"buried":[4,13,25,41,53]},{"mesh":"neck","components":1,"buried":[2,4,48,49]},{"mesh":"head","components":1,"buried":[]},{"mesh":"pupils0","components":1,"buried":[]},{"mesh":"pupils1","components":1,"buried":[]},{"mesh":"jaw","components":1,"buried":[]},{"mesh":"tongue","components":1,"buried":[]},{"mesh":"ears0","components":1,"buried":[]},{"mesh":"ears1","components":1,"buried":[]},{"mesh":"shoeL","components":1,"buried":[]},{"mesh":"legL","components":1,"buried":[]},{"mesh":"shoeR","components":1,"buried":[]},{"mesh":"legR","components":1,"buried":[]}]
+same-normal face pairs <=3mm (rest pose) {"counts":{"same":220,"different":79,"exposedDifferent":28,"exposedExact":0,"orbitVisible":24,"orbitExact":0},"examples":[["head","head",[-0.04216,2.37672,0.49641],139.99995,2,16,15,true],["head","head",[0.19827,2.70789,0.22702],54.74001,2,27,1,true],["head","head",[-0.16829,2.73529,0.18437],52.44,2,23,1,true],["body","body",[-0.19764,0.84172,-0.95617],41.52384,1.64145,253,166,true]]}
+other poses [s, exposed different-colour pairs] [[1,28],[2,28],[3,28]]
+pose samples 481 seconds 4 minimum Y -0 below floor []
+joints [parts, disconnected poses, worst gap lower bound in m, time in s] [["body/neck",0,0,0],["neck/head",0,0,0],["head/jaw",0,0,0],["jaw/tongue",0,0,0],["head/ears0",0,0,0],["head/ears1",0,0,0],["head/pupils0",0,0,0],["head/pupils1",0,0,0],["shoeL/legL",0,0,0],["legL/body",0,0,0],["shoeR/legR",0,0,0],["legR/body",0,0,0]]
+
+$ node tools/qa/tombairot-probe.mjs astra --mutate
+astra triangles 19020 W/H/D [ 1.23, 3.4831, 1.96225 ] W/H 0.35313
+foam width/H; panel width/H, height/H, centre/H [ 0.30605, 0.07063, 0.08087, 0.30169 ]
+mesh components; wholly buried source box indices [{"mesh":"mantell-Astra","components":1,"buried":[]},{"mesh":"cap-Astra","components":1,"buried":[]},{"mesh":"portador-Astra","components":1,"buried":[]}]
+same-normal face pairs <=3mm (rest pose) {"counts":{"same":0,"different":0,"exposedDifferent":0,"exposedExact":0,"orbitVisible":0,"orbitExact":0},"examples":[]}
+other poses [s, exposed different-colour pairs] [[1,0],[2,0],[3,0]]
+pose samples 481 seconds 4 minimum Y 0 below floor []
+joints [parts, disconnected poses, worst gap lower bound in m, time in s] [["mantell-Astra/cap-Astra",225,0.00855,3.54167],["mantell-Astra/portador-Astra",0,0,0]]
+

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import config from '../../vite.config.js';
+import viteConfig from '../../vite.config.js';
+const config = viteConfig({ command: 'build' }); // the config is a function of the command (__DEV_FIGURES__)
 const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url)));
 assert.equal(JSON.parse(config.define.__APP_VERSION__), pkg.version, 'runtime uses the complete release version');
 assert(JSON.parse(config.define.__APP_BUILD__).startsWith(pkg.version + '+'));

@@ -149,10 +149,13 @@ function staff(look) {
   const hand = new THREE.Vector3(0, -ARM.fore, 0).applyQuaternion(q).add(new THREE.Vector3(0, -ARM.upper, 0).applyQuaternion(qs)).y + ARM.y;
   const up = new THREE.Vector3(0, 1, 0).applyQuaternion(q.invert()), L = hand + 1.0, v = new Vox();
   cbox(v, 0, (L + 0.06) / 2, 0, 0.04, L + 0.06, 0.04, BOU.wood); // (cbox: by its centre) a long wooden staff from the paving
-  v.box(0.07, L + 0.03, 0, 0.17, 0.035, 0.035, BOU.wood).box(0.14, L - 0.02, 0, 0.03, 0.06, 0.03, BOU.wood); // its crook, bent outward and down
-  // the esquella hung from the crook (the owner's photo 2026-10-24): a bronze cowbell, narrow at the top, its strap and clapper
-  v.box(0.14, L - 0.055, 0, 0.03, 0.04, 0.012, BOU.black, 0).box(0.14, L - 0.1, 0, 0.08, 0.045, 0.065, BOU.bell);
-  v.box(0.14, L - 0.21, 0, 0.12, 0.11, 0.09, BOU.bell).box(0.14, L - 0.235, 0, 0.13, 0.025, 0.1, BOU.bellRim).box(0.14, L - 0.265, 0, 0.025, 0.035, 0.025, BOU.black);
+  if (look.staffTop) look.staffTop(v, L + 0.06); // another colla's own top on the same staff (the Tombairot's school sign)
+  else {
+    v.box(0.07, L + 0.03, 0, 0.17, 0.035, 0.035, BOU.wood).box(0.14, L - 0.02, 0, 0.03, 0.06, 0.03, BOU.wood); // its crook, bent outward and down
+    // the esquella hung from the crook (the owner's photo 2026-10-24): a bronze cowbell, narrow at the top, its strap and clapper
+    v.box(0.14, L - 0.055, 0, 0.03, 0.04, 0.012, BOU.black, 0).box(0.14, L - 0.1, 0, 0.08, 0.045, 0.065, BOU.bell);
+    v.box(0.14, L - 0.21, 0, 0.12, 0.11, 0.09, BOU.bell).box(0.14, L - 0.235, 0, 0.13, 0.025, 0.1, BOU.bellRim).box(0.14, L - 0.265, 0, 0.025, 0.035, 0.025, BOU.black);
+  }
   const m = v.mesh();
   m.quaternion.setFromUnitVectors(Y_UP, up);
   m.position.set(0, -ARM.fore, 0).addScaledVector(up, -hand); // its foot on the paving

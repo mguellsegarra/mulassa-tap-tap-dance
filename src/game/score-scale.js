@@ -7,12 +7,13 @@ export const CURRENT_SCORE_VERSION = 'mulassa-v3';
 export const SHORT_SCORE_VERSION = 'mulassa-v2-short';
 export const DRAC_SCORE_VERSION = 'drac-v1';
 export const BOU_SCORE_VERSION = 'bou-v1'; // records and online board share the unchanged chart
+export const TOMBA_SCORE_VERSION = 'tombairot-v1'; // device records only: no online board yet
 export const LEGACY_SCORE_VERSION = 'mulassa-v1';
 export const FULL_SCORE_ANCHORS = Object.freeze([96572, 113940, 196572]);
 export const SHORT_SCORE_ANCHORS = Object.freeze([69350, 83540, 149972]);
 
 export function comparableScore(raw, difficulty, version = CURRENT_SCORE_VERSION) {
-  if (version === CURRENT_SCORE_VERSION || version === LEGACY_SCORE_VERSION || version === DRAC_SCORE_VERSION || version === BOU_SCORE_VERSION) return raw;
+  if (version === CURRENT_SCORE_VERSION || version === LEGACY_SCORE_VERSION || version === DRAC_SCORE_VERSION || version === BOU_SCORE_VERSION || version === TOMBA_SCORE_VERSION) return raw;
   if (version !== SHORT_SCORE_VERSION || !Number.isInteger(difficulty) || difficulty < 0 || difficulty > 2)
     throw new RangeError('Unknown score version or difficulty');
   return Math.round(raw * FULL_SCORE_ANCHORS[difficulty] / SHORT_SCORE_ANCHORS[difficulty]);

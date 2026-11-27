@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula} {pct} reușite la {diff}… Drac cere revanșa. Tu cum te-ai descurca? 💃",
   "services.share.drac.record": "{mula}🔥 Record nou de puncte: {score} la {diff} ({pct} reușite), făcând Drac de Valls să danseze! 🎉",
   "services.share.bou": "Am făcut Bou Tradicional de Valls să danseze cu {pct} reușite la {diff}. #Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} reușite la {diff}… Mulassa cere revanșa. Tu cum te-ai descurca? 💃",
   "services.share.record": "{mula}🔥 Record nou de puncte: {score} la {diff} ({pct} reușite), făcând Mulassa de Valls să danseze! 🎉",
   "services.feedback.daily_limit": "Ai trimis deja 3 mesaje azi. Vei putea scrie din nou de la {time}."

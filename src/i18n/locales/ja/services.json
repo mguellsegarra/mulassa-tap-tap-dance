@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula} {diff}でヒット率{pct}… Dracがリベンジを待ってます。あなたならどう？ 💃",
   "services.share.drac.record": "{mula}🔥 スコア新記録！Drac de Vallsを踊らせて、{diff}で{score}点（ヒット率{pct}）！ 🎉",
   "services.share.bou": "Bou Tradicional de Vallsを踊らせて、{diff}でヒット率{pct}でした。 #Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {diff}でヒット率{pct}… Mulassaがリベンジを待ってます。あなたならどう？ 💃",
   "services.share.record": "{mula}🔥 スコア新記録！Mulassa de Vallsを踊らせて、{diff}で{score}点（ヒット率{pct}）！ 🎉",
   "services.feedback.daily_limit": "今日はもう3回送信したよ。{time}からまた送れるよ。"

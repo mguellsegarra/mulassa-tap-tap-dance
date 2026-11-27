@@ -33,7 +33,7 @@ let button, announcement;
 const figure = id => ({ id, song: id, composer: 'F. Bofarull', year: 1987 });
 const helpVars = {}, seen = new Map(), tips = [];
 let helpOnScreen = null;
-const context = vm.createContext({ tr, chip, store: { get: k => seen.get(k) ?? null, set: (k, v) => seen.set(k, v) }, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'), BOU: figure('bou'), playable: () => true, // every figure on the radio: the release gate is tests/figures/common/traits.mjs's
+const context = vm.createContext({ tr, chip, store: { get: k => seen.get(k) ?? null, set: (k, v) => seen.set(k, v) }, menuMusic: true, MULASSA: figure('mulassa'), DRAC: figure('drac'), BOU: figure('bou'), FIGURES: [], TOMBA_ID: 'tombairot-valls', playable: () => true, // every figure on the radio: the release gate is tests/figures/common/traits.mjs's
   figureSong: id => ({ audio: id, tail: 90, beats: [0, 1] }), portraitArt() {}, portraitPalette() {}, pixelSvg: () => '',
   mulaSpinner: () => ({}), PHOTO: { on: false }, clearPhotoKeys() {}, hud: {}, keyboardNav: false, beatAtTime() {},
   errors: { report: (...args) => failures.push(args) }, audioFailureTags: e => ({ name: e.name }),

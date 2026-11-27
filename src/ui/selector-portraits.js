@@ -2,6 +2,7 @@
 import { MULASSA_SELECTOR_SVG } from '../figures/mulassa/mula-portrait.js';
 import { DRAC_SELECTOR_SVG } from '../figures/drac/drac-portrait.js';
 import { BOU_SELECTOR_SVG } from '../figures/bou/bou-portrait.js';
+import { TOMBA_SELECTOR_SVG } from '../figures/tombairot/tomba-portrait.js'; // (null in a build while unreleased: hidden whole)
 import { DRAWN_SILHOUETTES } from './pending-silhouettes.js';
 import { UNRELEASED_IDS } from '../figures/index.js';
 // Invitation A3: two fictional carriers with a small plain standard, kept in colour.
@@ -54,4 +55,4 @@ export function pendingSilhouette(art) {
 }
 // Drawn pending silhouettes go before the traced ones; a figure that becomes playable needs its colour portrait here
 // (an unreleased one keeps it for its release and shows it in ink meanwhile).
-export const SELECTOR_PORTRAITS = { 'mulassa-valls': MULASSA_SELECTOR_SVG, 'drac-valls': DRAC_SELECTOR_SVG, ...DRAWN_SILHOUETTES, 'bou-tradicional-valls': UNRELEASED_IDS.has('bou-tradicional-valls') ? inkSilhouette(BOU_SELECTOR_SVG) : BOU_SELECTOR_SVG, 'la-teva-colla': INVITE_SELECTOR_SVG };
+export const SELECTOR_PORTRAITS = { 'mulassa-valls': MULASSA_SELECTOR_SVG, 'drac-valls': DRAC_SELECTOR_SVG, ...DRAWN_SILHOUETTES, 'bou-tradicional-valls': UNRELEASED_IDS.has('bou-tradicional-valls') ? inkSilhouette(BOU_SELECTOR_SVG) : BOU_SELECTOR_SVG, 'la-teva-colla': INVITE_SELECTOR_SVG, 'tombairot-valls': TOMBA_SELECTOR_SVG };

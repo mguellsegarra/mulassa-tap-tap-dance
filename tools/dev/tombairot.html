@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>El Tombairot · model</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#b8c7c9;font-family:system-ui}canvas{display:block;width:100%;height:100%;touch-action:none}
+#views{position:fixed;left:8px;bottom:8px;right:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#views button,#pick{font:15px system-ui;padding:8px 10px;border-radius:10px;border:1px solid #6b5a3c;background:#fff8e8}
+#cam{position:fixed;left:8px;top:8px;font:12px ui-monospace,monospace;background:#fff8e8e0;padding:6px 8px;border-radius:8px;white-space:pre}
+#ref{position:fixed;right:8px;top:8px;max-width:42vw;max-height:70vh;border-radius:12px}
+body.bare #views,body.bare #cam{display:none}</style></head>
+<body><canvas id="c"></canvas><div id="cam"></div>
+<div id="views"><button data-v="front">Davant</button><button data-v="q">3/4 esq.</button><button data-v="qr">3/4 dreta</button><button data-v="side">Costat</button><button data-v="back">Darrere</button><button data-v="qback">3/4 darrere</button>
+<button data-v="low">Baix</button><button data-v="top">Dalt</button><button data-v="head">Cap</button><button id="anim">Atura</button><button id="hop">Salta</button>
+<label id="pick">Foto…<input id="photo" type="file" accept="image/*" hidden></label></div>
+<script type="module">
+// Free 3D look at the Tombairot's model, figures/tombairot/tombairot.js (dev only), the Bou's and the Mulassa's viewers'
+// twin: drag to orbit, pinch or wheel to zoom, two fingers to pan, double-click a part to orbit round it. «Foto…» puts
+// a reference photo beside it (from your disk: the photos are not in the repo).
+// URL: ?t=<s> freezes the idle pose at that second, ?v=front|q|qr|side|back|qback|low|top|head, ?cam=x,y,z,tx,ty,tz[,fov] an exact
+// camera, ?amp= and ?hop= the pose's (poseTombairot), ?head= the head's scale, ?bare no buttons (captures), ?v1 the first
+// version (figures/tombairot-v1, kept to compare), ?joc the game's own lights (scene/stage.js: warmer, the ground orange).
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const q = new URLSearchParams(location.search), num = (k, d) => q.has(k) ? +q.get(k) : d;
+const { buildTombairot, poseTombairot } = q.has('v1')
+  ? await import('/src/figures/tombairot-v1/tombairot.js').then(m => ({ buildTombairot: m.buildTombairotV1, poseTombairot: m.poseTombairotV1 }))
+  : await import('/src/figures/tombairot/tombairot.js');
+document.body.classList.toggle('bare', q.has('bare'));
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true, preserveDrawingBuffer: q.has('bare') });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#b8c7c9');
+const joc = q.has('joc'); // (stage.js builds the whole plaça: its LIGHT, intensities and sun position are copied here)
+scene.add(new THREE.HemisphereLight(joc ? '#fff0dc' : '#fff4df', joc ? '#b88a5a' : '#867253', joc ? 1.6 : 2.3));
+const sun = new THREE.DirectionalLight(joc ? '#ffe6bd' : '#fff0cf', joc ? 2.4 : 2.2); sun.position.set(...(joc ? [-10, 18, 8] : [-4, 8, 4])); scene.add(sun);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(8, 48), new THREE.MeshLambertMaterial({ color: '#d5c69f' }));
+floor.rotation.x = -Math.PI / 2; floor.position.y = -.005; scene.add(floor); // below the soles (they shimmered on it)
+const camera = new THREE.PerspectiveCamera(40, 1, .05, 80);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = .4; controls.maxDistance = 20; controls.maxPolarAngle = Math.PI * .52;
+const rig = buildTombairot({ head: num('head', undefined) });
+scene.add(rig.root);
+// Views: it faces +z, 3.9 m to the horn's tip and 4.8 m from tongue to tail, its middle near z -1.2.
+const VIEWS = { front: [[0, 1.95, 8.2], [0, 1.95, 0]], q: [[5.6, 2.7, 4.9], [0, 1.9, -1.1]], qr: [[-5.6, 2.7, 4.9], [0, 1.9, -1.1]],
+  side: [[9.2, 1.95, -1.2], [0, 1.95, -1.2]], back: [[0, 2.2, -9.8], [0, 1.85, -1]], qback: [[-5.2, 2.8, -7], [0, 1.7, -1.5]],
+  low: [[4.3, .3, 6], [0, 1.8, -.9]], top: [[0, 11, -1.19], [0, 1, -1.2]], head: [[2.1, 3.7, 4.4], [0, 3.3, .7]] };
+const look = ([p, t]) => { camera.position.set(...p); controls.target.set(...t); };
+look(VIEWS[q.get('v')] ?? VIEWS.q);
+if (q.has('cam')) { const c = q.get('cam').split(',').map(Number); look([c.slice(0, 3), c.slice(3, 6)]); if (c[6]) camera.fov = c[6]; }
+document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => look(VIEWS[b.dataset.v]));
+let paused = q.has('t'), t = num('t', 0), hopAt = -9, last = performance.now();
+const animBtn = document.getElementById('anim'), label = document.getElementById('cam');
+animBtn.textContent = paused ? 'Anima' : 'Atura';
+animBtn.onclick = () => { paused = !paused; animBtn.textContent = paused ? 'Anima' : 'Atura'; };
+document.getElementById('hop').onclick = () => { hopAt = t; }; // a little jump: its feet show under the hem
+document.getElementById('photo').onchange = e => { // (the <img id="ref"> is made on the first photo)
+  const f = e.target.files[0]; if (!f) return;
+  const img = document.getElementById('ref') ?? document.body.appendChild(Object.assign(new Image(), { id: 'ref', alt: 'Foto de referència' }));
+  img.src = URL.createObjectURL(f);
+};
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+renderer.domElement.addEventListener('dblclick', e => {
+  ndc.set(e.clientX / innerWidth * 2 - 1, -e.clientY / innerHeight * 2 + 1); ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObject(rig.root, true)[0]; if (hit) controls.target.copy(hit.point);
+});
+function frame() {
+  const w = innerWidth, h = innerHeight;
+  if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio())) { renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  const now = performance.now(), dt = Math.min(.1, (now - last) / 1000); last = now;
+  if (!paused) t += dt;
+  const u = (t - hopAt) / .5, hop = u > 0 && u < 1 ? .22 * 4 * u * (1 - u) : 0;
+  poseTombairot(rig, t, { amp: num('amp', 1), hop: num('hop', 0) + hop });
+  const f = x => x.toFixed(2), c = camera.position, g = controls.target;
+  label.textContent = `t ${f(t)} s\ncam ${f(c.x)},${f(c.y)},${f(c.z)},${f(g.x)},${f(g.y)},${f(g.z)}`;
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(frame);
+}
+// For automated sweeps and captures: the rig, the camera, and a render of a given second.
+window.__orbit = { rig, camera, controls, look, render: (s = t, p) => { poseTombairot(rig, t = s, p); controls.update(); renderer.render(scene, camera); } };
+frame();
+</script></body></html>

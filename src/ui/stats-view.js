@@ -4,11 +4,11 @@
 // errors per kind or dates (decision 18).
 import { summary } from '../game/stats.js';
 import { FIGURE_VERSIONS } from '../services/leaderboard.js';
-import { MULASSA, DRAC, BOU } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, TOMBA_ID } from '../game/figures.js';
 import { num, posDisc } from './sheet-kit.js';
 import { tr } from '../i18n/messages.js';
 
-const SHORT = { [MULASSA.id]: MULASSA.name, [DRAC.id]: DRAC.name, [BOU.id]: BOU.name };
+const SHORT = { [MULASSA.id]: MULASSA.name, [DRAC.id]: DRAC.name, [BOU.id]: BOU.name, [TOMBA_ID]: 'Tombairot' }; // (the Tombairot: device statistics only, no board, so not in FIGURE_NAMES)
 export const FIGURE_NAMES = Object.freeze({ [MULASSA.id]: MULASSA.fullName, [DRAC.id]: DRAC.fullName, [BOU.id]: BOU.fullName }); // with the town: other towns' Mulasses and Dracs will come
 const COUNTS = ['runs', 'completed', 'collapsed', 'seconds', 'perfect', 'good', 'miss', 'guapa', 'guapaTotal', 'balloons', 'holds', 'bestCombo', 'bestStars'];
 // the judge's own words for each kind of error (judge.js, results.js)

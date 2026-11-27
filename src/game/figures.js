@@ -2,10 +2,10 @@
 import { tr } from '../i18n/messages.js';
 import figureCatalog from './figure-catalog.json' with { type: 'json' };
 import { bestRecord, recordPointsKey, saveRecord } from './records.js';
-import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION } from './score-scale.js';
+import { CURRENT_SCORE_VERSION, DRAC_SCORE_VERSION, BOU_SCORE_VERSION, TOMBA_SCORE_VERSION } from './score-scale.js';
 import { FIGURE_PORTRAITS } from './figure-portraits.js';
 import { MOCK_BOARD } from '../core/mock-board.js';
-import { PLAYABLE_IDS, FIGURE_TRAITS } from '../figures/index.js';
+import { PLAYABLE_IDS, FIGURE_TRAITS, UNRELEASED_IDS } from '../figures/index.js';
 // Valls first, the rest alphabetical by Catalan name, so the catalogue grows without a hand-kept order.
 const byTown = (a, b) => (a.id === 'valls' ? -1 : b.id === 'valls' ? 1 : a.name.localeCompare(b.name, 'ca'));
 export const TOWNS = [...figureCatalog.towns].sort(byTown);
@@ -15,15 +15,19 @@ const playableSongs = {
   'drac-valls': { song: 'Ball del Drac', composer: 'Francesc Bofarull i Figuerola', year: 1985, version: DRAC_SCORE_VERSION },
   // the UAF's Bou Tradicional (2012), not the Turba's; board enabled with the 1.4.0 migration
   'bou-tradicional-valls': { song: 'Ball del Bou', composer: 'Francesc Bofarull i Figuerola', year: 2012, version: BOU_SCORE_VERSION },
+  // noBoard: device records and statistics only, no server migration yet
+  'tombairot-valls': { song: 'Aligot', composer: 'Manel Sederra', year: null, version: TOMBA_SCORE_VERSION, noBoard: true },
 };
 const townRank = f => TOWNS.findIndex(t => t.id === f.town);
 // Hidden entries keep their catalog data and portraits but cannot enter selector navigation.
-export const FIGURES = figureCatalog.figures.filter(f => f.selectorVisible !== false).map(f => ({
+// An unreleased figure the build does not play is left out whole (src/figures/index.js UNRELEASED_IDS).
+export const FIGURES = figureCatalog.figures.filter(f => f.selectorVisible !== false && (PLAYABLE_IDS.includes(f.id) || !UNRELEASED_IDS.has(f.id))).map(f => ({
   ...f, status: playableSongs[f.id] && PLAYABLE_IDS.includes(f.id) ? 'playable' : 'aviat', ...playableSongs[f.id],
 })).sort((a, b) => Number(b.status === 'playable') - Number(a.status === 'playable') || townRank(a) - townRank(b)); // stable: each town keeps its catalogue order
 export const MULASSA = FIGURES.find(f => f.id === 'mulassa-valls');
 export const DRAC = FIGURES.find(f => f.id === 'drac-valls');
 export const BOU = FIGURES.find(f => f.id === 'bou-tradicional-valls');
+export const TOMBA_ID = 'tombairot-valls'; // (no TOMBAIROT entry: a build leaves it out of FIGURES while it is unreleased)
 // The strip's last card invites a colla to propose its figure: no real town, no song, outside FIGURES (records, board).
 export const INVITE_TOWN = { id: 'el-teu-poble', name: tr('figures.invite.town'), color: '#c8202f' };
 export const INVITE = { id: 'la-teva-colla', name: tr('figures.invite.name'), fullName: tr('figures.invite.name'), town: INVITE_TOWN.id, entity: tr('figures.invite.entity'), status: 'aviat', invite: true };
@@ -77,7 +81,7 @@ export const portraitPalette = figure => FIGURE_PORTRAITS[figure.id]?.palette ??
 // How tall each figure stands beside the others (the gegants = 1), so the selector shows them at roughly their real
 // relative size whatever zoom their pixel art was drawn at. Set by eye with ?sizes (src/dev/sizes-edit.js), not measured.
 export const STAND = {
-  'mulassa-valls': 0.8, 'drac-valls': 0.7, 'aliga-valls': 0.8, 'bou-tradicional-valls': 0.65, 'bou-valls': 0.7, 'lleo-valls': 0.6, 'gegant-calcot-valls': 1, 'gegant-campanar-valls': 1, 'os-trabucaires-valls': 0.65, 'nans-valls': 0.55,
+  'mulassa-valls': 0.8, 'drac-valls': 0.7, 'aliga-valls': 0.8, 'bou-tradicional-valls': 0.65, 'tombairot-valls': 0.8, 'bou-valls': 0.7, 'lleo-valls': 0.6, 'gegant-calcot-valls': 1, 'gegant-campanar-valls': 1, 'os-trabucaires-valls': 0.65, 'nans-valls': 0.55,
   'gegants-ciutat-valls': 1, 'cavallets-valls': 0.55, 'basilisc-valls': 0.65, 'diables-valls': 0.8,
   'aliga-tarragona': 0.8, 'cucafera-tarragona': 0.65, 'gegants-mulassa-reus': 0.8, 'gegants-solsona': 1, 'drac-solsona': 0.8,
   'mulassa-solsona': 0.8, 'aliga-solsona': 0.8, 'gegants-bojos-solsona': 1, 'draca-solsona': 0.8, 'boja-vilanova': 0.8, 'drac-vilanova': 0.8, 'aliga-barcelona': 0.8,
@@ -89,4 +93,4 @@ export const STAND = {
 export const portraitStand = figure => STAND[figure.id] ?? 0.8;
 // How heavily each figure lands in free mode (the Mulassa = 1): the one place that sets its «BUUUM» (audio.js thud),
 // lower, longer and louder with it. The Drac carries the fire kit and its heavier frame.
-export const FIGURE_WEIGHT = { 'mulassa-valls': 1, 'drac-valls': 1.5, 'bou-tradicional-valls': 1 };
+export const FIGURE_WEIGHT = { 'mulassa-valls': 1, 'drac-valls': 1.5, 'bou-tradicional-valls': 1, 'tombairot-valls': 1.1 };

@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula} {pct} asmatze, maila: {diff}… Drac errebantxa eske daukat. Eta zuk, zer moduz? 💃",
   "services.share.drac.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Drac de Valls dantzan! 🎉",
   "services.share.bou": "Bou Tradicional de Valls dantzan jarri dut: {pct} asmatze. Maila: {diff}. #Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} asmatze, maila: {diff}… Mulassa errebantxa eske daukat. Eta zuk, zer moduz? 💃",
   "services.share.record": "{mula}🔥 Puntu-errekor berria: {score}, maila: {diff} ({pct} asmatze), Mulassa de Valls dantzan! 🎉",
   "services.feedback.daily_limit": "Gaur 3 bidalketa egin dituzu jada. Berriro idatzi ahal izango duzu ordu honetatik aurrera: {time}."

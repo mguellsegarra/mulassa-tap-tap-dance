@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula} {pct} d’encèrts en {diff}… Eth Drac me demane era revenja. E tu, com ac haries? 💃",
   "services.share.drac.record": "{mula}🔥 Nau recòrd de punts: {score} en {diff} ({pct} d’encèrts) hènt a balhar eth Drac de Valls! 🎉",
   "services.share.bou": "È hèt a balhar eth Bou Tradicional de Valls damb un {pct} d’encèrts en {diff}. #Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} d’encèrts en {diff}… Era Mulassa me demane era revenja. E tu, com ac haries? 💃",
   "services.share.record": "{mula}🔥 Nau recòrd de punts: {score} en {diff} ({pct} d’encèrts) hènt a balhar era Mulassa de Valls! 🎉",
   "services.feedback.daily_limit": "Aué ja as hèt 3 enviaments. Poderàs tornar a escríuer a compdar des {time}."

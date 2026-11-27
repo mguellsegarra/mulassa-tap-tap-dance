@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula} {pct} влучань на рівні {diff}… Drac вимагає реваншу. А як зіграєш ти? 💃",
   "services.share.drac.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Drac de Valls! 🎉",
   "services.share.bou": "Мій танець Bou Tradicional de Valls: {pct} влучань на рівні {diff}. #Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula} {pct} влучань на рівні {diff}… Mulassa вимагає реваншу. А як зіграєш ти? 💃",
   "services.share.record": "{mula}🔥 Новий рекорд: {score} очок на рівні {diff} ({pct} влучань) у танці Mulassa de Valls! 🎉",
   "services.feedback.daily_limit": "Сьогодні ти вже надіслав 3 повідомлення. Знову написати можна буде з {time}."

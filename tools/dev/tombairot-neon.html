@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+  <title>El Tombairot (Neon) · visor 3D</title>
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #b8c7c9; font-family: system-ui, -apple-system, sans-serif; }
+    canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+    #bar { position: fixed; left: 8px; top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    #views { position: fixed; left: 8px; bottom: 8px; right: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    #cam { position: fixed; right: 8px; top: 8px; font: 12px ui-monospace, monospace; background: #fff8e8e0; color: #2b2114; padding: 6px 8px; border-radius: 8px; white-space: pre; }
+    #bar button, #views button { font: 14px system-ui; padding: 7px 10px; border-radius: 10px; border: 1px solid #6b5a3c; background: #fff8e8; color: #2b2114; cursor: pointer; }
+    #views button.active, #bar button.active { background: #f4d930; font-weight: 600; }
+    #time { width: 120px; }
+    #tlab { font: 12px ui-monospace, monospace; background: #fff8e8d0; padding: 4px 7px; border-radius: 8px; color: #2b2114; }
+    body.clean #bar, body.clean #views, body.clean #cam { display: none; }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="bar">
+    <button id="anim">Atura</button>
+    <button id="spin">Gira</button>
+    <input id="time" type="range" min="0" max="8" step="0.02" value="0">
+    <span id="tlab">t = 0.00 s</span>
+  </div>
+  <div id="views">
+    <button data-v="front">Davant</button>
+    <button data-v="q">3/4</button>
+    <button data-v="side">Costat</button>
+    <button data-v="back">Darrere</button>
+    <button data-v="low">Baixa</button>
+    <button data-v="top">Dalt</button>
+    <button data-v="head">Cap</button>
+    <button id="copy">Copia la vista</button>
+  </div>
+  <div id="cam"></div>
+  <script type="module">
+    // Free 3D viewer for El Tombairot (Gemini Neon), modelled after tools/dev/bou.html.
+    // Query params: ?t=<sec> (freezes animation at time t), ?view=front|q|side|back|low|top|head, ?clean=1 (hides HUD).
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { buildTombairotNeon, poseTombairotNeon } from '/src/figures/tombairot-neon/tombairot-neon.js';
+
+    const q = new URLSearchParams(location.search);
+    if (q.has('clean')) document.body.classList.add('clean');
+
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('c'), antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#b8c7c9');
+    scene.add(new THREE.HemisphereLight('#fff4df', '#8d7758', 1.95));
+
+    const sun = new THREE.DirectionalLight('#ffebc6', 2.25);
+    sun.position.set(-5, 11, 7);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    Object.assign(sun.shadow.camera, { left: -4, right: 4, top: 4, bottom: -4, near: 1, far: 30 });
+    sun.shadow.bias = -0.0005;
+    scene.add(sun);
+
+    const floor = new THREE.Mesh(
+      new THREE.CircleGeometry(6, 48),
+      new THREE.MeshLambertMaterial({ color: '#d5c69f' })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = -0.003;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    const rig = buildTombairotNeon();
+    scene.add(rig.root);
+
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.05, 60);
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.minDistance = 0.8;
+    controls.maxDistance = 16;
+    controls.maxPolarAngle = Math.PI * 0.51;
+
+    // Presets framed for El Tombairot (~2.96 m tall, centred around y = 1.45, z = -0.15)
+    const VIEWS = {
+      front: [[0, 1.55, 5.5], [0, 1.48, -0.05]],
+      q: [[3.6, 2.05, 4.4], [0, 1.45, -0.15]],
+      side: [[5.6, 1.55, -0.2], [0, 1.45, -0.2]],
+      back: [[0, 1.65, -5.6], [0, 1.42, -0.2]],
+      low: [[3.1, 0.42, 4.7], [0, 1.42, -0.15]],
+      top: [[0.01, 6.8, 0.6], [0, 1.35, -0.2]],
+      head: [[1.15, 2.75, 1.95], [0, 2.54, 0.18]],
+    };
+
+    const viewBtns = [...document.querySelectorAll('[data-v]')];
+    function setView(name) {
+      const preset = VIEWS[name] ?? VIEWS.q;
+      camera.position.set(...preset[0]);
+      controls.target.set(...preset[1]);
+      controls.update();
+      viewBtns.forEach(b => b.classList.toggle('active', b.dataset.v === name));
+    }
+    viewBtns.forEach(b => (b.onclick = () => setView(b.dataset.v)));
+
+    const animBtn = document.getElementById('anim');
+    const spinBtn = document.getElementById('spin');
+    const timeIn = document.getElementById('time');
+    const tlab = document.getElementById('tlab');
+    const camBox = document.getElementById('cam');
+
+    const frozen = q.has('t');
+    let playing = !frozen;
+    let t = frozen ? (+q.get('t') || 0) : 0;
+    let last = performance.now();
+
+    function syncAnimUi() {
+      animBtn.textContent = playing ? 'Atura' : 'Anima';
+      animBtn.classList.toggle('active', playing);
+      timeIn.value = String(((t % 8) + 8) % 8);
+      tlab.textContent = `t = ${t.toFixed(2)} s`;
+    }
+    animBtn.onclick = () => { playing = !playing; last = performance.now(); syncAnimUi(); };
+    spinBtn.onclick = () => {
+      controls.autoRotate = !controls.autoRotate;
+      spinBtn.textContent = controls.autoRotate ? 'Quiet' : 'Gira';
+      spinBtn.classList.toggle('active', controls.autoRotate);
+    };
+    timeIn.oninput = () => { playing = false; t = +timeIn.value; poseTombairotNeon(rig, t); syncAnimUi(); };
+
+    document.getElementById('copy').onclick = e => {
+      const r = v => +v.toFixed(2), c = camera.position, g = controls.target;
+      navigator.clipboard?.writeText(JSON.stringify({ t: r(t), cam: [r(c.x), r(c.y), r(c.z)], obj: [r(g.x), r(g.y), r(g.z)] }));
+      e.target.textContent = 'Copiat!';
+      setTimeout(() => (e.target.textContent = 'Copia la vista'), 1200);
+    };
+
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+    renderer.domElement.addEventListener('dblclick', e => {
+      ndc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      const hit = ray.intersectObject(rig.root, true)[0];
+      if (hit) controls.target.copy(hit.point);
+    });
+
+    function resize() {
+      const w = innerWidth, h = innerHeight;
+      if (renderer.domElement.width !== Math.round(w * renderer.getPixelRatio()) ||
+          renderer.domElement.height !== Math.round(h * renderer.getPixelRatio())) {
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+      }
+    }
+
+    setView(q.get('view') ?? 'q');
+    poseTombairotNeon(rig, t);
+    syncAnimUi();
+    resize();
+
+    function renderNow() {
+      resize();
+      poseTombairotNeon(rig, t);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    window.__orbit = {
+      rig, camera, controls,
+      setView(v) { setView(v); renderNow(); },
+      setTime(sec) { playing = false; t = sec; syncAnimUi(); renderNow(); },
+      render: renderNow,
+    };
+
+    function frame() {
+      resize();
+      const now = performance.now(), dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      if (playing) {
+        t += dt;
+        syncAnimUi();
+      }
+      poseTombairotNeon(rig, t);
+      controls.update();
+      renderer.render(scene, camera);
+      const f = x => x.toFixed(2), c = camera.position, g = controls.target;
+      camBox.textContent = `t ${f(t)} s\ncam ${f(c.x)} ${f(c.y)} ${f(c.z)}\nobj ${f(g.x)} ${f(g.y)} ${f(g.z)}`;
+      requestAnimationFrame(frame);
+    }
+    frame();
+  </script>
+</body>
+</html>

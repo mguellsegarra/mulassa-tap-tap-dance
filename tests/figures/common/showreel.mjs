@@ -7,13 +7,14 @@ import { SHOWREELS, SHOT_KINDS, REEL_GLIDE, REEL_GLIDE_AZ, REEL, followBeat, sho
 import menuSong from '../../../src/song-mulassa.json' with { type: 'json' };
 import dracSong from '../../../src/song-drac.json' with { type: 'json' };
 import bouSong from '../../../src/song-bou.json' with { type: 'json' };
+import tombaSong from '../../../src/song-tombairot.json' with { type: 'json' };
 import { beatAtTime } from '../../../src/core/beat-grid.js';
-import { MULASSA, DRAC, BOU } from '../../../src/game/figures.js';
+import { MULASSA, DRAC, BOU, TOMBA_ID } from '../../../src/game/figures.js';
 import { rootAt } from '../../../src/figures/drac/drac-path.js';
 import { dracTime } from '../../../src/figures/drac/drac-time.js';
 import { DRAC_SCALE } from '../../../src/figures/drac/drac.js';
 
-const songs = { [MULASSA.id]: menuSong, [DRAC.id]: dracSong, [BOU.id]: bouSong };
+const songs = { [MULASSA.id]: menuSong, [DRAC.id]: dracSong, [BOU.id]: bouSong, [TOMBA_ID]: tombaSong };
 const closeUp = kind => SHOT_KINDS[kind].part && SHOT_KINDS[kind].part !== '*'; // ('*': her whole body through the long lens, not a part)
 for (const [id, reel] of Object.entries(SHOWREELS)) {
   const { shots, loop, start } = reel, end = beatAtTime(songs[id].beats, songs[id].end);

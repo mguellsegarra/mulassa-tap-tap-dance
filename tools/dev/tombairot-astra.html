@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ca"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>El Tombairot · Astra</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#d9d5ca;color:#342e26;font:1rem system-ui}
+canvas{width:100vw;height:100dvh;display:block;touch-action:none}
+nav{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;padding:6px;background:#fff9e9;border-radius:12px}
+select,button{font:inherit;color:inherit;background:#fffaf0;border:1px solid #b7aa96;border-radius:8px;min-height:40px;padding:4px 12px}
+</style></head><body>
+<canvas aria-label="Model 3D del Tombairot"></canvas>
+<nav aria-label="Controls del model"><select aria-label="Vista"><option value="front">Davant</option><option value="q" selected>Tres quarts</option><option value="side">Perfil</option><option value="back">Darrere</option><option value="low">Contrapicat</option><option value="top">Des de dalt</option></select><button aria-pressed="false">Mou la figura</button></nav>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { buildTombairotAstra,poseTombairotAstra } from '/src/figures/tombairot-astra/tombairot-astra.js';
+const renderer=new THREE.WebGLRenderer({canvas:document.querySelector('canvas'),antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene(); scene.background=new THREE.Color('#d9d5ca');
+scene.add(new THREE.HemisphereLight('#fff4de','#c4bda6',1.65));
+const sun=new THREE.DirectionalLight('#fff4de',1.8);
+sun.position.set(-3,5,4);scene.add(sun);
+const floor=new THREE.Mesh(new THREE.CircleGeometry(4,72),new THREE.MeshLambertMaterial({color:'#bfad8d'}));
+floor.rotation.x=-Math.PI/2;floor.position.y=-.012;scene.add(floor);
+const rig=buildTombairotAstra();scene.add(rig.root);
+const camera=new THREE.PerspectiveCamera(34,1,.03,70), orbit=new OrbitControls(camera,renderer.domElement);
+orbit.target.set(0,1.62,-.08);orbit.minDistance=1;orbit.maxDistance=14;
+const views={front:[0,.04,1],q:[.71,.17,.87],side:[1,.05,0],back:[.10,.13,-1],low:[.45,-.28,1],top:[.02,1,.03]};
+const select=document.querySelector('select'),button=document.querySelector('button');
+const query=new URLSearchParams(location.search);
+select.value=Object.hasOwn(views,query.get('view')) ? query.get('view') : 'q';
+if(query.has('clean')) document.querySelector('nav').style.display='none';
+function frameView(){
+  camera.position.fromArray(views[select.value]).setLength(6.85*Math.max(1,.70/camera.aspect)).add(orbit.target);
+  orbit.update();
+}
+function resize(){
+  const canvas=renderer.domElement;
+  renderer.setSize(canvas.clientWidth,canvas.clientHeight,false);
+  camera.aspect=canvas.clientWidth/canvas.clientHeight; camera.updateProjectionMatrix(); frameView();
+}
+const draw=()=>renderer.render(scene,camera);
+orbit.addEventListener('change',draw);
+window.addEventListener('resize',()=>{resize();draw();});select.onchange=frameView;resize();
+let moving=false, start=0;
+function tick(now) {
+  poseTombairotAstra(rig,moving?(now-start)/1000:0);draw();
+}
+button.onclick=()=>{
+  moving=!moving;start=performance.now();
+  button.setAttribute('aria-pressed',String(moving));
+  button.textContent=moving?'Atura la figura':'Mou la figura';
+  renderer.setAnimationLoop(moving?tick:null);tick(start);
+};
+tick(0);
+</script></body></html>

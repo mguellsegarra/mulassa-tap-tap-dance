@@ -25,7 +25,8 @@ const PAPER = '#fff4df';
 const CARD_THEMES = {
   'mulassa-valls': { name: 'MULASSA', bg: '#8a1628', ray: '#a8283e', ink: '#24050c' },
   'drac-valls': { name: 'DRAC', bg: '#1f8a4c', ray: '#2a9e5a', ink: '#0b2414' },
-  'bou-tradicional-valls': { name: 'BOU', sub: 'hud.card.bouSub', bg: figThemes.bou.colors.pa, ray: figThemes.bou.colors.gua, ink: figThemes.bou.colors.paDk, rayA: 0.2 }, // its buttons' MA grana, faint rays of BRA sand (the light sand at 0.5 drowned the title); «Bou Tradicional» is its name
+  'bou-tradicional-valls': { name: 'BOU', sub: 'hud.card.bouSub', bg: figThemes.bou.colors.pa, ray: figThemes.bou.colors.gua, ink: figThemes.bou.colors.paDk, rayA: 0.2 },
+  'tombairot-valls': { name: 'TOMBAIROT', sub: 'hud.card.tombaSub', bg: figThemes.tombairot.colors.pa, ray: figThemes.tombairot.colors.gua, ink: figThemes.tombairot.colors.paDk, rayA: 0.25 }, // its BA green, rays of TOM yellow // its buttons' MA grana, faint rays of BRA sand (the light sand at 0.5 drowned the title); «Bou Tradicional» is its name
 };
 // Catalan diacritics always, plus the active language's sample (hud.share.fontSample).
 export async function loadCardFonts(fonts) {
@@ -103,7 +104,9 @@ function cardPhoto(c, hero, x, y, diameter, ink) {
 }
 function cardTitle(c, theme, y, story) {
   c.save(); c.translate(540, y); c.rotate(-Math.PI / 45);
-  const size = story ? (theme.name === 'MULASSA' ? 214 : 224) : (theme.name === 'MULASSA' ? 150 : 176); // (the short names fill the same width larger)
+  let size = story ? (theme.name === 'MULASSA' ? 214 : 224) : (theme.name === 'MULASSA' ? 150 : 176); // (the short names fill the same width larger)
+  c.font = `800 ${size}px ${CARD_FONT}`;
+  size *= Math.min(1, (story ? 940 : 660) / c.measureText(theme.name).width); // a longer name (TOMBAIROT) shrinks to MULASSA's width (930 / 652 px)
   const label = tr(theme.sub || 'hud.card.deValls');
   c.font = `800 ${story ? 82 : 56}px ${CARD_FONT}`;
   const sub = (story ? 82 : 56) * Math.min(1, (story ? 760 : 560) / c.measureText(label).width); // a longer name shrinks to the title's width

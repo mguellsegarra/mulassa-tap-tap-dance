@@ -1,7 +1,7 @@
 // Photo mode keeps the selector identity separate from the actor we drive: it always drives one figure, on show alone
 // (the selected one, else the last playable); Tab or the bar hands the plaça to another.
 import { PHOTO, setPhotoControl, clearPhotoKeys } from '../game/photo-control.js';
-import { MULASSA, DRAC, BOU, playable, portraitArt, portraitPalette } from '../game/figures.js';
+import { MULASSA, DRAC, BOU, FIGURES, TOMBA_ID, playable, portraitArt, portraitPalette } from '../game/figures.js';
 import { pixelSvg } from './select-ui.js';
 import { COARSE, isTablet } from '../core/env.js';
 import { hud } from '../hud/canvas.js';
@@ -12,8 +12,11 @@ import { tr } from '../i18n/messages.js';
 
 const PF_FIGS = [[MULASSA, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.mula.${k}`)])],
   [DRAC, ['q', 'e', 'r'].map(k => [k.toUpperCase(), tr(`ui.photo.act.drac.${k}`)])],
-  [BOU, [['Q', tr('ui.photo.act.drac.e')], ['E', tr('ui.photo.act.mula.q')], ['R', tr('ui.photo.act.bou.r')]]]].filter(([f]) => playable(f));
-const PF_WORDS = { [MULASSA.id]: ['ui.photo.moveMula', 'ui.photo.nowMula'], [DRAC.id]: ['ui.photo.moveDrac', 'ui.photo.nowDrac'], [BOU.id]: ['ui.photo.moveBou', 'ui.photo.nowBou'] };
+  [BOU, [['Q', tr('ui.photo.act.drac.e')], ['E', tr('ui.photo.act.mula.q')], ['R', tr('ui.photo.act.bou.r')]]],
+  [FIGURES.find(f => f.id === TOMBA_ID), [['Q', tr('ui.photo.act.tombairot.q')], ['E', tr('ui.photo.act.tombairot.e')], ['R', tr('ui.photo.act.bou.r')]]],
+].filter(([f]) => f && playable(f)); // (no Tombairot in a build while it is unreleased)
+const PF_WORDS = { [MULASSA.id]: ['ui.photo.moveMula', 'ui.photo.nowMula'], [DRAC.id]: ['ui.photo.moveDrac', 'ui.photo.nowDrac'], [BOU.id]: ['ui.photo.moveBou', 'ui.photo.nowBou'],
+  [TOMBA_ID]: ['ui.photo.moveTomba', 'ui.photo.nowTomba'] };
 const photoHelpActions = fig => [['WASD', tr('ui.photo.act.walk')], ['Shift', tr('ui.photo.act.run')], [tr('ui.photo.key.space'), tr('ui.photo.act.jump')], ...fig[1], ['Tab', tr('ui.photo.act.swap')], [tr('ui.photo.key.rightButton'), tr('ui.photo.act.holdLook')], ['M', tr('ui.photo.act.music')], ['Esc', tr(lookLocked() ? 'ui.photo.act.unlock' : 'ui.photo.act.exit')]];
 const photoHelpDescription = fig => tr('ui.photo.description', { figure: fig[0].fullName, actions: photoHelpActions(fig).map(([key, label]) => `${key} ${label}`).join(' · ') });
 const PF_TIP_MS = 6000; // brief discovery; manual help stays until toggled or the mode changes

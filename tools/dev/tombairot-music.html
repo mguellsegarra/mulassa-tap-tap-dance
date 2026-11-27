@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ca">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aligot · música del Tombairot</title>
+<!-- Listening preview for El Tombairot's song (tools/music/build_tombairot.py writes output/tombairot-music/). Dev only. -->
+<style>
+  :root { --bg: #fbf7f0; --fg: #2a2118; --muted: #7a6b5a; --card: #fff; --line: #e6dccd; --accent: #c2541b; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #1d1915; --fg: #f1e9de; --muted: #a8998a; --card: #27221c; --line: #3a3229; --accent: #f08a4b; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 system-ui, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 1.5rem; margin: 8px 0 4px; }
+  h2 { font-size: 1.1rem; margin: 0 0 12px; }
+  p { margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 0.9rem; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 16px 0; }
+  .row { display: grid; gap: 4px; margin: 0 0 16px; }
+  .row:last-child { margin-bottom: 0; }
+  audio { width: 100%; }
+  .phrases { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .phrases button, .actions button { font: inherit; font-size: 0.9rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); cursor: pointer; }
+  .group { display: grid; gap: 8px; margin: 0 0 12px; }
+  .group b { font-size: 0.95rem; }
+  label { display: flex; gap: 8px; align-items: center; }
+  .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .tag { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Aligot</h1>
+  <p class="muted">Pasdoble de Manel Sederra i Puigferrer, adaptació per a gralles d'Els Vernets (arxiu de Josep Sanz). Música del Tombairot, provisional. Drets pendents de permís: no publicar.</p>
+  <p class="muted">L'agent no ho ha pogut escoltar: les comprovacions han estat de nota, temps i volum.</p>
+
+  <section>
+    <h2>Partitura plana (sencera, amb totes les repeticions, a 120)</h2>
+    <div class="row"><span>Melodia sola (Gralla 1)</span><audio controls preload="none" src="/output/tombairot-music/melodia.mp3"></audio></div>
+    <div class="row"><span>Gralla 2</span><audio controls preload="none" src="/output/tombairot-music/veu-2.mp3"></audio></div>
+    <div class="row"><span>Gralla baixa (sona una octava per sota)</span><audio controls preload="none" src="/output/tombairot-music/veu-3.mp3"></audio></div>
+    <div class="row"><span>Les tres veus</span><audio controls preload="none" src="/output/tombairot-music/trio.mp3"></audio></div>
+  </section>
+
+  <section>
+    <h2>Versions de la mescla del joc</h2>
+    <div id="versions"></div>
+  </section>
+
+  <section>
+    <h2>Tria les frases</h2>
+    <p class="muted">Frases iguals agrupades. La intro de percussió sempre hi és, i el trio acaba sempre amb la segona volta (el final). Es munta a partir de la mescla completa.</p>
+    <div id="groups"></div>
+    <div class="actions"><button class="primary" id="play">Escolta</button><button id="stop">Atura</button><span id="total" class="muted"></span></div>
+  </section>
+</main>
+<script>
+const BASE = '/output/tombairot-music/';
+const NAMES = { v1: 'v1 · per defecte: totes les repeticions menys la del trio', v2: 'v2 · i la B una sola vegada', v3: 'v3 · la A una sola vegada (2a volta), la B dues', complet: 'Completa · totes les repeticions (massa llarga)' };
+const fmt = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const get = n => fetch(BASE + n).then(r => r.json());
+
+(async () => {
+  const box = document.getElementById('versions');
+  for (const v of ['v1', 'v2', 'v3', 'complet']) {
+    const info = await get(`mix-${v}.json`);
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<span>${NAMES[v]} <span class="muted">· ${fmt(info.duration)}</span></span><audio controls preload="none" src="${BASE}mix-${v}.mp3"></audio><div class="phrases"></div>`;
+    const audio = row.querySelector('audio');
+    for (const [, label, t] of info.phrases) {
+      const b = document.createElement('button'); b.textContent = `${fmt(t)} ${label}`;
+      b.onclick = () => { audio.currentTime = t; audio.play(); };
+      row.querySelector('.phrases').append(b);
+    }
+    box.append(row);
+  }
+
+  // the phrase selector: segments of the complete mix, back to back
+  const full = await get('mix-complet.json');
+  const ids = full.phrases.map(p => p[0]);
+  const seg = id => { const i = ids.indexOf(id); return [full.phrases[i][2], i + 1 < ids.length ? full.phrases[i + 1][2] : full.duration]; };
+  const GROUPS = [['Introducció', ['I', 'I2']], ['A', ['A1', 'A2']], ['B', ['B1', 'B2']], ['Trio', ['T1', 'T2']]];
+  const DEFAULT = new Set(['I', 'A1', 'A2', 'I2', 'B1', 'B2', 'T2']);
+  const groups = document.getElementById('groups');
+  for (const [name, list] of GROUPS) {
+    const g = document.createElement('div'); g.className = 'group'; g.innerHTML = `<b>${name}</b>`;
+    for (const id of list) {
+      const [a, b] = seg(id), label = full.phrases[ids.indexOf(id)][1];
+      const l = document.createElement('label');
+      l.innerHTML = `<input type="checkbox" value="${id}" ${DEFAULT.has(id) ? 'checked' : ''} ${id === 'T2' ? 'checked disabled' : ''}> ${label} <span class="muted">${fmt(b - a)}</span>`;
+      g.append(l);
+    }
+    groups.append(g);
+  }
+  const chosen = () => ids.filter(id => document.querySelector(`input[value="${id}"]`).checked);
+  const total = () => { const t = full.phrases[0][2] + chosen().reduce((s, id) => s + seg(id)[1] - seg(id)[0], 0); document.getElementById('total').textContent = `Durada: ${fmt(t)}`; };
+  groups.onchange = total; total();
+
+  let ctx, buf, playing = [];
+  const stop = () => { playing.forEach(s => { try { s.stop(); } catch {} }); playing = []; };
+  document.getElementById('stop').onclick = stop;
+  document.getElementById('play').onclick = async () => {
+    stop();
+    ctx ??= new AudioContext();
+    buf ??= await fetch(BASE + 'mix-complet.mp3').then(r => r.arrayBuffer()).then(a => ctx.decodeAudioData(a));
+    const parts = [[0, full.phrases[0][2]], ...chosen().map(seg)];
+    let at = ctx.currentTime + 0.1;
+    const X = 0.012; // a short crossfade at every join
+    for (const [a, b] of parts) {
+      const src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = buf; src.connect(g).connect(ctx.destination);
+      g.gain.setValueAtTime(0, at); g.gain.linearRampToValueAtTime(1, at + X);
+      g.gain.setValueAtTime(1, at + (b - a)); g.gain.linearRampToValueAtTime(0, at + (b - a) + X);
+      src.start(at, a, b - a + X);
+      playing.push(src); at += b - a;
+    }
+  };
+})();
+</script>
+</body>
+</html>

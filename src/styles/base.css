@@ -53,7 +53,7 @@ canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 1
 #pad .lbl { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; height: calc(100% - 10px); aspect-ratio: 1; max-width: calc(100% - 14px); border: 6px solid #fff; border-radius: 50%; background: radial-gradient(circle at 50% 30%, var(--lt), var(--c) 62%); box-shadow: 0 0 0 5px #2a1a10, 0 6px 0 5px #0006, inset 0 -8px 0 var(--dk); pointer-events: none; transition: transform .38s cubic-bezier(.3, 1.8, .5, 1), box-shadow .3s ease-out; will-change: transform; } /* release: springs back past 1 and settles */
 /* The outline is painted once: a stroked copy of the word under it (::before), not 16 text-shadows (iOS Safari
    ignores paint-order on HTML text). The word's own shadow drops under it; over the outline it's the same colour. */
-#pad .word { text-shadow: 0 2px 8px #0000002e; } #pad.fig-drac .word, #pad.fig-bou .word { text-shadow: 0 1px 0 var(--dk), 0 2px 6px #0006; } /* white on the light yellow (sand) needs a darker edge */ /* plain white, just a soft shadow for contrast */
+#pad .word { text-shadow: 0 2px 8px #0000002e; } #pad.fig-drac .word, #pad.fig-bou .word, #pad.fig-tombairot .word { text-shadow: 0 1px 0 var(--dk), 0 2px 6px #0006; } /* white on the light yellow (sand) needs a darker edge */ /* plain white, just a soft shadow for contrast */
 #pad .arr { font-size: 18px; line-height: 1; color: #fff; text-shadow: 0 1px 4px #0000002e; margin-bottom: 2px; }
 #pad button:hover { filter: none; }
 #pad button:active { transform: none; }

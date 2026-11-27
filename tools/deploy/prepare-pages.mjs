@@ -2,6 +2,7 @@ import { readdir, readFile, rm, stat } from 'node:fs/promises';
 import { resolve, relative, sep } from 'node:path';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { UNRELEASED_IDS } from '../../src/figures/index.js';
+import { UNRELEASED_FIGURES } from './unreleased-figure.mjs';
 
 const OMIT = new Set(['music/mulassa-taiko.wav', 'music/mulassa-taiko.mid', 'music/drac-taiko.mid', '.DS_Store']);
 // A root 404 disables Pages' SPA fallback: unknown URLs must not serve the game with HTTP 200.
@@ -77,9 +78,11 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const read = async name => JSON.parse(await readFile(new URL(`../../src/${name}`, import.meta.url), 'utf8'));
   const songs = [await read('song-mulassa.json'), await read('song-drac.json')];
   // an unreleased figure (src/figures/index.js) ships neither its song's audio nor its textures nor its share photo
-  if (UNRELEASED_IDS.has('bou-tradicional-valls')) {
-    for (const name of [(await read('song-bou.json')).audio.split('?')[0], 'share/bou-tradicional-valls.jpg']) await rm(resolve(dist, name), { force: true });
-  } else songs.push(await read('song-bou.json'));
+  for (const [id, { song }] of Object.entries(UNRELEASED_FIGURES)) {
+    const data = await read(song);
+    if (!UNRELEASED_IDS.has(id)) { songs.push(data); continue; }
+    for (const name of [data.audio.split('?')[0], `share/${id}.jpg`]) await rm(resolve(dist, name), { force: true });
+  }
   const files = await preparePages(dist, songs);
   console.log(`Pages static artifact ready: ${files.length} files; no Functions or Workers.`);
 }

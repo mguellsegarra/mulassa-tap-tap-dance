@@ -51,6 +51,7 @@
   "services.share.drac.fail": "{mula}{diff}难度命中率{pct}…Drac喊我再战一局。换你来会怎样？💃",
   "services.share.drac.record": "{mula}🔥刷新得分纪录！Drac de Valls，{diff}难度{score}分（命中率{pct}）！🎉",
   "services.share.bou": "我让Bou Tradicional de Valls跳起来了！{diff}难度命中率{pct}。#Valls",
+  "services.share.tombairot": "He fet ballar el Tombairot de l’Escola Candela amb un {pct} d'encerts a {diff}. #Valls",
   "services.share.fail": "{mula}{diff}难度命中率{pct}…Mulassa喊我再战一局。换你来会怎样？💃",
   "services.share.record": "{mula}🔥刷新得分纪录！Mulassa de Valls，{diff}难度{score}分（命中率{pct}）！🎉",
   "services.feedback.daily_limit": "你今天已发送3次。{time}起可以再次发送。"

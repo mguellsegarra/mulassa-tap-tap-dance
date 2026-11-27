@@ -7,8 +7,9 @@
 import { MULA_SCENE } from '../figures/mulassa/mula-scene.js';
 import { DRAC_SCENE } from '../figures/drac/drac-scene.js';
 import { BOU_SCENE } from '../figures/bou/bou-scene.js';
+import { TOMBA_SCENE } from '../figures/tombairot/tomba-scene.js';
 
-export const FIGURE_SCENES = [MULA_SCENE, DRAC_SCENE, BOU_SCENE].filter(Boolean); // an unreleased figure's is null in a build
+export const FIGURE_SCENES = [MULA_SCENE, DRAC_SCENE, BOU_SCENE, TOMBA_SCENE].filter(Boolean); // an unreleased figure's is null in a build
 export const sceneOf = id => FIGURE_SCENES.find(f => f.id === id) ?? null;
 // CPU preparation finishes before the first frame; each figure owns its scheduling.
 export const prepareFigureScenes = () => Promise.all(FIGURE_SCENES.map(f => f.prepare?.()));

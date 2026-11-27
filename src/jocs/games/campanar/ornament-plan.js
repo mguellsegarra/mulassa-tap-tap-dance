@@ -6,9 +6,11 @@ import { SIZE } from './rules.js';
 
 const DEMO = typeof location !== 'undefined' && import.meta.env?.DEV && new URLSearchParams(location.search).has('vitrina'); // ?vitrina: all of them early
 // floors from which (1 floor = 1.77 m): the drain gargoyles from 74 m, the rose from 100 m, the moon from 350 m (300 m
-// by night); the rose wants width A kept ROSE_KEEP floors under it, the Mulassa a streak of STREAK perfects, the
-// Candela XS_RUN floors survived in XS; after FILLER_AFTER plain floors in a row, a one-floor piece
-export const FROM = DEMO ? { gargoyle: 8, rose: 16, moon: 44, moonNight: 44 } : { gargoyle: 42, rose: 57, moon: 198, moonNight: 170 };
+// by night); the rose wants width A kept ROSE_KEEP floors under it, the dragon gargoyle a streak of STREAK perfects, the
+// Virgin's window XS_RUN floors survived in XS; after FILLER_AFTER plain floors in a row, a one-floor piece. The stork's
+// nest on a parapet from 74 m (the tower still A or C wide at 74 m), the lightning rod on a tower of 150 m (85 floors)
+export const FROM = DEMO ? { gargoyle: 8, rose: 16, moon: 44, moonNight: 44, nest: 16, rod: 40 }
+  : { gargoyle: 42, rose: 57, moon: 198, moonNight: 170, nest: 42, rod: 85 };
 const ROSE_KEEP = 8, STREAK = 6, XS_RUN = 8, FILLER_AFTER = DEMO ? 2 : 4; // the study said 6: the shaft's windows and string courses rarely leave that many
 const A = 0.65, C = 0.4, XS = 0.22; // facade.js's width classes, as shares of the full side
 const shareOf = known => j => Math.min(known[j].w, known[j].d) / SIZE; // floor j's width, a share of the full side
@@ -37,7 +39,7 @@ export function createOrnamentPlan(isNight = night()) {
       if (!done.has('A10') && clock && s >= C && set !== 'XS' && room(4)) return once('A10') && { name: 'escala', set, id: 'A10' };
       return null;
     },
-    // a string course's floor i: its corner pieces, the Mulassa's gargoyle once it is earned (A or C), the drain
+    // a string course's floor i: its corner pieces, the dragon gargoyle once it is earned (A or C), the drain
     // gargoyles from FROM.gargoyle; one set a bay (a string course comes every BAY floors)
     corners(i, known) {
       const share = shareOf(known), out = [];
@@ -45,6 +47,9 @@ export function createOrnamentPlan(isNight = night()) {
       if (i >= FROM.gargoyle) out.push('B5');
       return out;
     },
+    // the parapet's floor i (facade.js's remat, the topmost cornice): E1's stork nests on its gable on the camera's wall
+    // when it stands at 74 m or over on a tower still A or C wide at 74 m (a stork takes the highest ledge, a wide one)
+    remat: (i, known) => (!done.has('E1') && i >= FROM.nest && shareOf(known)(FROM.nest) >= C && once('E1') ? ['E1'] : []),
     // a plain floor after FILLER_AFTER of them: the oculus or the sawtooth frieze, never the last face piece's family
     filler: () => (plain >= FILLER_AFTER ? (family === 'A' ? 'serra' : 'ocul') : null),
     // floor i has settled wearing key: count the plain floors, remember the face piece's family

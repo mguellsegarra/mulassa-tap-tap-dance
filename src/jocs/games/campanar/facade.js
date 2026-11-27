@@ -73,7 +73,11 @@ export function createFacade() {
       return k;
     };
     const p = pending.get(i);
-    if (p) { put(p.key); f.group = p.group; f.found = p.found; } else if (cap !== null && i === cap) put('A/remat');
+    if (p) { put(p.key); f.group = p.group; f.found = p.found; } else if (cap !== null && i === cap) {
+      put('A/remat');
+      const nest = orn.remat(i, known); // E1, the stork's nest on its gable
+      if (nest.length) f.orn = f.found = nest;
+    }
     else if (cap !== null && i < cap && i >= cap - 4) { // the bell chamber under the parapet: the biggest bells that reach it whole
       const set = Object.keys(campanarWidths).find(k => share(at(cap - 1)) >= campanarWidths[k] && i === cap - LEN.bells[k] && flat(cap - 1));
       if (set) motif('bells', set, null, 'campanes');

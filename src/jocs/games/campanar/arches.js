@@ -33,7 +33,7 @@ const PORTALS = {
 // the prototype's face pieces (ornament-plan.js), kind: what ornaments.js adds in the opening. A round opening (`round`)
 // is a circle from its sill to its apex. ocul: A1's oculus, its ring of voussoirs, on every wall (common); the rest
 // only on the camera's wall (faces): rosassa, A6's rose of six petals over three floors, lit glass behind it; candela,
-// F8's lancet with the Candela's flame in its glass; lluna, G6's window with the moon caught in its bars; escala, A10's
+// F8's lancet with the Virgin in its blue glass (its key kept from the study); lluna, G6's window with the moon caught in its bars; escala, A10's
 // stair, a small window a floor climbing across the wall (off: its middle along the wall) to a landing with a railing
 const round = (R, yc, more) => ({ round: true, hw: R, ySill: yc - R, ySpring: yc - R, yApex: yc + R, sillH: 0, ...more });
 const CAM = [4]; // the wall the camera looks at most (+z, in the light)
@@ -41,7 +41,7 @@ const OCULI = Object.fromEntries([['A', 0.15, 0.135], ['C', 0.12, 0.105], ['XS',
   .map(([k, R, t]) => [k, round(R, 0.24, { band: 0.006, tWall: t, roomD: t * 2.2, kind: 'ocul' })]));
 const ROSES = { A: round(0.46, 0.72, { band: 0.05, tWall: 0.135, roomD: 0.2, kind: 'rosassa', faces: CAM, glass: 'amber' }) };
 const lancet = (hw, more) => ({ hw, ySill: 0.1, ySpring: 0.62, yApex: 0.62 + hw * 1.6, band: 0.04, tWall: 0.09, roomD: 0.14, faces: CAM, ...more });
-const CANDELES = { A: lancet(0.16, { kind: 'candela', glass: 'flame' }), C: lancet(0.14, { kind: 'candela', glass: 'flame' }), XS: lancet(0.1, { kind: 'candela', glass: 'flame' }) };
+const CANDELES = { A: lancet(0.16, { kind: 'candela', glass: 'blue' }), C: lancet(0.14, { kind: 'candela', glass: 'blue' }), XS: lancet(0.1, { kind: 'candela', glass: 'blue' }) };
 const LLUNES = { A: lancet(0.17, { kind: 'lluna', glass: 'night' }), C: lancet(0.15, { kind: 'lluna', glass: 'night' }), XS: lancet(0.11, { kind: 'lluna', glass: 'night' }) };
 // the stair's floors bottom up: three small square-headed windows, then the landing's
 const step = (off, hw, ySill, yApex, kind) => ({ off, hw, ySill, ySpring: yApex, yApex, band: 0.025, tWall: 0.1, roomD: 0.26, faces: CAM, kind });

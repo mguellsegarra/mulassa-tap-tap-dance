@@ -4,18 +4,19 @@
 // edges, clear of the slab in play, and take no tap. Built only when something changes, never per frame.
 import { presentDiscovery } from '#plassa/discovery.js';
 import { store } from '#plassa/storage.js';
-import { ORNAMENTS, RARITY, GLYPHS, MILESTONES } from './collection.js';
+import { ORNAMENTS, RARITY, GLYPHS, DRAWN, MILESTONES } from './collection.js';
 
 const SEEN = 'campanar-seen', SHOWN = 2800, NEAR = 20; // ms a reached height stays before it fades; m before one it shows
 const fmt = m => `${String(m).replace('.', ',')} m`;
 function chip(id) {
-  const el = document.createElement('div'), svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.innerHTML = GLYPHS[id];
+  const el = document.createElement('div');
+  let art;
+  if (DRAWN.has(id)) { art = new Image(); art.src = `/jocs/campanar/elements/${id}.png`; art.alt = ''; art.decoding = 'async'; }
+  else { art = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); art.setAttribute('viewBox', '0 0 24 24'); art.innerHTML = GLYPHS[id]; }
   el.className = 'find';
   el.dataset.id = id;
   el.style.setProperty('--tint', RARITY[ORNAMENTS[id].rarity].tint);
-  el.append(svg);
+  el.append(art);
   return el;
 }
 

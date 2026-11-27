@@ -121,12 +121,13 @@ function dragon(t, c, dir, side, y, k = 1.5) {
     s0 * k, s1 * k, w0 * k, w1 * k, Y(ya), Y(yb), col, colSide);
   B(-0.04, 0.07, 0.055, 0.05, [0, 0.01], 0.12, ARCH); // its shoulders
   for (const sw of [-1, 1]) {
-    B(-0.03, 0.12, 0.004, 0.004, [0.06, 0.08], [0.24, 0.1], ARCH, sw * 0.06); // a wing's membrane
-    B(-0.03, 0.12, 0.008, 0.006, [0.23, 0.095], [0.26, 0.11], SILL, sw * 0.062); // its leading bone
-    B(-0.05, -0.02, 0.006, 0.002, [0.25, 0.25], [0.28, 0.26], STEP, sw * 0.062); // the claw at its elbow
-    B(0, 0.07, 0.014, 0.012, [0.04, 0], [0.08, 0.03], ARCH, sw * 0.04); // a foreleg reaching down to the cornice
-    for (const toe of [-0.008, 0.008]) B(0.06, 0.105, 0.006, 0.002, [0, -0.04], [0.025, -0.03], STEP, sw * 0.04 + toe); // its claws over the edge
-    B(0.24, 0.255, 0.008, 0.008, 0.12, 0.135, JAMB, sw * 0.042); // an eye
+    B(-0.03, 0.04, 0.004, 0.004, [0.085, 0.12], [0.21, 0.16], ARCH, sw * 0.06); // a wing's membrane, scalloped between its fingers
+    B(0.04, 0.1, 0.004, 0.004, [0.1, 0.115], [0.16, 0.12], ARCH, sw * 0.06);
+    B(-0.03, 0.1, 0.008, 0.006, [0.2, 0.115], [0.225, 0.13], SILL, sw * 0.062); // its leading bone
+    B(-0.05, -0.02, 0.006, 0.002, [0.22, 0.22], [0.25, 0.23], STEP, sw * 0.062); // the claw at its elbow
+    B(0.02, 0.06, 0.012, 0.01, [0.06, 0.005], [0.1, 0.035], ARCH, sw * 0.062); // a foreleg down the string course's face, under the wing
+    for (const toe of [-0.008, 0.008]) B(0.045, 0.075, 0.006, 0.002, [0.005, -0.03], [0.03, -0.015], STEP, sw * 0.062 + toe); // its claws under its edge
+    B(0.24, 0.255, 0.008, 0.008, 0.12, 0.135, JAMB, sw * 0.042, JAMB); // an eye
     B(0.17, 0.28, 0.003, 0.012, [0.22, 0.15], [0.235, 0.17], STEP, sw * 0.026); // a horn sweeping back
   }
   // the neck in scale collars, each a little narrower than the one behind it, rising to the head
@@ -136,7 +137,7 @@ function dragon(t, c, dir, side, y, k = 1.5) {
   B(0.23, 0.3, 0.045, 0.04, [0.07, 0.075], [0.165, 0.15], ARCH); // the skull
   B(0.29, 0.4, 0.035, 0.022, 0.085, [0.15, 0.11], SILL); // the upper jaw
   B(0.28, 0.38, 0.03, 0.018, [0.06, 0.02], [0.08, 0.04], ARCH); // the lower jaw, open
-  B(0.27, 0.36, 0.02, 0.02, [0.07, 0.06], [0.09, 0.085], JAMB); // the throat between them: the spout
+  B(0.27, 0.37, 0.016, 0.016, [0.065, 0.042], [0.09, 0.085], JAMB, 0, JAMB); // the throat between them: the spout
   for (const sw of [-0.015, 0.015]) B(0.37, 0.39, 0.005, 0.003, [0.06, 0.065], 0.085, SILL, sw); // its fangs
 }
 
@@ -167,16 +168,16 @@ const hash = j => { const x = Math.sin(j * 127.1) * 43758.5453; return x - Math.
 const STORK = [
   ...[-0.01, 0.012].map((u, j) => [[[u - 0.005, 0], [u + 0.005, 0], [u + 0.005, 0.1], [u - 0.005, 0.1]], [-0.016, 0.006][j], RED, 0.01]),
   [[[0, 0.085], [0.05, 0.105], [0.06, 0.15], [-0.015, 0.168], [-0.1, 0.13], [-0.065, 0.095]], 0.036, WHITE],
-  [[[-0.03, 0.09], [0.02, 0.1], [0, 0.148], [-0.06, 0.162], [-0.112, 0.135], [-0.08, 0.1]], 0.04, BLACK],
+  [[[-0.04, 0.1], [-0.01, 0.11], [-0.03, 0.137], [-0.112, 0.135], [-0.09, 0.104]], 0.038, BLACK], // only the wing's rear: a white back
   [[[0.028, 0.14], [0.058, 0.135], [0.072, 0.225], [0.048, 0.232]], 0.017, WHITE],
   [[[0.046, 0.218], [0.076, 0.214], [0.082, 0.238], [0.064, 0.252], [0.046, 0.24]], 0.021, WHITE],
   [[[0.076, 0.218], [0.15, 0.2], [0.08, 0.236]], 0.009, RED],
   [[[0.064, 0.232], [0.07, 0.232], [0.07, 0.238], [0.064, 0.238]], 0.022, BLACK],
 ];
 // E1: a stork standing in its twig nest on the parapet's gable (mouldings.js remat, its apex at the floor's top) on wall
-// b, side on to the camera: rings of twigs, a dark cup, stray sticks and a few hanging over the gable's face
-function storkNest(t, b, R = 0.16, h = 0.085, S = 1.3) {
-  const o = at(b, 0, 0.455, 0.03), P = (u, y, n) => at(b, u, y, n);
+// b, side on to the camera: rings of twigs, a dark cup and stray sticks; a little over life size, so it reads from afar
+function storkNest(t, b, R = 0.16, h = 0.085, S = 1.5) {
+  const o = at(b, 0, 0.455, 0.03);
   for (let L = 0; L < 4; L++) for (let j = 0; j < 9; j++) { // its rim, wider up, the sticks of each ring across the ones under
     const th = (j + L * 0.37) * 2 * Math.PI / 9, rL = R * (0.72 + 0.1 * L), rad = new Vector3(Math.cos(th), 0, Math.sin(th));
     const c = { x: o.x + rad.x * rL, z: o.z + rad.z * rL }, len = 2 * Math.PI * rL / 9 * 0.75, dy = (hash(L * 9 + j) - 0.5) * 0.012;
@@ -190,10 +191,8 @@ function storkNest(t, b, R = 0.16, h = 0.085, S = 1.3) {
     const th = (j + 0.5) * 2 * Math.PI / 7 + hash(j) * 0.5, rad = new Vector3(Math.cos(th), 0, Math.sin(th)), y = o.y + h * (0.3 + 0.6 * hash(j + 20));
     beam(t, o, rad, new Vector3(-rad.z, 0, rad.x), R * 0.7, R * (1.25 + 0.2 * hash(j + 40)), 0.006, 0.004, y, y + 0.01, TWIG[j % 4]);
   }
-  for (const [u, du, dy] of [[-0.09, -0.02, 0.07], [0.02, 0.015, 0.1], [0.1, 0.03, 0.06]]) // hanging over the face
-    prism(t, P, [[u - 0.006, 0.46, true], [u + 0.006, 0.46, true], [u + du + 0.004, 0.46 - dy, true], [u + du - 0.004, 0.46 - dy, true]], 0.15, 0.16, -9, 9, TWIG[0], TWIG[2]);
   // the stork on the cup, its side to the camera (which looks down the (-1, -1, -1) diagonal): forward to the screen's right
-  const fw = new Vector3(1, 0, -1).normalize(), across = new Vector3(1, 0, 1).normalize(), foot = o.clone().setY(o.y + h * 0.6);
+  const fw = new Vector3(1, 0, -1).normalize(), across = new Vector3(1, 0, 1).normalize(), foot = o.clone().setY(o.y + h * 0.25); // its feet down in the cup, the rim over them
   const Q = (u, y, n) => foot.clone().addScaledVector(fw, u * S).addScaledVector(across, n * S).setY(foot.y + y * S);
   for (const [poly, w, k, w1] of STORK) prism(t, Q, poly.map(p => [...p, true]), w1 === undefined ? -w : w, w1 === undefined ? w : w + w1, -9, 9, k, k.clone().multiplyScalar(0.8));
 }

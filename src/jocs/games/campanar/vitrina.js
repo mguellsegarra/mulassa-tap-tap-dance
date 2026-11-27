@@ -1,5 +1,5 @@
 // ?vitrina (dev server only): a run that plays itself and builds every prototype ornament in about 70 floors
-// (ornament-plan.js lowers its heights): perfects in A (the clock, the stair, the Mulassa's gargoyle, the drain
+// (ornament-plan.js lowers its heights): perfects in A (the clock, the stair, the dragon gargoyle, the drain
 // gargoyles, the rose, the fillers), a cut to C, one to XS held for the Virgin's window and the moon, thin floors for the
 // spire's crockets, then a miss. Every find gets its moment each time (bands.js remembers nothing). ?vitrina=<id>
 // (A1, B2, A10, B5, A6, F8, F1, G6, E1) misses as soon as that ornament has settled: the end's close shot of the top

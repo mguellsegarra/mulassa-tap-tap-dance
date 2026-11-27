@@ -13,7 +13,7 @@ import { createFacade } from './facade.js';
 import { box, campanarFoot } from './stone.js';
 import { setCopingInner, terraceRail } from './coping.js';
 import { createOpenings } from './openings.js';
-import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments } from './crown.js';
+import { buildCampanarHead, makeStoneSpire, makePinnacles, makeWeathering, disposeCampanarOrnaments, towerCable } from './crown.js';
 import { sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings, skyPan } from './sky.js';
@@ -207,14 +207,14 @@ export function createScene(canvas, { found = () => {} } = {}) {
         if (crown || outro === null) return; // a new run already
         crown = new Group();
         const tops = slabs.map(m => m.position.y + FLOOR / 2), parapet = rects[cap] ?? rects[0] ?? rect;
-        const thin = courses.filter(c => c.key === 'agulla').length, parts = [];
+        const thin = courses.filter(c => c.key === 'agulla').length, parts = [], cable = towerCable(slabs.length, rects, courses.map(c => c.batter), cap);
         if (thin) { // the floors too thin for bells go under an octagonal spire as tall as them (crown.js), centred on the parapet
           for (let i = cap + 1; i < slabs.length; i++) slabs[i].visible = false;
-          const spire = makeStoneSpire(parapet, tops[cap], thin * FLOOR), slope = makeWeathering(parapet, spire.foot, tops[cap], FLOOR * 0.4);
+          const spire = makeStoneSpire(parapet, tops[cap], thin * FLOOR, cable), slope = makeWeathering(parapet, spire.foot, tops[cap], FLOOR * 0.4);
           parts.push(spire.g, makePinnacles(parapet, tops[cap]));
           if (slope) crown.add(slope);
-        } else parts.push(buildCampanarHead(parapet, tops[cap] ?? 0), makePinnacles(parapet, tops[cap]));
-        found([thin ? 'D1' : 'coberta', 'creu', 'pinacles']); // the spire's crockets and rings or the tiled head, its cross, the pinnacles (collection.js)
+        } else parts.push(buildCampanarHead(parapet, tops[cap] ?? 0, cable), makePinnacles(parapet, tops[cap]));
+        found([thin ? 'D1' : 'coberta', 'creu', 'pinacles', ...(cable ? ['D6'] : [])]); // the spire's crockets and rings or the tiled head, its cross, the pinnacles (collection.js)
         crown.add(...parts);
         scene.add(crown);
         done();

@@ -1,5 +1,5 @@
 // Sant Joan's octagonal tiled roof, its small bronze cage with the gold bell and cross, and stone pinnacles.
-import { Mesh, CylinderGeometry, Group, MeshLambertMaterial, Vector3, BufferGeometry, Float32BufferAttribute,
+import { Mesh, CylinderGeometry, OctahedronGeometry, Group, MeshLambertMaterial, Vector3, BufferGeometry, Float32BufferAttribute,
   Quaternion } from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { SIZE, FLOOR } from './rules.js';
@@ -82,8 +82,9 @@ export function buildCampanarHead(base, y) {
   return g;
 }
 // over a bell chamber whose floors above ran too thin for bells: an octagonal stone spire centred on the parapet `base`
-// at y, as tall as those floors (h): the campanar as tall as the player built it, never lower. A moulded ring every
-// three floors, then a small bronze cage with the gold bell and the gold cross. Never shorter than a spire reads.
+// at y, as tall as those floors (h): the campanar as tall as the player built it, never lower. Rings in pairs every
+// seven floors, as the shaft's string courses (D2), crockets up its arrises a floor apart (D1: ornament-plan.js), then a
+// small bronze cage with the gold bell and the gold cross. Never shorter than a spire reads.
 // → the group, and the square it stands on (for its weathering)
 export const spireHeight = (base, h) => Math.max(h, Math.min(base.w, base.d) * 1.2);
 export function makeStoneSpire(base, y, h) {
@@ -92,9 +93,13 @@ export function makeStoneSpire(base, y, h) {
   const radius = t => r0 * (1 - t / H); // the cone's radius at height t
   const oct = (rt, rb, ht, at) => new CylinderGeometry(rt, rb, ht, 8).rotateY(Math.PI / 8).translate(0, at + ht / 2, 0);
   const stone = [oct(radius(cage), r0, cage, 0)], ring = FLOOR * 0.16;
-  for (let t = 3 * FLOOR; t < cage - FLOOR; t += 3 * FLOOR) stone.push(oct(radius(t) * 1.16, radius(t) * 1.16, ring, t - ring / 2));
+  for (let t = 7 * FLOOR; t < cage - FLOOR; t += 7 * FLOOR) for (const dt of [-0.22, 0.22]) stone.push(oct(radius(t) * 1.16, radius(t) * 1.16, ring, t + dt * FLOOR - ring / 2));
+  for (let t = 1.5 * FLOOR; t < cage - FLOOR * 0.6; t += FLOOR) for (let k = 0; k < 8; k++) { // a crocket: a leaf curling up off the arris
+    const a = (k + 0.5) * Math.PI / 4, c = Math.max(radius(t) * 0.16, SIZE * 0.012), out = radius(t) * 1.02 + c * 0.7;
+    stone.push(new OctahedronGeometry(c).scale(1.5, 1.2, 0.6).rotateZ(0.5).rotateY(-a).translate(Math.cos(a) * out, t, Math.sin(a) * out));
+  }
   stone.push(oct(radius(cage) * 1.25, radius(cage) * 1.25, ring, cage - ring)); // the cage's ledge
-  g.add(new Mesh(ribbedSpire(mergeGeometries(stone), r0, H, cage), scaleStoneMat())); // fish-scale stone, a rib up each arris
+  g.add(new Mesh(ribbedSpire(mergeGeometries(stone.map(x => (x.index ? x.toNonIndexed() : x))), r0, H, cage), scaleStoneMat())); // fish-scale stone, a rib up each arris
   const metal = [], up = new Vector3(0, 1, 0), bar = Math.max(r0 * 0.05, SIZE * 0.008);
   const rod = (from, to, w = bar) => {
     const d = to.clone().sub(from), mid = from.clone().lerp(to, 0.5);

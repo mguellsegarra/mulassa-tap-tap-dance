@@ -28,6 +28,10 @@
     <div id="hud-mid"><div id="score" role="status">0</div></div>
   </div>
 
+  <!-- the run's side bands (bands.js): the famous heights passed, the ornaments found -->
+  <div id="marks" class="band" hidden></div>
+  <div id="finds" class="band" hidden></div>
+
   <!-- The home, as the games' 2.0.0 home (Pop's): MULASSA's red logo with TOWER under it and Juga (no pitch, no record: the owner's call),
        in the middle of the sky; no tower (it rises on Juga, scene.js home). shortcut: the logo's markup and the home's
        layout are Pop's, copied until they move into Plassa (the extraction plan); then this page uses the base's. -->
@@ -53,13 +57,12 @@
     </div>
   </div>
   <!-- The end's first look: the whole campanar, its metres on top, a tap for the sheet (main.js toSheet) -->
-  <div id="end-banner" hidden><b id="banner-m"></b><span id="banner-real"></span><span id="banner-best" hidden></span></div>
+  <div id="end-banner" hidden><b id="banner-m"></b><span id="banner-best" hidden></span></div>
   <p id="end-tap" hidden>Toca per continuar</p>
   <div id="end-menu" class="cover" hidden>
     <div class="sheet">
       <h2 id="end-title"></h2>
       <p class="result" id="end-score">0</p>
-      <p class="result-sub" id="end-real"></p>
       <p class="result-sub" id="end-best"></p>
       <div class="sheet-actions">
         <button id="again" class="btn btn-primary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5"/></svg><span>Torna-hi</span></button>

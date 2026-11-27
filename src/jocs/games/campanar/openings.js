@@ -10,7 +10,8 @@
 import { BufferGeometry, Float32BufferAttribute, MeshLambertMaterial, MeshBasicMaterial, Color, Vector2, Vector3, Matrix4,
   DoubleSide } from 'three';
 import { SIZE, FLOOR } from './rules.js';
-import { chamberOf, halfWidth, holes, cuts, walls, at, inset } from './arches.js';
+import { chamberOf, halfWidth, holes, cuts, walls, wallsOf, shift, at, inset } from './arches.js';
+import { glassAt, pieceSlice, ornamentSlice } from './ornaments.js';
 import { stoneGeo, courseMats } from './stone.js';
 import { copeSlab } from './coping.js';
 import { chamberBell, BELL_H, BELL_YOKE } from './bells.js';
@@ -42,28 +43,29 @@ function sizes(s, r) {
 // bottom only on the corner piers where the opening crosses them, so no stone ever crosses the niche between two floors
 function piercedGeo(r, y0, o) {
   const pos = [], nor = [], uv = [], groups = [], edges = Array.from({ length: 6 }, () => new Vector2(0, 1));
-  const { s } = o, a = y0 - o.y0, c = a + FLOOR, ys = cuts(s, a, c), bs = walls(r, o.y0);
+  const { s } = o, a = y0 - o.y0, c = a + FLOOR, ys = cuts(s, a, c), pierced = wallsOf(r, o.y0, s).map(b => b.mat);
+  const bs = walls(r, o.y0).map(b => (pierced.includes(b.mat) ? { ...shift(b, s.off ?? 0), hole: true } : b));
   const put = (p, n, u, v) => { pos.push(p.x, p.y, p.z); nor.push(n.x, n.y, n.z); uv.push(u, v); };
   const strip = (b, ua0, ua1, ya, ub0, ub1, yb) => {
     if (ua1 - ua0 < 1e-5 && ub1 - ub0 < 1e-5) return;
     const P = [[ua0, ya], [ua1, ya], [ub1, yb], [ua0, ya], [ub1, yb], [ub0, yb]];
-    for (const [u, y] of P) put(at(b, u, y, 0), b.N, u / SIZE + 0.5, (y - a) / FLOOR); // the wall's middle on the axis
+    for (const [u, y] of P) put(at(b, u, y, 0), b.N, (u + (b.off ?? 0)) / SIZE + 0.5, (y - a) / FLOOR); // the wall's middle on the axis
   };
   const side = b => {
     const start = pos.length / 3;
     for (let k = 0; k < ys.length - 1; k++) {
       const ya = ys[k], yb = ys[k + 1], ym = (ya + yb) / 2;
-      if (ym <= s.ySill || ym >= s.yApex) { strip(b, b.u0, b.u1, ya, b.u0, b.u1, yb); continue; }
+      if (!b.hole || ym <= s.ySill || ym >= s.yApex) { strip(b, b.u0, b.u1, ya, b.u0, b.u1, yb); continue; }
       const wa = halfWidth(Math.max(ya, s.ySill + 1e-5), s), wb = halfWidth(Math.min(yb, s.yApex - 1e-5), s);
       strip(b, b.u0, Math.max(b.u0, -wa), ya, b.u0, Math.max(b.u0, -wb), yb);
       strip(b, Math.min(b.u1, wa), b.u1, ya, Math.min(b.u1, wb), b.u1, yb);
     }
     groups.push({ start, count: pos.length / 3 - start, materialIndex: b.mat });
-    const ua = b.u0 / SIZE + 0.5, ub = b.u1 / SIZE + 0.5;
+    const ua = (b.u0 + (b.off ?? 0)) / SIZE + 0.5, ub = (b.u1 + (b.off ?? 0)) / SIZE + 0.5;
     edges[b.mat] = new Vector2(Math.min(ua, ub), Math.max(ua, ub));
   };
   const x0 = r.x - r.w / 2, x1 = r.x + r.w / 2, z0 = r.z - r.d / 2, z1 = r.z + r.d / 2;
-  const cap = (y, ny, mat) => { // a top or a bottom: whole, or the four corner piers outside the opening's cross
+  const cap = (y, ny, mat) => { // a top or a bottom: whole, or what is outside each pierced wall's notch to the middle
     const start = pos.length / 3, h = ny > 0 ? c : a, n = new Vector3(0, ny, 0);
     const rect = (xa, za, xb, zb) => {
       if (xb - xa < 1e-4 || zb - za < 1e-4) return;
@@ -71,10 +73,15 @@ function piercedGeo(r, y0, o) {
       for (const [x, z] of P) put(new Vector3(x, y, z), n, x / SIZE + 0.5, z / SIZE + 0.5);
     };
     if (h <= s.ySill + 1e-3 || h >= s.yApex - 1e-3) rect(x0, z0, x1, z1);
-    else {
-      const w = Math.max(halfWidth(h, s), s.hw * 1.26), lx = Math.min(x1, r.x - w), rx = Math.max(x0, r.x + w);
-      const lz = Math.min(z1, r.z - w), rz = Math.max(z0, r.z + w);
-      rect(x0, z0, lx, lz); rect(rx, z0, x1, lz); rect(x0, rz, lx, z1); rect(rx, rz, x1, z1);
+    else { // the four corner piers when all four walls are pierced
+      const w = Math.max(halfWidth(h, s), s.hw * 1.26), notches = bs.filter(b => b.hole).map(b => {
+        const p = [-w, w].flatMap(u => [at(b, u, 0, 0), at(b, u, 0, -Math.abs(b.N.x ? r.w : r.d) / 2)]);
+        return [Math.min(...p.map(q => q.x)), Math.min(...p.map(q => q.z)), Math.max(...p.map(q => q.x)), Math.max(...p.map(q => q.z))];
+      });
+      const cut = (lo, hi, k) => [...new Set([lo, hi, ...notches.flatMap(n => [n[k], n[k + 2]])])].filter(v => v >= lo && v <= hi).sort((p, q) => p - q);
+      const xs = cut(x0, x1, 0), zs = cut(z0, z1, 1), inside = (x, z) => notches.some(n => x > n[0] && x < n[2] && z > n[1] && z < n[3]);
+      for (let k = 0; k < zs.length - 1; k++) for (let j = 0; j < xs.length - 1; j++)
+        if (!inside((xs[j] + xs[j + 1]) / 2, (zs[k] + zs[k + 1]) / 2)) rect(xs[j], zs[k], xs[j + 1], zs[k + 1]);
     }
     groups.push({ start, count: pos.length / 3 - start, materialIndex: mat });
   };
@@ -96,13 +103,13 @@ function openingSlice(r, y0, o) {
   const lit = tris(), dark = tris(), { s } = o, a = y0 - o.y0, c = a + FLOOR, { tWall, roomD, cW } = sizes(s, r);
   const proud = SIZE * 0.012, band = s.band ?? Math.max(0.036, s.hw * 0.18), zP = -tWall * 0.3; // zP: a window's tympanum
   // the band's outer edge concentric with the arch, as deep at the crown as on the jambs: it goes on over the apex
-  const hood = inset(s, -band), lo = Math.max(a, s.ySill), hi = Math.min(c, hood.yApex);
+  const hood = inset(s, -band), lo = Math.max(a, s.round ? hood.ySill : s.ySill), hi = Math.min(c, hood.yApex);
   const ys = hi > lo + 1e-4 ? cuts({ ...hood, lights: [s, ...(s.lights ?? [])] }, lo, hi) : [];
   const shade = (y, deep, k) => { // darker up into the vault and deeper in, a little warm light off the sill
     const up = clamp01((y - s.ySill) / Math.max(0.1, s.yApex - s.ySill)), bounce = (1 - deep * 0.75) * Math.max(0, 1 - up * 2.5);
     return k.clone().lerp(DEEP, up * 0.58 + deep * 0.25).lerp(DARK_SILL, bounce * 0.55);
   };
-  for (const b of walls(r, o.y0)) {
+  for (const b of wallsOf(r, o.y0, s)) {
     const P = (u, y, n) => at(b, u, y, n), span = (b.u1 - b.u0) * 0.46;
     const sillH = s.sillH ?? Math.min(0.055, s.hw * 0.24), sy0 = Math.max(a, s.ySill - sillH), sy1 = Math.min(c, s.ySill);
     if (sy1 > sy0 + 1e-4) { // the sill, proud of the wall, its top sloping in to the jambs' foot
@@ -120,7 +127,7 @@ function openingSlice(r, y0, o) {
       lit.quad(P(wa, ya, proud), P(oa, ya, proud), P(ob, yb, proud), P(wb, yb, proud), ARCH);
       lit.quad(P(-oa, ya, 0), P(-oa, ya, proud), P(-ob, yb, proud), P(-ob, yb, 0), STEP);
       lit.quad(P(oa, ya, proud), P(oa, ya, 0), P(ob, yb, 0), P(ob, yb, proud), STEP);
-      if (ya >= s.yApex - 1e-5) continue; // over the apex only the band's crown
+      if (ya >= s.yApex - 1e-5 || yb <= s.ySill + 1e-5) continue; // over the apex (or under a circle) only the band
       // each opening's jambs and soffit, from the band (or a window's tympanum, set back) to the wall's back; e: the
       // edges at ya and yb, outline and holes, the stone between them in pairs: (e0, e1) solid, (e1, e2) open...
       const ea = [-wa, ...holes(s, ya).flat(), wa], eb = [-wb, ...holes(s, yb).flat(), wb], last = ea.length - 1;
@@ -137,7 +144,7 @@ function openingSlice(r, y0, o) {
         const ka = ya < s.lights[0].ySpring ? SILL : TYMPANUM, kb = yb <= s.lights[0].ySpring ? SILL : TYMPANUM;
         for (let j = 0; j < last; j += 2) lit.quad(P(ea[j], ya, zP), P(ea[j + 1], ya, zP), P(eb[j + 1], yb, zP), P(eb[j], yb, zP), ka, ka, kb, kb);
       }
-      const bA = shade(ya, 1, BACK), bB = shade(yb, 1, BACK), lA = shade(ya, 0.2, SHADE_CHEEK), lB = shade(yb, 0.2, SHADE_CHEEK);
+      const bA = s.glass ? glassAt(s, ya) : shade(ya, 1, BACK), bB = s.glass ? glassAt(s, yb) : shade(yb, 1, BACK), lA = shade(ya, 0.2, SHADE_CHEEK), lB = shade(yb, 0.2, SHADE_CHEEK);
       const rA = shade(ya, 0.2, LIT_CHEEK), rB = shade(yb, 0.2, LIT_CHEEK), t = -tWall + 0.004;
       dark.quad(P(-cW, ya, -roomD), P(cW, ya, -roomD), P(cW, yb, -roomD), P(-cW, yb, -roomD), bA, bA, bB, bB);
       dark.quad(P(-cW, ya, t), P(-cW, ya, -roomD), P(-cW, yb, -roomD), P(-cW, yb, t), lA, bA, bB, lB);
@@ -151,6 +158,7 @@ function openingSlice(r, y0, o) {
       if (Math.abs(yb - s.yApex) < 1e-3) dark.quad(P(-cW, yb, -tWall), P(-cW, yb, -roomD), P(cW, yb, -roomD), P(cW, yb, -tWall), DEEP);
     }
     if (s.mullion && ys.length) tracery(lit, P, s, a, c, tWall);
+    if (s.kind) pieceSlice(s, lit, dark, P, a, c, tWall, roomD); // the piece's own: voussoirs, petals, a flame, the moon...
   }
   return { lit: lit.geo(), dark: dark.geo() };
 }
@@ -199,8 +207,8 @@ function chamberBells(r, o) {
 export function createOpenings(scene) {
   const litMat = new MeshLambertMaterial({ vertexColors: true, side: DoubleSide, emissive: '#ffffff', emissiveIntensity: 0 });
   const lit = pool(scene, litMat), from = { value: 0 };
-  // only the motif settling now flashes, from its first vertex on (the pools are drawn unindexed): not the windows and
-  // the chamber settled before it
+  // only the floor settling now flashes, from its slice's first vertex on (the pools are drawn unindexed): not the half
+  // of its window settled a floor before (Marc, 27 Nov: flashing it again read as a blink)
   litMat.onBeforeCompile = sh => {
     sh.uniforms.uFlashFrom = from;
     sh.vertexShader = 'uniform float uFlashFrom;\nvarying float vFlash;\n' + sh.vertexShader.replace('#include <begin_vertex>',
@@ -210,9 +218,9 @@ export function createOpenings(scene) {
   };
   const dark = pool(scene, new MeshBasicMaterial({ vertexColors: true })), hands = createClockHands(scene);
   return {
-    // slab m (cut to its plan) wears course `key`, its glacis `batter`: its geometry is set
+    // slab m (cut to its plan) wears course `key`, its glacis `batter`, its ornaments `orn`: its geometry is set
     // and its faces returned (the flash of scene.js's turn fades on them)
-    dress(m, key, batter) {
+    dress(m, key, batter, orn) {
       const i = Math.round((m.position.y - FLOOR / 2) / FLOOR), y0 = i * FLOOR, odd = i % 2 === 1;
       const r = { x: m.position.x, z: m.position.z, w: m.scale.x, d: m.scale.z }, ch = chamberOf(key, i);
       const o = ch && { ...ch, y0: ch.lo * FLOOR };
@@ -223,7 +231,7 @@ export function createOpenings(scene) {
       const plain = `A/${o?.s.door || key === 'A/imposta' ? 'base' : 'fust'}-${odd ? 'senar' : 'parell'}`;
       const mats = courseMats(o || clock || course ? plain : key, edges, odd);
       if (key !== 'ferro') copeSlab(mats, r, batter, y0); // its top and glacis in coping stones
-      if ((o ?? clock ?? (COURSES[key] && { lo: i }))?.lo === i) from.value = lit.count; // the motif's first floor
+      from.value = lit.count;
       if (o) {
         const slice = o.s.door ? { lit: portalSlice(r, y0, o) } : openingSlice(r, y0, o);
         lit.add(slice.lit);
@@ -235,15 +243,14 @@ export function createOpenings(scene) {
         if (i === clock.lo + clock.n - 1) hands.show(clockFaces(r, clock)); // the hands with the last floor
       }
       if (course) lit.add(course(r, y0));
+      if (orn?.length) lit.add(ornamentSlice(r, y0, orn)); // lesenes, Lombard arches, gargoyles (ornaments.js)
       return mats;
     },
-    // what flashes with a floor wearing `key` besides its own faces: its opening's frames (and bells), the whole motif so
-    // far: a chamber's or a window's floors flash it together, which is what it settling reads as
+    // what flashes with a floor wearing `key` besides its own faces: its slice of the opening's frames (and bells)
     flashing: key => (clockOf(key, 0) ? [litMat, hands.mat] : chamberOf(key, 0) || COURSES[key] ? [litMat] : []),
-    // a wide terrace's balustrade (coping.js terraceRail), built as the floor over it settles wearing `key`: it flashes
-    // with that floor's turn → what flashes
-    terrace(g, key) {
-      if (!this.flashing(key).length) from.value = lit.count;
+    // a wide terrace's balustrade (coping.js terraceRail), built as the floor over it settles: it flashes with
+    // that floor's turn → what flashes
+    terrace(g) {
       lit.add(g);
       return [litMat];
     },

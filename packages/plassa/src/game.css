@@ -219,3 +219,17 @@ div.mula-load{display:flex;align-items:center;justify-content:center;container-t
 @keyframes logo-glint { 0%, 84% { translate: -73.4%; opacity: 0; animation-timing-function: cubic-bezier(.333, 0, .667, 1); } 92% { opacity: 1; } 100% { translate: 253.9%; opacity: 0; } }
 @keyframes logo-glint-in { 0%, 84% { translate: 26.15%; animation-timing-function: cubic-bezier(.333, 0, .667, 1); } 100% { translate: -90.5%; } }
 @media (prefers-reduced-motion: reduce) { .logo-glint { display: none; } }
+
+/* A discovery's moment (discovery.js), from Mulassa Alchemy's good mix: rays in the find's colour (--tint) behind its
+   art, its name and a line under it; it takes no tap. Its art flies out (.leaving) as the rest fades */
+.discovery { position: fixed; z-index: 3; left: 0; right: 0; height: 0; display: flex; justify-content: center; pointer-events: none; }
+.discovery-rays { position: absolute; left: 50%; top: 0; width: 64vmin; height: 64vmin; margin: -32vmin 0 0 -32vmin; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--tint) 50%, transparent), transparent 40%), repeating-conic-gradient(color-mix(in srgb, var(--tint) 30%, transparent) 0 12deg, transparent 12deg 24deg); -webkit-mask-image: radial-gradient(closest-side, #000 35%, #0000); mask-image: radial-gradient(closest-side, #000 35%, #0000); animation: discovery-spin 24s linear infinite, discovery-fade .35s ease-out both; will-change: transform; }
+.discovery-card { position: absolute; top: 0; translate: 0 -42px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.discovery-art { width: 84px; height: 84px; animation: discovery-rise .4s cubic-bezier(.2, 1.5, .5, 1) both; transition: translate .4s cubic-bezier(.5, 0, .75, 0), scale .4s cubic-bezier(.5, 0, .75, 0); }
+.discovery b { font: 800 24px/1.1 'Baloo 2', system-ui, sans-serif; color: #fff3d6; -webkit-text-stroke: 6px #2a1a10; paint-order: stroke fill; max-width: calc(100vw - 168px); animation: discovery-rise .4s .08s cubic-bezier(.2, 1.5, .5, 1) both; }
+.discovery span { font: 700 14px/1.2 'Baloo 2', system-ui, sans-serif; color: var(--tint); -webkit-text-stroke: 4px #2a1a10; paint-order: stroke fill; animation: discovery-fade .3s .2s both; }
+.discovery.leaving .discovery-rays, .discovery.leaving b, .discovery.leaving span { opacity: 0; transition: opacity .3s; }
+@keyframes discovery-spin { to { rotate: 1turn; } }
+@keyframes discovery-fade { from { opacity: 0; } }
+@keyframes discovery-rise { from { opacity: 0; transform: scale(.5); } }
+@media (prefers-reduced-motion: reduce) { .discovery-rays, .discovery-art, .discovery b, .discovery span { animation: none; } }

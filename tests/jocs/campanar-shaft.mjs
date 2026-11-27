@@ -8,18 +8,19 @@ import { terraceRail, TERRACE } from '../../src/jocs/games/campanar/coping.js';
 import { spireHeight } from '../../src/jocs/games/campanar/crown.js';
 
 const tower = widths => widths.map(w => ({ x: 0, z: 0, w, d: w }));
-const kind = k => (k === 'A/faixa' ? '=' : /espitllera/.test(k) ? 'e' : /mainell/.test(k) ? 'W' : /fust/.test(k) ? '.' : /arquets/.test(k) ? 'a' : k);
+const kind = k => (k === 'A/faixa' ? '=' : /espitllera/.test(k) ? 'e' : /candela/.test(k) ? 'c' : /ocul/.test(k) ? 'o' : /escala/.test(k) ? 's' : /mainell/.test(k) ? 'W' : /fust/.test(k) ? '.' : /arquets/.test(k) ? 'a' : k);
 const plan = (n, w) => Array(n).fill(SIZE * w);
 // a long thin body (too thin for a clock) over the wide foot, then floors too thin for bells: its bays, a slit in each
-// (the window ten floors apart is too wide for it), string courses BAY floors apart between plain floors
+// (the window ten floors apart is too wide for it), string courses BAY floors apart between plain floors; its first
+// opening is the Candela (ornament-plan.js F8: 8 floors survived that thin), once a run, then slits
 const thin = facade(tower([...plan(12, 1), ...plan(24, 0.35), ...plan(3, 0.15)])), body = thin.bodies.find(b => b.lo === 12);
 const shaft = thin.courses.slice(body.lo, thin.cap - 2).map(c => kind(c.key)).join('');
-assert.equal(shaft, '..ee..=..ee..=..ee...', 'the body\'s opening two floors over its foot, then bays');
+assert.equal(shaft, '..cc..=..ee..=..ee...', 'the body\'s opening two floors over its foot, then bays');
 assert.equal(shaft.lastIndexOf('=') - shaft.indexOf('='), BAY);
-// a long wide body with the clock: the bay over its arches stays plain, then bays again; windows ten floors apart, a
-// slit between them
+// a long wide body with the clock: the bay over its arches stays plain but for an oculus after four plain floors
+// (ornament-plan.js filler), then bays again; the first opening after the clock is its stair (A10), then a window
 const wide = facade(tower([...plan(9, 1), ...plan(36, 0.6), 0.1 * SIZE])).courses.map(c => kind(c.key)).join('');
-assert.match(wide, /a\.{6}=\.\.WW\.\.=\.\.ee\.\.=\.\.WW/, `the shaft over the clock: ${wide}`);
+assert.match(wide, /a\.{4}o\.=\.\.s{4}\.\.=\.\.WW/, `the shaft over the clock: ${wide}`);
 // a wide tower ending 21 to 30 floors up still gets its whole bell chamber (a run that ends while a bay's opening is half
 // laid gets a smaller one: nothing settled changes)
 for (let n = 21; n <= 30; n++) assert.equal(facade(tower(plan(n, 1))).courses.at(-5).key, 'A/campanes-04', `${n} floors: the whole chamber`);

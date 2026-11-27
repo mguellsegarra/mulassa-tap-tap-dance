@@ -30,24 +30,45 @@ const PORTALS = {
   A: portal({ hw: 0.3, ySill: 0, ySpring: 0.67, yApex: 1.21 }, 0.05, 2, 0.05, 0.16),
   C: portal({ hw: 0.216, ySill: 0, ySpring: 0.5, yApex: 0.79 }, 0.035, 2, 0.035, 0.12),
 };
-const SETS = { campanes: BELLS, mainell: WINDOW_SETS, espitllera: WINDOW_SETS, portal: PORTALS };
-const MOTIF = { campanes: 'bells', mainell: 'window', espitllera: 'window', portal: 'portal' };
+// the prototype's face pieces (ornament-plan.js), kind: what ornaments.js adds in the opening. A round opening (`round`)
+// is a circle from its sill to its apex. ocul: A1's oculus, its ring of voussoirs, on every wall (common); the rest
+// only on the camera's wall (faces): rosassa, A6's rose of six petals over three floors, lit glass behind it; candela,
+// F8's lancet with the Candela's flame in its glass; lluna, G6's window with the moon caught in its bars; escala, A10's
+// stair, a small window a floor climbing across the wall (off: its middle along the wall) to a landing with a railing
+const round = (R, yc, more) => ({ round: true, hw: R, ySill: yc - R, ySpring: yc - R, yApex: yc + R, sillH: 0, ...more });
+const CAM = [4]; // the wall the camera looks at most (+z, in the light)
+const OCULI = Object.fromEntries([['A', 0.15, 0.135], ['C', 0.12, 0.105], ['XS', 0.09, 0.075]]
+  .map(([k, R, t]) => [k, round(R, 0.24, { band: 0.006, tWall: t, roomD: t * 2.2, kind: 'ocul' })]));
+const ROSES = { A: round(0.46, 0.72, { band: 0.05, tWall: 0.135, roomD: 0.2, kind: 'rosassa', faces: CAM, glass: 'amber' }) };
+const lancet = (hw, more) => ({ hw, ySill: 0.1, ySpring: 0.62, yApex: 0.62 + hw * 1.6, band: 0.04, tWall: 0.09, roomD: 0.14, faces: CAM, ...more });
+const CANDELES = { A: lancet(0.16, { kind: 'candela', glass: 'flame' }), C: lancet(0.14, { kind: 'candela', glass: 'flame' }), XS: lancet(0.1, { kind: 'candela', glass: 'flame' }) };
+const LLUNES = { A: lancet(0.17, { kind: 'lluna', glass: 'night' }), C: lancet(0.15, { kind: 'lluna', glass: 'night' }), XS: lancet(0.11, { kind: 'lluna', glass: 'night' }) };
+// the stair's floors bottom up: three small square-headed windows, then the landing's
+const step = (off, hw, ySill, yApex, kind) => ({ off, hw, ySill, ySpring: yApex, yApex, band: 0.025, tWall: 0.1, roomD: 0.26, faces: CAM, kind });
+const STAIR = [step(-0.24, 0.07, 0.12, 0.34, 'escala'), step(-0.08, 0.07, 0.12, 0.34, 'escala'), step(0.08, 0.07, 0.12, 0.34, 'escala'),
+  step(0.16, 0.13, 0.08, 0.4, 'replà')]; // i18n-ok: a piece kind, never shown
+const SETS = { campanes: BELLS, mainell: WINDOW_SETS, espitllera: WINDOW_SETS, portal: PORTALS, ocul: OCULI, rosassa: ROSES, candela: CANDELES, lluna: LLUNES };
+const MOTIF = { campanes: 'bells', mainell: 'window', espitllera: 'window', portal: 'portal', ocul: 'ocul', rosassa: 'rosassa', candela: 'candela', lluna: 'lluna' };
 // the opening's piece floor i wears (facade.js: `<set>/campanes-0<n>`, a window's `<set>/mainell-0<n>`,
 // `XS/espitllera-0<n>` or `<set>/portal-0<n>`, n counting down from the motif's first floor; or XS's whole bell opening
 // on one floor) → its set's measures and that first floor; null for any other course
 export function chamberOf(key, i) {
   if (key === 'XS/campanes-master') return { s: BELLS.S1, lo: i };
-  const m = /^(A|C|XS)\/(campanes|mainell|espitllera|portal)-0(\d)$/.exec(key);
+  const m = /^(A|C|XS)\/(campanes|mainell|espitllera|portal|ocul|rosassa|candela|lluna|escala)-0(\d)$/.exec(key);
+  if (m?.[2] === 'escala') return { s: STAIR[LEN.escala[m[1]] - +m[3]], lo: i }; // each of its floors an opening of its own
   return m && { s: SETS[m[2]][m[1]], lo: i - (LEN[MOTIF[m[2]]][m[1]] - +m[3]) };
 }
 // a pointed arch's profile d inside s (outside, d < 0), concentric: the same two centres and springing
 export function inset(s, d) {
+  if (s.round) return round(s.hw - d, (s.ySill + s.yApex) / 2);
+  if (s.ySpring >= s.yApex) return { ...s, hw: s.hw - d, ySpring: s.yApex - d, yApex: s.yApex - d }; // a square head
   const H = s.yApex - s.ySpring, uc = (s.hw * s.hw - H * H) / (2 * s.hw), r = s.hw - uc - d;
   return { hw: s.hw - d, ySill: s.ySill, ySpring: s.ySpring, yApex: s.ySpring + Math.sqrt(Math.max(0, r * r - uc * uc)) };
 }
 // the opening's half width at height y over the motif's foot: straight jambs, then a two-centred pointed arch
 export function halfWidth(y, s) {
   if (y < s.ySill - 1e-5 || y > s.yApex + 1e-5) return 0;
+  if (s.round) { const dy = y - (s.ySill + s.yApex) / 2; return Math.sqrt(Math.max(0, s.hw * s.hw - dy * dy)); }
   if (y <= s.ySpring) return s.hw;
   const H = Math.max(0.001, s.yApex - s.ySpring), uc = (s.hw * s.hw - H * H) / (2 * s.hw), r = s.hw - uc;
   const dy = Math.min(H, y - s.ySpring);
@@ -68,7 +89,8 @@ export function cuts(s, a, b) {
   for (const l of [s, ...(s.lights ?? [])]) {
     const a0 = Math.max(a, l.ySpring), a1 = Math.min(b, l.yApex);
     for (const k of [l.ySill, l.ySpring, l.yApex]) if (k > a + 1e-4 && k < b - 1e-4) ys.add(k);
-    if (a1 > a0 + 1e-4) for (let k = 1; k < 16; k++) ys.add(a0 + (a1 - a0) * k / 16);
+    const n = l.round ? Math.ceil(64 * (l.yApex - l.ySill)) : 16; // a circle all round, about 1/64 a step
+    if (a1 > a0 + 1e-4) for (let k = 1; k < n; k++) ys.add(a0 + (a1 - a0) * k / n);
   }
   return [...ys].sort((p, q) => p - q);
 }
@@ -84,4 +106,8 @@ export function walls(r, y0) {
     { mat: 5, o: new Vector3(r.x, y0, r.z - hd), T: new Vector3(-1, 0, 0), N: new Vector3(0, 0, -1), u0: -hw, u1: hw },
   ];
 }
+// the walls an opening s pierces (all four, or its faces), each framed on the opening's middle (s.off along the wall);
+// off: how far, for the stone's UVs
+export const wallsOf = (r, y0, s) => walls(r, y0).filter(b => !s.faces || s.faces.includes(b.mat)).map(b => shift(b, s.off ?? 0));
+export const shift = (b, off) => ({ ...b, off, o: b.o.clone().addScaledVector(b.T, off), u0: b.u0 - off, u1: b.u1 - off });
 export const at = (b, u, y, n) => new Vector3(b.o.x + b.T.x * u + b.N.x * n, b.o.y + y, b.o.z + b.T.z * u + b.N.z * n);

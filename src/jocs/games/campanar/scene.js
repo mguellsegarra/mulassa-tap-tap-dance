@@ -6,7 +6,7 @@
 // in colour turn too, one wave up, and the crown grows on the top floor: the tiled pyramid and the small bronze cage.
 // The sky and the town are the page's background (style.css), so the canvas is transparent.
 import { WebGLRenderer, Scene, PerspectiveCamera, HemisphereLight, DirectionalLight, Mesh, Group, MeshLambertMaterial,
-  Vector3 } from 'three';
+  Vector3, Box3 } from 'three';
 import { SIZE, FLOOR } from './rules.js';
 import { colorOf } from './palette.js';
 import { createFacade } from './facade.js';
@@ -18,7 +18,7 @@ import { sameCampanarPlan } from './bodies.js';
 import { createFall } from './fall.js';
 import { skySettings, skyPan } from './sky.js';
 import { createTowerTurn } from './turn.js';
-import { endShot, stepEndShot, widenEndShot } from './end-camera.js';
+import { endShot, stepEndShot, widenEndShot, zoomEndShot, panEndShot } from './end-camera.js';
 import { createClouds } from './clouds-astra.js';
 import { createStars } from './stars-fable.js';
 import { STACK_TRY, STACK_LENS, STACK_ZOOM } from './stack.js';
@@ -31,7 +31,8 @@ const ZOOM = +new URLSearchParams(location.search).get('zoom') || (STACK_TRY ? S
 const VIEW = new Vector3(2.3, 2.3, 2.3).multiplyScalar(SIZE * ZOOM); // the camera's offset from the top
 const easeOut = t => 1 - (1 - t) ** 3;
 
-export function createScene(canvas) {
+// found(ids): ornaments completed as a floor turns to stone, or as the spire grows (ornament-plan.js)
+export function createScene(canvas, { found = () => {} } = {}) {
   const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
   renderer.setClearColor(0, 0);
   const scene = new Scene();
@@ -98,13 +99,13 @@ export function createScene(canvas) {
   const openings = createOpenings(scene); // what a settled floor wears: the bell chamber's openings and bells (openings.js)
 
   // a placed slab turns to stone (or, already stone, to another course): a white flash fading out, a small swell
-  function turn(m, key, batter) {
-    const was = m.userData.stone, id = idOf(key, m, batter);
+  function turn(m, key, batter, orn) {
+    const was = m.userData.stone, id = idOf(key, m, batter, orn);
     if (was === id) return [];
     if (was) m.geometry.dispose();
     m.userData.stone = id;
     for (const x of [m.material].flat()) x.dispose();
-    const mats = m.material = openings.dress(m, key, batter); // its geometry and faces, the bell chamber's pierced
+    const mats = m.material = openings.dress(m, key, batter, orn); // its geometry and faces, the bell chamber's pierced
     const glow = [...mats, ...openings.flashing(key)];
     fx.push({ m, tick: t => { // a white flash fading into the stone, and a small swell
       const k = Math.min(1, t / 0.35);
@@ -116,13 +117,14 @@ export function createScene(canvas) {
     return glow; // what flashes: pieces built with it join in
   }
   // what a slab wears: its course, its plan (its body's) and its batter
-  const idOf = (key, m, b) => `${key}|${m.position.x},${m.position.z},${m.scale.x},${m.scale.z}|${b ? [b.x, b.z, b.w, b.d] : ''}`;
+  const idOf = (key, m, b, orn) => `${key}|${m.position.x},${m.position.z},${m.scale.x},${m.scale.z}|${b ? [b.x, b.z, b.w, b.d] : ''}|${orn ?? ''}`;
   const built = () => slabs.map(m => m.userData.built);
   // a slab takes its settled course: cut to its body's plan, then turned
   function settleSlab(m, c, r) {
     m.scale.set(r.w, m.scale.y, r.d);
     m.position.set(r.x, m.position.y, r.z);
-    const glow = turn(m, c.key, c.batter);
+    const glow = turn(m, c.key, c.batter, c.orn);
+    if (c.found?.length) found(c.found);
     // the floors still in colour that will wear this body's plan, or the next one's it slopes in to, take it now: no
     // colour over narrower stone
     for (const [j, p] of c.ahead ?? []) {
@@ -135,9 +137,10 @@ export function createScene(canvas) {
     const under = slabs[slabs.indexOf(m) - 1]?.userData.settled, y = m.position.y - FLOOR / 2;
     setCopingInner(slabs[slabs.indexOf(m) - 1] ?? base, r); // and the shadow at this wall's foot on its top
     const rail = under && !under.batter && terraceRail(under.rect, r, y), w = under && !under.batter && !rail && makeWeathering(under.rect, r, y, FLOOR * 0.6);
-    if (rail) glow.push(...openings.terrace(rail, c.key));
+    if (rail) glow.push(...openings.terrace(rail));
     if (w) weather.add(w);
   }
+  const freeHalf = () => innerHeight * (1 - lifted[0] - lifted[1]) / 2; // the half height of the view the tower is framed in (px)
   const gone = m => { scene.remove(m); for (const x of [m.material].flat()) x.dispose(); if (m.userData.stone) m.geometry.dispose(); };
 
   function resize() {
@@ -196,7 +199,7 @@ export function createScene(canvas) {
       while (turning.length) turning.shift()(); // the floors still waiting turn now, before the wave
       const { courses, rects, cap } = plan.finish(built()); // the floors still in colour settle; the top is laid
       const steps = slabs.map((m, i) => [m, courses[i], rects[i]])
-        .filter(([m, c, r]) => c.key !== 'agulla' && m.userData.stone !== idOf(c.key, { position: r, scale: { x: r.w, z: r.d } }, c.batter));
+        .filter(([m, c, r]) => c.key !== 'agulla' && m.userData.stone !== idOf(c.key, { position: r, scale: { x: r.w, z: r.d } }, c.batter, c.orn));
       const gap = Math.min(70, 1200 / Math.max(1, steps.length));
       steps.forEach(([m, c, r], i) => setTimeout(() => { if (m.parent) { settleSlab(m, c, r); each(i); } }, 350 + i * gap));
       const rect = rects[rects.length - 1] ?? { x: 0, z: 0, w: SIZE, d: SIZE };
@@ -211,6 +214,7 @@ export function createScene(canvas) {
           parts.push(spire.g, makePinnacles(parapet, tops[cap]));
           if (slope) crown.add(slope);
         } else parts.push(buildCampanarHead(parapet, tops[cap] ?? 0), makePinnacles(parapet, tops[cap]));
+        found([thin ? 'D1' : 'coberta', 'creu', 'pinacles']); // the spire's crockets and rings or the tiled head, its cross, the pinnacles (collection.js)
         crown.add(...parts);
         scene.add(crown);
         done();
@@ -218,7 +222,7 @@ export function createScene(canvas) {
           const k = Math.min(1, t / 0.45), s = k < 1 ? 1 + 0.25 * Math.sin(Math.PI * k) * (1 - k) * 2 - (1 - k) ** 3 : 1;
           for (const x of parts) x.scale.set(1, Math.max(0.01, s), 1);
           if (k === 1) { // the cuts have settled; only the uncovered tops and the four walls can show
-            if (outro) widenEndShot(outro); // grown: the camera eases out to the whole tower (end-camera.js)
+            if (outro) widenEndShot(outro, new Box3().setFromObject(crown).max.y); // grown: out to the whole tower (end-camera.js)
             for (let i = 0; i <= cap; i++) {
               const geo = slabs[i].geometry;
               const covered = i < cap && sameCampanarPlan(courses[i].batter ?? rects[i], rects[i + 1]);
@@ -247,8 +251,12 @@ export function createScene(canvas) {
     // the end: the camera eases to the top, close, then back until the whole tower fits (end-camera.js); per device
     // (sky.js), the share of its height kept over the aim, and its lens
     pullOut() {
-      outro = endShot(camY, aimY, half => Math.max(1, half / Math.tan(camera.fov * Math.PI / 360) / VIEW.length()), skySettings());
+      outro = endShot(camY, aimY, half => Math.max(1, half / Math.tan(camera.fov * Math.PI / 360) / VIEW.length()), skySettings(),
+        matchMedia('(prefers-reduced-motion: reduce)').matches);
     },
+    // the player's zoom on the whole tower, by times closer round the screen's y (px); along: a drag of dy px down
+    zoom(by, y) { if (outro) zoomEndShot(outro, by, (innerHeight * (1 + lifted[0] - lifted[1]) / 2 - y) / freeHalf()); },
+    along(dy) { if (outro) panEndShot(outro, dy / freeHalf()); },
     // keep the top and bottom shares of the screen clear: the whole tower is framed in the space between
     lift(top, bottom) { lift = [top, bottom]; },
     aside(share) { aside = share; },
@@ -279,7 +287,7 @@ export function createScene(canvas) {
       // near a quarter of the way in, not 0.1: the clocks' and windows' millimetres off the wall stop blinking from afar
       if (Math.abs(camera.near - across / 4) > camera.near * 0.01) { camera.near = across / 4; camera.updateProjectionMatrix(); }
       freeLook.place(camera, across, VIEW.y * k * tilt, camY, dt);
-      camera.lookAt(0, camY - 0.3 * SIZE, 0);
+      camera.lookAt(0, camY - 0.3 * SIZE * (outro?.f ?? 1), 0); // the end's zoom scales the whole view round this point
       clouds.tick(dt, camY, skyPan(freeLook.spin)); // the end's turn: the sky's round, its clouds and stars go with it
       stars.tick(dt, camY, skyPan(freeLook.spin));
       renderer.render(scene, camera);

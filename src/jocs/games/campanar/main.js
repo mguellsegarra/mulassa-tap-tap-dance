@@ -3,10 +3,12 @@
 // shortcut: the words are provisional Catalan in the page, no locales/ nor Sentry/update watch yet; add them when it leaves POC.
 import { createScene } from './scene.js';
 import { paintSky, tuneSky, climbSky } from './sky.js';
-import { SIZE, FLOOR, RANGE as GAME_RANGE, REAL, drop, speedAt, metresOf } from './rules.js';
+import { SIZE, FLOOR, RANGE as GAME_RANGE, drop, speedAt, metresOf } from './rules.js';
 import { STACK_TRY, STACK_REACH, STACK_PERFECT } from './stack.js';
 const RANGE = STACK_TRY ? SIZE * STACK_REACH : GAME_RANGE; // ?stack: the slab comes from farther (stack.js)
 import { SFX, unlock, uiBlip } from './audio.js';
+import { createBands } from './bands.js';
+import { VITRINA, vitrinaDrop, vitrinaFound } from './vitrina.js';
 import { RITME, ritmeStart, ritmeStop, ritmeHold, ritmeTick, ritmeAt, ritmeSpeed, ritmeDrop, ritmeLog, ritmeAudio } from './ritme.js';
 import { deviceBest } from '#plassa/best.js';
 import { haptic } from '#plassa/haptics.js';
@@ -24,7 +26,8 @@ import '#plassa/focus.js';
 
 const $ = id => document.getElementById(id);
 const lines = bootLines($('boot-line'));
-const scene = createScene($('game'));
+const bands = createBands($('marks'), $('finds'), { remember: !VITRINA }); // the side bands (bands.js)
+const scene = createScene($('game'), { found: ids => { bands.found(ids); if (VITRINA) vitrinaFound(ids); } });
 const record = deviceBest('campanar-best');
 
 let ready = false; // the run's first slab is out
@@ -33,6 +36,7 @@ let mode = 'menu', n = 1, top, y, axis, pos, dir, score, streak, lastTap = 0;
 function show(id) { for (const c of ['menu', 'pause-menu', 'end-menu']) $(c).hidden = c !== id; }
 function hud() {
   $('score').textContent = `${metresOf(score)} m`; // the same metres as the end sheet
+  bands.height(metresOf(score));
 }
 
 // ?ritme: the slab is where the audio clock says, at page time ms (now when left out)
@@ -55,6 +59,8 @@ function start() {
   mode = 'play';
   show(null);
   $('hud').hidden = false;
+  bands.reset();
+  bands.show(true);
   hud();
   ready = false; // the first slab once the tower has risen into place
   if (RITME) ritmeStart();
@@ -66,18 +72,17 @@ function end() {
   $('hud').hidden = true; // nothing over the campanar as it comes whole
   scene.pullOut();
   scene.turnAll(SFX.turn, SFX.bell); // the top becomes the campanar's, a bubble each course, a bell for the crown
+  bands.browse(true); // its finds can be looked at again (bands.js)
   const rose = record.raiseBest(score);
-  // the run's height in metres, against the real campanar's (provisional words: Codex writes the final copy)
+  // the run's height in metres (provisional words: Codex writes the final copy)
   const m = metresOf(score);
   $('end-title').textContent = 'El teu campanar fa'; // i18n-ok: POC, provisional words until Codex writes the catalogue
   $('end-score').textContent = `${m} m`;
-  $('end-real').textContent = m >= REAL ? `Més alt que el de Valls (${REAL} m)!` : `El de Valls en fa ${REAL}`; // i18n-ok: POC, provisional words until Codex writes the catalogue
   $('end-best').textContent = rose ? 'Nou rècord!' : `Rècord: ${metresOf(record.best())} m`; // i18n-ok: POC, provisional words until Codex writes the catalogue
   $('end-best').classList.toggle('record', rose);
   // first the whole campanar, crown and all, its metres on top; a tap then brings the sheet, the tower framed above it
   $('banner-m').textContent = `${m} m`;
   $('banner-best').hidden = true;
-  $('banner-real').textContent = $('end-real').textContent;
   $('end-banner').hidden = false;
   scene.lift(($('end-banner').getBoundingClientRect().bottom + 12) / innerHeight, 0); // the words on top kept clear
   looking = performance.now() + 2200;
@@ -91,6 +96,7 @@ function toSheet() {
   $('banner-best').textContent = $('end-best').textContent; // the record joins the metres on top
   $('banner-best').hidden = false;
   show('end-menu'); // only its buttons (style.css): no card over the tower
+  bands.show(false);
   scene.lift(($('end-banner').getBoundingClientRect().bottom + 12) / innerHeight, Math.min(0.4, ($('end-menu').querySelector('.sheet-actions').offsetHeight + 40) / innerHeight));
 }
 
@@ -133,6 +139,7 @@ function toMenu() {
   mode = 'menu';
   ritmeStop();
   $('hud').hidden = true;
+  bands.show(false);
   scene.reset();
   looking = 0;
   $('end-banner').hidden = $('end-tap').hidden = true;
@@ -141,29 +148,51 @@ function toMenu() {
 }
 const homeAside = () => scene.home(mode === 'menu'); // the home is the sky and the logo; the tower rises on Juga
 
+// the end: one finger turns the campanar round (scene.look) or, zoomed in, moves along it (scene.along), whichever its
+// first 8 px went; two pinch the zoom (scene.zoom); a tap without moving goes on to the sheet, never after a pinch
+const endFingers = new Map(); // pointerId → { x, y, t }: the end's fingers down
+let endGesture = null; // since the first finger: { sx, sy, moved, axis, pinched }
 $('game').addEventListener('pointerdown', e => {
   if (e.button) return;
   if (mode !== 'over') return tap(e.timeStamp);
-  // the end: a drag turns the campanar round (scene.look), a tap without moving goes on to the sheet
-  const c = $('game'), from = { x: e.clientX, y: e.clientY, t: e.timeStamp, moved: 0 };
-  c.setPointerCapture(e.pointerId);
-  const move = m => {
-    const dx = m.clientX - from.x, dy = m.clientY - from.y;
-    from.moved += Math.abs(dx) + Math.abs(dy);
-    scene.look(dx, dy, (m.timeStamp - from.t) / 1000);
-    Object.assign(from, { x: m.clientX, y: m.clientY, t: m.timeStamp });
-  };
-  const up = u => {
-    c.removeEventListener('pointermove', move);
-    c.removeEventListener('pointerup', up);
-    c.removeEventListener('pointercancel', up);
-    scene.letGo(!matchMedia('(prefers-reduced-motion: reduce)').matches && u.type === 'pointerup');
-    if (from.moved < 8 && u.type === 'pointerup') toSheet();
-  };
-  c.addEventListener('pointermove', move);
-  c.addEventListener('pointerup', up);
-  c.addEventListener('pointercancel', up);
+  $('game').setPointerCapture(e.pointerId);
+  if (!endFingers.size) endGesture = { sx: e.clientX, sy: e.clientY, moved: 0, axis: null, pinched: false };
+  endFingers.set(e.pointerId, { x: e.clientX, y: e.clientY, t: e.timeStamp });
+  if (endFingers.size > 1) { endGesture.pinched = true; scene.letGo(false); }
 });
+const endSpread = () => { const [a, b] = endFingers.values(); return [Math.hypot(a.x - b.x, a.y - b.y), (a.y + b.y) / 2]; };
+$('game').addEventListener('pointermove', m => {
+  const f = endFingers.get(m.pointerId), g = endGesture;
+  if (!f || mode !== 'over') return;
+  const dx = m.clientX - f.x, dy = m.clientY - f.y, dt = (m.timeStamp - f.t) / 1000;
+  if (endFingers.size > 1) { // the pinch: its spread zooms round its middle, its middle moving drags the tower along
+    const [d0, y0] = endSpread();
+    Object.assign(f, { x: m.clientX, y: m.clientY, t: m.timeStamp });
+    const [d1, y1] = endSpread();
+    scene.along(y1 - y0);
+    if (d0 > 0) scene.zoom(d1 / d0, y1);
+    return;
+  }
+  Object.assign(f, { x: m.clientX, y: m.clientY, t: m.timeStamp });
+  g.moved += Math.abs(dx) + Math.abs(dy);
+  if (!g.axis && g.moved >= 8) g.axis = Math.abs(m.clientX - g.sx) >= Math.abs(m.clientY - g.sy) ? 'x' : 'y';
+  if (g.axis === 'x') scene.look(dx, 0, dt);
+  else if (g.axis === 'y') scene.along(dy);
+});
+const endUp = u => {
+  if (!endFingers.delete(u.pointerId) || endFingers.size) return; // a pinch's first finger up: the other carries on
+  const g = endGesture, done = u.type === 'pointerup';
+  scene.letGo(!matchMedia('(prefers-reduced-motion: reduce)').matches && done && g.axis === 'x' && !g.pinched);
+  if (g.moved < 8 && !g.pinched && done) toSheet();
+};
+$('game').addEventListener('pointerup', endUp);
+$('game').addEventListener('pointercancel', endUp);
+// the wheel, a trackpad's two fingers or its pinch (ctrlKey, finer steps) zoom round the cursor
+$('game').addEventListener('wheel', w => {
+  if (mode !== 'over') return;
+  w.preventDefault();
+  scene.zoom(Math.exp(-w.deltaY * (w.deltaMode ? 16 : 1) * (w.ctrlKey ? 0.01 : 0.002)), w.clientY);
+}, { passive: false });
 addEventListener('keydown', e => {
   if ((e.key === ' ' || e.key === 'Enter') && (mode === 'play' || looking)) { e.preventDefault(); if (looking) toSheet(); else tap(e.timeStamp); }
   if (e.key === 'Escape') back();
@@ -205,6 +234,7 @@ function frame(now) {
   // ?ritme: the music runs ahead of the clock, and the slab comes out on its downbeat (ritme.js)
   const out = mode === 'play' && (!RITME || ritmeTick(!ready && scene.settled));
   if (mode === 'play' && !ready && scene.settled && out) { ready = true; spawn(); }
+  if (VITRINA && mode === 'play' && ready && now - lastTap > 320) { pos = top[axis] + vitrinaDrop(n, top) * SIZE; tap(); } // it plays itself
   if (mode === 'play' && ready) {
     if (RITME) ritmeSlide();
     else {

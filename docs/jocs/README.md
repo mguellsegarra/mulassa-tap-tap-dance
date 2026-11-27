@@ -104,7 +104,8 @@ The how-to is `.agents/skills/mulassacat-minijoc/SKILL.md`; the wider account an
   + `render-quality.js`, `orientation.js`.
 - A home's music from a rendered file: `menu-music.js` (Pop's home and the selector).
 - Words and state: `music-pref.js` (Plassa's one music switch, mulassa.cat's `menu-music` key), `words.js` (a game's `locales/*.json`) over `locale.js` (the saved language), `storage.js`, `best.js`,
-  `haptics.js`, `countdown.js`.
+  `haptics.js`, `countdown.js`, `discovery.js` (a find's moment, from Alchemy's good mix: rays, its art and name, then it
+  flies into the game's place for it; takes no tap; its look is game.css's `.discovery`).
 - Boards: `board.js` (a board's row and a player's name with its badge, as mulassa.cat's; the game brings the art, the words
   and its own cells) over `badge-tip.js`.
 - Settings and account (one account everywhere, inventari §2): `sheets.css` (the modal sheets' corner × and scrolling body,

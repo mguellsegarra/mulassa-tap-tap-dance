@@ -21,9 +21,9 @@ const COPING = [[0.37, 0], [0.37, 0.03], [0.405, 0.04], [0.43, 0.065], [0.48, 0.
 
 // a row of blind round arches on wall b from y0 up, about `pitch` apart between the quoins: posts and a ring of
 // voussoirs proud of the wall, the wall inside each arch in shade; ys the springing, depth how proud; none within `gap`
-// of the middle
-function arcade(t, P, b, y0, ys, pitch, depth, gap = 0) {
-  const span = b.u1 - b.u0 - 2 * quoinOf(b.u1 - b.u0) - 0.02, n = Math.max(1, Math.floor(span / pitch)), p = span / n;
+// of the middle; edge: how far in from the wall's ends it starts (the quoins)
+export function arcade(t, P, b, y0, ys, pitch, depth, gap = 0, edge = quoinOf(b.u1 - b.u0)) {
+  const span = b.u1 - b.u0 - 2 * edge - 0.02, n = Math.max(1, Math.floor(span / pitch)), p = span / n;
   const ro = p * 0.47, ri = ro * 0.68;
   for (let k = 0; k < n; k++) {
     const u = (b.u0 + b.u1) / 2 + (k + 0.5 - n / 2) * p, arc = [];
@@ -91,6 +91,16 @@ const course = draw => (r, y0) => {
 export const COURSES = {
   'A/imposta': course((t, P, b) => moulding(t, P, b, IMPOSTA, IMPOSTA_K)),
   'A/faixa': course((t, P, b) => moulding(t, P, b, FAIXA, FAIXA_K)),
+  // B2's sawtooth frieze (ornament-plan.js): triangles in relief point up and point down between two fillets
+  'A/serra': course((t, P, b) => {
+    moulding(t, P, b, [[0.14, 0], [0.14, 0.02], [0.17, 0.02], [0.17, 0]], [STEP, SILL, ARCH]);
+    moulding(t, P, b, [[0.31, 0], [0.31, 0.02], [0.34, 0.02], [0.34, 0]], [STEP, SILL, ARCH]);
+    const edge = quoinOf(b.u1 - b.u0) + 0.02, n = Math.max(2, Math.floor((b.u1 - b.u0 - 2 * edge) / 0.09)), p = (b.u1 - b.u0 - 2 * edge) / n;
+    for (let k = 0; k < 2 * n - 1; k++) {
+      const u = b.u0 + edge + (k + 1) * p / 2, up = k % 2 === 0;
+      prism(t, P, [[u - p / 2, up ? 0.18 : 0.3, true], [u + p / 2, up ? 0.18 : 0.3, true], [u, up ? 0.3 : 0.18, true]], 0, 0.022, -9, 9, up ? ARCH : SILL, STEP);
+    }
+  }),
   'A/arquets': course((t, P, b) => {
     moulding(t, P, b, SILL_BAND, SILL_K);
     arcade(t, P, b, 0.13, 0.19, 0.25, 0.026);

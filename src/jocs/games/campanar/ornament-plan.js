@@ -1,0 +1,59 @@
+// The prototype's ornaments (Marc's «Prototip 10 peces», 27 Nov 2026; the study artifact TQx8MQL9j7LNf9WJYR2V9g):
+// what a shaft floor wears besides its course, decided once as it settles (facade.js) from what the player built and
+// nothing random: its height, a width kept, a perfect streak, a stretch survived in XS, the device's hour. Commons go
+// on all four walls; the rest on the camera's wall (openings.js CAM). Pure: no three, no DOM.
+import { SIZE } from './rules.js';
+
+const DEMO = typeof location !== 'undefined' && import.meta.env?.DEV && new URLSearchParams(location.search).has('vitrina'); // ?vitrina: all of them early
+// floors from which (1 floor = 1.77 m): the drain gargoyles from 74 m, the rose from 100 m, the moon from 350 m (300 m
+// by night); the rose wants width A kept ROSE_KEEP floors under it, the Mulassa a streak of STREAK perfects, the
+// Candela XS_RUN floors survived in XS; after FILLER_AFTER plain floors in a row, a one-floor piece
+export const FROM = DEMO ? { gargoyle: 8, rose: 16, moon: 44, moonNight: 44 } : { gargoyle: 42, rose: 57, moon: 198, moonNight: 170 };
+const ROSE_KEEP = 8, STREAK = 6, XS_RUN = 8, FILLER_AFTER = DEMO ? 2 : 4; // the study said 6: the shaft's windows and string courses rarely leave that many
+const A = 0.65, C = 0.4, XS = 0.22; // facade.js's width classes, as shares of the full side
+const shareOf = known => j => Math.min(known[j].w, known[j].d) / SIZE; // floor j's width, a share of the full side
+const night = () => { const h = new Date().getHours(); return h >= 21 || h < 7; };
+
+// one run's plan; known: the slabs as built, bottom up (facade.js)
+export function createOrnamentPlan(isNight = night()) {
+  const done = new Set();
+  let plain = 0, family = null; // plain floors in a row; the last face piece's family (no two in a row of one)
+  const run = (i, ok) => { let k = 0; for (let j = i; j >= 0 && ok(j); j--) k++; return k; };
+  const perfect = (known, j) => j > 0 && known[j].w === known[j - 1].w; // a perfect drop keeps the side whole (rules.js)
+  const best = (known, ok) => { let k = 0, most = 0; for (let j = 0; j < known.length; j++) most = Math.max(most, k = ok(j) ? k + 1 : 0); return most; };
+  const earned = {
+    F1: known => best(known, j => perfect(known, j)) >= STREAK,
+    F8: known => { const share = shareOf(known); return best(known, j => share(j) >= XS && share(j) < C) >= XS_RUN; },
+  };
+  const once = id => done.add(id); // truthy
+  return {
+    // a window's slot at floor i (its set, room(n): n floors there flat and clear, clock: the clock is laid) → the piece
+    // that takes it { name, set, id } or null for the plain window. Rarest first; each once a run
+    slot(i, known, set, room, clock) {
+      const share = shareOf(known), s = share(i);
+      if (!done.has('G6') && i >= (isNight ? FROM.moonNight : FROM.moon) && room(2)) return once('G6') && { name: 'lluna', set, id: 'G6' };
+      if (!done.has('A6') && i >= FROM.rose && set === 'A' && run(i - 1, j => share(j) >= A) >= ROSE_KEEP && room(3)) return once('A6') && { name: 'rosassa', set, id: 'A6' };
+      if (!done.has('F8') && earned.F8(known) && room(2)) return once('F8') && { name: 'candela', set, id: 'F8' };
+      if (!done.has('A10') && clock && s >= C && set !== 'XS' && room(4)) return once('A10') && { name: 'escala', set, id: 'A10' };
+      return null;
+    },
+    // a string course's floor i: its corner pieces, the Mulassa's gargoyle once it is earned (A or C), the drain
+    // gargoyles from FROM.gargoyle; one set a bay (a string course comes every BAY floors)
+    corners(i, known) {
+      const share = shareOf(known), out = [];
+      if (!done.has('F1') && earned.F1(known) && share(i) >= C && once('F1')) out.push('F1');
+      if (i >= FROM.gargoyle) out.push('B5');
+      return out;
+    },
+    // a plain floor after FILLER_AFTER of them: the oculus or the sawtooth frieze, never the last face piece's family
+    filler: () => (plain >= FILLER_AFTER ? (family === 'A' ? 'serra' : 'ocul') : null),
+    // floor i has settled wearing key: count the plain floors, remember the face piece's family
+    after(key) {
+      plain = /fust/.test(key) ? plain + 1 : 0;
+      if (/\/(ocul|rosassa|escala)/.test(key)) family = 'A';
+      else if (/\/serra/.test(key)) family = 'B';
+      else if (/\/(candela)/.test(key)) family = 'F';
+      else if (/\/(lluna)/.test(key)) family = 'G';
+    },
+  };
+}

@@ -21,7 +21,7 @@ import { clockOf, clockSlice, clockFaces, createClockHands } from './clock.js';
 import { COURSES } from './mouldings.js';
 
 const DEEP = new Color('#110a06'), BACK = new Color('#160d08'), LIT_CHEEK = new Color('#2b1a10'), SHADE_CHEEK = new Color('#1c110b');
-const DARK_SILL = new Color('#3e2718'), TYMPANUM = new Color('#c08d55'); // the tympanum a shade under the stone: it reads from above
+const DARK_SILL = new Color('#3e2718'), TYMPANUM = ARCH; // the tympanum a shade under the sill: the old #c08d55 read as a brown stain
 const clamp01 = v => Math.max(0, Math.min(1, v));
 
 // the wall's thickness, the niche's depth and half width, how deep the bell hangs (A's behind the mullion), the height

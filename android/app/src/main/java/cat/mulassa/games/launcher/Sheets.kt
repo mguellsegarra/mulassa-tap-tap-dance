@@ -6,6 +6,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
@@ -82,7 +85,7 @@ fun Sheets(model: Launcher, version: String, sky: Sky, open: Boolean, dismiss: (
                 Box(Modifier.weight(1f).semantics { heading() }, contentAlignment = Alignment.Center) { Label(stringResource(R.string.html_accountTitle), Fonts.baloo, 22.dp, Palette.cream) }
                 RoundButton(CLOSE, stringResource(R.string.html_attr_close), onClick = close)
             }
-            SheetBody { Profile(); Settings(model, version) }
+            SheetBody { Profile(model); Settings(model, version) }
         }
     } }
 }
@@ -108,7 +111,7 @@ fun Avatar(size: Dp) = Box(Modifier.size(size).drawBehind {
 
 // ---- Perfil. Counters wait for the native session and records (native-shell.md, phases 3-4): a dash until then.
 @Composable
-private fun Profile() {
+private fun Profile(model: Launcher) {
     Row(Modifier.fillMaxWidth().card().padding(M), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         Avatar(56.dp)
         Label("—", Fonts.baloo, 22.dp, Palette.cream)
@@ -119,6 +122,20 @@ private fun Profile() {
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Label("—", Fonts.baloo, 26.dp, Palette.yellowHi)
                 Label(label, Fonts.balooBold, 13.dp, Palette.cream.copy(alpha = 0.7f))
+            }
+        }
+    }
+    // each game's record, «—» until the native records come (as iOS's sheet)
+    val played = model.games.filter { !it.soon }
+    if (played.isNotEmpty()) Column(Modifier.fillMaxWidth().card()) {
+        played.forEachIndexed { k, game ->
+            Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).drawBehind { if (k > 0) drawRect(Palette.cream.copy(alpha = 0.1f), size = Size(size.width, density)) }
+                .padding(horizontal = M).semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.size(32.dp).clip(RoundedCornerShape(9.dp)).background(game.tint)) {
+                    model.images[game.id]?.let { Image(it, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop) }
+                }
+                Box(Modifier.weight(1f)) { Label(game.title, Fonts.baloo, 17.dp, Palette.cream) }
+                Label("—", Fonts.baloo, 17.dp, Palette.yellowHi)
             }
         }
     }

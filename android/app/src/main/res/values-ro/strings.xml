@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Curând</string>
     <string name="launcher_settings_rateApp">Evaluează aplicația</string>
     <string name="launcher_settings_shareApp">Distribuie aplicația</string>
-    <string name="html_settings_aria">Setări</string>
-    <string name="html_profile_aria">Profil</string>
     <string name="html_attr_close">Închide</string>
     <string name="html_accountTitle">Profil</string>
-    <string name="html_settingsTitle">Setări</string>
-    <string name="pop_rank_cardRuns">Jocuri</string>
     <string name="pop_music">Muzică</string>
     <string name="ui_lang_title">Limbă</string>
     <string name="html_common_privacy">Confidențialitate</string>

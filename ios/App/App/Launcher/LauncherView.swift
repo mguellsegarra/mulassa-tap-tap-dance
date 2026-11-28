@@ -10,10 +10,12 @@ typealias ViewState = SwiftUI.State
     @Published private(set) var games: [Game] = []
     func number(_ game: Game) -> Int? { games.firstIndex(of: game).map { $0 + 1 } } // engraved in its grip
     @Published private(set) var images: [String: UIImage] = [:]
-    @Published private(set) var icon: UIImage?
+    @Published private(set) var planes: [String: Planes] = [:] // a game's art in two planes, when its catalogue entry has them
     @Published var arrived = false // the splash is lifting: the cartridges come in
     var play: (Game, CGPoint, _ covered: @escaping () -> Void) -> Void = { _, _, _ in } // `covered`: the iris is over the launcher
     private var root: URL?
+
+    private func take(_ got: [String: Planes], from dir: URL) { if root == dir { planes = got } } // not a bundle since replaced
 
     // Read again on every return from a game: a live update may have switched the bundle meanwhile.
     func load(root: URL) {
@@ -21,8 +23,17 @@ typealias ViewState = SwiftUI.State
         if found.root == self.root && found.games == games { return }
         self.root = found.root
         games = found.games
+        // the planes are decoded off the main thread and come in when ready: until then a cartridge wears its flat art
+        planes = [:]
+        let games = found.games, dir = found.root
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let got = Dictionary(games.compactMap { g -> (String, Planes)? in
+                guard let b = g.layers?.back, let f = g.layers?.front, let back = WebBundle.image(b, in: dir), let front = WebBundle.image(f, in: dir) else { return nil }
+                return (g.id, Planes(back: back, front: front))
+            }) { a, _ in a }
+            await self?.take(got, from: dir)
+        }
         images = Dictionary(found.games.compactMap { g in WebBundle.image(g.art, in: found.root).map { (g.id, $0) } }) { a, _ in a }
-        icon = WebBundle.image("/apple-touch-icon.png", in: found.root)
     }
 }
 
@@ -49,6 +60,7 @@ struct LauncherRoot: View {
             .opacity(covered ? 0 : 1)
             .overlay { if let lifted { LiftView(model: model, lifted: lifted, covered: $covered) { self.lifted = nil; covered = false; FrameLog.end() } } }
             .sheet(isPresented: $account) { AccountSheet(model: model) }
+            .onChange(of: account, initial: true) { _, open in Tilt.shared.set(sheet: open) } // and under the account sheet
         }
         .environment(\.locale, Locale(identifier: language.code))
         .id(language.code) // a new language redraws every string, the ones read outside Text included
@@ -96,22 +108,19 @@ private struct Home: View {
         }
         .background(SkyBackground(sky: sky))
         .onAppear { Tilt.shared.set(home: lifted == nil) }
-        .onChange(of: lifted) { _, out in Tilt.shared.set(home: out == nil) } // level under a lift
+        .onDisappear { Tilt.shared.set(home: false) }
+        .onChange(of: lifted) { _, out in Tilt.shared.set(home: out == nil) } // level, and the sensor off, under a lift
     }
 
     // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
     private func gap(_ g: GeometryProxy) -> (gap: CGFloat, scrolls: Bool) {
-        let u = (g.size.width - 3 * M) / 2 / Cartridge.size.width, rows = (model.games.count + 1) / 2
+        let cols = columns(g.size.width), u = (g.size.width - CGFloat(cols + 1) * M) / CGFloat(cols) / Cartridge.size.width
+        let rows = (model.games.count + cols - 1) / cols
         let top = g.safeAreaInsets.top + Faldo.below + Faldo.fringe + M // the grid's first row, under the Faldó
         return rowGap(view: g.safeAreaInsets.top + g.size.height + g.safeAreaInsets.bottom, bottom: g.safeAreaInsets.bottom, top: top, row: Cartridge.size.height * u, rows: rows)
     }
 }
 
-// Ronda 32-33, the owner: rows that all fit spread over the screen down to the home indicator, and the page does not
-// scroll; rows that overflow it («que la gent sàpiga que hi ha scroll») get a gap that grows from M up to 2M until the
-// screen's bottom edge cuts a row between 30 and 70 % of its height, as near the middle as it can (a thin sliver, or a
-// row cut at its very bottom, hides that the grid scrolls). `view`: the screen's height; `bottom`: the home indicator's.
-// Same rule on Android (LauncherScreens.kt).
 // The Faldó (header ronda 3, owner's pick C1): the Mulassa's cloth in granat, hung from the screen's top edge with soft
 // folds, a gold line and a dense gold fringe whose strands touch, so they read as hair without the sky showing through.
 // One static Canvas (no blur, no animation); the whole piece is drawn into one layer and shadowed once. It takes the taps
@@ -155,21 +164,28 @@ struct Faldo: View {
     }
 }
 
-func rowGap(view: CGFloat, bottom: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> (gap: CGFloat, scrolls: Bool) {
-    let room = view - bottom - M - top // down to the home indicator, with a margin
-    if CGFloat(rows) * row + CGFloat(max(rows - 1, 0)) * M <= room {
-        return (rows > 1 ? (room - CGFloat(rows) * row) / CGFloat(rows - 1) : M, false)
-    }
-    return (peek(view: view, top: top, row: row, rows: rows), true)
-}
+// How many cartridges a row: two on a phone, more on a wider window, so none grows past 240 pt (an iPad on its side showed
+// two giants and one row). Android's Rows.kt is the same rule.
+func columns(_ width: CGFloat) -> Int { max(2, Int(((width - M) / (240 + M)).rounded(.up))) }
 
-private func peek(view: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> CGFloat {
-    for i in stride(from: rows - 1, through: 1, by: -1) { // i rows above the cut one; the most first, so the gap stays small
-        let gap = { (f: CGFloat) in (view - top - f * row) / CGFloat(i) - row } // the gap that cuts row i at fraction f
-        let lo = max(gap(0.7), M), hi = min(gap(0.3), 2 * M)
-        if lo <= hi { return min(max(gap(0.5), lo), hi) }
+// The grid's gap between rows, and whether it scrolls (ronda 32-33, the owner). Rows that fit (down to the home indicator,
+// with a gap of half a margin at least) spread over the screen and the page stands still. Rows that overflow it («que la
+// gent sàpiga que hi ha scroll») get the gap, from M/2 to 2M, that makes the screen's bottom edge cut a row as near its
+// middle as it can: a thin sliver, or a row cut at its very bottom, hides that the grid scrolls. `view`: the screen's
+// height; `bottom`: the home indicator's; `top`: where the first row starts. Android's Rows.kt is the same rule, and its
+// RowsTest.kt holds the numbers.
+func rowGap(view: CGFloat, bottom: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> (gap: CGFloat, scrolls: Bool) {
+    guard rows > 1 else { return (M, top + CGFloat(rows) * row > view - bottom) }
+    let n = CGFloat(rows), room = view - bottom - M - top
+    // (spread, but never more than four margins apart: two rows on a tall iPad stood a screen away from each other)
+    if n * row + M / 2 * (n - 1) <= room { return (min((room - n * row) / (n - 1), 4 * M), false) }
+    var best = M, miss = CGFloat.infinity
+    for i in stride(from: rows - 1, through: 1, by: -1) { // i rows above the cut one; the most first: on a tie the gap stays small
+        let k = CGFloat(i), gap = min(max((view - top - row * 0.5) / k - row, M / 2), 2 * M) // would cut row i at its middle
+        let cut = (view - top - (row + gap) * k) / row // how much of row i shows
+        if cut > 0.05, cut < 0.95, abs(cut - 0.5) < miss { miss = abs(cut - 0.5); best = gap }
     }
-    return M
+    return (best, true)
 }
 
 // Every game, two a row; an odd count gets a filler cartridge in the lone last slot.
@@ -181,14 +197,14 @@ struct Cartridges: View {
     let lift: (Lifted) -> Void
 
     var body: some View {
-        let u = (width - 3 * M) / 2 / Cartridge.size.width
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: M), GridItem(.flexible(), spacing: M)], spacing: gap) {
+        let cols = columns(width), u = (width - CGFloat(cols + 1) * M) / CGFloat(cols) / Cartridge.size.width
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: M), count: cols), spacing: gap) {
             ForEach(Array(model.games.enumerated()), id: \.element.id) { k, game in
                 CartridgeCell(model: model, game: game, u: u, lift: lift).opacity(lifted == game.id ? 0 : 1) // its slot stays empty while it is out
                     .modifier(Arriving(k: k, arrived: model.arrived))
             }
-            if model.games.count % 2 == 1 {
-                Cartridge.filler(u: u).equatable().modifier(Leaning(u: u)).modifier(Arriving(k: model.games.count, arrived: model.arrived))
+            if model.games.count % cols != 0 { // a last row left short gets one filler
+                LeaningCartridge(cart: Cartridge.filler(u: u)).modifier(Arriving(k: model.games.count, arrived: model.arrived))
                     .accessibilityHidden(true)
             }
         }
@@ -203,12 +219,11 @@ struct CartridgeCell: View {
 
     var body: some View {
         GeometryReader { p in
-            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { Cartridge(game: game, number: model.number(game), image: model.images[game.id], u: u).equatable() }
+            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { LeaningCartridge(cart: Cartridge(game: game, number: model.number(game), image: model.images[game.id], planes: model.planes[game.id], u: u)) }
                 .buttonStyle(Squash(depth: 0.3 * u))
                 .accessibilityLabel(game.soon ? Text("ui.select.aviat") : Text(verbatim: game.title))
         }
         .frame(width: Cartridge.size.width * u, height: Cartridge.size.height * u)
-        .modifier(Leaning(u: u))
     }
 }
 

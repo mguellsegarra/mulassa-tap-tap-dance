@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Lèu</string>
     <string name="launcher_settings_rateApp">Valora era app</string>
     <string name="launcher_settings_shareApp">Compartís era app</string>
-    <string name="html_settings_aria">Configuracion</string>
-    <string name="html_profile_aria">Perfil</string>
     <string name="html_attr_close">Barra</string>
     <string name="html_accountTitle">Perfil</string>
-    <string name="html_settingsTitle">Configuracion</string>
-    <string name="pop_rank_cardRuns">Partides</string>
     <string name="pop_music">Musica</string>
     <string name="ui_lang_title">Lengua</string>
     <string name="html_common_privacy">Privadança</string>

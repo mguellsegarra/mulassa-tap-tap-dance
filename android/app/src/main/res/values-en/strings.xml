@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Soon</string>
     <string name="launcher_settings_rateApp">Rate the app</string>
     <string name="launcher_settings_shareApp">Share the app</string>
-    <string name="html_settings_aria">Settings</string>
-    <string name="html_profile_aria">Profile</string>
     <string name="html_attr_close">Close</string>
     <string name="html_accountTitle">Profile</string>
-    <string name="html_settingsTitle">Settings</string>
-    <string name="pop_rank_cardRuns">Games</string>
     <string name="pop_music">Music</string>
     <string name="ui_lang_title">Language</string>
     <string name="html_common_privacy">Privacy</string>

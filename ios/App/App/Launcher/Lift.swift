@@ -45,15 +45,16 @@ struct LiftView: View {
             let button: CGFloat = 56, gap: CGFloat = 28
             // the room between the status bar and the console's shoulders
             let con = Console(width: w, height: h), top = g.safeAreaInsets.top, bottom = con.top // over the console's shoulders
-            let width = min(w * 0.68, (bottom - top - gap - button - 32) * Cartridge.size.width / Cartridge.size.height)
+            let width = max(48, min(w * 0.68, (bottom - top - gap - button - 32) * Cartridge.size.width / Cartridge.size.height)) // never nothing, in the shortest window
             let u = width / Cartridge.size.width, height = Cartridge.size.height * u
             let centre = CGPoint(x: w / 2, y: (top + bottom) / 2 - (gap + button) / 2) // the cartridge and «Juga» together, centred
             let k = lifted.from.width / width
-            let face = faces.get(game, model.number(game), model.images[game.id], u: u, scale: scale)
+            let face = faces.get(game, model.number(game), model.images[game.id], model.planes[game.id], u: u, scale: scale)
             // seated: the bay's width, its top level with the shoulders'; the cartridge's centre moves 1:1 with the finger
             let seatScale = con.seatWidth / width, seatY = con.seatTop + height * seatScale / 2
             // it narrows to the bay's width on the way to the shoulders' top (edge), so it enters between them
-            let bay = Bay(travel: seatY - centre.y, edge: (con.lip - height * seatScale / 2 - centre.y) / (seatY - centre.y),
+            // (the edge kept inside the travel whatever the window's shape: outside it the cartridge scaled the wrong way)
+            let bay = Bay(travel: seatY - centre.y, edge: min(0.95, max(0.05, (con.lip - height * seatScale / 2 - centre.y) / (seatY - centre.y))),
                           iris: CGPoint(x: w / 2, y: (con.seatTop + con.panel) / 2))
             let shown = still || ready, below = h - con.top // the console waits under the bottom edge
             ZStack(alignment: .topLeading) {
@@ -179,6 +180,7 @@ struct LiftView: View {
         busy = true
         if still {
             withAnimation(.linear(duration: 0.15)) { faded = true } completion: {
+                guard !leaving else { return } // closed meanwhile: it is on its way back to its slot
                 p = 1; dx = 0
                 withAnimation(.linear(duration: 0.15)) { faded = false } completion: { seat(bay) }
             }
@@ -208,6 +210,7 @@ struct LiftView: View {
         busy = true
         FrameLog.mark("refuse")
         Feel.no()
+        if still { return back() } // no swings with Reduce Motion: the buzz says no
         withAnimation(.linear(duration: 0.38)) { shake = 1 } completion: { shake = 0; back() }
     }
 
@@ -227,16 +230,17 @@ private struct Bay {
 // The two faces as bitmaps, drawn once per lift (the first body, before anything moves) at the lifted size.
 @MainActor private final class Faces {
     private var key: (String, CGFloat)?
+    private var art: UIImage?, fore: UIImage?
     private(set) var front = UIImage(), back = UIImage()
-    func get(_ game: Game, _ number: Int?, _ image: UIImage?, u: CGFloat, scale: CGFloat) -> Faces {
-        guard key?.0 != game.id || key?.1 != u else { return self }
-        key = (game.id, u)
+    func get(_ game: Game, _ number: Int?, _ image: UIImage?, _ planes: Planes?, u: CGFloat, scale: CGFloat) -> Faces {
+        guard key?.0 != game.id || key?.1 != u || art !== image || fore !== planes?.front else { return self } // new art after a live update draws again
+        key = (game.id, u); art = image; fore = planes?.front
         func draw(_ v: some View) -> UIImage {
             let r = ImageRenderer(content: v)
             r.scale = scale
             return r.uiImage ?? UIImage()
         }
-        front = draw(Cartridge(game: game, number: number, image: image, u: u))
+        front = draw(Cartridge(game: game, number: number, image: image, planes: planes, u: u))
         back = draw(Cartridge.back(color: game.tint, u: u))
         return self
     }

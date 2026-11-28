@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Скоро</string>
     <string name="launcher_settings_rateApp">Оценить приложение</string>
     <string name="launcher_settings_shareApp">Поделиться приложением</string>
-    <string name="html_settings_aria">Настройки</string>
-    <string name="html_profile_aria">Профиль</string>
     <string name="html_attr_close">Закрыть</string>
     <string name="html_accountTitle">Профиль</string>
-    <string name="html_settingsTitle">Настройки</string>
-    <string name="pop_rank_cardRuns">Игры</string>
     <string name="pop_music">Музыка</string>
     <string name="ui_lang_title">Язык</string>
     <string name="html_common_privacy">Конфиденциальность</string>

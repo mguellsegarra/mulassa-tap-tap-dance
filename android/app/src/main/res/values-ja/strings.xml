@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">近日</string>
     <string name="launcher_settings_rateApp">アプリを評価</string>
     <string name="launcher_settings_shareApp">アプリを共有</string>
-    <string name="html_settings_aria">設定</string>
-    <string name="html_profile_aria">プロフィール</string>
     <string name="html_attr_close">閉じる</string>
     <string name="html_accountTitle">プロフィール</string>
-    <string name="html_settingsTitle">設定</string>
-    <string name="pop_rank_cardRuns">プレイ数</string>
     <string name="pop_music">音楽</string>
     <string name="ui_lang_title">言語</string>
     <string name="html_common_privacy">プライバシー</string>

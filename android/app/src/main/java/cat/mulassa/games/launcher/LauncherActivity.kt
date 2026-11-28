@@ -72,27 +72,30 @@ class LauncherActivity : ComponentActivity() {
     }
 
     // the phone's lean (Motion.kt), only while the launcher is in front: a game on top pauses it
-    override fun onResume() { super.onResume(); Tilt.start(this) }
-    override fun onPause() { Tilt.stop(this); super.onPause() }
+    @Suppress("DEPRECATION") // defaultDisplay: the activity's own display, on every API level the app runs on
+    override fun onResume() { super.onResume(); Tilt.start(this) { windowManager.defaultDisplay.rotation } }
+    override fun onPause() { Tilt.stop(); super.onPause() }
+
+    private var back: Offset? = null // where the reverse iris closes: the grid slot of the cartridge that opened the game
 
     private fun play(game: Game, from: Offset) {
         val path = game.path
         if (busy || game.soon || !WebBundle.isEntryPath(path)) return
         busy = true
-        model.played(game.id)
         iris.game = game
         iris.image = model.images[game.id]
         iris.origin = from // the window is edge to edge: window coordinates are the screen's
         lifecycleScope.launch(AndroidUiDispatcher.Main) { // the animations need its frame clock
             bars(false) // the iris covers the whole screen, as on iOS
             iris.forward()
-            // under the covering iris: the game comes back to the grid, so the reverse iris closes on the cartridge's slot
-            model.pick?.let { iris.origin = it.at }
+            // the game comes back to the grid: the reverse iris closes on the cartridge's slot. Kept apart until then: moving
+            // the open iris's centre now made its rays jump across the screen on the hand-over frame
+            back = model.pick?.at ?: from
             model.pick = null
             this@LauncherActivity.game.launch(
                 Intent(this@LauncherActivity, MainActivity::class.java)
                     .putExtra(GameSession.PATH, path).putExtra(GameSession.ID, game.id)
-                    .putExtra(GameSession.X, iris.origin.x).putExtra(GameSession.Y, iris.origin.y),
+                    .putExtra(GameSession.X, from.x).putExtra(GameSession.Y, from.y),
                 ActivityOptionsCompat.makeCustomAnimation(this@LauncherActivity, 0, 0),
             )
         }
@@ -109,6 +112,7 @@ class LauncherActivity : ComponentActivity() {
             iris.image = model.images[game.id]
             iris.origin = Offset(data?.getFloatExtra(GameSession.X, 0f) ?: 0f, data?.getFloatExtra(GameSession.Y, 0f) ?: 0f)
         }
+        back?.let { iris.origin = it; back = null }
         busy = true
         lifecycleScope.launch(AndroidUiDispatcher.Main) {
             bars(false)

@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">即将登场</string>
     <string name="launcher_settings_rateApp">为应用评分</string>
     <string name="launcher_settings_shareApp">分享应用</string>
-    <string name="html_settings_aria">设置</string>
-    <string name="html_profile_aria">档案</string>
     <string name="html_attr_close">关闭</string>
     <string name="html_accountTitle">档案</string>
-    <string name="html_settingsTitle">设置</string>
-    <string name="pop_rank_cardRuns">局数</string>
     <string name="pop_music">音乐</string>
     <string name="ui_lang_title">语言</string>
     <string name="html_common_privacy">隐私</string>

@@ -28,9 +28,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asComposePath
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
@@ -53,7 +51,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.core.content.res.ResourcesCompat
 import cat.mulassa.games.R
 
@@ -68,16 +65,30 @@ const val CART_H = 12.42f
 // The art window and the name, in u, as the label's rect in the prototype.
 private const val ART_X = 1.21f; private const val ART_Y = 2.35f; private const val ART_W = 7.9f; private const val ART_H = 5.35f
 
+class Planes(val back: ImageBitmap, val front: ImageBitmap)
+
 @Composable
-fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Boolean, placeholder: Boolean = false, number: Int? = null) {
-    // one offscreen layer: a scroll only moves it
-    Box(Modifier.size(u * CART_W, u * CART_H).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
+// `lean` (the grid: Motion.kt's Tilt, read in layer and draw blocks only) slides the art behind the label's window and
+// moves the varnish's light; without it both rest.
+fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Boolean, placeholder: Boolean = false, number: Int? = null, planes: Planes? = null, lean: (() -> Offset)? = null) {
+    // The shell is one offscreen layer: a scroll, a turn or a lean only moves it. The art and the varnish are layers of
+    // their own over it, so a sensor sample moves them and redraws the varnish's one gradient, never the shell (the
+    // review of ronda 37 found the whole cartridge re-rasterised 50 times a second).
+    Box(Modifier.size(u * CART_W, u * CART_H)) {
         val measure = rememberTextMeasurer()
-        Canvas(Modifier.size(u * CART_W, u * CART_H)) { scale(u.toPx(), Offset.Zero) { body(color) }; if (number != null) engraved(color, "#%02d".format(number), measure, u.toPx()) }
-        // the label's gloss, drawn over the art: a soft light from the top left corner
-        val art = Modifier.offset(u * ART_X, u * ART_Y).size(u * ART_W, u * ART_H).clip(RoundedCornerShape(u * 0.3f)).drawWithContent {
-            drawContent()
-            drawRect(Brush.linearGradient(0f to Color.White.copy(alpha = 0.26f), 0.46f to Color.Transparent, start = Offset.Zero, end = Offset(size.width, size.height)))
+        Canvas(Modifier.size(u * CART_W, u * CART_H).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) { scale(u.toPx(), Offset.Zero) { body(color) }; if (number != null) engraved(color, "#%02d".format(number), measure, u.toPx()) }
+        // The label's window (ronda 37, Astra's recipe): over the art, the cavity's shade along the top and left (built once)
+        val art = Modifier.offset(u * ART_X, u * ART_Y).size(u * ART_W, u * ART_H).clip(RoundedCornerShape(u * 0.3f)).drawWithCache {
+            val k = u.toPx()
+            val top = Brush.verticalGradient(0f to Color.Black.copy(alpha = 0.3f), 1f to Color.Transparent, endY = 0.5f * k)
+            val left = Brush.horizontalGradient(0f to Color.Black.copy(alpha = 0.2f), 1f to Color.Transparent, endX = 0.4f * k)
+            onDrawWithContent { drawContent(); drawRect(top, size = Size(size.width, 0.5f * k)); drawRect(left, size = Size(0.4f * k, size.height)) }
+        }
+        // the varnish, in its own layer: one soft warm light that moves across the glass and grows a little with the lean
+        val varnish = Modifier.offset(u * ART_X, u * ART_Y).size(u * ART_W, u * ART_H).clip(RoundedCornerShape(u * 0.3f)).graphicsLayer {}.drawBehind {
+            val v = lean?.invoke() ?: Offset.Zero; val far = minOf(1f, v.getDistance())
+            val at = Offset(size.width * (0.24f + 0.6f * v.x), size.height * (0.12f + 0.44f * v.y))
+            drawRect(Brush.radialGradient(0f to Palette.cream.copy(alpha = 0.1f + 0.16f * far), 1f to Color.Transparent, center = at, radius = size.width * 0.75f))
         }
         if (placeholder) {
             Box(art.background(hex("#59402e")), contentAlignment = Alignment.Center) {
@@ -86,12 +97,28 @@ fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Bo
         } else {
             Box(art.background(color)) {
                 // object-position 50% 22%: the art's subject sits high
-                if (image != null) Image(image, null, Modifier.matchParentSize(), contentScale = ContentScale.Crop, alignment = BiasAlignment(0f, -0.56f))
+                if (planes != null) { // the backdrop goes one way and the figure the other: 6.8 dp apart on a 160 dp cartridge
+                    Image(planes.back, null, Modifier.matchParentSize().graphicsLayer {
+                        val v = lean?.invoke() ?: Offset.Zero
+                        scaleX = 1.12f; scaleY = 1.12f; translationX = -v.x * 0.29f * u.toPx(); translationY = -v.y * 0.2f * u.toPx()
+                    }, contentScale = ContentScale.Crop, alignment = BiasAlignment(0f, -0.56f))
+                    Image(planes.front, null, Modifier.matchParentSize().graphicsLayer {
+                        val v = lean?.invoke() ?: Offset.Zero
+                        // 5 % bigger: a figure cut by its picture's edge never shows that edge as it slides
+                        scaleX = 1.05f; scaleY = 1.05f; translationX = v.x * 0.15f * u.toPx(); translationY = v.y * 0.11f * u.toPx()
+                    }, contentScale = ContentScale.Crop, alignment = BiasAlignment(0f, -0.56f))
+                }
+                // 12 % bigger than its window, so it can slide under the frame without showing an edge
+                else if (image != null) Image(image, null, Modifier.matchParentSize().graphicsLayer {
+                    val v = lean?.invoke() ?: Offset.Zero
+                    scaleX = 1.12f; scaleY = 1.12f; translationX = -v.x * 0.4f * u.toPx(); translationY = -v.y * 0.28f * u.toPx()
+                }, contentScale = ContentScale.Crop, alignment = BiasAlignment(0f, -0.56f))
                 if (locked) Box(Modifier.matchParentSize().background(hex("#1c110a").copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
                     Box(Modifier.size(u * 2.4f).drawBehind { lock() })
                 }
             }
         }
+        Box(varnish)
         val px = with(LocalDensity.current) { (u * 1.4f).toSp() }
         Box(Modifier.offset(u * ART_X, u * 7.92f).size(u * ART_W, u * 1.73f), contentAlignment = Alignment.Center) {
             // the name always fits its label: a long one shrinks rather than gets cut
@@ -109,7 +136,7 @@ fun Cartridge(color: Color, name: String, image: ImageBitmap?, u: Dp, locked: Bo
 @Composable
 fun CartridgeBack(color: Color, u: Dp) {
     val badge = ImageBitmap.imageResource(R.drawable.mulassa_badge) // a mask: its ink takes each colour
-    // its own offscreen layer, like the face's: drawn (and its text measured) once, then only moved
+    // its own offscreen layer, like the face's: drawn once, then only moved
     Canvas(Modifier.size(u * CART_W, u * CART_H).graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }) {
         val k = u.toPx()
         val dark = color.mix(hex("#1d100a"), 0.62f); val ink = color.mix(hex("#1d100a"), 0.55f); val lit = color.mix(Color.White, 0.45f)
@@ -128,24 +155,20 @@ fun CartridgeBack(color: Color, u: Dp) {
     }
 }
 
-// The grid's shine (ronda 36): a band of light across the face, inside its outline, that crosses it as the phone leans
-// (x, y: Motion.kt's Tilt) and is gone when it is level. Drawn over the cartridge's own layer: that is not drawn again.
-fun DrawScope.shine(u: Float, x: Float, y: Float) {
-    val lean = minOf(1f, kotlin.math.hypot(x, y))
-    if (lean < 0.02f) return
-    val at = Offset(CART_W / 2 + x * CART_W * 0.7f, CART_H / 2 - y * CART_H * 0.5f); val half = Offset(CART_W * 0.4f, CART_H * 0.4f)
+// The slab's far edge (ronda 37): the face's outline again, behind it, half way and all the way back, on the side the lean
+// uncovers (x, y: Motion.kt's Tilt). Drawn in the cartridge's own turning layer.
+fun DrawScope.cartridgeEdge(u: Float, c: Color, x: Float, y: Float) {
+    val dark = c.mix(hex("#1d100a"), 0.62f); val dx = -0.206f * x; val dy = -0.168f * y
     scale(u, Offset.Zero) {
-        clipPath(SHAPE) {
-            drawRect(Brush.linearGradient(0f to Color.Transparent, 0.5f to Color.White.copy(alpha = 0.34f * minOf(1f, lean * 2.2f)), 1f to Color.Transparent,
-                start = at - half, end = at + half), size = Size(CART_W, CART_H), blendMode = BlendMode.Plus)
-        }
+        translate(dx, dy + 0.34f) { drawPath(SHAPE, dark) }; translate(dx, dy) { drawPath(SHAPE, dark) }
+        translate(dx / 2, dy / 2) { drawPath(SHAPE, dark) }
     }
 }
 
 // Its shadow on the sky, under the grid's cartridges: two soft steps, no blur; it slides against the lean.
 fun DrawScope.cartridgeShadow(u: Float, x: Float, y: Float, alpha: Float) {
     if (alpha <= 0f) return
-    translate(-x * 0.3f * u, y * 0.25f * u) {
+    translate(-x * 0.245f * u, -y * 0.245f * u) {
         scale(u, Offset.Zero) {
             drawRoundRect(Color.Black.copy(alpha = 0.1f * alpha), Offset(0.36f, 1.25f), Size(9.6f, 11.6f), CornerRadius(0.6f))
             drawRoundRect(Color.Black.copy(alpha = 0.07f * alpha), Offset(0.06f, 1.35f), Size(10.2f, 11.9f), CornerRadius(0.8f))

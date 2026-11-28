@@ -10,7 +10,9 @@ struct Console {
     let s: CGFloat // points per canvas px
     let top: CGFloat // the canvas's top, in screen points
     let mid: CGFloat
-    init(width w: CGFloat, height h: CGFloat) { s = w / 1212.6; top = h - 582 * s; mid = w / 2 }
+    // by the width on a phone; on a wide, short window (an iPad on its side, Split View) by the height, so it never takes
+    // more than 38 % of it and the cartridge keeps its room above
+    init(width w: CGFloat, height h: CGFloat) { s = min(w / 1212.6, h * 0.38 / 582); top = h - 582 * s; mid = w / 2 }
     var size: CGSize { CGSize(width: 1064 * s, height: 620 * s) }
     var lip: CGFloat { top + 17 * s } // the shoulders' top: where the cartridge first touches
     var seatWidth: CGFloat { 626 * s } // the bay's width, a hair under the gap between the shoulders

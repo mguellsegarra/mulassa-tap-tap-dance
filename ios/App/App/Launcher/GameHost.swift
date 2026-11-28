@@ -34,7 +34,9 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     // the first frame (a subview of this hosting view ends up under SwiftUI's content).
     override func viewIsAppearing(_ animated: Bool) {
         super.viewIsAppearing(animated)
-        guard !Splash.shown, let scene = view.window?.windowScene else { return }
+        // (a launcher made again in the same process shows no splash: its cartridges are there at once)
+        if Splash.shown { model.arrived = true; return }
+        guard let scene = view.window?.windowScene else { return }
         Splash.shown = true
         let w = UIWindow(windowScene: scene)
         w.windowLevel = .normal + 2 // over the iris's window too

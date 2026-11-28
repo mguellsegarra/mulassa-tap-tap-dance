@@ -26,7 +26,6 @@ import com.getcapacitor.PluginMethod
 import com.getcapacitor.WebViewListener
 import com.getcapacitor.annotation.CapacitorPlugin
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.snapshotFlow
@@ -56,7 +55,8 @@ class GameSession(private val activity: BridgeActivity) {
         // Ronda 34: on a WebView that reads the window's insets itself (140+, with the pages' viewport-fit=cover), Capacitor's
         // SystemBars padded the decor view until the page had loaded and then dropped the padding: the page and the iris over
         // it jumped by the bars' height. Untouched insets from the first frame instead; older WebViews keep the padding.
-        if (webViewMajor() >= 140) (plugins.optJSONObject("SystemBars") ?: JSONObject().also { plugins.put("SystemBars", it) }).put("insetsHandling", "disable")
+        // the plugin's own hint that the pages are viewport-fit=cover: no padding from the first frame, its keyboard handling kept
+        if (webViewMajor() >= 140) (plugins.optJSONObject("SystemBars") ?: JSONObject().also { plugins.put("SystemBars", it) }).put("initialViewportFitValueHint", "cover")
         val dir = File(activity.noBackupFilesDir, "bridge").apply { mkdirs() }
         File(dir, "capacitor.config.json").writeText(json.toString())
         return CapConfig.loadFromFile(activity, dir.path)

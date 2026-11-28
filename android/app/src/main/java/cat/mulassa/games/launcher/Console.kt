@@ -28,6 +28,7 @@ object Bay {
     const val W = 1064f; const val H = 1478f
     const val SHOW = 0.4845f // of the screen's width, the console's part above the bottom edge (D4-open)
     const val WIDTH = 0.3267f / 393 * W // the canvas's width, of the screen's (D4-open: 393 wide)
+    const val SHOWN = SHOW / WIDTH * W // the part above the bottom edge, in canvas pixels (582.8)
     const val U = 615f / CART_W // the seated cartridge's u
     const val SEAT = 17f // the seated cartridge's top: level with the shoulders' (the owner: nothing sticks out)
     const val MOUTH = 341f // the panel's top edge, where the cartridge slides under it

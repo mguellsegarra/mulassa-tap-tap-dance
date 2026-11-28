@@ -58,6 +58,11 @@ import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import cat.mulassa.games.R
@@ -88,7 +93,7 @@ private const val DEPTH = 0.075f // the side's depth, of the face's width
 // sharp. Both faces are composed once, each on its own offscreen layer: the motion only moves cached layers (transforms and
 // alpha), nothing is measured or redrawn per frame but the thin side.
 @Composable
-fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1D>, ready: () -> Boolean, done: () -> Unit) {
+fun Picked(model: Launcher, pick: Pick, sounds: ConsoleSounds, veil: Animatable<Float, AnimationVector1D>, ready: () -> Boolean, done: () -> Unit) {
     val ctx = LocalContext.current; val res = ctx.contentResolver
     val still = remember { Settings.Global.getFloat(res, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
     val lift = remember { Animatable(0f) }
@@ -105,7 +110,6 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
     var armed by remember { mutableStateOf(false) } // the intro is over: the drag and «Juga» may start
     val busy = remember { booleanArrayOf(false, false) } // [refusing or settling, seating: nothing takes it back]
     var job by remember { mutableStateOf<Job?>(null) } // the one animation on p
-    val sounds = rememberConsoleSounds(model)
     // Ronda 23's evidence, debuggable builds only: the first animated frame's time of the pick and of the return (the
     // clock of framestats' IntendedVsync), so `dumpsys gfxinfo framestats` rows line up with them
     val debug = remember { ctx.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 }
@@ -148,15 +152,18 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
         armed = true
     }
     BackHandler { close() }
+    val name = if (pick.game.soon) stringResource(R.string.ui_select_aviat) else stringResource(R.string.launcher_play, pick.game.title)
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val d = LocalDensity.current
         val above = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding() // the bar's room even while the iris hides it: no jump on return
         // the console: its canvas k dp a pixel, its top `shown` from the top once up
-        val k = maxWidth * Bay.WIDTH / Bay.W; val cw = k * Bay.W; val ch = k * Bay.H
-        val shown = maxHeight - maxWidth * Bay.SHOW
+        // by the width on a phone; on a wide, short window (a tablet on its side, a split screen) by the height, so it
+        // never takes more than 38 % of it and the cartridge keeps its room above
+        val k = minOf(maxWidth * Bay.WIDTH / Bay.W, maxHeight * 0.38f / Bay.SHOWN); val cw = k * Bay.W; val ch = k * Bay.H
+        val shown = maxHeight - k * Bay.SHOWN
         val extra = if (pick.game.soon) 0.dp else BUTTON_GAP + BUTTON_H
         // two thirds of the width (owner, ronda 19), smaller only if it would not fit above the console
-        val big = minOf(maxWidth * 2 / 3, (shown - above - M * 2 - extra) * (CART_W / CART_H)) / CART_W
+        val big = maxOf(minOf(maxWidth * 2 / 3, (shown - above - M * 2 - extra) * (CART_W / CART_H)), 48.dp) / CART_W // never nothing, in the shortest window
         val w = big * CART_W; val h = big * CART_H
         val block = h + extra
         // centred between the status bar and the navigation bar, as before the console; clear of it
@@ -168,7 +175,8 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
         val seat = with(d) { Offset(((maxWidth - cw) / 2 + k * Bay.CENTRE).toPx(), (shown + k * (Bay.SEAT + Bay.U * CART_H / 2)).toPx()) }
         val travel = seat.y - to.y
         val half = with(d) { (h / 2).toPx() }; val mouth = with(d) { (shown + k * Bay.MOUTH).toPx() }
-        val pc = (mouth - to.y - half) / (travel + half * (q - 1)) // the cartridge's bottom edge reaches the panel
+        // the cartridge's bottom edge reaches the panel; kept inside the travel whatever the window's shape
+        val pc = ((mouth - to.y - half) / (travel + half * (q - 1))).coerceIn(0.05f, 0.95f)
         val iris = with(d) { Offset(seat.x, ((shown * 2 + k * (Bay.SEAT + Bay.MOUTH))/ 2).toPx()) } // its part left outside
         fun scaleNow() = (1 + (q - 1) * p)
         fun move(v: Float) {
@@ -207,12 +215,13 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
             }
         }
         Box(Modifier.fillMaxSize().graphicsLayer { alpha = veil.value }.drawBehind { drawRect(hex("#0a0603").copy(alpha = 0.6f)) }
-            .clickable(null, null) { close() })
+            .clearAndSetSemantics {}.clickable(null, null) { close() }) // back closes it for TalkBack; the cartridge is its one target
         // the console's layers move together: slid up from below the edge, or faded in with reduced motion
         fun console(m: Modifier) = m.offset((maxWidth - cw) / 2, shown).graphicsLayer {
             translationY = if (still) 0f else (1 - rise.value) * (maxHeight - shown + 8.dp).toPx(); alpha = if (still) rise.value else 1f
         }
-        ConsoleShell(cw, ch, console(Modifier).clickable(null, null) { if (armed) insert() })
+        fun push() { if (!armed || busy[0]) return; if (pick.game.soon) { move(pc); refuse() } else insert() } // a tap: in alone, or refused
+        ConsoleShell(cw, ch, console(Modifier).clearAndSetSemantics {}.clickable(null, null) { push() })
         val side = remember { Side() }
         fun Density.lift() = side.apply {
             val e = lift.value; val s = pick.u / big
@@ -232,8 +241,9 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
             lift()
             translationX = side.tx + side.shift(size.width / 2, size.height / 2); translationY = side.ty
             scaleX = side.scale; scaleY = side.scale; rotationY = side.turn; cameraDistance = side.camera; alpha = fade.value
-        }.clickable(null, null) {}.draggable(drag, Orientation.Vertical, enabled = armed,
-            onDragStarted = { job?.cancel(); scope.launch { mark("drag") } },
+        }.semantics { contentDescription = name; role = Role.Button }.clickable(null, null) { push() }.draggable(drag, Orientation.Vertical, enabled = armed,
+            // a drag takes the cartridge from a spring back, never from its seating: that job opens the game
+            onDragStarted = { if (!busy[1]) job?.cancel(); scope.launch { mark("drag") } },
             onDragStopped = { velocity ->
                 if (!busy[0]) {
                     val fling = velocity * scaleNow() > 1200 * d.density // dp/s, downwards
@@ -242,7 +252,7 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
             })) {
             fun back() = cos(Math.toRadians(turn.value.toDouble())) < 0
             Box(Modifier.graphicsLayer { alpha = if (back()) 0f else 1f }) {
-                Cartridge(pick.game.tint, pick.game.short ?: stringResource(R.string.ui_select_aviat), model.images[pick.game.id], big, locked = pick.game.soon, number = model.number(pick.game))
+                Cartridge(pick.game.tint, pick.game.short ?: stringResource(R.string.ui_select_aviat), model.images[pick.game.id], big, locked = pick.game.soon, number = model.number(pick.game), planes = model.planes[pick.game.id])
             }
             // the turn mirrors the back: flipped once more, its engraving reads left to right
             Box(Modifier.graphicsLayer { alpha = if (back()) 1f else 0f; scaleX = -1f }) { CartridgeBack(pick.game.tint, big) }
@@ -251,7 +261,7 @@ fun Picked(model: Launcher, pick: Pick, veil: Animatable<Float, AnimationVector1
         // «Juga» runs the same insertion; it fades as the cartridge is dragged away from it
         if (!pick.game.soon) Box(Modifier.offset((maxWidth - w) / 2 + big * 0.16f, top + h + BUTTON_GAP).size(w - big * 0.32f, BUTTON_H)
             .graphicsLayer { alpha = juga.value * (1 - p * 5).coerceAtLeast(0f) }) {
-            PlayButton(stringResource(R.string.jocs_menu_play)) { if (armed) insert() }
+            PlayButton(stringResource(R.string.jocs_menu_play)) { push() }
         }
     }
 }

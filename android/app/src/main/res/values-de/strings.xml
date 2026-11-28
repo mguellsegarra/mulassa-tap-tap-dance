@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Bald</string>
     <string name="launcher_settings_rateApp">App bewerten</string>
     <string name="launcher_settings_shareApp">App teilen</string>
-    <string name="html_settings_aria">Einstellungen</string>
-    <string name="html_profile_aria">Profil</string>
     <string name="html_attr_close">Zu</string>
     <string name="html_accountTitle">Profil</string>
-    <string name="html_settingsTitle">Einstellungen</string>
-    <string name="pop_rank_cardRuns">Spiele</string>
     <string name="pop_music">Musik</string>
     <string name="ui_lang_title">Sprache</string>
     <string name="html_common_privacy">Datenschutz</string>

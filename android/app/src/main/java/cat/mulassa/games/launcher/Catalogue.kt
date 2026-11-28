@@ -27,6 +27,7 @@ data class Game(
     val ink: String,
     val category: String?,
     val art: String,
+    val back: String? = null, val front: String? = null, // the art in two planes, for the grid's parallax; without them, `art`
 ) {
     // shortcut: Catalan only, until the launcher follows the app's language (native settings, phase 4)
     val title: String get() = name["ca"] ?: id
@@ -40,8 +41,9 @@ class WebBundle(val dir: File?) {
         if (dir != null) File(dir, rel).inputStream() else ctx.assets.open("public/$rel")
     }.getOrNull()
 
+    // a picture inside the bundle: a path that climbs out of it reads as missing
     fun image(ctx: Context, path: String): ImageBitmap? =
-        open(ctx, path)?.use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
+        if (".." in path) null else open(ctx, path)?.use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
 
     // Where the bridge loads files from, as Capacitor itself decides (Bridge.java): Capgo's last `set()` bundle, unless the
     // app binary changed since (then the bridge ignores it and Capgo resets).
@@ -66,6 +68,10 @@ class WebBundle(val dir: File?) {
             return WebBundle(null) to emptyList()
         }
 
+        // one plane's path of a game's `layers`; null when the object, the key or its value is missing
+        private fun layer(g: JSONObject, key: String): String? =
+            g.optJSONObject("layers")?.takeIf { !it.isNull(key) }?.optString(key)?.ifEmpty { null }
+
         fun parse(json: String): List<Game>? {
             val file = JSONObject(json)
             if (file.getInt("schema") != 1 || file.getInt("minBridge") > BRIDGE_VERSION) return null
@@ -84,6 +90,7 @@ class WebBundle(val dir: File?) {
                     ink = g.getString("ink"),
                     category = if (g.isNull("category")) null else g.optString("category"),
                     art = g.getString("art"),
+                    back = layer(g, "back"), front = layer(g, "front"),
                 )
             }.filter { it.soon || isEntryPath(it.path) }
         }

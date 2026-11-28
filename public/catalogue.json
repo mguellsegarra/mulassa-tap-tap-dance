@@ -47,7 +47,11 @@
    "color": "#f5c518",
    "ink": "#3a2208",
    "category": "ritme",
-   "art": "/jocs/menu/cards/tap-app.jpg"
+   "art": "/jocs/menu/cards/tap-app.jpg",
+   "layers": {
+    "back": "/jocs/menu/cards/tap-app-fons.jpg",
+    "front": "/jocs/menu/cards/tap-app-figura.png"
+   }
   },
   {
    "id": "pop",
@@ -94,7 +98,11 @@
    "color": "#ff7ac8",
    "ink": "#3d0f2a",
    "category": "accio",
-   "art": "/jocs/menu/cards/pop.jpg"
+   "art": "/jocs/menu/cards/pop-app.jpg",
+   "layers": {
+    "back": "/jocs/menu/cards/pop-app-fons.jpg",
+    "front": "/jocs/menu/cards/pop-app-figura.png"
+   }
   },
   {
    "id": "aviat-1",
@@ -141,7 +149,8 @@
    "color": "#ff9d3b",
    "ink": "#4a2400",
    "category": null,
-   "art": "/jocs/menu/cards/aviat-1.jpg"
+   "art": "/jocs/menu/cards/aviat-1.jpg",
+   "layers": null
   },
   {
    "id": "aviat-2",
@@ -188,7 +197,8 @@
    "color": "#ff9d3b",
    "ink": "#4a2400",
    "category": null,
-   "art": "/jocs/menu/cards/aviat-2.jpg"
+   "art": "/jocs/menu/cards/aviat-2.jpg",
+   "layers": null
   },
   {
    "id": "aviat-3",
@@ -235,7 +245,8 @@
    "color": "#ff9d3b",
    "ink": "#4a2400",
    "category": null,
-   "art": "/jocs/menu/cards/aviat-3.jpg"
+   "art": "/jocs/menu/cards/aviat-3.jpg",
+   "layers": null
   }
  ]
 }

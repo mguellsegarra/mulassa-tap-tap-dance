@@ -8,9 +8,13 @@ import { join } from 'node:path';
 export const CATALOGUE_SCHEMA = 1;
 export const MIN_BRIDGE = 1;
 // what the web menu does not know: the app's entry path, the cartridge's short name and colours, the category
+// art: the cartridge's own picture; layers: the same picture in two planes (ronda 38: the game's own models, rendered by
+// tools/dev/pop-cover.html, over a backdrop), which the launcher slides against each other as the phone leans. A shell
+// that does not know `layers` shows `art`.
+const cover = id => ({ art: `/jocs/menu/cards/${id}-app.jpg`, layers: { back: `/jocs/menu/cards/${id}-app-fons.jpg`, front: `/jocs/menu/cards/${id}-app-figura.png` } });
 const LAUNCHER = {
-  tap: { path: '/index.html', short: 'Tap Tap Dance', color: '#f5c518', ink: '#3a2208', category: 'ritme', art: '/jocs/menu/cards/tap-app.jpg' },
-  pop: { path: '/pop/index.html', short: 'Pop', color: '#ff7ac8', ink: '#3d0f2a', category: 'accio' },
+  tap: { path: '/index.html', short: 'Tap Tap Dance', color: '#f5c518', ink: '#3a2208', category: 'ritme', ...cover('tap') },
+  pop: { path: '/pop/index.html', short: 'Pop', color: '#ff7ac8', ink: '#3d0f2a', category: 'accio', ...cover('pop') },
 };
 const SOON = { short: null, color: '#ff9d3b', ink: '#4a2400', category: null };
 const PROPER = { tap: 'Mulassa Tap Tap Dance' }; // a name with no translation key stays as it is
@@ -37,6 +41,7 @@ export function buildCatalogue() {
       name: nameKey ? tr(nameKey) : Object.fromEntries(Object.keys(locales).map(l => [l, PROPER[id]])), short: own.short, desc: descKey ? tr(descKey) : null,
       color: own.color, ink: own.ink, category: own.category,
       art: own.art ?? card.match(/<img src="([^"]+)"/)[1], // the app's cartridge may wear its own art
+      layers: own.layers ?? null,
     };
   });
   games.sort((a, b) => (b.id === 'tap') - (a.id === 'tap')); // the app opens on its flagship; the web menu keeps its own order

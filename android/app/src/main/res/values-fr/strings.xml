@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Bientôt</string>
     <string name="launcher_settings_rateApp">Noter l’application</string>
     <string name="launcher_settings_shareApp">Partager l’application</string>
-    <string name="html_settings_aria">Réglages</string>
-    <string name="html_profile_aria">Profil</string>
     <string name="html_attr_close">Ferme</string>
     <string name="html_accountTitle">Profil</string>
-    <string name="html_settingsTitle">Réglages</string>
-    <string name="pop_rank_cardRuns">Parties</string>
     <string name="pop_music">Musique</string>
     <string name="ui_lang_title">Langue</string>
     <string name="html_common_privacy">Confidentialité</string>

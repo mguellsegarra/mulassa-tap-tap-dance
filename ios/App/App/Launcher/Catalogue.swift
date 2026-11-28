@@ -14,6 +14,8 @@ struct Game: Decodable, Identifiable, Equatable {
     let ink: String
     let category: String?
     let art: String
+    var layers: Layers? // the art in two planes, for the grid's parallax; without both of them the game shows `art`
+    struct Layers: Decodable, Equatable { let back: String?, front: String? } // optional: half a pair must not void the whole catalogue
 
     // shortcut: Catalan only, until the launcher follows the app's language (native settings, phase 4)
     var title: String { (name["ca"] ?? nil) ?? id }
@@ -48,8 +50,10 @@ enum WebBundle {
         return path.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "/._-".contains($0)) }
     }
 
+    // a picture inside the bundle: a path that climbs out of it reads as missing
     static func image(_ path: String, in root: URL) -> UIImage? {
-        UIImage(contentsOfFile: root.appendingPathComponent(String(path.drop { $0 == "/" })).path)?.preparingForDisplay()
+        guard !path.contains("..") else { return nil }
+        return UIImage(contentsOfFile: root.appendingPathComponent(String(path.drop { $0 == "/" })).path)?.preparingForDisplay()
     }
 
     // The game's own faces (public/fonts), registered once from whichever bundle the app starts with.
@@ -82,14 +86,10 @@ extension UIColor {
 }
 
 enum Palette {
-    static let bg = Color(UIColor(hex: "#1c110a"))
     static let cream = Color(UIColor(hex: "#fff3d6"))
     static let ink = Color(UIColor(hex: "#2a1608"))
     static let brown = Color(UIColor(hex: "#3a2208"))
     static let yellow = UIColor(hex: "#f5c518")
     static let yellowHi = Color(UIColor(hex: "#ffe26a"))
     static let yellowLo = Color(UIColor(hex: "#b47d07"))
-    static let smoke = Color(red: 38 / 255, green: 20 / 255, blue: 9 / 255).opacity(0.74)
-    static let red = Color(UIColor(hex: "#e0364c"))
-    static let pink = Color(UIColor(hex: "#ff7ac8"))
 }

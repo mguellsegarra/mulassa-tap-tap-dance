@@ -4,12 +4,8 @@
     <string name="ui_select_aviat">Presto</string>
     <string name="launcher_settings_rateApp">Valuta l’app</string>
     <string name="launcher_settings_shareApp">Condividi l’app</string>
-    <string name="html_settings_aria">Impostazioni</string>
-    <string name="html_profile_aria">Profilo</string>
     <string name="html_attr_close">Chiudi</string>
     <string name="html_accountTitle">Profilo</string>
-    <string name="html_settingsTitle">Impostazioni</string>
-    <string name="pop_rank_cardRuns">Partite</string>
     <string name="pop_music">Musica</string>
     <string name="ui_lang_title">Lingua</string>
     <string name="html_common_privacy">Privacy</string>

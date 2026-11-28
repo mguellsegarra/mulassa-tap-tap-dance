@@ -48,3 +48,45 @@ test('switching remembers the page, for index.html to go back to after the reloa
   assert.deepEqual(p.calls, [['set', 'id-D']]);
   assert.equal(saved.get('live-update-return'), '/pop/index.html?x=1');
 });
+
+test('a bundle the launcher could not switch to yet (pending) is reused, not downloaded again', async () => {
+  local = { build: 'A' }; site = { build: 'E', manifest: [] };
+  const p = plugin({ bundles: [{ id: 'waiting', version: 'E', status: 'pending' }] });
+  assert.equal(await checkLiveUpdate(p, BASE), 'waiting');
+  assert.equal(p.calls.length, 0);
+});
+
+test('only forwards: an older site build never replaces a newer app, unless either predates seq', async () => {
+  local = { build: 'A', seq: 200 }; site = { build: 'F', seq: 100, manifest: [] };
+  let p = plugin(); assert.equal(await checkLiveUpdate(p, BASE), null); assert.equal(p.calls.length, 0, 'older');
+  site = { build: 'F', seq: 300, manifest: [] }; p = plugin(); assert.equal(await checkLiveUpdate(p, BASE), 'id-F', 'newer');
+  site = { build: 'G', manifest: [] }; p = plugin(); assert.equal(await checkLiveUpdate(p, BASE), 'id-G', 'a site from before seq');
+  local = { build: 'A' };
+});
+
+test('a rollback reported while offline is still remembered', async () => {
+  const online = globalThis.fetch;
+  globalThis.fetch = async () => { throw new TypeError('offline'); };
+  await assert.rejects(checkLiveUpdate(plugin({ failed: { bundle: { version: 'H' } } }), BASE));
+  globalThis.fetch = online;
+  site = { build: 'H', manifest: [] }; const p = plugin(); assert.equal(await checkLiveUpdate(p, BASE), null);
+  assert.equal(p.calls.length, 0);
+});
+
+test('the resting page switches only with the launcher\'s yes, by set() itself, and frees the launcher on a failure', async () => {
+  const { restCheck } = await import('../../packages/plassa/src/live-rest.js');
+  const shell = ok => { const calls = []; return { calls, rested: async () => calls.push('rested'), mayUpdate: async o => { calls.push(['may', o]); return { ok }; } }; };
+  saved.delete('live-update-return');
+  let s = shell(true), p = plugin(); await restCheck(s, p, async () => 'id-R');
+  assert.deepEqual(s.calls, ['rested', ['may', { id: 'id-R' }]], 'the launcher gets the id to check its catalogue');
+  assert.deepEqual(p.calls, [['set', 'id-R']]);
+  assert.equal(saved.has('live-update-return'), false, 'no return path: a failed switch must not send the next game here');
+  s = shell(false); p = plugin(); await restCheck(s, p, async () => 'id-R');
+  assert.equal(p.calls.length, 0, 'refused: no switch');
+  s = shell(true); p = { set: async () => { throw new Error('no'); } }; await restCheck(s, p, async () => 'id-R');
+  assert.equal(s.calls.at(-1), 'rested', 'a failed set() lets the launcher go');
+  let base; s = shell(false); s.liveServer = async () => ({ url: 'http://lan:3791' }); await restCheck(s, plugin(), async (u, b) => { base = b; });
+  assert.equal(base, 'http://lan:3791', 'a debug build follows the site typed in the launcher');
+  s = shell(false); s.liveServer = async () => ({ url: '' }); await restCheck(s, plugin(), async (u, ...b) => { base = b; });
+  assert.deepEqual(base, [undefined], 'none typed: the build\'s own site');
+});

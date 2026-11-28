@@ -59,6 +59,8 @@ export async function preparePages(directory, song) {
       || /^jocs\/menu\/video\/[\w-]+\.(mp4|jpg)$/.test(name) // the games menu's hero clips and their first frames (src/jocs/menu/hero-video.js)
       || name === 'campanar-valls.svg' // Configuració «Sobre el joc»
       || name === 'version.json' // vite.config.js buildStamp: the woken app's update check
+      || name === 'catalogue.json' // the app launcher's games (tools/app/catalogue.mjs), in the live bundle the app downloads from here
+      || name === 'app/rest.html' // the app's resting page behind the launcher (live-rest.js), part of that same bundle
       || name === 'uaf-logo.jpg' // /projecte/'s credits: the Unió Anelles de la Flama logo
       || name === 'share/bou-tradicional-valls.jpg' // the Bou's share photo, once it is released
       || ['robots.txt', 'sitemap.xml', 'llms.txt', 'index.md', 'projecte/index.html', 'projecte/index.md'].includes(name); // tools/deploy/seo-pages.mjs + public/

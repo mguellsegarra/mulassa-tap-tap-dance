@@ -35,6 +35,7 @@ struct AccountSheet: View {
     @AppStorage("launcher-sound") private var sound = true
     @AppStorage("launcher-music") private var music = true
     @AppStorage("launcher-haptics") private var haptics = true
+    @AppStorage("mulassa-live-server") private var liveServer = "" // MulassaPlugin.server, debug builds only
     @Environment(\.requestReview) private var requestReview
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
@@ -91,6 +92,12 @@ struct AccountSheet: View {
                     Button { requestReview() } label: { row("launcher.settings.rateApp", "#f5c518", "star") { Chevron() } }
                     ShareLink(item: shareURL) { row("launcher.settings.shareApp", "#ff7ac8", "square.and.arrow.up") { Chevron() } }
                 }
+                #if DEBUG
+                Section { // not player copy: the live-update site (MulassaPlugin.liveServer), read when the launcher next rests
+                    TextField(text: $liveServer, prompt: Text(verbatim: "el del bundle (version.json)")) { EmptyView() }
+                        .font(.balooBold(17)).keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
+                } header: { Text(verbatim: "Servidor d'actualitzacions (debug)") }
+                #endif
                 Section {
                     // shortcut: Ajuda and Privadesa have no native page yet; the rows name where they will go, with no arrow
                     Text("Ajuda").font(.balooBold(17))

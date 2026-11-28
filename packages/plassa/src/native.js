@@ -85,20 +85,28 @@ export const askAccount = (what, back, web) => {
 // whenever the app goes to the background, mid-run too. A bundle that never says it is ready is rolled back (appReadyTimeout).
 const liveUpdater = capPlugins?.CapacitorUpdater, LIVE_UPDATE_URL = (import.meta.env ?? {}).VITE_LIVE_UPDATE_URL;
 export const LIVE_UPDATES = !!(liveUpdater && LIVE_UPDATE_URL);
+// Also from the app's resting page (app/rest.html): the bundle it switched to stays without a game being opened. shortcut: a bundle
+// whose games break but whose resting page loads is not rolled back (owner, 27 Nov 2026); revisit before the public release.
 liveUpdater?.notifyAppReady().catch(() => {});
 // The site publishes app-bundle.json ({ build, manifest }: each file with its SHA-256, tools/deploy/app-bundle.mjs); the plugin
 // fetches from the site only the files it lacks. Answers the id of the downloaded bundle to switch to, or null when none.
 export async function checkLiveUpdate(updater = liveUpdater, base = LIVE_UPDATE_URL) {
-  const at = url => fetch(url, { cache: 'no-store' }).then(r => r.json());
-  const [here, there, { bundles = [] } = {}, failed] = await Promise.all([at('/version.json'), at(`${base}/app-bundle.json`), updater.list(), updater.getFailedUpdate()]);
-  // A rolled-back bundle is deleted by the plugin and its failure reported once: kept here, or every launch would retry it
+  if (!base) return null; // a build with no site, and no debug site typed (live-rest.js)
+  // A rolled-back bundle is deleted by the plugin and its failure reported once: kept here, or every launch would retry it.
+  // Asked apart and first, so an offline check does not lose the report.
+  const failed = await updater.getFailedUpdate().catch(() => null);
   const bad = new Set(readFailedBuilds()); if (failed?.bundle?.version) { bad.add(failed.bundle.version); saveFailedBuilds([...bad]); }
-  if (!there.build || there.build === here.build || bad.has(there.build)) return null;
-  const have = bundles.find(b => b.version === there.build && b.status === 'success'); // downloaded on an earlier, busy check
+  const at = url => fetch(url, { cache: 'no-store' }).then(r => r.json());
+  const [here, there, { bundles = [] } = {}] = await Promise.all([at('/version.json'), at(`${base}/app-bundle.json`), updater.list()]);
+  if (!there.build || there.build === here.build || bad.has(there.build) || !isNewerBuild(there, here)) return null;
+  // downloaded on an earlier check: one the launcher could not switch to yet (pending), or one used before (success)
+  const have = bundles.find(b => b.version === there.build && (b.status === 'success' || b.status === 'pending'));
   if (have) return have.id;
   const manifest = there.manifest.map(f => ({ ...f, download_url: `${base}/${encodeURI(f.file_name)}` }));
   return (await updater.download({ url: `${base}/app-bundle.json`, version: there.build, manifest })).id; // url: required, unused
 }
+// Only forwards (vite.config.js `seq`); a build from before `seq` existed compares as before: any other build.
+export const isNewerBuild = (there, here) => !(there.seq > 0 && here.seq > 0) || there.seq > here.seq;
 // set() reloads the web view at the app's start (Android) or at the root, which index.html sends on to Mulassa Games: the
 // first plassa page to load goes back to the page that applied the update.
 const LIVE_RETURN_KEY = 'live-update-return', liveReturn = store.get(LIVE_RETURN_KEY);

@@ -19,6 +19,8 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         super.init(rootView: LauncherRoot(model: model))
         bridgeVC.modalPresentationStyle = .fullScreen
         bridgeVC.onExit = { [weak self] in self?.exitGame() }
+        bridgeVC.mayUpdate = { [weak self] id in self?.beginUpdate(id) ?? false }
+        bridgeVC.onRested = { [weak self] in self?.endUpdate() }
         // Loading the bridge's view loads its plugins: Capgo picks the active bundle there, which the launcher then reads.
         bridgeVC.loadViewIfNeeded()
         WebBundle.registerFonts(from: bundleRoot)
@@ -62,6 +64,8 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     override var preferredStatusBarStyle: UIStatusBarStyle { .lightContent }
 
     private func play(_ game: Game, from: CGPoint, covered: @escaping () -> Void) {
+        // a cartridge seated while the bundle switches (its lift has already given up the taps): opened once the switch is done
+        if updating { queued = { [weak self] in self?.replay(game.id, from: from, covered: covered) }; return }
         guard !busy, !game.soon, let path = game.path, WebBundle.isEntryPath(path),
               let server = bridgeVC.bridge?.config.serverURL, let url = URL(string: path, relativeTo: server) else { return }
         busy = true
@@ -106,12 +110,42 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         dismiss(animated: false) { [weak self] in
             guard let self else { return }
             Tilt.shared.set(game: false)
-            // the page is stopped (its music, its frames) by loading the bundle's catalogue, a page with no script
-            if let server = bridgeVC.bridge?.config.serverURL, let quiet = URL(string: "/catalogue.json", relativeTo: server) {
+            // the page is stopped (its music, its frames) by loading the resting page, which checks for a live update again
+            if let server = bridgeVC.bridge?.config.serverURL, let quiet = URL(string: MulassaBridgeViewController.rest, relativeTo: server) {
                 bridgeVC.webView?.load(URLRequest(url: quiet))
             }
             model.load(root: bundleRoot) // a live update applied in the game switched the bundle
         }
+    }
+
+    // A live update downloaded by the resting page switches the bundle only here, with no game open or opening, and only to a
+    // bundle whose catalogue this app can read (contract 6): until the page loads again from the new bundle, a seated cartridge
+    // waits (10 s at most, should the page never come back).
+    private var updating = false
+    private var updates = 0 // which switch a 10 s guard belongs to: an older one's never ends a later one
+    private var queued: (() -> Void)?
+    private func beginUpdate(_ id: String) -> Bool {
+        guard !busy, presentedViewController == nil, let dir = WebBundle.downloaded(id), WebBundle.catalogue(at: dir) != nil else { return false }
+        busy = true
+        updating = true
+        updates += 1
+        let mine = updates
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in if self?.updates == mine { self?.endUpdate() } }
+        return true
+    }
+    private func endUpdate() {
+        guard updating else { return }
+        updating = false
+        busy = false
+        model.load(root: bundleRoot) // the new bundle's games, names and art
+        let open = queued
+        queued = nil
+        open?()
+    }
+    // the seated game as the new catalogue has it; gone from it, the lift is let go and nothing opens
+    private func replay(_ id: String, from: CGPoint, covered: @escaping () -> Void) {
+        guard let game = model.games.first(where: { $0.id == id }), !game.soon else { covered(); return }
+        play(game, from: from, covered: covered)
     }
 
     // The launcher's settings are the games' too (native-shell.md, contract 4): its language and music saved where the web reads

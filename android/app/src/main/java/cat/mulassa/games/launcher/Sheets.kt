@@ -56,6 +56,20 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import cat.mulassa.games.R
 import kotlinx.coroutines.launch
 
@@ -77,15 +91,32 @@ fun Sheets(model: Launcher, version: String, sky: Sky, open: Boolean, dismiss: (
     CompositionLocalProvider(LocalIndication provides ripple()) { ModalBottomSheet(dismiss, sheetState = state, shape = sheetShape,
         containerColor = Color.Transparent, contentColor = Palette.cream, scrimColor = hex("#0a0603").copy(alpha = 0.6f),
         dragHandle = null, contentWindowInsets = { WindowInsets(0) }) {
-        Column(Modifier.fillMaxHeight().background(sky.sheet, sheetShape).windowInsetsPadding(BottomSheetDefaults.windowInsets)) {
-            BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally), color = Palette.cream.copy(alpha = 0.35f))
-            // the title centred between two 44 dp columns, so a long one never runs under the X
-            Row(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp), verticalAlignment = Alignment.CenterVertically) {
-                Spacer(Modifier.size(44.dp))
-                Box(Modifier.weight(1f).semantics { heading() }, contentAlignment = Alignment.Center) { Label(stringResource(R.string.html_accountTitle), Fonts.baloo, 22.dp, Palette.cream) }
-                RoundButton(CLOSE, stringResource(R.string.html_attr_close), onClick = close)
+        Box(Modifier.fillMaxHeight().background(sky.sheet, sheetShape).windowInsetsPadding(BottomSheetDefaults.windowInsets)) {
+            // As the App Store's sheet: the body scrolls under the header, which shows it blurred and fading out, never cut straight.
+            val body = rememberGraphicsLayer()
+            var header by remember { mutableIntStateOf(0) }
+            val top = with(LocalDensity.current) { header.toDp() }
+            val scroll = rememberScrollState()
+            // iOS's hairline under the bar, once the body runs under it
+            val line by androidx.compose.animation.core.animateFloatAsState(if (scroll.value > 0) 1f else 0f, label = "line")
+            SheetBody(top, scroll, Modifier.drawWithContent { body.record { this@drawWithContent.drawContent() }; drawLayer(body) }) {
+                // first: the keyboard never reaches the sheet's top (no ime insets reach its window to scroll a lower field above it)
+                if (LocalContext.current.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) LiveServer(LocalContext.current)
+                Profile(model); Settings(model, version)
             }
-            SheetBody { Profile(model); Settings(model, version) }
+            ScrollEdge(body, sky.sheet, Modifier.fillMaxWidth().height(top))
+            Box(Modifier.fillMaxWidth().onSizeChanged { header = it.height }
+                .drawBehind { drawRect(Palette.cream.copy(alpha = 0.12f * line), Offset(0f, size.height - density), Size(size.width, density)) }) {
+                Column {
+                    BottomSheetDefaults.DragHandle(Modifier.align(Alignment.CenterHorizontally), color = Palette.cream.copy(alpha = 0.35f))
+                    // the title centred between two 44 dp columns, so a long one never runs under the X
+                    Row(Modifier.fillMaxWidth().padding(horizontal = M).height(44.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Spacer(Modifier.size(44.dp))
+                        Box(Modifier.weight(1f).semantics { heading() }, contentAlignment = Alignment.Center) { Label(stringResource(R.string.html_accountTitle), Fonts.baloo, 22.dp, Palette.cream) }
+                        RoundButton(CLOSE, stringResource(R.string.html_attr_close), onClick = close)
+                    }
+                }
+            }
         }
     } }
 }
@@ -93,9 +124,24 @@ fun Sheets(model: Launcher, version: String, sky: Sky, open: Boolean, dismiss: (
 private val sheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 
 @Composable
-private fun SheetBody(content: @Composable () -> Unit) {
-    Column(Modifier.verticalScroll(rememberScrollState()).padding(start = M, end = M, top = M, bottom = 24.dp),
+private fun SheetBody(top: Dp, scroll: androidx.compose.foundation.ScrollState, modifier: Modifier, content: @Composable () -> Unit) {
+    Column(modifier.verticalScroll(scroll).padding(start = M, end = M, top = top + M, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(M)) { content() }
+}
+
+// The header's backdrop: the sheet's colour with the body drawn again on it, blurred (Android 12+; older ones get only the tint) and tinted with the
+// sheet's colour, down to the hairline that shows once the body runs under it (iOS's bar).
+@Composable
+private fun ScrollEdge(body: androidx.compose.ui.graphics.layer.GraphicsLayer, tint: Color, modifier: Modifier) {
+    val blur = android.os.Build.VERSION.SDK_INT >= 31
+    Box(modifier.graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }.drawWithContent {
+        drawContent() // as iOS: blurred down to the hairline, the body sharp below it; a few pixels soften the edge before the line shows
+        drawRect(Brush.verticalGradient(0.9f to Color.Black, 1f to Color.Transparent), blendMode = BlendMode.DstIn)
+    }.background(tint)) { // opaque where it is not fading: the sharp body under it stays hidden
+        Box(Modifier.matchParentSize().clipToBounds().graphicsLayer { if (blur) renderEffect = BlurEffect(20.dp.toPx(), 20.dp.toPx(), TileMode.Clamp) }
+            .drawBehind { drawLayer(body) })
+        Box(Modifier.matchParentSize().background(tint.copy(alpha = if (blur) 0.45f else 0.8f)))
+    }
 }
 
 // The player's avatar: no session on the native side yet (native-shell.md), so a person glyph.
@@ -176,6 +222,20 @@ private fun share(ctx: Context) =
     ctx.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, STORE_URL), null))
 
 // A card: a faint cream wash with a faint cream rim.
+// Debug builds only, not player copy: the live-update site (LiveUpdate.server), checked again on the launcher's next start.
+@Composable
+private fun LiveServer(ctx: Context) {
+    var url by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(LiveUpdate.server(ctx)) }
+    Column(Modifier.card().padding(horizontal = M, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Label("Servidor d'actualitzacions (debug)", Fonts.balooBold, 13.dp, Palette.cream.copy(alpha = 0.7f))
+        androidx.compose.foundation.text.BasicTextField(url, { url = it; LiveUpdate.server(ctx, it) }, Modifier.fillMaxWidth(), singleLine = true,
+            textStyle = androidx.compose.ui.text.TextStyle(fontFamily = Fonts.balooBold, fontSize = 17.dp.fixed(), color = Palette.cream),
+            cursorBrush = androidx.compose.ui.graphics.SolidColor(Palette.yellowHi),
+            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Uri, autoCorrectEnabled = false),
+            decorationBox = { field -> Box { if (url.isEmpty()) Label("el del bundle (version.json)", Fonts.balooBold, 17.dp, Palette.cream.copy(alpha = 0.35f)); field() } })
+    }
+}
+
 private fun Modifier.card() = drawBehind {
     val r = CornerRadius(18 * density); val w = 1.5f * density
     drawRoundRect(Palette.cream.copy(alpha = 0.08f), cornerRadius = r)

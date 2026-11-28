@@ -27,7 +27,9 @@ import androidx.core.app.ActivityOptionsCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import cat.mulassa.games.MainActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // The app's entry and the task's root (docs/app/native-shell.md, «Navigation»): the Compose launcher. A game opens in the
 // bridge activity (MainActivity) on top of it, under the iris; leaving the game finishes that activity, and the launcher
@@ -75,6 +77,19 @@ class LauncherActivity : ComponentActivity() {
     @Suppress("DEPRECATION") // defaultDisplay: the activity's own display, on every API level the app runs on
     override fun onResume() { super.onResume(); Tilt.start(this) { windowManager.defaultDisplay.rotation } }
     override fun onPause() { Tilt.stop(); super.onPause() }
+
+    // Every time the launcher comes to the front (start, back from a game or from the background): a newer bundle from the site
+    // (LiveUpdate.kt), switched to only while the launcher is still in front and no game is opening; the grid then reads its catalogue.
+    // A result that finds the launcher busy (a game opening, the iris coming back) waits for the next start: the bundle stays
+    // downloaded and is switched to then.
+    override fun onStart() {
+        super.onStart()
+        lifecycleScope.launch {
+            val ready = withContext(Dispatchers.IO) { LiveUpdate.download(applicationContext) }
+            if (ready != null && !busy && lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED) &&
+                LiveUpdate.use(applicationContext, ready.first, ready.second)) model.load()
+        }
+    }
 
     private var back: Offset? = null // where the reverse iris closes: the grid slot of the cartridge that opened the game
 

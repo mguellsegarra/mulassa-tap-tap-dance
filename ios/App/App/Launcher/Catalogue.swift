@@ -36,18 +36,31 @@ enum WebBundle {
     // Games the shell can show from the bundle at `root`; an unreadable or too-new catalogue reads as the app's own copy.
     static func games(at root: URL) -> (root: URL, games: [Game]) {
         for dir in [root, builtin] {
-            guard let data = try? Data(contentsOf: dir.appendingPathComponent("catalogue.json")),
-                  let file = try? JSONDecoder().decode(CatalogueFile.self, from: data),
-                  file.schema == 1, file.minBridge <= bridgeVersion else { continue }
-            return (dir, file.games.filter { $0.soon || isEntryPath($0.path) })
+            if let games = catalogue(at: dir) { return (dir, games) }
         }
         return (builtin, [])
+    }
+
+    // The bundle's own catalogue, or nil when it is unreadable or needs a newer bridge (contract 6): such a bundle is never switched to.
+    static func catalogue(at dir: URL) -> [Game]? {
+        guard let data = try? Data(contentsOf: dir.appendingPathComponent("catalogue.json")),
+              let file = try? JSONDecoder().decode(CatalogueFile.self, from: data),
+              file.schema == 1, file.minBridge <= bridgeVersion else { return nil }
+        return file.games.filter { $0.soon || isEntryPath($0.path) }
     }
 
     // A game opens only at a page inside the bundle: never another origin or a path that climbs out of it.
     static func isEntryPath(_ path: String?) -> Bool {
         guard let path, path.hasPrefix("/"), !path.hasPrefix("//"), path.hasSuffix(".html"), !path.contains("..") else { return false }
         return path.allSatisfy { $0.isASCII && ($0.isLetter || $0.isNumber || "/._-".contains($0)) }
+    }
+
+    // Where Capgo keeps a downloaded bundle (CapgoUpdater.resolveBundleDirectory, Library/NoCloud/ionic_built_snapshots/<id>),
+    // its ids being letters and digits. To check again on a Capgo upgrade, as LiveUpdate.kt's `versions/<id>` on Android.
+    static func downloaded(_ id: String) -> URL? {
+        guard !id.isEmpty, id.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber) }),
+              let library = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask).first else { return nil }
+        return library.appendingPathComponent("NoCloud/ionic_built_snapshots/\(id)")
     }
 
     // a picture inside the bundle: a path that climbs out of it reads as missing

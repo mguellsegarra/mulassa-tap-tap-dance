@@ -14,6 +14,6 @@ const manifest = readdirSync(dist, { recursive: true, withFileTypes: true }).fil
   .map(e => `${e.parentPath}/${e.name}`.slice(dist.length).replace(/^\//, '')).filter(name => !webOnly(name)).sort()
   .map(file_name => ({ file_name, file_hash: createHash('sha256').update(readFileSync(dist + file_name)).digest('hex') }));
 if (!manifest.some(f => f.file_name === 'index.html')) throw new Error('app bundle without index.html');
-const { build } = JSON.parse(readFileSync(`${dist}version.json`, 'utf8'));
-writeFileSync(dist + OUT, JSON.stringify({ build, manifest }));
+const { build, seq } = JSON.parse(readFileSync(`${dist}version.json`, 'utf8'));
+writeFileSync(dist + OUT, JSON.stringify({ build, seq, manifest })); // seq: the app only moves forwards (vite.config.js)
 console.log(`App bundle ${build}: ${manifest.length} files`);

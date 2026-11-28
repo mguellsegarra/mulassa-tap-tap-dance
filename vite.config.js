@@ -16,18 +16,25 @@ const version = pkg;
 // QA_BUILD=1: the debug flags on any host (src/core/flags.js), for a device farm's phone through a tunnel. A local build only.
 const qa = !!process.env.QA_BUILD;
 if (qa && process.env.CI) throw new Error('QA_BUILD opens the debug flags on every host: never built in CI or deployed');
-const build = `${version}+${git('rev-parse --short=7 HEAD') || 'dev'}${qa ? '-qa' : ''}`;
+// BUILD_TAG: a local build that must read as newer than the app's own copy of the same commit (tools/app/live-server.mjs)
+const build = `${version}+${git('rev-parse --short=7 HEAD') || 'dev'}${process.env.BUILD_TAG ? `-${process.env.BUILD_TAG}` : ''}${qa ? '-qa' : ''}`; // -qa last: prepare-pages.mjs refuses it
+// The order of builds, which the app's live update follows only forwards (a newer app never steps back to an older site build):
+// the commit's time, or the build's own for a tagged local one, which must read as newer than the app's copy of that commit.
+const seq = process.env.BUILD_TAG ? Math.floor(Date.now() / 1000) : Number(git('log -1 --format=%ct')) || 0;
 // `DEV_HTTPS=1 npm run dev`: https on the LAN with a self-signed certificate (.cert/, gitignored; made once with `openssl req -x509 -newkey rsa:2048 -nodes -keyout .cert/dev.key -out .cert/dev.crt -subj /CN=mulassa-dev -addext subjectAltName=IP:<LAN-IP>`
 // «?final»). Phones need a secure context for Web Share with files and the clipboard; http://192.168.x.x has neither.
 const https = process.env.DEV_HTTPS ? { key: readFileSync('.cert/dev.key'), cert: readFileSync('.cert/dev.crt') } : undefined;
 // A home-screen app on iOS wakes from memory instead of reloading: src/services/update.js compares this file with its own build.
 // index.html's #build-check carries the same build, so a page kept from before a deploy reloads before the game boots.
-const buildStamp = { name: 'build-stamp', generateBundle() { this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build }) }); },
+// `live`: the site the app's live updates follow (VITE_LIVE_UPDATE_URL), which the native launcher reads from its active bundle.
+let live = '';
+const buildStamp = { name: 'build-stamp', configResolved(c) { live = c.env.VITE_LIVE_UPDATE_URL ?? ''; },
+  generateBundle() { this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify(live ? { build, seq, live } : { build, seq }) }); },
   transformIndexHtml: html => html.replace("'__MULASSA_BUILD__'", JSON.stringify(build)) };
 // One page per mini-game (docs/jocs/README.md): a full navigation is what frees the main game's memory.
 // Mulassa Pop lives at mulassa.cat/pop/; games still on their branches come back under jocs/<id>/.
 // jocs/index.html is Mulassa Games, the games' selector.
-const pages = ['index.html', 'pop/index.html', 'jocs/index.html', ...readdirSync('jocs', { withFileTypes: true }).filter(e => e.isDirectory()).map(e => `jocs/${e.name}/index.html`)];
+const pages = ['index.html', 'pop/index.html', 'jocs/index.html', 'app/rest.html', ...readdirSync('jocs', { withFileTypes: true }).filter(e => e.isDirectory()).map(e => `jocs/${e.name}/index.html`)];
 // A game page's boot watchdog must run even when its module fails to load: inlined as a classic script, never bundled.
 // Its boot screen's running Mulassa is painted before any script: one copy for every game (packages/plassa/src/mula-load.html).
 const WATCHDOG = '<script id="boot-watchdog" src="/packages/plassa/src/boot-watchdog.js"></script>';

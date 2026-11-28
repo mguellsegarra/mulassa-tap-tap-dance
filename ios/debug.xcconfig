@@ -1,1 +1,3 @@
 CAPACITOR_DEBUG = true
+// Debug builds only: the launcher may follow a live-update site on the LAN over plain http (App/Info.plist, tools/app/live-server.mjs)
+INFOPLIST_PREPROCESSOR_DEFINITIONS = MULASSA_LAN_HTTP=1

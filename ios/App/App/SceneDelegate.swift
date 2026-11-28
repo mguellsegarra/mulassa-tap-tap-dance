@@ -25,22 +25,30 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 // The games' bridge, kept warm by the launcher, with the app's own plugins registered on it.
 class MulassaBridgeViewController: CAPBridgeViewController {
+    static let rest = "/app/rest.html"
     var onExit: (() -> Void)?
+    var mayUpdate: ((String) -> Bool)? // the launcher lets a downloaded bundle (its id) in only when no game is opening (app/rest.html)
+    var onRested: (() -> Void)?
 
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(PowerPlugin())
         bridge?.registerPluginInstance(MulassaPlugin())
     }
 
-    // It starts on a page with no script (the launcher loads each game into it) and without the web splash: the
-    // launcher is what the player sees first.
+    // It starts on the resting page, which only checks for live updates (the launcher loads each game into it), and without
+    // the web splash: the launcher is what the player sees first.
     override open func instanceDescriptor() -> InstanceDescriptor {
         let descriptor = super.instanceDescriptor()
-        descriptor.appStartPath = "/catalogue.json"
+        descriptor.appStartPath = Self.rest
         var plugins = descriptor.pluginConfigurations
         var splash = plugins["SplashScreen"] as? [String: Any] ?? [:]
         splash["launchShowDuration"] = 0
         plugins["SplashScreen"] = splash
+        #if DEBUG // a live-update site on the LAN over plain http (tools/app/live-server.mjs); store builds stay https only
+        var updater = plugins["CapacitorUpdater"] as? [String: Any] ?? [:]
+        updater["httpsOnly"] = false
+        plugins["CapacitorUpdater"] = updater
+        #endif
         descriptor.pluginConfigurations = plugins
         return descriptor
     }
@@ -51,10 +59,28 @@ class MulassaBridgeViewController: CAPBridgeViewController {
 public class MulassaPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "MulassaPlugin"
     public let jsName = "Mulassa"
-    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name: "exitToLauncher", returnType: CAPPluginReturnPromise)]
+    public let pluginMethods: [CAPPluginMethod] = ["exitToLauncher", "mayUpdate", "rested", "liveServer"].map { CAPPluginMethod(name: $0, returnType: CAPPluginReturnPromise) }
+    private var host: MulassaBridgeViewController? { bridge?.viewController as? MulassaBridgeViewController }
 
     @objc func exitToLauncher(_ call: CAPPluginCall) {
-        DispatchQueue.main.async { (self.bridge?.viewController as? MulassaBridgeViewController)?.onExit?() }
+        DispatchQueue.main.async { self.host?.onExit?() }
+        call.resolve()
+    }
+    @objc func mayUpdate(_ call: CAPPluginCall) {
+        let id = call.getString("id") ?? ""
+        DispatchQueue.main.async { call.resolve(["ok": self.host?.mayUpdate?(id) ?? false]) }
+    }
+    // Debug builds only: the live-update site typed in the account sheet (Sheets.swift), over the build's; empty: the build's.
+    @objc func liveServer(_ call: CAPPluginCall) {
+        #if DEBUG
+        call.resolve(["url": UserDefaults.standard.string(forKey: Self.server)?.trimmingCharacters(in: .whitespaces) ?? ""])
+        #else
+        call.resolve(["url": ""])
+        #endif
+    }
+    static let server = "mulassa-live-server"
+    @objc func rested(_ call: CAPPluginCall) {
+        DispatchQueue.main.async { self.host?.onRested?() }
         call.resolve()
     }
 }

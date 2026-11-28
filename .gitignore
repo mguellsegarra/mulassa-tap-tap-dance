@@ -2,6 +2,7 @@
 node_modules
 .bestiari-media.json
 dist/
+.live/
 .vite/
 
 # Local deployment artifacts and browser evidence

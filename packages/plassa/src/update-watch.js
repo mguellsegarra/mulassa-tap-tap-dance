@@ -4,12 +4,13 @@
 // mid-run, never under a sheet or a typed field. The main game (update.js) and each mini-game say what quiet is for them.
 import { APP_BUILD } from '../../../src/core/version.js';
 import { shouldReload } from './update-rules.js';
-import { LIVE_UPDATES, checkLiveUpdate, applyLiveUpdate } from './native.js';
+import { IN_LAUNCHER, LIVE_UPDATES, checkLiveUpdate, applyLiveUpdate } from './native.js';
 
 const UPDATE_TRIED = 'reloaded-for'; // sessionStorage: the build a reload was tried for (update-rules.js)
 
-// live: switch to a downloaded app bundle (the app's games pages); the main game passes false, it only says it loaded
-export function watchUpdates(quiet, live = LIVE_UPDATES) {
+// live: switch to a downloaded app bundle (the app's games pages); the main game passes false, it only says it loaded. Under the
+// native launcher the launcher alone switches (app/rest.html, LiveUpdate.kt), with its own checks (native-shell.md, contracts 5-6).
+export function watchUpdates(quiet, live = LIVE_UPDATES && !IN_LAUNCHER) {
   let newer = null, waitT = 0, downloading = false;
   function reloadWhenQuiet() {
     clearTimeout(waitT);

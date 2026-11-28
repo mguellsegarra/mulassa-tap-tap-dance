@@ -54,6 +54,7 @@ export function setupLang({ store, state, location = globalThis.location, doc = 
 
   // --- ⚙ Configuració: a flat row (.switch-row) with the native <select> transparent over all of it (iOS opens its own wheel); endonyms, `lang`/`dir` on each option
   const pick = mk('div', { className: 'switch-row lang-pick', id: 'settings-lang' });
+  pick.dataset.app = 'language'; // the app's launcher owns it (plassa native.js); its tip never shows there, the launcher saved a choice
   const endo = mk('span', { className: 'endo' });
   const left = mk('span', { className: 'l' }, LANG_GLOBE), right = mk('span', { className: 'v' });
   left.appendChild(mk('span', { textContent: tr('ui.lang.title') })); right.appendChild(endo); right.appendChild(mk('span', { className: 'chev' }, LANG_CHEVRON));
@@ -79,6 +80,7 @@ export function setupLang({ store, state, location = globalThis.location, doc = 
   const code = suggestion({ languages: navigator.languages, saved: store.get(LANG_KEY), url: new URLSearchParams(location.search).get('lang'), seen: store.get(SUGGESTED_KEY), released });
   if (code && state() === 'splash') {
     const words = SUGGEST[code], tip = mk('div', { id: 'lang-tip', lang: code, role: 'status' });
+    tip.dataset.app = 'language'; // the launcher asks it there
     const done = () => { store.set(SUGGESTED_KEY, '1'); cancelAnimationFrame(gone); tip.remove(); };
     const yes = mk('button', { type: 'button', className: 'btn btn-primary', textContent: words.yes }), no = mk('button', { type: 'button', className: 'btn btn-secondary', textContent: words.no });
     yes.addEventListener('click', () => { done(); switchTo(code); }); no.addEventListener('click', done);

@@ -18,6 +18,7 @@ import { tr } from '../../../i18n/messages.js';
 import { t } from './i18n.js';
 import { APP_BUILD } from '../../../core/version.js';
 import { store } from '#plassa/storage.js';
+import { PROMPT_OFF } from './ranking-ui.js';
 import { focusIn } from '#plassa/focus.js';
 import { mountMainSheets } from '../../main-sheets.js';
 import { setupGameInstall } from '../../install.js';
@@ -93,6 +94,7 @@ export function openSettings(done = onDone) {
   onDone = done;
   if (menu.open) return;
   $('settings-profile').hidden = !service.configured; // Perfil only with a board (mulassa.cat's decision 6)
+  syncPromptRow(); // set elsewhere too (the app's own prompt, main.js askName)
   menu.showModal(); focusIn(menu, 'settings-profile');
 }
 // The boot screen pays Configuració's first paint: Chrome compiles a GPU program for every kind of paint the page has not
@@ -126,7 +128,6 @@ export function openProfile(kind, back, run = null) {
 }
 // The same, opening by itself after a run with no name, as the main game's publish prompt: the run on top, «Publica», and
 // «No m'ho tornis a recordar» (this game's own, kept: the end sheet's button still opens it); false when it did not open
-const PROMPT_OFF = 'pop-publish-optout';
 // ⚙ «Proposta de publicar»: the main game's row, there only while this game's prompt is off; «Activa» turns it back on
 const syncPromptRow = () => { $('settings-prompt-row').hidden = !kv.get(PROMPT_OFF); };
 { const sub = $('settings-prompt-row').querySelector('.sub'); sub.removeAttribute('data-i18n'); sub.textContent = t('settings.promptOff'); } // this game's words: «la partida», not «el ball»

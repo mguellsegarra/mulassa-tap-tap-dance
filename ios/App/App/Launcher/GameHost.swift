@@ -12,7 +12,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
     private var splashWindow: UIWindow?
     private var busy = false
     private var loading: NSKeyValueObservation?
-    private var webLanguage: String?
+    private var webShell: String? // the last snapshot given to the web view
 
     init() {
         model = Launcher()
@@ -63,7 +63,7 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         guard !busy, !game.soon, let path = game.path, WebBundle.isEntryPath(path),
               let server = bridgeVC.bridge?.config.serverURL, let url = URL(string: path, relativeTo: server) else { return }
         busy = true
-        tellLanguage()
+        tellShell()
         showIris(game, from: from)
         iris.forward { [weak self] in
             guard let self else { return }
@@ -112,13 +112,23 @@ final class LauncherController: UIHostingController<LauncherRoot> {
         }
     }
 
-    // The launcher's language is the games' too (native-shell.md, contract 4): saved where the web reads it (ui-language-v1)
-    // before any of the page's scripts run. A later script runs after the earlier ones, so a change adds one more.
-    private func tellLanguage() {
-        let code = AppLanguage.shared.code
-        guard code != webLanguage, let scripts = bridgeVC.webView?.configuration.userContentController else { return }
-        webLanguage = code
-        scripts.addUserScript(WKUserScript(source: "try{localStorage.setItem('ui-language-v1','\(code)')}catch(e){}", injectionTime: .atDocumentStart, forMainFrameOnly: true))
+    // The launcher's settings are the games' too (native-shell.md, contract 4): its language and music saved where the web reads
+    // them (ui-language-v1, menu-music) before any of the page's scripts run, and what it covers, so a game hides those rows and
+    // buttons (plassa native.js). A later script runs after the earlier ones, so a change adds one more.
+    private func tellShell() {
+        let on = { (key: String) in UserDefaults.standard.object(forKey: key) as? Bool ?? true }
+        // only the bundle's own pages (a WKUserScript has no origin filter); the code is a saved string: letters and dashes only
+        guard let server = bridgeVC.bridge?.config.serverURL, let scheme = server.scheme, let host = server.host else { return }
+        let origin = "\(scheme)://\(host)" + (server.port.map { ":\($0)" } ?? "") // a dev server's port too
+        let code = AppLanguage.shared.code.range(of: "^[A-Za-z-]{2,12}$", options: .regularExpression) != nil ? AppLanguage.shared.code : AppLanguage.base
+        let source = "if(location.origin==='\(origin)'){try{localStorage.setItem('ui-language-v1','\(code)');"
+            + "localStorage.setItem('menu-music','\(on("launcher-music") ? "on" : "off")')}catch(e){}"
+            + "window.__mulassaShell={covers:['language','music'],sound:\(on("launcher-sound")),vibration:\(on("launcher-haptics"))}}"
+        // shortcut: each change adds one more script (WKUserContentController removes only all of them, Capacitor's too);
+        // the last one wins, and a session sees a few at most
+        guard source != webShell, let scripts = bridgeVC.webView?.configuration.userContentController else { return }
+        webShell = source
+        scripts.addUserScript(WKUserScript(source: source, injectionTime: .atDocumentStart, forMainFrameOnly: true))
     }
 
     private func showIris(_ game: Game, from: CGPoint) {

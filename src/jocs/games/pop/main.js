@@ -5,9 +5,10 @@ import { createHero } from './hero.js';
 import { createHud } from './hud.js';
 import { createResults } from './results.js';
 import { createFlow } from './flow.js';
-import { setupRankingUI } from './ranking-ui.js';
+import { setupRankingUI, PROMPT_OFF } from './ranking-ui.js';
+import { store } from '#plassa/storage.js';
 import { setupOrientation } from '#plassa/orientation.js';
-import { onNativeBack, onAppInactive, exitGame, CAP_APP } from '#plassa/native.js';
+import { onNativeBack, onAppInactive, exitGame, CAP_APP, IN_LAUNCHER, appCovers, askAccount } from '#plassa/native.js';
 import { t, applyWords } from './i18n.js';
 import { setMusicOn, musicOn, startHomeMusic, unlock, audioPage, watchAudio, SFX } from './audio.js';
 import { setupLevelStep } from './level-step.js';
@@ -37,7 +38,9 @@ let booted = false; // the boot screen is up: nothing is drawn under it (see the
 const lines = bootLines($('boot-line')); // its funny lines while it lasts; it leaves at a line's end, as mulassa.cat's
 // The public board (ranking-ui.js). The dev bot's runs start at BOT_FROM points: they are not the game's and never go.
 const rankingUI = setupRankingUI({ t, focusBack: () => $('menu-best').focus({ focusVisible: false }),
-  askName: run => settings().then(m => m.promptName(run, rankingUI.named), () => {}) });
+  // the app's launcher sheet once it owns the account (plassa askAccount): its «don't remind me» kept as the web sheet's
+  askName: run => !store.get(PROMPT_OFF) && askAccount('prompt', r => { if (r?.never) { store.set(PROMPT_OFF, '1'); syncSettingsBtn(); } rankingUI.named(); },
+    () => settings().then(m => m.promptName(run, rankingUI.named), () => {})) });
 const hud = createHud({ board, t });
 const flow = createFlow({ board, hero, hud, results: createResults({ board, hero, t, rankingUI }), rankingUI, t, booted: () => booted });
 errors.context(() => ({ game: 'pop', state: flow.mode, booted, gl: GL_NAME })); // crash reports as the main game's (plassa/errors.js)
@@ -74,8 +77,15 @@ document.fonts.ready.then(fitExitTip);
 $('back').addEventListener('click', e => {
   if (e.button || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
   e.preventDefault();
-  exitGame($('back').href);
+  if (!IN_LAUNCHER || backHoldFailed) exitGame($('back').href); // the app: held only (home-hold.js, below), never a tap while it loads
 });
+// the app: a home held down instead, and no ⚙ once the launcher owns every row of it (Pop has none of its own)
+let backHoldFailed = false; // its chunk failed to load (a broken bundle): the tap leaves then, as on the website, never no way out
+if (IN_LAUNCHER) import('#plassa/home-hold.js').then(m => m.holdToHome($('back'), { hint: t('holdHome'), leave: () => exitGame() }), () => { backHoldFailed = true; });
+const syncSettingsBtn = () => { $('settings').hidden = appCovers('language', 'account', 'feedback', 'about') && !store.get(PROMPT_OFF); }; // kept for «Proposta de publicar» while it is off
+syncSettingsBtn();
+// «Activa» in ⚙ may have taken its last row: decided again as the sheet closes (a dialog's close does not bubble: captured)
+document.addEventListener('close', e => { if (e.target.id === 'settings-menu') syncSettingsBtn(); }, true);
 $('game').addEventListener('pointerdown', e => flow.tap(e.clientX, e.clientY));
 const levelStep = setupLevelStep({ t, onPlay: flow.start }); // «Juga» asks for the level first; «Torna-hi» keeps it
 // «Com es juga?», and the first «Juga» goes through it (help.js), once
@@ -102,7 +112,7 @@ $('settings').addEventListener('click', () => settings().then(m => m.openSetting
 $('end-name').addEventListener('click', e => {
   const a = e.currentTarget;
   e.preventDefault();
-  settings().then(m => m.openProfile(a.dataset.kind, rankingUI.named, a.dataset.kind === 'create' ? rankingUI.runLine() : null), () => { location.href = a.href; }); // the chunk failed: mulassa.cat's sheet
+  askAccount(a.dataset.kind, rankingUI.named, () => settings().then(m => m.openProfile(a.dataset.kind, rankingUI.named, a.dataset.kind === 'create' ? rankingUI.runLine() : null), () => { location.href = a.href; })); // the chunk failed: mulassa.cat's sheet
 });
 const musicBtns = document.querySelectorAll('.music-btn'); // the HUD's and the home's
 const syncMusicBtn = () => { for (const b of musicBtns) { b.setAttribute('aria-pressed', musicOn()); b.querySelector('.music-off').toggleAttribute('hidden', musicOn()); } };

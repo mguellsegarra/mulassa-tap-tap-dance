@@ -1,6 +1,6 @@
 // Haptics, shared by the game's pad and the mini-games. Android vibrates; iPhone (iOS 18+) gives a system tick when a
 // native switch is toggled, so a hidden one is flicked from inside the tap. Only works during a real touch.
-import { nativeHaptics } from './native.js';
+import { nativeHaptics, appOff } from './native.js';
 // The app (Capacitor) has the real engine: each kind a strength, patterns as timed taps, and no tap needed (a fuse running out too).
 const NATIVE_HAPTICS = { tap: [['impact', 'LIGHT']], hit: [['impact', 'MEDIUM']], miss: [['notification', 'ERROR']],
   big: [['impact', 'HEAVY'], ['impact', 'MEDIUM', 90], ['impact', 'HEAVY', 180]], combo: [['impact', 'MEDIUM'], ['impact', 'LIGHT', 70]],
@@ -18,6 +18,7 @@ const hapticSwitch = (() => {
   return l;
 })();
 export function haptic(kind) {
+  if (appOff('vibration')) return; // the app's «Vibració» switched off
   if (nativeHaptics) { nativeHaptic(kind); return; }
   if (navigator.vibrate) { navigator.vibrate(HAPTICS[kind]); return; }
   hapticSwitch.click();

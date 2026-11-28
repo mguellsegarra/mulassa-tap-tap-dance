@@ -1,6 +1,7 @@
 // The synthesized voices (drums, blips, noise hits, claps and every sfx kind), mixed into Chip and the calibration's
 // Clicker: `this` is the engine (ctx, out, bus, noise, applause, voice()).
 import { playThud } from './landing-sound.js';
+import { appOff } from './native.js';
 
 const hz = m => 440 * 2 ** ((m - 69) / 12);
 
@@ -89,6 +90,7 @@ export const VOICES = {
   },
 
   sfx(kind, i = 0, manual = false, weight = 1) { // manual: explicit free-mode action, independent of the music choice; i: a petard's index, a landing's speed
+    if (kind === 'menu' && appOff('sound')) return; // the app's «So» switched off: no menu blips (plassa native.js)
     if (this.menuToken && this.menuMusic === false && !manual && kind !== 'menu') return; // discard muted demo events (UI clicks still sound, over the other app's audio); never replay on enable / play
     if (this.ctx.state && this.ctx.state !== 'running') return; // an immediate effect cannot be queued for a future wake
     if (typeof document !== 'undefined' && (document.hidden || !document.hasFocus())) return;

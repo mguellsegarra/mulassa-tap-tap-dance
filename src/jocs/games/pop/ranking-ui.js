@@ -9,6 +9,9 @@ import { openPages, nextPage, wanted, capped, CAP } from './board-pages.js';
 
 const SUPABASE = !!import.meta.env.VITE_SUPABASE_URL;
 export const RANKING = SUPABASE || import.meta.env.DEV;
+// «No m'ho tornis a recordar» on the name prompt after a nameless run (settings.js's web sheet, or the app's launcher sheet:
+// main.js askName); ⚙ «Proposta de publicar» turns it back on
+export const PROMPT_OFF = 'pop-publish-optout';
 const service = () => (SUPABASE ? import('./ranking.js') : import('./ranking-mock.js'));
 const marks = () => import('../../../ui/badge-svg.js');
 // the server's no to the run itself (pop-score): sent again it can never pass, so it is not kept to retry

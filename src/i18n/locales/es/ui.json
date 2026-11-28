@@ -77,6 +77,7 @@
   "ui.common.ok": "De acuerdo",
   "ui.common.retry": "Vuelve a intentarlo",
   "ui.controls.exitLabel": "SAL",
+  "ui.controls.holdHome": "Mantén pulsado para volver",
   "ui.controls.exitPractice": "Sal de la práctica",
   "ui.controls.howto": "¿Cómo se juega?",
   "ui.controls.photo": "Juego libre",

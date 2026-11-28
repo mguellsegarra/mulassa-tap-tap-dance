@@ -60,6 +60,16 @@ localStorage values, restricted to the main frame on `app.mulassa.cat`, replacin
 document-start injection is unavailable on Android, the page asks `Mulassa.bootstrap()` before boot. `?lang=` keeps
 its precedence; a language change waits for the end of a run before reloading.
 
+Built (27 Nov 2026), with its shortcuts: `GameHost.swift tellShell` and `GameSession.kt LauncherShell` write
+`ui-language-v1` and `menu-music` and set `window.__mulassaShell = { covers, sound, vibration }` (Android's also carries
+`language` and `music`). `packages/plassa/src/native.js` reads it: `appCovers()` hides every `data-app="<what>"` element
+the launcher covers (and sets `<html data-covers>` for layout), `appOff()` gates the UI sound and vibration, `askAccount()`
+hands account sheets to native once `account` is covered. Shortcuts: no version field yet; iOS adds one more script per
+settings change instead of replacing it (WKUserContentController only removes all, Capacitor's too; the last one wins) and
+checks the host inside the script; Android's `Mulassa.bootstrap()` is asked during boot, not before it, so a changed
+language or music saves and reloads the page once. Games never write back (no `setMusic` yet): the game rows are hidden.
+The way out of a game in the app is a home button held 0.8 s (`packages/plassa/src/home-hold.js`).
+
 ### 5. Update readiness and navigation in the same first step
 Today `notifyAppReady()` runs on module import and `applyLiveUpdate` relies on a return path. With a native
 launcher: one web boot/health entry point acknowledges the bundle after the bridge contract initialises; update

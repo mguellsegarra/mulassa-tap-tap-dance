@@ -10,6 +10,10 @@ body:has(#select:not([hidden])):has(#free[hidden]) { --cb-b: 1; }
 body:has(#select:not([hidden])) #free { --cb-i: 0; }
 body:has(#select:not([hidden])) #music { --cb-i: calc(1 - var(--cb-b)); }
 body:has(#select:not([hidden])) #settings { --cb-i: calc(2 - var(--cb-b)); }
+/* the app's launcher owns the sound (plassa native.js hides #music there): the row closes up without it. No :has() (css-costs):
+   :not(#_) only outranks the rules above; these counters are read inside the selector alone */
+html[data-covers~="music"] body:not(#_) { --cb-n: calc(2 - var(--cb-b)); }
+html[data-covers~="music"] #settings:not(#_) { --cb-i: calc(1 - var(--cb-b)); }
 /* free play stands out: a dark lilac disc, the row's gold edge; the gamepad dances on what sounds (controls.js
    freeDance runs its sway on the compositor, on the menu beat): left and right, each beat landing on one side (no ring, it distracted) */
 :is(#free, #howto-walk, .news-free, #watch-walk) { background: #24122c; overflow: hidden; isolation: isolate; } /* two lilac and plum glows drifting slowly over the dark disc (and the help's free-play button: the games look) */

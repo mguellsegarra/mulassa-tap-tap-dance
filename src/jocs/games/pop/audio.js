@@ -10,12 +10,16 @@ import { MELODY } from './melody.js';
 import { createPageAudio } from '#plassa/page-audio.js';
 import { musicPref } from '#plassa/music-pref.js';
 import { errors, errorName } from '#plassa/errors.js';
+import { appCovers, appOff } from '#plassa/native.js';
 
 musicPref.adopt('pica-music'); // Pop's own key until Plassa's one switch (the game's first name)
 let on = musicPref.get(), ctx = null, clock = null, seq = null, sfxBus = null, noise = null, timer = 0;
 let music = null, home = null, homeOn = false, out = null, life = null, hooks = {}; // out: everything's last gain (page-audio.js fades it) // music: on/off for everything musical; home: the home's music, homeOn while it should play
 let tune = null, offset = 0; // the run's conductor; audio time = game time + offset
 let armed = false; // from «Juga»'s tap (the 3, 2, 1) to the run's pause or end: the run should sound
+// the taps' notes, the blasts and the 3, 2, 1: on the website ♪ silences them with the music; in the app the launcher has
+// «Música» and «So» apart, so its music switch leaves them to its sound one (the owner's call, 27 Nov 2026)
+const effects = () => (appCovers('music') ? !appOff('sound') : on);
 
 // The tune is laid out by the game's frames (conductor.js), ahead of them; the timer queues it. The offset only grows: after
 // a stall the music waits for the game rather than bursting the notes it missed (and followGame keeps it on the game's clock).
@@ -60,7 +64,7 @@ function buildAudio() {
   clock = audioClock(ctx);
   out = ctx.createGain();
   out.connect(ctx.destination);
-  life = createPageAudio(ctx, out, { hearing: () => on && (homeOn || armed), stall: () => !!hooks.stall?.() });
+  life = createPageAudio(ctx, out, { hearing: () => (on && (homeOn || armed)) || (effects() && armed), stall: () => !!hooks.stall?.() });
   seq = createSequencer(ctx, out);
   sfxBus = ctx.createBiquadFilter();
   sfxBus.type = 'lowpass';
@@ -139,7 +143,7 @@ export function resumeMusic() {
 }
 
 function tone(freq, dur, type = 'sine', vol = .1, to = freq, at = 0) {
-  if (!ctx || !on) return;
+  if (!ctx || !effects()) return;
   const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + at;
   o.type = type;
   o.frequency.setValueAtTime(freq, t);
@@ -152,7 +156,7 @@ function tone(freq, dur, type = 'sine', vol = .1, to = freq, at = 0) {
 }
 // filtered noise: a lowpass sweeping down from `from` to `to` Hz, fading over `dur`
 function rumble(dur, vol, from, to, at = 0) {
-  if (!ctx || !on) return;
+  if (!ctx || !effects()) return;
   const src = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), t = ctx.currentTime + at;
   src.buffer = noise;
   src.loop = true;

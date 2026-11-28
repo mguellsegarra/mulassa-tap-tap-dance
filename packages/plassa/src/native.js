@@ -36,6 +36,50 @@ export const leaveApp = () => capPlugins?.App?.minimizeApp().catch(() => {}); //
 // The app's native launcher (ios/App/App/Launcher): a game's way out closes it there. The website, and an app without
 // the launcher, go to the page given, as before.
 export const exitGame = path => (capPlugins?.Mulassa ? capPlugins.Mulassa.exitToLauncher() : location.replace(path));
+// The launcher's snapshot (GameHost.swift tellShell, GameSession.kt LauncherShell), set before any script: what the app already
+// does for every game. Anything marked data-app="<what>" (music, language, account, feedback, about) is hidden when the app
+// covers it, so a game never branches on the app itself; the website gets no snapshot and shows everything as before.
+export const IN_LAUNCHER = !!capPlugins?.Mulassa;
+let shell = IN_LAUNCHER ? globalThis.__mulassaShell ?? null : null;
+const covers = new Set();
+export const appCovers = (...what) => what.every(w => covers.has(w));
+// the launcher's own switches the games follow too: its UI sound (ui-sound.js) and its vibration (haptics.js)
+export const appOff = what => shell?.[what] === false;
+function applyShell(s) {
+  shell = s;
+  for (const w of s?.covers ?? []) if (/^[a-z]+$/.test(w)) covers.add(w);
+  if (!covers.size) return;
+  document.documentElement.dataset.covers = [...covers].join(' '); // lets a page close the gap a hidden button leaves (select-chrome.css)
+  document.head.append(Object.assign(document.createElement('style'), { textContent: `${[...covers].map(w => `[data-app="${w}"]`).join(',')}{display:none!important}` }));
+}
+applyShell(shell);
+// An Android WebView that runs no document-start script (before Chrome 89-ish): the same snapshot asked through the bridge.
+// The page has read its language and music at boot by then, so a changed one is saved and the page loads again, once
+// (native-shell.md, contract 4: the snapshot before boot); the rest applies as it answers.
+const BOOTSTRAP_RELOAD = 'shell-bootstrap-reload';
+if (IN_LAUNCHER && !shell) capPlugins.Mulassa.bootstrap?.().then(s => {
+  const want = { 'ui-language-v1': [String(s.language ?? 'ca'), 'ca'], 'menu-music': [s.music === false ? 'off' : 'on', 'on'] }; // [value, what none reads as]
+  let stale = false;
+  try {
+    for (const [k, [v, none]] of Object.entries(want)) {
+      if ((localStorage.getItem(k) ?? none) !== v) stale = true;
+      localStorage.setItem(k, v);
+    }
+    if (stale && !sessionStorage.getItem(BOOTSTRAP_RELOAD)) { sessionStorage.setItem(BOOTSTRAP_RELOAD, '1'); location.reload(); return; }
+    sessionStorage.removeItem(BOOTSTRAP_RELOAD);
+  } catch { /* no storage: this page keeps what it read */ }
+  applyShell(s);
+}, () => {});
+// A game asking for the account (sign in, name, profile): the launcher's own sheet over the game once it covers the account
+// (native-shell.md, contracts 1 and 7), then `back` with its answer ({ completed, never }), as a closed web sheet calls it;
+// a cancelled sheet skips it. mulassa.cat's web sheets otherwise, and when the bridge refuses (an older app without the
+// method): the player always gets a sheet.
+let asking = null; // one launcher sheet at a time: a second ask while it is up (Pop's end-sheet tap and its timed prompt) joins it
+export const askAccount = (what, back, web) => {
+  if (!appCovers('account')) return web();
+  return (asking ??= Promise.resolve().then(() => capPlugins.Mulassa.openAccount({ what })).then(r => { if (r?.completed !== false) back?.(r); }, () => web())
+    .finally(() => { asking = null; }));
+};
 // Live updates (Capgo updater, manual mode): the app runs the web it carries; update-watch.js downloads the site's newer
 // build and switches to it, both only when the page is quiet. Never queued with next(): the plugin applies a queued bundle
 // whenever the app goes to the background, mid-run too. A bundle that never says it is ready is rolled back (appReadyTimeout).

@@ -17,7 +17,7 @@ import { COARSE, CALM } from '../core/env.js';
 import { photoOrient } from './fullscreen.js';
 import { curtain } from './curtain.js';
 import { tr } from '../i18n/messages.js';
-import { exitGame } from '../platform/native.js';
+import { exitGame, IN_LAUNCHER } from '../platform/native.js';
 
 const practiceLabel = document.getElementById('skip-label'), practiceIcon = document.getElementById('skip-icon');
 const CTL = { photoExit: tr('ui.controls.photoExit'), photo: tr('ui.controls.photo'), plaza: tr('ui.controls.plaza'), photoHelp: tr('ui.controls.photoHelp'), howto: tr('ui.controls.howto'), // resolved once: updateControls runs per frame
@@ -115,7 +115,13 @@ export function freeDance(b) {
 export function enterFree() { if (sheets.freeGate?.ask()) return; curtain(() => { setView(true); if (viewMode) sheets.music?.playFigure(G.figureId); }); } // the figure's own song (a pending selection: the last playable one, the one she drives)
 // Mulassa Games is its own page (jocs/index.html): replace, so bfcache does not keep the game frozen in memory (docs/jocs/README.md)
 export const openGames = () => exitGame('/jocs/');
-freeEl.addEventListener('click', () => { if (G.state === 'select') openGames(); });
+let freeHoldFailed = false; // its chunk failed to load (a broken bundle): the tap leaves then, as on the website, never no way out
+freeEl.addEventListener('click', () => { if (G.state === 'select' && (!IN_LAUNCHER || freeHoldFailed)) openGames(); }); // the app: held only (below)
+// the app: a home held down instead of a tap (plassa home-hold.js), loaded only there
+if (IN_LAUNCHER) {
+  import('./home-hold.js').then(m => m.holdToHome(freeEl, { hint: tr('ui.controls.holdHome'), leave: () => { if (G.state === 'select') openGames(); } }),
+    () => { freeHoldFailed = true; });
+}
 document.getElementById('rotate-exit').addEventListener('click', () => curtain(() => setView(false)));
 let helpWas = null; // which help the ? last said it opens (null: not written yet)
 export function updateControls() {

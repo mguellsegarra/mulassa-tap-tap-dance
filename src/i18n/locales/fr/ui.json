@@ -77,6 +77,7 @@
   "ui.common.ok": "D’accord",
   "ui.common.retry": "Réessaie",
   "ui.controls.exitLabel": "SORS",
+  "ui.controls.holdHome": "Maintiens pour revenir",
   "ui.controls.exitPractice": "Quitte l’essai",
   "ui.controls.howto": "Comment jouer ?",
   "ui.controls.photo": "Jeu libre",

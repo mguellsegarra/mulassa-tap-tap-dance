@@ -53,6 +53,7 @@ const THIN = new Set([
   'platform/render-quality.js', 'ui/badge-tip.js', 'platform/boot.js', 'platform/double-tap.js',
   'ui/focus.js', 'platform/haptics.js', 'platform/storage.js', 'services/update-rules.js',
   'services/errors.js', 'services/sentry-load.js', 'services/update-watch.js', 'i18n/locale.js', 'platform/native.js',
+  'ui/home-hold.js',
 ]);
 for (const n of THIN) assert.equal(
   readFileSync(join(root, n), 'utf8').split('\n').filter(l => l && !l.startsWith('//')).join(),

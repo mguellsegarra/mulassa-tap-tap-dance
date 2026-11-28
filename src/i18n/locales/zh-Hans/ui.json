@@ -77,6 +77,7 @@
   "ui.common.ok": "好的",
   "ui.common.retry": "重试",
   "ui.controls.exitLabel": "退出",
+  "ui.controls.holdHome": "长按返回",
   "ui.controls.exitPractice": "退出练习",
   "ui.controls.howto": "怎么玩？",
   "ui.controls.photo": "自由模式",

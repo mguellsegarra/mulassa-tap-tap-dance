@@ -31,7 +31,7 @@ struct Avatar: View {
 
 struct AccountSheet: View {
     @ObservedObject var model: Launcher
-    // shortcut: kept on the device only; the games do not read them yet (native settings, phase 4)
+    // the games follow these too (GameHost tellShell): music, UI sound and vibration
     @AppStorage("launcher-sound") private var sound = true
     @AppStorage("launcher-music") private var music = true
     @AppStorage("launcher-haptics") private var haptics = true

@@ -94,8 +94,7 @@ class Launcher(private val ctx: Context) {
     var play: (Game, Offset) -> Unit = { _, _ -> }
     // the cartridge lifted into Picked; the activity drops it under the closed iris, so a game returns to the grid
     var pick by mutableStateOf<Pick?>(null)
-    // shortcut: kept on the launcher only; the games read their own sound and music until the settings snapshot
-    // (native-shell.md, contract 4) hands these to them. Vibration already gates the launcher's haptics.
+    // the games follow these too (GameSession.kt LauncherShell, native-shell.md contract 4): music, UI sound and vibration. Vibration already gates the launcher's haptics.
     var sound by toggle("sound"); var music by toggle("music"); var vibration by toggle("vibration")
 
     private fun toggle(key: String) = object : kotlin.properties.ReadWriteProperty<Any?, Boolean> {

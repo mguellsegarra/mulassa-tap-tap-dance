@@ -77,6 +77,7 @@
   "ui.common.ok": "확인",
   "ui.common.retry": "다시 시도",
   "ui.controls.exitLabel": "나가기",
+  "ui.controls.holdHome": "길게 눌러 돌아가기",
   "ui.controls.exitPractice": "연습 나가기",
   "ui.controls.howto": "게임 방법",
   "ui.controls.photo": "자유 놀이",

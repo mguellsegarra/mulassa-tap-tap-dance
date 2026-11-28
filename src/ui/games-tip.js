@@ -1,8 +1,10 @@
 // «Més jocs!» beside the games button (under it on a narrow phone), as Mulassa Pop's bubble: it pops in on the selector and comes back every few seconds
 // (CSS .games-tip), always, as Pop's. CSS hides it with the button (play, the reel) and in free play.
 import { tr } from '../i18n/messages.js';
+import { IN_LAUNCHER } from '../platform/native.js';
 
-export function setupGamesTip({ doc = document, win = globalThis } = {}) {
+export function setupGamesTip({ doc = document, win = globalThis, app = IN_LAUNCHER } = {}) {
+  if (app) return { update() {} }; // the app: the launcher is the games' home, and the button's own hint says to hold it (plassa home-hold.js)
   const btn = doc.getElementById('free');
   let tip = null;
   // where the title's lettering ends: its <svg> box runs wider than what it paints

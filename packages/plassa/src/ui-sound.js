@@ -1,8 +1,10 @@
 // The UI's sound: a blip on every keyboard focus move (sheet-keys.js) and, where a page asks for it (soundOnPress), on
 // every button press. Each page plugs in its own voice: the main game its chip's 'menu', a game its synth or blipOn().
+import { appOff } from './native.js';
+
 let voice = null;
 export const setUiSound = fn => { voice = fn; };
-export const uiSound = () => voice?.();
+export const uiSound = () => { if (!appOff('sound')) voice?.(); }; // the app's «So» switched off: no blips
 
 // A game without a synth: the main game's 'menu' blip (audio-voices.js), on the game's context and bus, so its mute and
 // its unlock hold (a context the browser has not let run yet makes no sound and queues none).

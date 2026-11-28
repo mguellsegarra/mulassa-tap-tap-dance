@@ -77,6 +77,7 @@
   "ui.common.ok": "OK",
   "ui.common.retry": "Try again",
   "ui.controls.exitLabel": "EXIT",
+  "ui.controls.holdHome": "Hold to go back",
   "ui.controls.exitPractice": "Exit practice",
   "ui.controls.howto": "How to play?",
   "ui.controls.photo": "Free play",

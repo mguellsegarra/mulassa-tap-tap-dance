@@ -18,6 +18,8 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import com.getcapacitor.BridgeActivity
 import com.getcapacitor.CapConfig
+import com.getcapacitor.JSArray
+import com.getcapacitor.JSObject
 import com.getcapacitor.Plugin
 import com.getcapacitor.PluginCall
 import com.getcapacitor.PluginMethod
@@ -87,22 +89,23 @@ class GameSession(private val activity: BridgeActivity) {
         // Capacitor's SystemBars shows every bar as it loads (its `hidden` config, false, posted to the main thread): hidden
         // again right after it, before the first frame, or the status bar blinked over the iris
         activity.window.decorView.post { hideStatusBar() }
-        tellLanguage()
+        tellShell()
         activity.bridge?.addWebViewListener(object : WebViewListener() {
             override fun onPageLoaded(webView: WebView?) { loaded++ }
         })
         showCover()
     }
 
-    // The launcher's language is the game's too (native-shell.md, contract 4): saved where the web reads it (ui-language-v1)
-    // before any of the page's scripts run, on the bridge's own origin. The page is only requested so far: this lands first.
-    // shortcut: a WebView without document-start scripts (before Chrome 89-ish) keeps the web's own choice, Catalan by default.
-    private fun tellLanguage() {
+    // The launcher's settings are the game's too (native-shell.md, contract 4): its language and music saved where the web reads
+    // them (ui-language-v1, menu-music) before any of the page's scripts run, on the bridge's own origin, and what it covers, so
+    // the game hides those rows and buttons (plassa native.js). The page is only requested so far: this lands first.
+    // shortcut: a WebView without document-start scripts (before Chrome 89-ish) keeps the web's own choices and rows.
+    private fun tellShell() {
         val web = activity.bridge?.webView ?: return
         if (!WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) return
         AppLanguage.load(activity)
         val url = android.net.Uri.parse(activity.bridge.appUrl)
-        WebViewCompat.addDocumentStartJavaScript(web, AppLanguage.script(), setOf("${url.scheme}://${url.authority}"))
+        WebViewCompat.addDocumentStartJavaScript(web, LauncherShell.script(activity), setOf("${url.scheme}://${url.authority}"))
     }
 
     fun save(out: Bundle) {
@@ -151,10 +154,32 @@ class GameSession(private val activity: BridgeActivity) {
     }
 }
 
-// The launcher's side of the bridge: a game's way out (plassa/native.js exitGame) returns to it.
+// What the launcher hands every game (native-shell.md, contract 4): its language, music, UI sound and vibration, and what it
+// covers. Before the page's scripts (GameSession.tellShell) or, on a WebView without document-start scripts, through the bridge.
+object LauncherShell {
+    private val COVERS = listOf("language", "music")
+    fun data(ctx: android.content.Context): JSObject {
+        val prefs = ctx.getSharedPreferences("launcher", android.content.Context.MODE_PRIVATE)
+        AppLanguage.load(ctx)
+        return JSObject().put("language", AppLanguage.code).put("music", prefs.getBoolean("music", true))
+            .put("sound", prefs.getBoolean("sound", true)).put("vibration", prefs.getBoolean("vibration", true))
+            .put("covers", JSArray(COVERS))
+    }
+    fun script(ctx: android.content.Context): String {
+        val d = data(ctx)
+        return AppLanguage.script() + "try{localStorage.setItem('menu-music','${if (d.getBool("music") == true) "on" else "off"}')}catch(e){}" +
+            "window.__mulassaShell=$d;"
+    }
+}
+
+// The launcher's side of the bridge: a game's way out (plassa/native.js exitGame) returns to it; the snapshot again for a
+// WebView that ran no document-start script (plassa/native.js applyShell).
 @CapacitorPlugin(name = "Mulassa")
 class MulassaPlugin : Plugin() {
     interface Host { fun exitToLauncher() }
+
+    @PluginMethod
+    fun bootstrap(call: PluginCall) = call.resolve(LauncherShell.data(context))
 
     @PluginMethod
     fun exitToLauncher(call: PluginCall) {

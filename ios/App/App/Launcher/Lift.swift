@@ -63,7 +63,7 @@ struct LiftView: View {
                 con.layer("console").offset(y: shown ? 0 : below).opacity(!still || ready ? 1 : 0)
                     .onTapGesture { push(bay) }.accessibilityHidden(true)
                 Image(uiImage: face.front).resizable().frame(width: width, height: height)
-                    .modifier(Turn(angle: angle, color: game.tint, u: u, back: face.back))
+                    .modifier(Turn(angle: angle, color: game.shell, u: u, back: face.back))
                     .modifier(Shake(t: shake))
                     .scaleEffect(up ? 1 + min(1, max(0, p) / bay.edge) * (seatScale - 1) : still ? 0.92 : k)
                     .opacity(still && !up || faded ? 0 : 1)
@@ -241,7 +241,7 @@ private struct Bay {
             return r.uiImage ?? UIImage()
         }
         front = draw(Cartridge(game: game, number: number, image: image, planes: planes, u: u))
-        back = draw(Cartridge.back(color: game.tint, u: u))
+        back = draw(Cartridge.back(color: game.shell, u: u))
         return self
     }
 }

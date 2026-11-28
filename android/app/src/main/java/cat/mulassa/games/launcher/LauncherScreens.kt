@@ -2,6 +2,7 @@
 
 package cat.mulassa.games.launcher
 
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -162,9 +163,15 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
         }) {
             // under a picked cartridge the home leaves the accessibility tree, as iOS's modal lift
             Box(Modifier.fillMaxSize().sky { sky }.then(if (model.pick != null) Modifier.clearAndSetSemantics {} else Modifier)) {
-                // the clouds drift a little against the lean: the sky sits further back than the cartridges
-                Box(Modifier.matchParentSize().graphicsLayer { translationX = -Tilt.x * 10.dp.toPx(); translationY = -Tilt.y * 7.dp.toPx() }) { SkyLife(sky) }
+                // the clouds drift with the lean, further than anything behind a window: the sky is the furthest plane
+                Box(Modifier.matchParentSize().graphicsLayer { translationX = Tilt.x * Tilt.CLOUDS[0].dp.toPx(); translationY = Tilt.y * Tilt.CLOUDS[1].dp.toPx() }) { SkyLife(sky) }
+                Town(sky)
                 Home(model, list, model.pick?.game?.id, { account = true }) { model.pick = it }
+                // a wisp of mist in front of the lowest row, by day: the nearest plane
+                Image(painterResource(R.drawable.cloud_wisp), null, Modifier.align(Alignment.BottomStart).fillMaxWidth(0.9f).graphicsLayer {
+                    alpha = 0.22f * (1 - sky.stars)
+                    translationX = (Tilt.x * Tilt.MIST[0]).dp.toPx() - size.width * 0.22f; translationY = (Tilt.y * Tilt.MIST[1]).dp.toPx() - 110.dp.toPx()
+                }, contentScale = ContentScale.FillWidth)
             }
         }
         frozen?.let {
@@ -187,7 +194,6 @@ fun LauncherRoot(model: Launcher, version: String, hour: Float? = null) {
 @Composable
 private fun Home(model: Launcher, list: LazyListState, picked: String?, account: () -> Unit, pick: (Pick) -> Unit) {
     val wide = LocalConfiguration.current.screenWidthDp.dp; val cols = columns(wide, M)
-    val u = (wide - M * (cols + 1)) / cols / CART_W
     val top = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding() // the bar's room even while the iris hides it: no jump on return
     val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() + M
     val label = stringResource(R.string.html_accountTitle)
@@ -201,19 +207,26 @@ private fun Home(model: Launcher, list: LazyListState, picked: String?, account:
     val clock = remember { Animatable(if (model.arrived) 1e4f else 0f) } // ms since they began to arrive
     LaunchedEffect(model.arrived) { if (model.arrived && clock.value < 1e4f) { clock.animateTo(400f + 60f * rows.size * cols, tween(400 + 60 * rows.size * cols, easing = LinearEasing)); clock.snapTo(1e4f) } }
     fun enter(k: Int): () -> Float = { EaseOut.transform(((clock.value - if (still) 0f else 60f * k) / 400f).coerceIn(0f, 1f)) }
-    val gridTop = top + FALDO_BELOW + FALDO_FRINGE + M // the grid starts a margin under the Faldó's fringe and scrolls under it
+    val fringe = top + FALDO_BELOW + FALDO_FRINGE // the Faldó's bottom: the grid starts one gap under it and scrolls under it
     BoxWithConstraints(Modifier.fillMaxSize().semantics { isTraversalGroup = true }) {
-        // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
-        val (gap, scrolls) = rowGap(maxHeight, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(), gridTop, u * CART_H, rows.size, M)
-        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = M, end = M, top = gridTop, bottom = bottom), verticalArrangement = Arrangement.spacedBy(M), userScrollEnabled = scrolls) {
+        // one gap everywhere when the rows fit, the rows' rule when they do not (Rows.kt)
+        val grid = grid(wide, maxHeight, WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding(), fringe, rows.size, M, CART_W, CART_H)
+        val u = grid.u
+        LazyColumn(Modifier.fillMaxSize(), list, PaddingValues(start = grid.side, end = grid.side, top = fringe + grid.side + grid.lead, bottom = bottom), verticalArrangement = Arrangement.spacedBy(grid.gap), userScrollEnabled = grid.scrolls) {
             itemsIndexed(rows, key = { _, row -> row.joinToString { it?.id ?: "aviat" } }) { k, row ->
-                Row(Modifier.fillMaxWidth().padding(top = if (k > 0) gap - M else 0.dp), horizontalArrangement = Arrangement.spacedBy(M)) {
-                    row.forEachIndexed { c, g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.number(g), model.images[g.id], model.planes[g.id], u, g.id == picked, still, enter(k * cols + c), pick) else Placeholder(u, still, enter(k * cols + c)) } }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(grid.side)) {
+                    row.forEachIndexed { c, g -> Box(Modifier.weight(1f), contentAlignment = Alignment.TopCenter) { if (g != null) Cell(g, model.number(g), model.images[g.id], model.planes[g.id], u, k * cols + c, cols, g.id == picked, still, enter(k * cols + c), pick) else Placeholder(u, model.games.size + 1, cols, still, enter(k * cols + c)) } }
                     repeat(cols - row.size) { Spacer(Modifier.weight(1f)) } // a short last row keeps its cartridges' width
                 }
             }
         }
         // the logo and the avatar on the Faldó, fixed to the screen's top edge (owner, 27 Nov 2026)
+        // the springs and the float tick with the frames, only while the grid shows and animations are on
+        LaunchedEffect(still, Tilt.covered) {
+            if (still || Tilt.covered) return@LaunchedEffect
+            Tilt.rest()
+            while (true) withFrameNanos { Tilt.frame(it, cols) }
+        }
         Faldo(top + FALDO_BELOW)
         // read first (the grid is declared before it and starts higher), and clear of a side cutout or navigation bar
         Row(Modifier.fillMaxWidth().semantics { isTraversalGroup = true; traversalIndex = -1f }
@@ -263,35 +276,40 @@ private fun Faldo(cloth: Dp) {
 }
 
 
-// A cartridge in the grid, with depth (ronda 37): its shadow on the sky, sliding against the lean; the rigid face turning
-// up to 6° sideways and 5° up and down with the phone (Motion.kt) and coming in with the others (`enter`: 0 to 1); behind
-// it, in the same turning layer, its dark side on the edge the lean uncovers. The art slides behind the label's window
-// and the varnish's light crosses it in Cartridge.kt. Transforms, an alpha and small draws: nothing is recomposed.
-private fun Modifier.leaning(u: Dp, tint: androidx.compose.ui.graphics.Color, still: Boolean, enter: () -> Float, shown: () -> Boolean) = this
-    .drawBehind { if (shown()) cartridgeShadow(u.toPx(), Tilt.x, Tilt.y, enter()) }
-    .graphicsLayer {
+// A cartridge in the grid (ronda 39): the shell stands still and square; it only comes in with the others (`enter`: 0 to
+// 1). What is behind its label's window follows the phone, in Cartridge.kt. No turn, no slab, no shadow: over a sky none
+// of them had a wall to lean on.
+private fun Modifier.arriving(still: Boolean, enter: () -> Float, at: Int = 0, cols: Int = 2, u: Dp = 16.43.dp, shown: () -> Boolean): Modifier {
+    val m = FloatArray(3)
+    return graphicsLayer {
         val p = enter()
         alpha = if (shown()) p else 0f
-        if (!still) { translationY = (1 - p) * 28.dp.toPx(); scaleX = 0.94f + 0.06f * p; scaleY = scaleX }
-        // the signs and the focal length (5.2 cartridge widths; a layer's camera distance counts in 72nds of a pixel) of iOS
-        rotationY = -Tilt.TURN_X * Tilt.x; rotationX = Tilt.TURN_Y * Tilt.y; cameraDistance = 5.2f * size.width / 72f
+        if (!still) {
+            // its depth's slide and swing against the lean, and its float at rest (Motion.kt, ronda 40)
+            Tilt.cell(at, cols, true, m)
+            val k = u.toPx() / 16.43f
+            translationX = m[0] * k; translationY = m[1] * k + (1 - p) * 28.dp.toPx(); rotationZ = m[2]
+            scaleX = 0.94f + 0.06f * p; scaleY = scaleX
+        }
     }
-    .drawBehind { cartridgeEdge(u.toPx(), tint, Tilt.x, Tilt.y) }
+}
 
 // A tap lifts it out (Pick.kt); while it is out, its slot stays empty.
 @Composable
-private fun Cell(game: Game, number: Int?, image: ImageBitmap?, planes: Planes?, u: Dp, out: Boolean, still: Boolean, enter: () -> Float, pick: (Pick) -> Unit) {
+private fun Cell(game: Game, number: Int?, image: ImageBitmap?, planes: Planes?, u: Dp, place: Int, cols: Int, out: Boolean, still: Boolean, enter: () -> Float, pick: (Pick) -> Unit) {
     var at by remember { mutableStateOf(Offset.Zero) }
     val aviat = stringResource(R.string.ui_select_aviat)
     val playIt = stringResource(R.string.launcher_play, game.title)
-    Box(Modifier.leaning(u, game.tint, still, enter) { !out }
+    Box(Modifier.arriving(still, enter, place, cols, u) { !out }
         .onGloballyPositioned { at = it.centre() }
         .semantics { contentDescription = if (game.soon) aviat else playIt }
         .squash(u * 0.3f) { pick(Pick(game, at, u)) }) {
-        Cartridge(game.tint, game.short ?: aviat, image, u, locked = game.soon, number = number, planes = planes, lean = { Offset(Tilt.x, Tilt.y) })
+        Cartridge(game.shell, game.short ?: aviat, image, u, locked = game.soon, number = number, planes = planes, lean = { Offset(Tilt.x, Tilt.y) })
     }
 }
 
 @Composable
-private fun Placeholder(u: Dp, still: Boolean, enter: () -> Float) =
-    Box(Modifier.leaning(u, hex("#7a5a44"), still, enter) { true }.clearAndSetSemantics {}) { Cartridge(hex("#7a5a44"), stringResource(R.string.ui_select_aviat), null, u, locked = false, placeholder = true) }
+private fun Placeholder(u: Dp, number: Int, cols: Int, still: Boolean, enter: () -> Float) = // one more to come: every place holds a cartridge (the owner)
+    Box(Modifier.arriving(still, enter, number - 1, cols, u) { true }.clearAndSetSemantics {}) {
+        Cartridge(calm(hex("#ff9d3b")), stringResource(R.string.ui_select_aviat), null, u, locked = true, number = number, lean = { Offset(Tilt.x, Tilt.y) })
+    }

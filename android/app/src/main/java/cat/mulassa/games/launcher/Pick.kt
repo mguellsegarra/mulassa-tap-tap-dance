@@ -235,7 +235,7 @@ fun Picked(model: Launcher, pick: Pick, sounds: ConsoleSounds, veil: Animatable<
         // The cartridge's side, so it reads as a thick object while it turns: a slab DEPTH of its width deep on the edge
         // that faces us, projected as the face's own layer is; the face moves to the box's front plane.
         Box(Modifier.offset((maxWidth - w) / 2, top).size(w, h).drawBehind {
-            lift().draw(this, big.toPx(), pick.game.tint)
+            lift().draw(this, big.toPx(), pick.game.shell)
         })
         Box(Modifier.offset((maxWidth - w) / 2, top).size(w, h).graphicsLayer {
             lift()
@@ -252,10 +252,10 @@ fun Picked(model: Launcher, pick: Pick, sounds: ConsoleSounds, veil: Animatable<
             })) {
             fun back() = cos(Math.toRadians(turn.value.toDouble())) < 0
             Box(Modifier.graphicsLayer { alpha = if (back()) 0f else 1f }) {
-                Cartridge(pick.game.tint, pick.game.short ?: stringResource(R.string.ui_select_aviat), model.images[pick.game.id], big, locked = pick.game.soon, number = model.number(pick.game), planes = model.planes[pick.game.id])
+                Cartridge(pick.game.shell, pick.game.short ?: stringResource(R.string.ui_select_aviat), model.images[pick.game.id], big, locked = pick.game.soon, number = model.number(pick.game), planes = model.planes[pick.game.id])
             }
             // the turn mirrors the back: flipped once more, its engraving reads left to right
-            Box(Modifier.graphicsLayer { alpha = if (back()) 1f else 0f; scaleX = -1f }) { CartridgeBack(pick.game.tint, big) }
+            Box(Modifier.graphicsLayer { alpha = if (back()) 1f else 0f; scaleX = -1f }) { CartridgeBack(pick.game.shell, big) }
         }
         ConsolePanel(cw, ch, { led.value }, console(Modifier))
         // «Juga» runs the same insertion; it fades as the cartridge is dragged away from it

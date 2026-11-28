@@ -15,13 +15,13 @@ class RowsTest {
     @Test fun rowsThatFitSpreadAndStandStill() {
         val (gap, scrolls) = rowGap(932.dp, 34.dp, 150.dp, 226.dp, 3, m) // an iPhone Pro Max: three rows with room to spare
         assertFalse(scrolls)
-        assertEquals((932 - 34 - 16 - 150 - 3 * 226) / 2f, gap.value, 0.01f) // the last row ends a margin over the bar
+        assertEquals(minOf((932 - 34 - 16 - 150 - 3 * 226) / 2f, 24f), gap.value, 0.01f) // spread, a margin and a half at most
     }
 
     @Test fun fewRowsOnATallScreenStayTogether() {
         val (gap, scrolls) = rowGap(1210.dp, 20.dp, 90.dp, 226.dp, 2, m) // an iPad upright: two rows of four
         assertFalse(scrolls)
-        assertEquals(64f, gap.value, 0f)
+        assertEquals(24f, gap.value, 0f)
     }
 
     @Test fun rowsThatAlmostFitCloseUpInsteadOfScrollingByAHair() {
@@ -57,6 +57,22 @@ class RowsTest {
             val cols = columns(w.dp, m); val cart = (w - 16f * (cols + 1)) / cols
             assertTrue("$w: $cart", cart <= 240f && cart >= 130f)
         }
+    }
+
+    @Test fun rowsThatFitGetOneGapEverywhere() { // 393 x 852 with three rows of two: sides, columns, rows, top and bottom alike
+        val g = grid(393.dp, 852.dp, 34.dp, 134.dp, 3, m, 10.32f, 12.42f)
+        assertFalse(g.scrolls); assertEquals(2, g.cols); assertEquals(g.side.value, g.gap.value, 0f)
+        assertTrue("gap ${g.gap.value}", g.gap.value in 8f..32f)
+        assertEquals(393f, 2 * 10.32f * g.u.value + 3 * g.side.value, 0.05f) // the width, filled
+        assertEquals(852f - 34f - 134f, 3 * 12.42f * g.u.value + 4 * g.gap.value, 0.05f) // and the height, from the fringe to the bar
+    }
+
+    @Test fun aTabletOrManyRowsKeepTheMarginAndTheRowsRule() {
+        val pad = grid(1210.dp, 834.dp, 20.dp, 90.dp, 1, m, 10.32f, 12.42f)
+        assertEquals(5, pad.cols); assertEquals(16f, pad.side.value, 0f); assertFalse(pad.scrolls)
+        assertTrue("lead ${pad.lead.value}", pad.lead.value > 100f) // one row on a tablet sits towards the middle, not under the fringe
+        val many = grid(393.dp, 852.dp, 34.dp, 134.dp, 5, m, 10.32f, 12.42f)
+        assertEquals(16f, many.side.value, 0f); assertTrue(many.scrolls)
     }
 
     @Test fun oneRowKeepsTheMargin() {

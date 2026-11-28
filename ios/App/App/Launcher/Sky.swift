@@ -47,9 +47,26 @@ struct SkyBackground: View {
                                    .init(color: Color(sky.bottom), location: 1)], startPoint: .top, endPoint: .bottom)
                 .overlay { Stars().opacity(sky.stars) }
                 .overlay { SkyLife(sky: sky, top: g.safeAreaInsets.top, still: still).modifier(Drifting()) }
+                .overlay(alignment: .bottom) { Town(sky: sky, width: g.size.width) }
                 .ignoresSafeArea()
         }
         .allowsHitTesting(false)
+    }
+}
+
+// Valls at the foot of the sky (ronda 40; tools/app/valls-skyline.py draws it): the roofs and the bell towers as one cut-out in the sky's own
+// far tone, a little wider and lower than the screen so the lean never shows its ends.
+private struct Town: View {
+    let sky: Sky
+    let width: CGFloat
+    var body: some View {
+        // a third wider than the screen: the bell towers stand clear of the lowest row; lighter than a night sky, darker than a day's
+        let w = width * 1.35, h = w * 144 / 900, far = sky.bottom.mix(UIColor(hex: sky.stars > 0.5 ? "#5a6da6" : "#1c2a4e"), 0.5)
+        Image("valls").resizable().frame(width: w, height: h)
+            .foregroundStyle(Color(far).opacity(0.86))
+            .offset(y: 10)
+            .modifier(Drifting(by: Depth.town))
+            .accessibilityHidden(true)
     }
 }
 

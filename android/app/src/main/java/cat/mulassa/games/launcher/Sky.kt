@@ -2,6 +2,11 @@
 
 package cat.mulassa.games.launcher
 
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.Alignment
 import android.provider.Settings
 import androidx.annotation.DrawableRes
 import cat.mulassa.games.R
@@ -91,6 +96,17 @@ fun rememberSky(hour: Float?): Sky {
         while (true) { sky = skyAt(hour ?: now()); delay(5 * 60 * 1000L) }
     }
     return sky
+}
+
+// Valls at the foot of the sky (ronda 40; tools/app/valls-skyline.py draws it): the roofs and the bell towers as one cut-out in the sky's own
+// far tone, a little wider and lower than the screen so the lean never shows its ends. It goes with the lean, as the clouds.
+@Composable
+fun BoxScope.Town(sky: Sky) {
+    // a third wider than the screen: the bell towers stand clear of the lowest row; lighter than a night sky, darker than a day's
+    val far = sky.bottom.mix(hex(if (sky.stars > 0.5f) "#5a6da6" else "#1c2a4e"), 0.5f).copy(alpha = 0.86f)
+    Image(painterResource(R.drawable.valls), null, Modifier.align(Alignment.BottomCenter).requiredWidth(LocalConfiguration.current.screenWidthDp.dp * 1.35f).graphicsLayer {
+        translationX = (Tilt.x * Tilt.TOWN[0]).dp.toPx(); translationY = (Tilt.y * Tilt.TOWN[1]).dp.toPx() + 10.dp.toPx()
+    }, contentScale = ContentScale.FillWidth, colorFilter = ColorFilter.tint(far))
 }
 
 // The gradient and the static stars (three tiled dot grids), as the prototype's CSS layers. B1 draws its own clouds.

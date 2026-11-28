@@ -9,19 +9,18 @@ struct Cartridge: View, Equatable {
     let name: String
     let image: UIImage?
     let locked: Bool
-    var plus = false // the odd count's filler: a + on a brown window instead of art
     var number: Int? // its place in the catalogue, engraved in the grip (the filler has none)
     var planes: Planes? // the art in two planes (ronda 38): the figure slides over its backdrop as the phone leans
     var window = true // the art in its window; the grid draws it apart, to slide behind the label (Motion.swift)
     let u: CGFloat
 
     init(game: Game, number: Int?, image: UIImage?, planes: Planes? = nil, u: CGFloat) {
-        color = game.tint; name = game.label; self.image = image; self.planes = planes; locked = game.soon; self.number = number; self.u = u
+        color = game.shell; name = game.label; self.image = image; self.planes = planes; locked = game.soon; self.number = number; self.u = u
     }
     // fills the lone last slot of an odd count: not a game, nothing to tap
-    static func filler(u: CGFloat) -> Cartridge {
-        var c = Cartridge(color: UIColor(hex: "#7a5a44"), name: Bundle.main.localizedString(forKey: "ui.select.aviat", value: nil, table: nil), image: nil, locked: false, u: u)
-        c.plus = true
+    static func filler(u: CGFloat, number: Int) -> Cartridge {
+        var c = Cartridge(color: Game.calm(UIColor(hex: "#ff9d3b")), name: Bundle.main.localizedString(forKey: "ui.select.aviat", value: nil, table: nil), image: nil, locked: true, u: u)
+        c.number = number
         return c
     }
     private init(color: UIColor, name: String, image: UIImage?, locked: Bool, u: CGFloat) {
@@ -29,18 +28,18 @@ struct Cartridge: View, Equatable {
     }
 
     static func == (a: Cartridge, b: Cartridge) -> Bool {
-        a.color == b.color && a.name == b.name && a.image === b.image && a.planes?.front === b.planes?.front && a.planes?.back === b.planes?.back && a.locked == b.locked && a.plus == b.plus && a.number == b.number && a.window == b.window && a.u == b.u
+        a.color == b.color && a.name == b.name && a.image === b.image && a.planes?.front === b.planes?.front && a.planes?.back === b.planes?.back && a.locked == b.locked && a.number == b.number && a.window == b.window && a.u == b.u
     }
 
     var body: some View {
         let c = color, u = u, number = number
         ZStack(alignment: .topLeading) {
-            Canvas { ctx, _ in Self.draw(ctx, color: c, number: number, u: u, back: false) }
+            Canvas { ctx, _ in Self.draw(ctx, color: c, number: number, u: u, back: false, locked: locked) }
             if window { Window(cart: self, lean: .zero) }
             Text(name)
-                .font(.baloo(1.4 * u)) // Baloo everywhere: the owner dropped the pixel face
-                .foregroundStyle(Palette.ink)
-                .lineLimit(1).minimumScaleFactor(0.5) // a long name shrinks rather than being cut
+                .font(.baloo(1.15 * u)) // one size for every name in a row (ronda 39); Baloo everywhere
+                .foregroundStyle(Palette.ink.opacity(locked ? 0.56 : 1))
+                .lineLimit(1).minimumScaleFactor(0.75) // a long translation shrinks rather than being cut
                 .frame(width: 7.9 * u - 4, height: 1.73 * u)
                 .offset(x: 1.21 * u + 2, y: 7.92 * u)
         }
@@ -52,11 +51,11 @@ struct Cartridge: View, Equatable {
     // behind), with an engraved frame and the Mulassa's head in its round badge (ronda 33, the owner's B3-cap-final), tone
     // on tone. Lift shows it as a real back face, so it reads.
     static func back(color: UIColor, u: CGFloat) -> some View {
-        Canvas { ctx, _ in draw(ctx, color: color, number: nil, u: u, back: true) }
+        Canvas { ctx, _ in draw(ctx, color: color, number: nil, u: u, back: true, locked: false) }
             .frame(width: size.width * u, height: size.height * u).drawingGroup()
     }
 
-    private static func draw(_ ctx: GraphicsContext, color c: UIColor, number: Int?, u: CGFloat, back: Bool) {
+    private static func draw(_ ctx: GraphicsContext, color c: UIColor, number: Int?, u: CGFloat, back: Bool, locked: Bool) {
         func r(_ x: CGFloat, _ y: CGFloat, _ w: CGFloat, _ h: CGFloat, _ rad: CGFloat, _ fill: UIColor) {
             ctx.fill(Path(roundedRect: CGRect(x: x * u, y: y * u, width: w * u, height: h * u), cornerRadius: rad * u), with: .color(Color(fill)))
         }
@@ -72,6 +71,8 @@ struct Cartridge: View, Equatable {
         shell.fill(shape, with: .linearGradient(Gradient(stops: [.init(color: Color(c.mix(.white, 0.18)), location: 0), .init(color: Color(c), location: 0.52),
                                                                .init(color: Color(c.mix(UIColor(hex: "#251008"), 0.12)), location: 1)]),
                                               startPoint: .zero, endPoint: CGPoint(x: 0, y: 12.05 * u)))
+        // its own contour (ronda 39): over a sky nothing casts a shadow, so a warm line 1 pt wide sets it off at every hour
+        shell.stroke(shape, with: .color(Color(c.mix(UIColor(hex: "#2a1a10"), 0.48))), lineWidth: max(1, 0.06 * u))
         if back { return engrave(ctx, color: c, u: u) } // (before the edge lights: the back's outline is mirrored, they are not)
         // volume (ronda 36): the light catches the top and left edges of the moulded shell, the right one falls in shade
         r(0.5, 0.07, 9.32, 0.09, 0.045, c.mix(.white, 0.55)); r(0.23, 0.34, 0.09, 11.4, 0.045, c.mix(.white, 0.38))
@@ -89,27 +90,11 @@ struct Cartridge: View, Equatable {
         r(0.89, 2.04, 8.54, 7.9, 0.33, UIColor(hex: "#fff3d6"))
         let socket = UIColor(hex: "#38271b")
         r(1.96, 10.78, 6.4, 1.27, 0.2, socket); r(1.96, 11.6, 6.4, 0.45, 0, socket)
-        for k in 0..<10 { r(5.16 - (9 * 0.61 + 0.33) / 2 + CGFloat(k) * 0.61, 10.98, 0.33, 1.07, 0, UIColor(hex: "#efbf59")) }
+        for k in 0..<10 { r(5.16 - (9 * 0.61 + 0.33) / 2 + CGFloat(k) * 0.61, 10.98, 0.33, 1.07, 0, UIColor(hex: locked ? "#c9a35c" : "#efbf59")) }
     }
 }
 
 extension Cartridge {
-    // the face's outline (draw's SHAPE), for the grid's slab edge behind it
-    static func outline(u: CGFloat) -> Path {
-        Path { p in
-            p.addLines([(0.16, 0.25), (0.41, 0), (9.91, 0), (10.16, 0.25), (10.16, 10.95), (9.06, 12.05), (0.41, 12.05), (0.16, 11.8)].map { CGPoint(x: $0.0 * u, y: $0.1 * u) })
-            p.closeSubpath()
-        }
-    }
-    // its shadow on the sky, under the grid's cartridges: two soft steps, no blur (a blur is redrawn as the cartridge leans)
-    static func shadow(u: CGFloat) -> some View {
-        ZStack(alignment: .topLeading) {
-            RoundedRectangle(cornerRadius: 0.6 * u).fill(.black.opacity(0.1)).frame(width: 9.6 * u, height: 11.6 * u).offset(x: 0.36 * u, y: 1.25 * u)
-            RoundedRectangle(cornerRadius: 0.8 * u).fill(.black.opacity(0.07)).frame(width: 10.2 * u, height: 11.9 * u).offset(x: 0.06 * u, y: 1.35 * u)
-        }
-        .frame(width: size.width * u, height: size.height * u, alignment: .topLeading)
-    }
-
     // The back's engraving: each mark twice, the shell's light 1 pt lower, then its darker inset on top.
     fileprivate static func engrave(_ ctx: GraphicsContext, color c: UIColor, u: CGFloat) {
         let ink = UIColor(hex: "#1d100a"), cut = Color(c.mix(ink, 0.3)), lit = Color(c.mix(UIColor(hex: "#fff3d6"), 0.45))
@@ -127,44 +112,54 @@ extension Cartridge {
 
 struct Planes { let back: UIImage, front: UIImage }
 
-// The label's window (ronda 37, Astra's recipe): the art sits a little behind the label, drawn 12 % bigger than its window, so
-// it can slide under the frame as the phone leans (`lean`, Motion.swift's -1...1) without showing an edge; over it the
-// cavity's shade along the top and left, the lock, and the varnish: one soft warm light that moves across the glass and
-// grows a little with the lean. The window itself stays put: only what is behind it and the light on it move.
+// A game to come wears its colour calmed towards a satin amber, so the ones that can be played lead the grid (ronda 39).
+extension Game {
+    var shell: UIColor { soon ? Game.calm(tint) : tint }
+    static func calm(_ c: UIColor) -> UIColor { c.mix(UIColor(hex: "#d8bf8f"), 0.42) }
+}
+
+// The label's window (ronda 39, Carbon's recipe after the owner tried ronda 37: «el 3D es veu raro»): the cartridge itself
+// never turns. What is behind the glass moves with the lean (`lean`, Motion.swift's -1...1), every plane the same way the
+// eye would see it and more the further back: the backdrop most, the figure a little the other way, 8.7 pt apart on a
+// 172 pt cartridge; a flat cover slides as a backdrop and its lock floats over it as a figure. Nothing veils the art at
+// rest; leaning draws one narrow band of light across the glass. Offsets and one gradient: nothing is redrawn.
 struct Window: View {
     let cart: Cartridge
     let lean: CGPoint
 
     var body: some View {
-        let u = cart.u, art = CGRect(x: 1.21 * u, y: 2.35 * u, width: 7.9 * u, height: 5.35 * u), far = min(1, hypot(lean.x, lean.y))
-        Group {
-            if cart.plus {
-                Color(UIColor(hex: "#59402e")).overlay {
-                    Image(systemName: "plus").font(.system(size: 2.1 * u, weight: .bold)).foregroundStyle(Palette.cream.opacity(0.8))
-                }
-            } else {
-                Color(cart.color).overlay {
-                    if let planes = cart.planes { // the backdrop goes one way and the figure the other: 6.8 pt apart on a 160 pt cartridge
-                        Cover(image: planes.back, size: art.size).scaleEffect(1.12).offset(x: -lean.x * 0.29 * u, y: -lean.y * 0.2 * u)
-                        // 5 % bigger: a figure cut by its picture's edge never shows that edge as it slides
-                        Cover(image: planes.front, size: art.size).scaleEffect(1.05).offset(x: lean.x * 0.15 * u, y: lean.y * 0.11 * u)
-                    } else if let image = cart.image {
-                        Cover(image: image, size: art.size).scaleEffect(1.12).offset(x: -lean.x * 0.4 * u, y: -lean.y * 0.28 * u)
-                    }
-                }
+        let u = cart.u, art = CGRect(x: 1.21 * u, y: 2.35 * u, width: 7.9 * u, height: 5.35 * u)
+        let far = CGSize(width: lean.x * 0.34 * u, height: lean.y * 0.22 * u), near = CGSize(width: -lean.x * 0.18 * u, height: -lean.y * 0.11 * u)
+        Color(cart.color).overlay {
+            if let planes = cart.planes {
+                Cover(image: planes.back, size: art.size).scaleEffect(1.16).offset(far)
+                // 5 % bigger: a figure cut by its picture's edge never shows that edge as it slides
+                Cover(image: planes.front, size: art.size).scaleEffect(1.05).offset(near)
+            } else if let image = cart.image {
+                Cover(image: image, size: art.size).scaleEffect(1.16).offset(far)
             }
         }
         .overlay(alignment: .top) { LinearGradient(colors: [.black.opacity(0.3), .black.opacity(0)], startPoint: .top, endPoint: .bottom).frame(height: 0.5 * u) }
         .overlay(alignment: .leading) { LinearGradient(colors: [.black.opacity(0.2), .black.opacity(0)], startPoint: .leading, endPoint: .trailing).frame(width: 0.4 * u) }
-        .overlay { if cart.locked { Color(red: 28 / 255, green: 17 / 255, blue: 10 / 255).opacity(0.55).overlay(Lock().frame(width: 2.4 * u, height: 2.4 * u)) } }
-        .overlay {
-            EllipticalGradient(colors: [Palette.cream.opacity(0.1 + 0.16 * far), Palette.cream.opacity(0)],
-                               center: UnitPoint(x: 0.24 + 0.6 * lean.x, y: 0.12 + 0.44 * lean.y), startRadiusFraction: 0, endRadiusFraction: 0.75)
-        }
+        .overlay { if cart.locked { Color(red: 28 / 255, green: 17 / 255, blue: 10 / 255).opacity(0.5).overlay(Lock().frame(width: 2.2 * u, height: 2.2 * u).offset(near)) } }
+        .overlay { Glint(lean: lean, strength: cart.locked ? 0.075 : 0.155) }
         .frame(width: art.width, height: art.height)
         .clipShape(RoundedRectangle(cornerRadius: 0.3 * u))
         .offset(x: art.minX, y: art.minY)
         .allowsHitTesting(false)
+    }
+}
+
+// The glass's light: a narrow diagonal band that crosses the window as the phone leans, and is not there at rest.
+private struct Glint: View {
+    let lean: CGPoint
+    let strength: Double
+    var body: some View {
+        let at = 0.5 + 0.36 * lean.x + 0.24 * lean.y, a = strength * min(1, hypot(lean.x, lean.y) * 1.6)
+        let light = Color(UIColor(hex: "#fff8e6"))
+        LinearGradient(stops: [.init(color: light.opacity(0), location: min(1, max(0, at - 0.28))), .init(color: light.opacity(a), location: min(1, max(0, at))),
+                               .init(color: light.opacity(0), location: min(1, max(0, at + 0.28)))],
+                       startPoint: UnitPoint(x: 0, y: 0.2), endPoint: UnitPoint(x: 1, y: 0.8))
     }
 }
 

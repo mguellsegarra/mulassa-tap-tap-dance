@@ -81,12 +81,18 @@ private struct Home: View {
     var body: some View {
         GeometryReader { g in
             ScrollView {
-                Cartridges(model: model, width: g.size.width, gap: gap(g).gap, lifted: lifted, lift: lift)
-                    .padding([.horizontal, .bottom], M)
-                    .padding(.top, Faldo.below + Faldo.fringe + M) // the grid starts a margin under the fringe
+                let grid = grid(g)
+                Cartridges(model: model, grid: grid, lifted: lifted, lift: lift)
+                    .padding(.horizontal, grid.side).padding(.bottom, M)
+                    .padding(.top, Faldo.below + Faldo.fringe + grid.side + grid.lead) // the grid starts one gap under the fringe
             }
             .scrollIndicators(.hidden)
-            .scrollDisabled(!gap(g).scrolls) // every row fits: the page stands still
+            .overlay(alignment: .bottom) { // a wisp of mist in front of the lowest row, by day: the nearest plane
+                Image("cloud_wisp").resizable().scaledToFit().frame(width: g.size.width * 0.9)
+                    .opacity(0.22 * (1 - sky.stars)).offset(x: -g.size.width * 0.2, y: -g.size.height * 0.12)
+                    .modifier(Drifting(by: Depth.mist)).allowsHitTesting(false).accessibilityHidden(true)
+            }
+            .scrollDisabled(!grid(g).scrolls) // every row fits: the page stands still
             .overlay(alignment: .top) {
                 ZStack(alignment: .top) {
                     Faldo(cloth: g.safeAreaInsets.top + Faldo.below)
@@ -112,12 +118,9 @@ private struct Home: View {
         .onChange(of: lifted) { _, out in Tilt.shared.set(home: out == nil) } // level, and the sensor off, under a lift
     }
 
-    // the rows' gap (rowGap's rule): spread over the screen when they all fit, a row cut across its middle when not
-    private func gap(_ g: GeometryProxy) -> (gap: CGFloat, scrolls: Bool) {
-        let cols = columns(g.size.width), u = (g.size.width - CGFloat(cols + 1) * M) / CGFloat(cols) / Cartridge.size.width
-        let rows = (model.games.count + cols - 1) / cols
-        let top = g.safeAreaInsets.top + Faldo.below + Faldo.fringe + M // the grid's first row, under the Faldó
-        return rowGap(view: g.safeAreaInsets.top + g.size.height + g.safeAreaInsets.bottom, bottom: g.safeAreaInsets.bottom, top: top, row: Cartridge.size.height * u, rows: rows)
+    private func grid(_ g: GeometryProxy) -> Grid {
+        Grid(width: g.size.width, view: g.safeAreaInsets.top + g.size.height + g.safeAreaInsets.bottom, bottom: g.safeAreaInsets.bottom,
+             fringe: g.safeAreaInsets.top + Faldo.below + Faldo.fringe, count: model.games.count)
     }
 }
 
@@ -168,6 +171,29 @@ struct Faldo: View {
 // two giants and one row). Android's Rows.kt is the same rule.
 func columns(_ width: CGFloat) -> Int { max(2, Int(((width - M) / (240 + M)).rounded(.up))) }
 
+// The grid's measures (ronda 39, Fable's «un sol espai a tot arreu»): when the rows fit, one gap everywhere — at the sides,
+// between columns, between rows, under the fringe and over the home indicator — found by solving the width and the
+// height together; the cartridges take the size that leaves it. Out of that gap's range (8 to 32 pt: a tablet, many
+// rows) the margins are M and the rows follow rowGap. `fringe`: the header's bottom. Android's Rows.kt is the same.
+struct Grid: Equatable {
+    let cols: Int, u: CGFloat, side: CGFloat, gap: CGFloat, scrolls: Bool
+    var lead: CGFloat = 0 // room left over a still grid on a tall screen, 42 % of it above the rows: they sit a little over the middle
+    init(width: CGFloat, view: CGFloat, bottom: CGFloat, fringe: CGFloat, count: Int) {
+        let cols = columns(width), rows = (count + cols - 1) / cols, n = CGFloat(rows), c = CGFloat(cols)
+        let k = n * Cartridge.size.height / (c * Cartridge.size.width), den = (n + 1) - k * (c + 1) // rows' height per point of width
+        let even = den == 0 ? 0 : (view - bottom - fringe - k * width) / den
+        if rows > 0, even >= M / 2, even <= 2 * M {
+            (self.cols, u, side, gap, scrolls) = (cols, (width - (c + 1) * even) / (c * Cartridge.size.width), even, even, false)
+        } else {
+            let u = (width - (c + 1) * M) / (c * Cartridge.size.width)
+            let rule = rowGap(view: view, bottom: bottom, top: fringe + M, row: Cartridge.size.height * u, rows: rows)
+            (self.cols, self.u, side, gap, scrolls) = (cols, u, M, rule.gap, rule.scrolls)
+            let spare = view - bottom - M - (fringe + M) - n * Cartridge.size.height * u - rule.gap * max(n - 1, 0)
+            if !rule.scrolls, spare > 0 { lead = spare * 0.42 }
+        }
+    }
+}
+
 // The grid's gap between rows, and whether it scrolls (ronda 32-33, the owner). Rows that fit (down to the home indicator,
 // with a gap of half a margin at least) spread over the screen and the page stands still. Rows that overflow it («que la
 // gent sàpiga que hi ha scroll») get the gap, from M/2 to 2M, that makes the screen's bottom edge cut a row as near its
@@ -177,8 +203,8 @@ func columns(_ width: CGFloat) -> Int { max(2, Int(((width - M) / (240 + M)).rou
 func rowGap(view: CGFloat, bottom: CGFloat, top: CGFloat, row: CGFloat, rows: Int) -> (gap: CGFloat, scrolls: Bool) {
     guard rows > 1 else { return (M, top + CGFloat(rows) * row > view - bottom) }
     let n = CGFloat(rows), room = view - bottom - M - top
-    // (spread, but never more than four margins apart: two rows on a tall iPad stood a screen away from each other)
-    if n * row + M / 2 * (n - 1) <= room { return (min((room - n * row) / (n - 1), 4 * M), false) }
+    // (spread, but never more than a margin and a half apart: the rows stay a group; Grid.lead places what room is left)
+    if n * row + M / 2 * (n - 1) <= room { return (min((room - n * row) / (n - 1), 1.5 * M), false) }
     var best = M, miss = CGFloat.infinity
     for i in stride(from: rows - 1, through: 1, by: -1) { // i rows above the cut one; the most first: on a tie the gap stays small
         let k = CGFloat(i), gap = min(max((view - top - row * 0.5) / k - row, M / 2), 2 * M) // would cut row i at its middle
@@ -191,20 +217,19 @@ func rowGap(view: CGFloat, bottom: CGFloat, top: CGFloat, row: CGFloat, rows: In
 // Every game, two a row; an odd count gets a filler cartridge in the lone last slot.
 struct Cartridges: View {
     @ObservedObject var model: Launcher
-    let width: CGFloat
-    let gap: CGFloat // between rows; M between columns
+    let grid: Grid
     let lifted: String?
     let lift: (Lifted) -> Void
 
     var body: some View {
-        let cols = columns(width), u = (width - CGFloat(cols + 1) * M) / CGFloat(cols) / Cartridge.size.width
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: M), count: cols), spacing: gap) {
+        let cols = grid.cols, u = grid.u
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: grid.side), count: cols), spacing: grid.gap) {
             ForEach(Array(model.games.enumerated()), id: \.element.id) { k, game in
-                CartridgeCell(model: model, game: game, u: u, lift: lift).opacity(lifted == game.id ? 0 : 1) // its slot stays empty while it is out
+                CartridgeCell(model: model, game: game, u: u, row: k / cols, col: k % cols, lift: lift).opacity(lifted == game.id ? 0 : 1) // its slot stays empty while it is out
                     .modifier(Arriving(k: k, arrived: model.arrived))
             }
-            if model.games.count % cols != 0 { // a last row left short gets one filler
-                LeaningCartridge(cart: Cartridge.filler(u: u)).modifier(Arriving(k: model.games.count, arrived: model.arrived))
+            if model.games.count % cols != 0 { // a last row left short gets one more to come: every place holds a cartridge (the owner)
+                LeaningCartridge(cart: Cartridge.filler(u: u, number: model.games.count + 1), row: model.games.count / cols, col: model.games.count % cols).modifier(Arriving(k: model.games.count, arrived: model.arrived))
                     .accessibilityHidden(true)
             }
         }
@@ -215,11 +240,12 @@ struct CartridgeCell: View {
     @ObservedObject var model: Launcher
     let game: Game
     let u: CGFloat
+    var row = 0, col = 0
     let lift: (Lifted) -> Void
 
     var body: some View {
         GeometryReader { p in
-            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { LeaningCartridge(cart: Cartridge(game: game, number: model.number(game), image: model.images[game.id], planes: model.planes[game.id], u: u)) }
+            Button { lift(Lifted(game: game, from: p.frame(in: .global))) } label: { LeaningCartridge(cart: Cartridge(game: game, number: model.number(game), image: model.images[game.id], planes: model.planes[game.id], u: u), row: row, col: col) }
                 .buttonStyle(Squash(depth: 0.3 * u))
                 .accessibilityLabel(game.soon ? Text("ui.select.aviat") : Text(verbatim: game.title))
         }

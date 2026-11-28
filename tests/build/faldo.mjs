@@ -42,10 +42,11 @@ for (const hex of ['7d1f35', '3d0a18', 'f2c230', 'd9a521', 'e9b62a', 'fff0b0']) 
   assert.match(andFaldo, new RegExp(hex, 'i'), `Android's Faldó lacks #${hex}`);
 }
 
-// the grid starts a margin under the fringe, in its padding and in the row-gap rule alike
-assert.match(iosHome, /\.padding\(\.top, Faldo\.below \+ Faldo\.fringe \+ M\)/, 'iOS grid does not start under the fringe');
-assert.match(iosHome, /safeAreaInsets\.top \+ Faldo\.below \+ Faldo\.fringe \+ M/, 'iOS row gap ignores the Faldó');
-assert.match(andHome, /val gridTop = top \+ FALDO_BELOW \+ FALDO_FRINGE \+ M/, 'Android grid top ignores the Faldó');
-assert.match(andHome, /rowGap\(.*gridTop, u/, 'Android row gap ignores the grid top');
-assert.match(andHome, /PaddingValues\([^)]*top = gridTop/, 'Android grid padding ignores the grid top');
+// the grid starts one gap under the fringe (Grid: the side margin when the rows fit, plus what room is left), in its
+// padding and in the grid's measures alike
+assert.match(iosHome, /\.padding\(\.top, Faldo\.below \+ Faldo\.fringe \+ grid\.side \+ grid\.lead\)/, 'iOS grid does not start under the fringe');
+assert.match(iosHome, /fringe: g\.safeAreaInsets\.top \+ Faldo\.below \+ Faldo\.fringe/, 'iOS grid measures ignore the Faldó');
+assert.match(andHome, /val fringe = top \+ FALDO_BELOW \+ FALDO_FRINGE/, 'Android grid top ignores the Faldó');
+assert.match(andHome, /grid\(.*fringe, rows\.size/, 'Android grid measures ignore the fringe');
+assert.match(andHome, /PaddingValues\([^)]*top = fringe \+ grid\.side \+ grid\.lead/, 'Android grid padding ignores the fringe');
 console.log('faldó: iOS and Android draw it with the same measures, strands and palette, and start the grid under it ok');

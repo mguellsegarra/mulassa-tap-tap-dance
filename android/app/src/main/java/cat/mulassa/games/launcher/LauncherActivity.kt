@@ -59,7 +59,7 @@ class LauncherActivity : ComponentActivity() {
         // debug builds only: `--ef hour 21.5` fixes the sky to preview an hour
         val hour = intent.getFloatExtra("hour", -1f).takeIf { it >= 0 && applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 }
         // debug builds only: `--es tilt 0.9,-0.6` holds a lean (Motion.kt), for captures on an emulator
-        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) intent.getStringExtra("tilt")?.split(",")?.mapNotNull { it.toFloatOrNull() }?.takeIf { it.size == 2 }?.let { Tilt.hold(it[0], it[1]) }
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) intent.getStringExtra("tilt")?.let { t -> if (t == "sweep") Tilt.sweep() else t.split(",").mapNotNull { it.toFloatOrNull() }.takeIf { it.size == 2 }?.let { Tilt.hold(it[0], it[1]) } }
         model.arrived = !splash
         setContent {
             Box(Modifier.fillMaxSize()) {
